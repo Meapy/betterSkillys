@@ -57,13 +57,6 @@ namespace WorldServer.core.net.handlers
                     return;
                 }
 
-                if (!player.Client.Account.Admin)
-                    if (!player.GameServer.Configuration.serverInfo.testing && player.Stars < 2)
-                    {
-                        player.SendHelp("To use this feature you need 2 stars");
-                        return;
-                    }
-
                 // save message for mob behaviors
                 player.World.ChatReceived(player, text);
 
