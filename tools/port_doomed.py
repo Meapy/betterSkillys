@@ -1,0 +1,446 @@
+"""Port Doomed Realms items and pets into betterSkillys.
+
+Usage:
+    python tools/port_doomed.py --dr "<path to Doomed Realms repo>" [--plan]
+
+What it does:
+  * Selects every Doomed Realms object betterSkillys doesn't have (by id) of the ported classes
+    (items, dyes, and the projectiles / pets / summons those items reference), skipping class
+    abilities that need the Doomed Realms classes (PORT_LATER_EFFECTS).
+  * Gives them new type codes in 0xD000-0xDFFF. The mapping is kept in tools/doomed/types.json
+    so a type never changes once characters hold the item.
+  * Points their sprites at copies of the Doomed Realms sprite sheets, registered in the client
+    under a "dr" prefix (drLofiObj5, drChars8x8rPets1, ...), so they keep their exact art.
+    RemoteTexture sprites (downloaded once into tools/doomed/remote/ by --fetch-remote) become
+    one small sheet each (drRemote<id>).
+  * Writes the XML for the server (source/Shared/resources/xml/custom/DoomedRealms.xml) and the
+    client (client/src/kabam/rotmg/assets/custom/xmls/DoomedRealms.xml), and generates
+    client/src/kabam/rotmg/assets/doomed/DoomedAssets.as, which registers the sheets.
+
+The Doomed Realms sprite sheets are exported from its client with FFDec (Doomed Realms
+tools/ffdec) into build/doomed/images on first use.
+"""
+
+import argparse
+import copy
+import glob
+import json
+import os
+import re
+import shutil
+import struct
+import subprocess
+import sys
+import time
+import urllib.request
+import xml.etree.ElementTree as ET
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATE = os.path.join(ROOT, "tools", "doomed")
+TYPES_JSON = os.path.join(STATE, "types.json")
+REMOTE_DIR = os.path.join(STATE, "remote")
+BUILD = os.path.join(ROOT, "build", "doomed")
+SERVER_XML = os.path.join(ROOT, "source", "Shared", "resources", "xml", "custom", "DoomedRealms.xml")
+CLIENT_ASSETS = os.path.join(ROOT, "client", "src", "kabam", "rotmg", "assets")
+CLIENT_XML = os.path.join(CLIENT_ASSETS, "custom", "xmls", "DoomedRealms.xml")
+CLIENT_XML_AS = os.path.join(CLIENT_ASSETS, "custom", "xmls", "DoomedRealms.as")
+CLIENT_IMAGES = os.path.join(CLIENT_ASSETS, "doomed", "images")
+CLIENT_ASSETS_AS = os.path.join(CLIENT_ASSETS, "doomed", "DoomedAssets.as")
+
+TYPE_START, TYPE_END = 0xD000, 0xDFFF
+PORTED_CLASSES = {"Equipment", "Dye"}
+# Abilities of the Doomed Realms-only classes; ported together with those classes.
+PORT_LATER_EFFECTS = {"PearlAbility", "BuildTower", "MonsterToss", "PartyAOE", "MiniPot", "Halo",
+                      "SamuraiAbility", "Summon", "TomeDamage", "MultiDecoy"}
+REMOTE_URL = "https://realmofthemadgod.appspot.com/picture/get?id={}"
+
+# Doomed Realms client sheet registrations (its util/loadEmbeds): name -> (embed image, mask, kind, args)
+# kind "set": AssetLibrary.addImageSet(name, img, w, h)
+# kind "char": AnimatedChars.add(name, img, mask, w, h, sheetW, sheetH, dir)
+SHEETS = {
+    "lofiChar8x8": ("lofiChar", None, "set", (8, 8)),
+    "lofiChar16x8": ("lofiChar", None, "set", (16, 8)),
+    "lofiChar16x16": ("lofiChar", None, "set", (16, 16)),
+    "lofiChar28x8": ("lofiChar2", None, "set", (8, 8)),
+    "lofiChar216x8": ("lofiChar2", None, "set", (16, 8)),
+    "lofiChar216x16": ("lofiChar2", None, "set", (16, 16)),
+    "lofiCharBig": ("lofiCharBig", None, "set", (16, 16)),
+    "lofiEnvironment": ("lofiEnvironment", None, "set", (8, 8)),
+    "lofiEnvironment2": ("lofiEnvironment2", None, "set", (8, 8)),
+    "lofiEnvironment3": ("lofiEnvironment3", None, "set", (8, 8)),
+    "lofiInterface": ("lofiInterface", None, "set", (8, 8)),
+    "redLootBag": ("redLootBag", None, "set", (8, 8)),
+    "lofiInterfaceBig": ("lofiInterfaceBig", None, "set", (16, 16)),
+    "lofiInterface2": ("lofiInterface2", None, "set", (8, 8)),
+    "lofiObj": ("lofiObj", None, "set", (8, 8)),
+    "lofiObj2": ("lofiObj2", None, "set", (8, 8)),
+    "lofiObj3": ("lofiObj3", None, "set", (8, 8)),
+    "lofiObj4": ("lofiObj4", None, "set", (8, 8)),
+    "lofiObj5": ("lofiObj5", None, "set", (8, 8)),
+    "lofiObj6": ("lofiObj6", None, "set", (8, 8)),
+    "lofiObjBig": ("lofiObjBig", None, "set", (16, 16)),
+    "lofiObj40x40": ("lofiObj40x40", None, "set", (40, 40)),
+    "lofiProjs": ("lofiProjs", None, "set", (8, 8)),
+    "lofiProjsBig": ("lofiProjsBig", None, "set", (16, 16)),
+    "lofiParts": ("lofiParts", None, "set", (8, 8)),
+    "chars8x8rBeach": ("chars8x8rBeach", None, "char", (8, 8, 56, 8, "RIGHT")),
+    "chars8x8dBeach": ("chars8x8dBeach", None, "char", (8, 8, 56, 8, "DOWN")),
+    "chars8x8rLow1": ("chars8x8rLow1", None, "char", (8, 8, 56, 8, "RIGHT")),
+    "chars8x8rLow2": ("chars8x8rLow2", None, "char", (8, 8, 56, 8, "RIGHT")),
+    "chars8x8rMid": ("chars8x8rMid", None, "char", (8, 8, 56, 8, "RIGHT")),
+    "chars8x8rMid2": ("chars8x8rMid2", None, "char", (8, 8, 56, 8, "RIGHT")),
+    "chars8x8rHigh": ("chars8x8rHigh", None, "char", (8, 8, 56, 8, "RIGHT")),
+    "chars8x8rHero1": ("chars8x8rHero1", None, "char", (8, 8, 56, 8, "RIGHT")),
+    "chars8x8rHero2": ("chars8x8rHero2", None, "char", (8, 8, 56, 8, "RIGHT")),
+    "chars8x8dHero1": ("chars8x8dHero1", None, "char", (8, 8, 56, 8, "DOWN")),
+    "chars8x8dEncounters": ("chars8x8dEncounters", None, "char", (8, 8, 56, 8, "DOWN")),
+    "chars8x8rEncounters": ("chars8x8rEncounters", None, "char", (8, 8, 56, 8, "RIGHT")),
+    "chars16x8dEncounters": ("chars16x8dEncounters", None, "char", (16, 8, 112, 8, "DOWN")),
+    "chars16x8rEncounters": ("chars16x8rEncounters", None, "char", (16, 8, 112, 8, "DOWN")),
+    "chars16x16dEncounters": ("chars16x16dEncounters", None, "char", (16, 16, 112, 16, "DOWN")),
+    "chars16x16dEncounters2": ("chars16x16dEncounters2", None, "char", (16, 16, 112, 16, "DOWN")),
+    "chars16x16dMountains1": ("chars16x16dMountains1", None, "char", (16, 16, 112, 16, "DOWN")),
+    "chars16x16dMountains2": ("chars16x16dMountains2", None, "char", (16, 16, 112, 16, "DOWN")),
+    "chars16x16rEncounters": ("chars16x16rEncounters", None, "char", (16, 16, 112, 16, "RIGHT")),
+    "players": ("players", "playersMask", "char", (8, 8, 56, 24, "RIGHT")),
+    "chars8x8rPets1": ("chars8x8rPets1", "chars8x8rPets1Mask", "char", (8, 8, 56, 8, "RIGHT")),
+}
+SHARED_SHEETS = {"invisible"}  # same in both clients
+# Embeds whose image classes FFDec exports under the client's obfuscated class names
+OBFUSCATED_EMBEDS = {"lofiCharBig": "class_429", "lofiInterfaceBig": "class_440", "lofiInterface2": "class_426",
+                     "lofiObjBig": "class_450", "lofiProjs": "class_448", "lofiProjsBig": "class_427",
+                     "lofiParts": "class_461", "players": "class_458", "playersMask": "class_455",
+                     "redLootBag": "class_447"}
+
+
+def dr_name(sheet):
+    return "dr" + sheet[0].upper() + sheet[1:]
+
+
+def load_objects(files):
+    objs = {}
+    for f in sorted(files):
+        text = re.sub(r"<\?xml[^>]*\?>", "", open(f, encoding="utf-8", errors="replace").read())
+        try:
+            root = ET.fromstring("<r>" + text + "</r>")
+        except ET.ParseError as e:
+            print("  skipping unparsable %s: %s" % (os.path.basename(f), e))
+            continue
+        for o in root.iter("Object"):
+            if o.get("id"):
+                objs[o.get("id")] = o
+    return objs
+
+
+def references(o):
+    """Object ids an item or object points at (projectile sprites, pets, summons, ...)."""
+    refs = set()
+    for p in o.iter("Projectile"):
+        oid = p.findtext("ObjectId")
+        if oid:
+            refs.add(oid.strip())
+    for a in list(o.iter("Activate")) + list(o.iter("ActivateOnEquip")):
+        for attr in ("objectId", "id", "dungeonName"):
+            if a.get(attr):
+                refs.add(a.get(attr))
+    return refs
+
+
+def select(dr, bs):
+    chosen, skipped = {}, {}
+    for oid, o in dr.items():
+        if oid in bs or o.findtext("Class") not in PORTED_CLASSES:
+            continue
+        effects = {a.text for a in o.iter("Activate")}
+        if effects & PORT_LATER_EFFECTS:
+            skipped[oid] = "class ability: " + ", ".join(sorted(effects & PORT_LATER_EFFECTS))
+            continue
+        # keys that open Doomed Realms dungeons wait for the dungeons
+        portals = [r for r in references(o) if r in dr and r not in bs and dr[r].findtext("Class") == "Portal"]
+        if portals:
+            skipped[oid] = "opens " + portals[0]
+            continue
+        chosen[oid] = o
+    # add what they reference (projectile objects, pets, ...), transitively
+    todo = list(chosen.values())
+    while todo:
+        for ref in references(todo.pop()):
+            if ref in dr and ref not in bs and ref not in chosen and dr[ref].findtext("Class") != "Portal":
+                chosen[ref] = dr[ref]
+                todo.append(dr[ref])
+    return chosen, skipped
+
+
+def remote_ids(objs):
+    ids = set()
+    for o in objs.values():
+        for r in o.iter("RemoteTexture"):
+            ids.add((r.findtext("Instance") or "draw").strip() + ":" + (r.findtext("Id") or "").strip())
+    return ids
+
+
+def remote_file(rid):
+    instance, num = rid.split(":", 1)
+    return os.path.join(REMOTE_DIR, "%s_%s.png" % (instance, num))
+
+
+def remote_sheet(rid):
+    instance, num = rid.split(":", 1)
+    return "drRemote_%s_%s" % (instance, num)
+
+
+def fetch_remote(ids):
+    os.makedirs(REMOTE_DIR, exist_ok=True)
+    hosts = {"draw": "https://realmofthemadgod.appspot.com", "tdraw": "https://rotmgtesting.appspot.com"}
+    for rid in sorted(ids):
+        path = remote_file(rid)
+        if os.path.exists(path):
+            continue
+        instance, num = rid.split(":", 1)
+        if instance not in hosts or not num.isdigit():
+            print("  can't fetch remote texture %s" % rid)
+            continue
+        data = b""
+        for attempt in range(4):
+            time.sleep(1 + 10 * attempt)  # the service answers "<Error>Endpoint spam</Error>" when hit too fast
+            try:
+                data = urllib.request.urlopen(hosts[instance] + "/picture/get?id=" + num, timeout=30).read()
+            except OSError as e:
+                print("  remote texture %s: %s" % (rid, e))
+                break
+            if b"Endpoint spam" not in data:
+                break
+        if not data.startswith(b"\x89PNG"):
+            print("  remote texture %s is not a PNG, skipped" % rid)
+            continue
+        open(path, "wb").write(data)
+    print("Remote textures in %s: %d" % (REMOTE_DIR, len(glob.glob(os.path.join(REMOTE_DIR, "*.png")))))
+
+
+def png_size(path):
+    data = open(path, "rb").read(32)
+    return struct.unpack(">II", data[16:24])
+
+
+def assign_types(objs):
+    types = json.load(open(TYPES_JSON)) if os.path.exists(TYPES_JSON) else {}
+    used = {int(v, 16) for v in types.values()}
+    nxt = TYPE_START
+    for oid, o in sorted(objs.items(), key=lambda kv: (int(kv[1].get("type", "0"), 16), kv[0])):
+        if oid in types:
+            continue
+        while nxt in used:
+            nxt += 1
+        if nxt > TYPE_END:
+            sys.exit("Out of type codes in 0x%04X-0x%04X" % (TYPE_START, TYPE_END))
+        types[oid] = "0x%04X" % nxt
+        used.add(nxt)
+    os.makedirs(STATE, exist_ok=True)
+    with open(TYPES_JSON, "w") as f:
+        json.dump(dict(sorted(types.items(), key=lambda kv: kv[1])), f, indent=1)
+    return types
+
+
+def convert(o, new_type, sheets, remotes):
+    """Copy of a Doomed Realms object with its new type and sprites pointed at the dr sheets."""
+    o = copy.deepcopy(o)
+    o.set("type", new_type)
+    # betterSkillys reads <Tier> as a number; Doomed Realms also used "UT" and "UR" (untiered)
+    for tier in o.findall("Tier"):
+        if not (tier.text or "").strip().lstrip("-").isdigit():
+            o.remove(tier)
+    for tex in o.iter():
+        if tex.tag in ("Texture", "AnimatedTexture", "Mask") or tex.tag == "AltTexture":
+            f = tex.find("File")
+            if f is not None and f.text:
+                name = f.text.strip()
+                if name in SHEETS:
+                    f.text = dr_name(name)
+                    sheets.add(name)
+                elif name not in SHARED_SHEETS:
+                    print("  %s: unknown sheet %s left as is" % (o.get("id"), name))
+    for parent in o.iter():
+        for i, child in enumerate(list(parent)):
+            if child.tag != "RemoteTexture":
+                continue
+            rid = (child.findtext("Instance") or "draw").strip() + ":" + (child.findtext("Id") or "").strip()
+            if not os.path.exists(remote_file(rid)):
+                print("  %s: remote texture %s missing (run with --fetch-remote)" % (o.get("id"), rid))
+                continue
+            animated = o.findtext("Class") == "Character"
+            new = ET.Element("AnimatedTexture" if animated else "Texture")
+            ET.SubElement(new, "File").text = remote_sheet(rid)
+            ET.SubElement(new, "Index").text = "0"
+            new.tail = child.tail
+            parent.remove(child)
+            parent.insert(i, new)
+            use = remotes.setdefault(rid, {"animated": False, "static": False, "right": False})
+            use["animated" if animated else "static"] = True
+            use["right"] = use["right"] or child.find("Right") is not None
+    return o
+
+
+def write_xml(objs, path):
+    root = ET.Element("Objects")
+    root.text = "\n"
+    for o in objs:
+        root.append(o)
+    ET.indent(root, space="\t")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\r\n") as f:
+        f.write("<!-- Generated by tools/port_doomed.py from the Doomed Realms server. Do not edit. -->\n")
+        f.write(ET.tostring(root, encoding="unicode"))
+        f.write("\n")
+
+
+def export_dr_images(dr_root):
+    out = os.path.join(BUILD, "images")
+    if glob.glob(os.path.join(out, "*_Embeds_*.png")):
+        return out
+    swf = os.path.join(dr_root, "build", "client", "renamed.swf")
+    if not os.path.exists(swf):
+        swf = os.path.join(dr_root, "localhost.swf-new.swf")
+    ffdec = os.path.join(dr_root, "tools", "ffdec", "ffdec.jar")
+    print("Exporting Doomed Realms sprite sheets with FFDec ...")
+    subprocess.check_call(["java", "-jar", ffdec, "-export", "image", out, swf], stdout=subprocess.DEVNULL)
+    return out
+
+
+def write_assets(sheets, remotes, images_dir):
+    if os.path.isdir(CLIENT_IMAGES):
+        shutil.rmtree(CLIENT_IMAGES)
+    os.makedirs(CLIENT_IMAGES)
+    embeds, lines = [], []
+
+    def embed(name, src):
+        shutil.copyfile(src, os.path.join(CLIENT_IMAGES, name + ".png"))
+        embeds.append('      [Embed(source="images/%s.png")]\n      private static const %s:Class;\n' % (name, name))
+
+    exported = {}
+    for f in glob.glob(os.path.join(images_dir, "*_Embeds_*Embed_.png")):
+        exported[re.sub(r"^\d+_Embeds_|Embed_\.png$", "", os.path.basename(f))] = f
+    for embed_name, cls in OBFUSCATED_EMBEDS.items():
+        for f in glob.glob(os.path.join(images_dir, "*_%s.png" % cls)):
+            exported[embed_name] = f
+    done = set()
+    for sheet in sorted(sheets):
+        image, mask, kind, a = SHEETS[sheet]
+        for n in (image, mask):
+            if n and n not in done:
+                if n not in exported:
+                    sys.exit("Doomed Realms sheet image %s not found in %s" % (n, images_dir))
+                embed(n, exported[n])
+                done.add(n)
+        if kind == "set":
+            lines.append('         AssetLibrary.addImageSet("%s", new %s().bitmapData, %d, %d);' % (dr_name(sheet), image, a[0], a[1]))
+        else:
+            lines.append('         AnimatedChars.add("%s", new %s().bitmapData, %s, %d, %d, %d, %d, AnimatedChar.%s);'
+                         % (dr_name(sheet), image, "new %s().bitmapData" % mask if mask else "null", a[0], a[1], a[2], a[3], a[4]))
+    for rid, use in sorted(remotes.items()):
+        name = remote_sheet(rid)
+        embed(name, remote_file(rid))
+        w, h = png_size(remote_file(rid))
+        if use["animated"]:
+            # remote character sprites are a strip of 7 frames, as the old client loaded them
+            lines.append('         AnimatedChars.add("%s", new %s().bitmapData, null, %d, %d, %d, %d, AnimatedChar.%s);'
+                         % (name, name, max(1, w // 7), h, w, h, "RIGHT" if use["right"] else "DOWN"))
+        if use["static"]:
+            # an item that shares a character's strip (e.g. a pet generator) shows its first frame
+            tile_w = max(1, w // 7) if use["animated"] else w
+            lines.append('         AssetLibrary.addImageSet("%s", new %s().bitmapData, %d, %d);' % (name, name, tile_w, h))
+
+    with open(CLIENT_ASSETS_AS, "w", encoding="utf-8", newline="\r\n") as f:
+        f.write("// Generated by tools/port_doomed.py: sprite sheets of the content ported from Doomed Realms.\n")
+        f.write("package kabam.rotmg.assets.doomed\n{\n")
+        f.write("   import com.company.assembleegameclient.util.AnimatedChar;\n")
+        f.write("   import com.company.assembleegameclient.util.AnimatedChars;\n")
+        f.write("   import com.company.util.AssetLibrary;\n\n")
+        f.write("   public class DoomedAssets\n   {\n")
+        f.write("".join(embeds))
+        f.write("\n      public static function register():void\n      {\n")
+        f.write("\n".join(lines) + "\n")
+        f.write("      }\n   }\n}\n")
+    return len(done) + len(remotes)
+
+
+def hook_client():
+    """One-time edits so the client loads DoomedRealms.xml and registers the sheets."""
+    if not os.path.exists(CLIENT_XML_AS):
+        with open(CLIENT_XML_AS, "w", newline="\r\n") as f:
+            f.write("package kabam.rotmg.assets.custom.xmls\n{\nimport mx.core.ByteArrayAsset;\n\n"
+                    '[Embed(source="DoomedRealms.xml", mimeType="application/octet-stream")]\n'
+                    "    public class DoomedRealms extends ByteArrayAsset\n    {\n    }\n}\n")
+    data_as = os.path.join(CLIENT_ASSETS, "EmbeddedData.as")
+    t = open(data_as, encoding="utf-8-sig").read()
+    if "doomedRealms" not in t:
+        t = t.replace("        private static const customProj:Class = CustomProj;",
+                      "        private static const customProj:Class = CustomProj;\n"
+                      "        private static const doomedRealms:Class = DoomedRealms;", 1)
+        t = t.replace("            new customItems(),", "            new customItems(),\n            new doomedRealms(),", 1)
+        if "doomedRealms()" not in t:
+            sys.exit("Could not hook DoomedRealms.xml into EmbeddedData.as")
+        open(data_as, "w", encoding="utf-8", newline="").write(t)
+    loader = os.path.join(ROOT, "client", "src", "com", "company", "assembleegameclient", "util", "AssetLoader.as")
+    t = open(loader, encoding="utf-8-sig").read()
+    if "DoomedAssets" not in t:
+        t = t.replace("import kabam.rotmg.assets.EmbeddedAssets;", "import kabam.rotmg.assets.EmbeddedAssets;\nimport kabam.rotmg.assets.doomed.DoomedAssets;", 1)
+        anchor = '      AnimatedChars.add("ancientRuinsChars16x16"'
+        i = t.index(anchor)
+        end = t.index("\n", i) + 1
+        t = t[:end] + "      DoomedAssets.register(); // content ported from Doomed Realms\n" + t[end:]
+        open(loader, "w", encoding="utf-8", newline="").write(t)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--dr", required=True, help="Doomed Realms repo root (the folder with db/ and wserver/)")
+    ap.add_argument("--plan", action="store_true", help="only print what would be ported")
+    ap.add_argument("--fetch-remote", action="store_true", help="download missing RemoteTexture images first")
+    args = ap.parse_args()
+
+    dr = load_objects(glob.glob(os.path.join(args.dr, "db", "data", "*.xml")))
+    bs = load_objects([f for f in glob.glob(os.path.join(ROOT, "source", "Shared", "resources", "xml", "**", "*.xml"), recursive=True)
+                       if os.path.abspath(f) != os.path.abspath(SERVER_XML)])
+    chosen, skipped = select(dr, bs)
+    classes = {}
+    for o in chosen.values():
+        classes[o.findtext("Class")] = classes.get(o.findtext("Class"), 0) + 1
+    remotes = remote_ids(chosen)
+    print("Doomed Realms objects to port: %d %s" % (len(chosen), sorted(classes.items())))
+    print("Left for later (Doomed Realms class abilities): %d" % len(skipped))
+    print("Remote textures needed: %d" % len(remotes))
+    if args.plan:
+        for oid, why in sorted(skipped.items()):
+            print("  later: %s (%s)" % (oid, why))
+        return
+    if args.fetch_remote:
+        fetch_remote(remotes)
+    # leave out objects whose remote sprite no longer exists, and the items that give them
+    dropped = {oid for oid, o in chosen.items()
+               if any(not os.path.exists(remote_file(r)) for r in remote_ids({oid: o}))}
+    while True:
+        more = {oid for oid, o in chosen.items() if oid not in dropped and references(o) & dropped}
+        if not more:
+            break
+        dropped |= more
+    for oid in sorted(dropped):
+        print("  left out (sprite unavailable): %s" % oid)
+        del chosen[oid]
+
+    types = assign_types(chosen)
+    sheets, remote_used = set(), {}
+    converted = [convert(o, types[oid], sheets, remote_used)
+                 for oid, o in sorted(chosen.items(), key=lambda kv: types[kv[0]])]
+    write_xml(converted, SERVER_XML)
+    write_xml(converted, CLIENT_XML)
+    n = write_assets(sheets, remote_used, export_dr_images(args.dr))
+    hook_client()
+    print("Wrote %d objects to %s and the client copy, %d sprite images." % (len(converted), SERVER_XML, n))
+    import port_doomed_pets
+    dr_pets, bs_pets = port_doomed_pets.write_pet_behaviors(args.dr, dr, chosen, bs, types)
+    print("Wrote %s: %d Doomed Realms pets, %d betterSkillys pets given a follow."
+          % (port_doomed_pets.PET_BEHAVIORS_CS, dr_pets, bs_pets))
+
+
+if __name__ == "__main__":
+    main()

@@ -6,3 +6,4 @@
 /dist/
 /source/Redis/data/
 *.local.txt
+/tools/__pycache__/
