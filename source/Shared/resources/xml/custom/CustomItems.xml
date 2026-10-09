@@ -118,7 +118,7 @@
 			<Index>0x01</Index>
 		</Texture>
 		<SlotType>10</SlotType>
-		<Description>When consumed, gives fame.</Description>
+		<Description>When consumed, gives 100 gold.</Description>
 		<Sound>use_potion</Sound>
 		<Activate amount="100">Gold</Activate>
 		<Consumable />

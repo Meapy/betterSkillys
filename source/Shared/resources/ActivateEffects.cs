@@ -42,6 +42,7 @@
         Unlock,
         ObjectToss,
         Fame,
+        Gold,
 
         // to be added
         LevelTwenty,

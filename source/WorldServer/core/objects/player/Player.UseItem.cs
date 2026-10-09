@@ -519,6 +519,9 @@ namespace WorldServer.core.objects
                     case ActivateEffects.Fame:
                         AEFame(time, item, target, eff);
                         break;
+                    case ActivateEffects.Gold:
+                        AEGold(time, item, target, eff);
+                        break;
                     case ActivateEffects.LevelTwenty:
                     case ActivateEffects.MarkAndTeleport:
                     case ActivateEffects.SelfTransform:
@@ -589,6 +592,21 @@ namespace WorldServer.core.objects
                 .ContinueWith(t =>
                 {
                     CurrentFame = acc.Fame;
+                });
+            trans.Execute(CommandFlags.FireAndForget);
+        }
+
+        private void AEGold(TickTime time, Item item, Position target, ActivateEffect eff)
+        {
+            if (World is TestWorld || Client.Account == null)
+                return;
+
+            var acc = Client.Account;
+            var trans = GameServer.Database.Conn.CreateTransaction();
+            GameServer.Database.UpdateCurrency(acc, eff.Amount, CurrencyType.Gold, trans)
+                .ContinueWith(t =>
+                {
+                    Credits = acc.Credits;
                 });
             trans.Execute(CommandFlags.FireAndForget);
         }
