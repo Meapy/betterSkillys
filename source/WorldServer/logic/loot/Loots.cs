@@ -83,7 +83,12 @@ namespace WorldServer.logic.loot
             var allItems = gameServer.Resources.GameData.Items;
             foreach (var item in allItems.Values)
             {
-                var itemType = TierLoot.SlotTypesToItemType(item.SlotType);
+                // Items ported from Doomed Realms (types 0xD000-0xDFFF, tools/port_doomed.py) stay out of
+                // the random tier drops; so do items whose slot type isn't a loot category.
+                if (item.ObjectType >= 0xD000 && item.ObjectType <= 0xDFFF)
+                    continue;
+                if (!TierLoot.TryGetItemType(item.SlotType, out var itemType))
+                    continue;
                 if (!Items.TryGetValue(itemType, out var dict))
                     Items[itemType] = dict = new Dictionary<int, List<Item>>();
                 if (!dict.TryGetValue(item.Tier, out var items))

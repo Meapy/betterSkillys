@@ -644,13 +644,14 @@ namespace WorldServer.core.objects
 
             // create new pet
             var petId = PetId;
-            if (petId != 0)
+            if (petId != 0 && GameServer.Resources.GameData.ObjectDescs.TryGetValue((ushort)petId, out var petDesc))
             {
-                //var pet = new Pet(GameServer, this, (ushort)petId);
-                //pet.Move(X, Y);
-                //owner.EnterWorld(pet);
-                //pet.SetDefaultSize(pet.ObjectDesc.Size);
-                //Pet = pet;
+                var pet = new Pet(GameServer, this, (ushort)petId);
+                pet.Move(X, Y);
+                owner.EnterWorld(pet);
+                if (petDesc.Size > 0)
+                    pet.Size = petDesc.Size;
+                Pet = pet;
             }
         }
 
