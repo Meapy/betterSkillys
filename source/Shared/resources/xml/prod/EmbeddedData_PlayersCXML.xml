@@ -522,4 +522,36 @@
 		<UnlockLevel level="20" type="0x031f">Paladin</UnlockLevel>
 		<UnlockCost>999</UnlockCost>
 	</Object>
+	<Object type="0x5719" id="Vaelith">
+		<Class>Player</Class>
+		<Description>For Realm Creators.</Description>
+		<AnimatedTexture>
+			<File>players</File>
+			<Index>16</Index>
+		</AnimatedTexture>
+		<HitSound>player/archer_hit</HitSound>
+		<DeathSound>player/archer_death</DeathSound>
+		<Player/>
+		<BloodProb>1.0</BloodProb>
+		<SlotTypes>0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0</SlotTypes>
+		<Equipment>0xa1a, -1, -1, -1, 0xa22, -1, -1, -1, -1, -1, -1, -1</Equipment>
+		<MaxHitPoints max="1000">100</MaxHitPoints>
+		<MaxMagicPoints max="1000">100</MaxMagicPoints>
+		<Attack max="85">10</Attack>
+		<Defense max="50">0</Defense>
+		<Speed max="80">10</Speed>
+		<Dexterity max="85">15</Dexterity>
+		<HpRegen max="85">12</HpRegen>
+		<MpRegen max="85">15</MpRegen>
+		<LevelIncrease min="20" max="30">MaxHitPoints</LevelIncrease>
+		<LevelIncrease min="5" max="15">MaxMagicPoints</LevelIncrease>
+		<LevelIncrease min="1" max="2">Attack</LevelIncrease>
+		<LevelIncrease min="0" max="1">Defense</LevelIncrease>
+		<LevelIncrease min="0" max="2">Speed</LevelIncrease>
+		<LevelIncrease min="1" max="2">Dexterity</LevelIncrease>
+		<LevelIncrease min="0" max="2">HpRegen</LevelIncrease>
+		<LevelIncrease min="1" max="2">MpRegen</LevelIncrease>
+		<UnlockLevel level="1" type="0x031c">Bard</UnlockLevel>
+		<UnlockCost>0</UnlockCost>
+	</Object>
 </Objects>

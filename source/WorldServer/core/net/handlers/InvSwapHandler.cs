@@ -26,7 +26,7 @@ namespace WorldServer.core.net.handlers
     public class InvSwapHandler : IMessageHandler
     {
         private const ushort SOULBOUND_LOOT_BAG_TYPE = 0x0503;
-        private static readonly string[] StackableItems = new string[] { "Magic Dust", "Glowing Shard", "Frozen Coin" }; //stackable items
+        private static readonly string[] StackableItems = new string[] { "Magic Dust", "Glowing Shard", "Frozen Coin" };
 
         public override MessageId MessageId => MessageId.INVSWAP;
 
@@ -234,10 +234,10 @@ namespace WorldServer.core.net.handlers
 
         private bool ValidateItemSwap(Player player, IContainer container, Item item, int slot)
         {
-            if(container == player)
+            if (container == player)
             {
-                if(slot > 20)
-                    if(item != null)
+                if (slot > 20)
+                    if (item != null)
                     {
                         var count = -1;
                         for (var i = 20; i < 28; i++)
@@ -245,9 +245,6 @@ namespace WorldServer.core.net.handlers
                                 count++;
                         if (count > 1)
                             return false;
-                        //for (var i = 20; i < 28; i++)
-                        //    if (player.Inventory[i] != null && player.Inventory[i].ObjectType == item.ObjectType && item.TalismanItemDesc.OnlyOne)
-                        //        return false;
                     }
             }
             return container == player || item == null || !item.Soulbound && !player.Client.Account.Admin || IsSoleContainerOwner(player, container);
@@ -265,7 +262,7 @@ namespace WorldServer.core.net.handlers
         private bool ValidateEntities(Player player, Entity from, Entity to)
         {
             // returns false if bad input
-            if (from == null || to == null) 
+            if (from == null || to == null)
                 return false;
 
             if (from as IContainer == null || to as IContainer == null)
@@ -288,15 +285,23 @@ namespace WorldServer.core.net.handlers
 
             var aPos = new Vector2(from.X, from.Y);
             var bPos = new Vector2(to.X, to.Y);
-            if (Vector2.DistanceSquared(aPos, bPos) > 1) 
+            if (Vector2.DistanceSquared(aPos, bPos) > 1)
                 return false;
             return true;
         }
 
-        // todo add in talisman count checks
         private bool ValidateSlotSwap(IContainer conA, IContainer conB, int slotA, int slotB)
-            => slotA < 20 && slotB < 20 &&
-                conB.AuditItem(conA.Inventory[slotA], slotB) && conA.AuditItem(conB.Inventory[slotB], slotA);
+        {
+            if ((conA is Player pA && pA.Client.Account.Admin) || (conB is Player pB && pB.Client.Account.Admin))
+                return true;
+
+            // Zaktualizowano na docelowe ID postaci 0x5719
+            if ((conA is Player playerA && playerA.ObjectType == 0x5719) || (conB is Player playerB && playerB.ObjectType == 0x5719))
+                return true;
+
+            return slotA < 20 && slotB < 20 &&
+                   conB.AuditItem(conA.Inventory[slotA], slotB) && conA.AuditItem(conB.Inventory[slotB], slotA);
+        }
 
         public static void HandleUnavailableInventoryAction(Player player, Item item, int slotId, Random random, IContainer container)
         {
