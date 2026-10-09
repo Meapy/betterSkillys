@@ -110,7 +110,9 @@ namespace App
             Config.serverInfo.maxPlayers = maxPlayers;
         }
 
-        public List<ServerItem> GetServerList()
+        // localRequest: the client runs on this PC, so send it 127.0.0.1 instead of the world
+        // servers' public address (which needs NAT loopback on the router to reach from inside).
+        public List<ServerItem> GetServerList(bool localRequest = false)
         {
             var ret = new List<ServerItem>();
             foreach (var server in ISManager.GetServerList().ToList())
@@ -124,7 +126,7 @@ namespace App
                     Lat = server.latitude,
                     Long = server.longitude,
                     Port = server.port,
-                    DNS = server.address,
+                    DNS = localRequest ? "127.0.0.1" : server.address,
                     Usage = server.players / (double)server.maxPlayers,
                     AdminOnly = server.adminOnly,
                     UsageText = server.IsJustStarted() ? "- NEW!" : $"{server.players}/{server.maxPlayers}"

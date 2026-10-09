@@ -130,6 +130,10 @@ public class WebMain extends Sprite {
         }
         sWidth = stage.stageWidth;
         sHeight = stage.stageHeight;
+        // mscale is only given a default on entering the game; on a first run the window's
+        // initial resize would otherwise divide by undefined and size the 3D back buffer to 0.
+        if (Parameters.data_ != null && !(Parameters.data_.mscale > 0))
+            Parameters.data_.mscale = "1.0";
         Camera.adjustDimensions();
         Stage3DConfig.Dimensions();
     }
