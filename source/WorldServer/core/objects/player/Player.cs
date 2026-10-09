@@ -653,6 +653,8 @@ namespace WorldServer.core.objects
                     pet.Size = petDesc.Size;
                 Pet = pet;
             }
+            else if (petId != 0)
+                WorldServer.utils.StaticLogger.Instance.Warn($"Pet type {petId:x4} of {Name} not found");
         }
 
         private void TickCooldownTimers(TickTime time)

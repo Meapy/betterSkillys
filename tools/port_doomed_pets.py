@@ -144,7 +144,7 @@ def write_pet_behaviors(dr_root, dr, chosen, bs, types):
                 lo, hi, rng = attack[2], attack[3], attack[4]
             else:
                 index, count, rng = attack[2], attack[3], attack[4]
-                dmg = projectile_damage(dr[oid], index)
+                dmg = projectile_damage(chosen[oid], index)
                 if not dmg:
                     continue
                 lo, hi = dmg[0] * count, dmg[1] * count

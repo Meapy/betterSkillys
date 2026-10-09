@@ -1649,7 +1649,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Black Cat" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Black Cat (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD067" id="Grey Cat Generator">
@@ -1665,7 +1665,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Grey Cat" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Grey Cat (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD068" id="Orange Cat Generator">
@@ -1681,7 +1681,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Orange Cat" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Orange Cat (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD069" id="Tan Cat Generator">
@@ -1698,7 +1698,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Tan Cat" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Tan Cat (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD06A" id="Yellow Cat Generator">
@@ -1715,7 +1715,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Yellow Cat" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Yellow Cat (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD06B" id="Brown Pup Generator">
@@ -1731,7 +1731,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Brown Pup" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Brown Pup (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD06C" id="Grey Pup Generator">
@@ -1748,7 +1748,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Grey Pup" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Grey Pup (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD06D" id="Golden Pup Generator">
@@ -1765,7 +1765,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Golden Pup" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Golden Pup (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD06E" id="White Cat Generator">
@@ -1782,7 +1782,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="White Cat" cooldown="10">PermaPet</Activate>
+		<Activate objectId="White Cat (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD06F" id="Blue Snail Generator">
@@ -1798,7 +1798,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Blue Snail" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Blue Snail (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD070" id="Grey Wolf Generator">
@@ -1814,7 +1814,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Grey Wolf" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Grey Wolf (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD071" id="Brown Fox Generator">
@@ -1830,7 +1830,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Brown Fox" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Brown Fox (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD072" id="Green Frog Generator">
@@ -1846,7 +1846,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Green Frog" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Green Frog (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD073" id="Lion Generator">
@@ -1862,7 +1862,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Lion" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Lion (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD074" id="Penguin Generator">
@@ -1878,7 +1878,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Penguin" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Penguin (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD075" id="Sheepdog Generator">
@@ -1894,7 +1894,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Sheepdog" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Sheepdog (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD076" id="Panda Generator">
@@ -1910,7 +1910,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Panda" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Panda (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD077" id="Purple Snail Generator">
@@ -1927,7 +1927,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Purple Snail" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Purple Snail (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD078" id="Black Wolf Generator">
@@ -1945,7 +1945,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Black Wolf" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Black Wolf (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD079" id="Grey Fox Generator">
@@ -1962,7 +1962,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Grey Fox" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Grey Fox (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD07A" id="Purple Frog Generator">
@@ -1979,7 +1979,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Purple Frog" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Purple Frog (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD07B" id="White Lion Generator">
@@ -1996,7 +1996,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="White Lion" cooldown="10">PermaPet</Activate>
+		<Activate objectId="White Lion (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD07C" id="Green Penguin Generator">
@@ -2013,7 +2013,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Green Penguin" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Green Penguin (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD07D" id="Golden Sheepdog Generator">
@@ -2030,7 +2030,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Golden Sheepdog" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Golden Sheepdog (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD07E" id="Bluebird Generator">
@@ -2046,7 +2046,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Bluebird" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Bluebird (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD07F" id="Chick Generator">
@@ -2062,7 +2062,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Chick" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Chick (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD080" id="Pig Generator">
@@ -2078,7 +2078,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Pig" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Pig (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD081" id="Sea Slurp Generator">
@@ -2094,7 +2094,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Sea Slurp" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Sea Slurp (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD082" id="Squirrel Generator">
@@ -2110,7 +2110,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Squirrel" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Squirrel (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD083" id="Bat Generator">
@@ -2126,7 +2126,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Bat" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Bat (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD084" id="Lil' Ghost Generator">
@@ -2142,7 +2142,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Lil' Ghost" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Lil' Ghost (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD085" id="Doomie Heart">
@@ -2173,7 +2173,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Leprechaun" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Leprechaun (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD087" id="Toucan Generator">
@@ -2189,7 +2189,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Toucan" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Toucan (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD088" id="Skunk Generator">
@@ -2205,7 +2205,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Skunk" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Skunk (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD089" id="Mallard Generator">
@@ -2221,7 +2221,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Mallard" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Mallard (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD08A" id="Duck Generator">
@@ -2237,7 +2237,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Duck" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Duck (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD08B" id="Eagle Generator">
@@ -2253,7 +2253,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Eagle" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Eagle (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD08C" id="Turtle Generator">
@@ -2269,7 +2269,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Turtle" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Turtle (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD08D" id="Jelly Generator">
@@ -2285,7 +2285,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Jelly" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Jelly (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD08E" id="Bee Generator">
@@ -2301,7 +2301,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Bee" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Bee (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD08F" id="Raven Generator">
@@ -2317,7 +2317,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Raven" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Raven (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD090" id="Purple Penguin Generator">
@@ -2349,7 +2349,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Grass Penguin" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Grass Penguin (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD092" id="Elf Generator">
@@ -2365,7 +2365,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Elf" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Elf (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD093" id="Crab Generator">
@@ -2381,7 +2381,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Crab" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Crab (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD094" id="Hamster Generator">
@@ -2397,7 +2397,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Hamster" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Hamster (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD095" id="Dino Generator">
@@ -2413,7 +2413,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Dino" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Dino (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD096" id="Elephant Generator">
@@ -2429,7 +2429,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Elephant" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Elephant (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD097" id="Demon Frog Generator">
@@ -2445,7 +2445,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Demon Frog" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Demon Frog (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD098" id="Gargoyle Generator">
@@ -2461,7 +2461,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Gargoyle" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Gargoyle (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD099" id="Gummy Bear Generator">
@@ -2477,7 +2477,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Gummy Bear" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Gummy Bear (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD09A" id="Dragonfly Generator">
@@ -2493,7 +2493,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Dragonfly" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Dragonfly (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD09B" id="Lil' Cyclops Generator">
@@ -2509,7 +2509,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Lil' Cyclops" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Lil' Cyclops (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD09C" id="Snowy Owl Generator">
@@ -2525,7 +2525,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Snowy Owl" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Snowy Owl (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD09D" id="Turkey Generator">
@@ -2541,7 +2541,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Turkey" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Turkey (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD09E" id="Baby Generator">
@@ -2557,7 +2557,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Baby" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Baby (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD09F" id="Baby Dragon Generator">
@@ -2573,7 +2573,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Baby Dragon" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Baby Dragon (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD0A0" id="Karate Penguin Red Generator">
@@ -2653,7 +2653,7 @@
 		<Sound>spell/light_heal</Sound>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Robobuddy" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Robobuddy (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
 	<Object type="0xD0A5" id="Snowman Generator">
@@ -5306,7 +5306,7 @@
 		<ScaleValue>3</ScaleValue>
 		<InvUse />
 		<VaultItem />
-		<Activate objectId="Shroom" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Shroom (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 		<Shop>
 			<Name>donorpets</Name>
@@ -5963,7 +5963,7 @@
 		<Description>Every evil boss creates miniature versions of himself.  It's just something they do.</Description>
 		<Sound>spell/light_heal</Sound>
 		<Consumable />
-		<Activate objectId="Lil' Oryx" cooldown="10">PermaPet</Activate>
+		<Activate objectId="Lil' Oryx (Doomed)" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 		<Shop>
 			<Name>donor</Name>
@@ -9254,5 +9254,741 @@
 		<Activate effect="Armored" duration="6" range="4">ConditionEffectAura</Activate>
 		<Activate effect="Damaging" duration="6">ConditionEffectSelf</Activate>
 		<Cooldown>7</Cooldown>
+	</Object>
+	<Object type="0xD20B" id="Black Cat (Doomed)">
+		<DisplayId>Black Cat</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x00</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD20C" id="Grey Cat (Doomed)">
+		<DisplayId>Grey Cat</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x01</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD20D" id="Orange Cat (Doomed)">
+		<DisplayId>Orange Cat</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x02</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD20E" id="Tan Cat (Doomed)">
+		<DisplayId>Tan Cat</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x02</Index>
+		</AnimatedTexture>
+		<Tex1>0x1ce9f32</Tex1>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD20F" id="Yellow Cat (Doomed)">
+		<DisplayId>Yellow Cat</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x02</Index>
+		</AnimatedTexture>
+		<Tex1>0x1cbc916</Tex1>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD210" id="Brown Pup (Doomed)">
+		<DisplayId>Brown Pup</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x05</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD211" id="Grey Pup (Doomed)">
+		<DisplayId>Grey Pup</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x05</Index>
+		</AnimatedTexture>
+		<Tex1>0x1767676</Tex1>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD212" id="Golden Pup (Doomed)">
+		<DisplayId>Golden Pup</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x05</Index>
+		</AnimatedTexture>
+		<Tex1>0x1ce9f32</Tex1>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD213" id="White Cat (Doomed)">
+		<DisplayId>White Cat</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x00</Index>
+		</AnimatedTexture>
+		<Tex1>0x1ffffff</Tex1>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD214" id="Blue Snail (Doomed)">
+		<DisplayId>Blue Snail</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x03</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD215" id="Grey Wolf (Doomed)">
+		<DisplayId>Grey Wolf</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x04</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD216" id="Brown Fox (Doomed)">
+		<DisplayId>Brown Fox</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x06</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD217" id="Green Frog (Doomed)">
+		<DisplayId>Green Frog</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x07</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>80</Size>
+	</Object>
+	<Object type="0xD218" id="Lion (Doomed)">
+		<DisplayId>Lion</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x08</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>80</Size>
+	</Object>
+	<Object type="0xD219" id="Penguin (Doomed)">
+		<DisplayId>Penguin</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x09</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD21A" id="Sheepdog (Doomed)">
+		<DisplayId>Sheepdog</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x0a</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD21B" id="Panda (Doomed)">
+		<DisplayId>Panda</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x0b</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD21C" id="Purple Snail (Doomed)">
+		<DisplayId>Purple Snail</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x03</Index>
+		</AnimatedTexture>
+		<Tex2>0x19829f6</Tex2>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD21D" id="Black Wolf (Doomed)">
+		<DisplayId>Black Wolf</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x04</Index>
+		</AnimatedTexture>
+		<Tex1>0x1333333</Tex1>
+		<Tex2>0x1ff0000</Tex2>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD21E" id="Grey Fox (Doomed)">
+		<DisplayId>Grey Fox</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x06</Index>
+		</AnimatedTexture>
+		<Tex1>0x1808080</Tex1>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD21F" id="Purple Frog (Doomed)">
+		<DisplayId>Purple Frog</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x07</Index>
+		</AnimatedTexture>
+		<Tex1>0x19829f6</Tex1>
+		<NoMiniMap />
+		<Size>80</Size>
+	</Object>
+	<Object type="0xD220" id="White Lion (Doomed)">
+		<DisplayId>White Lion</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x08</Index>
+		</AnimatedTexture>
+		<Tex1>0x1d0d0d0</Tex1>
+		<NoMiniMap />
+		<Size>80</Size>
+	</Object>
+	<Object type="0xD221" id="Green Penguin (Doomed)">
+		<DisplayId>Green Penguin</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x09</Index>
+		</AnimatedTexture>
+		<Tex1>0x1005302</Tex1>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD222" id="Golden Sheepdog (Doomed)">
+		<DisplayId>Golden Sheepdog</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x0a</Index>
+		</AnimatedTexture>
+		<Tex1>0x1cf9700</Tex1>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD223" id="Bluebird (Doomed)">
+		<DisplayId>Bluebird</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x0c</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD224" id="Chick (Doomed)">
+		<DisplayId>Chick</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x0d</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD225" id="Pig (Doomed)">
+		<DisplayId>Pig</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x0e</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD226" id="Sea Slurp (Doomed)">
+		<DisplayId>Sea Slurp</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>0x0f</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD227" id="Squirrel (Doomed)">
+		<DisplayId>Squirrel</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>18</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Flying />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD228" id="Bat (Doomed)">
+		<DisplayId>Bat</DisplayId>
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x18</Index>
+		</Texture>
+		<Animation prob="1.0" period="0.0">
+			<Frame time=".15">
+				<Texture>
+					<File>drLofiChar28x8</File>
+					<Index>0x18</Index>
+				</Texture>
+			</Frame>
+			<Frame time=".15">
+				<Texture>
+					<File>drLofiChar28x8</File>
+					<Index>0x19</Index>
+				</Texture>
+			</Frame>
+		</Animation>
+		<NoMiniMap />
+		<Z>0.24</Z>
+		<Flying />
+		<Size>60</Size>
+		<ShadowSize>80</ShadowSize>
+	</Object>
+	<Object type="0xD229" id="Lil' Ghost (Doomed)">
+		<DisplayId>Lil' Ghost</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>16</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Z>0.15</Z>
+		<Flying />
+		<Size>60</Size>
+		<ShadowSize>80</ShadowSize>
+	</Object>
+	<Object type="0xD22A" id="Leprechaun (Doomed)">
+		<DisplayId>Leprechaun</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>17</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD22B" id="Toucan (Doomed)">
+		<DisplayId>Toucan</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>19</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+		<WhileMoving>
+			<Z>0.35</Z>
+			<Flying />
+		</WhileMoving>
+	</Object>
+	<Object type="0xD22C" id="Skunk (Doomed)">
+		<DisplayId>Skunk</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>20</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD22D" id="Mallard (Doomed)">
+		<DisplayId>Mallard</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>21</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD22E" id="Duck (Doomed)">
+		<DisplayId>Duck</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>22</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD22F" id="Eagle (Doomed)">
+		<DisplayId>Eagle</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>23</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+		<WhileMoving>
+			<Z>0.35</Z>
+			<Flying />
+		</WhileMoving>
+	</Object>
+	<Object type="0xD230" id="Turtle (Doomed)">
+		<DisplayId>Turtle</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>24</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD231" id="Jelly (Doomed)">
+		<DisplayId>Jelly</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>25</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+		<ShadowSize>80</ShadowSize>
+	</Object>
+	<Object type="0xD232" id="Bee (Doomed)">
+		<DisplayId>Bee</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>26</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drChars8x8rPets1</File>
+				<Index>27</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<NoMiniMap />
+		<Z>0.25</Z>
+		<Flying />
+		<ShadowSize>60</ShadowSize>
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD233" id="Raven (Doomed)">
+		<DisplayId>Raven</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>28</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+		<WhileMoving>
+			<Z>0.35</Z>
+			<Flying />
+		</WhileMoving>
+	</Object>
+	<Object type="0xD234" id="Grass Penguin (Doomed)">
+		<DisplayId>Grass Penguin</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>30</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+		<ShadowSize>80</ShadowSize>
+	</Object>
+	<Object type="0xD235" id="Elf (Doomed)">
+		<DisplayId>Elf</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>31</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+		<ShadowSize>80</ShadowSize>
+	</Object>
+	<Object type="0xD236" id="Crab (Doomed)">
+		<DisplayId>Crab</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>32</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+		<ShadowSize>80</ShadowSize>
+	</Object>
+	<Object type="0xD237" id="Hamster (Doomed)">
+		<DisplayId>Hamster</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>33</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD238" id="Dino (Doomed)">
+		<DisplayId>Dino</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>34</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD239" id="Elephant (Doomed)">
+		<DisplayId>Elephant</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>35</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD23A" id="Demon Frog (Doomed)">
+		<DisplayId>Demon Frog</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>36</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD23B" id="Gargoyle (Doomed)">
+		<DisplayId>Gargoyle</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>37</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+		<WhileMoving>
+			<Z>0.25</Z>
+			<Flying />
+		</WhileMoving>
+	</Object>
+	<Object type="0xD23C" id="Gummy Bear (Doomed)">
+		<DisplayId>Gummy Bear</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>38</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD23D" id="Dragonfly (Doomed)">
+		<DisplayId>Dragonfly</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>39</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drChars8x8rPets1</File>
+				<Index>40</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<NoMiniMap />
+		<Z>0.25</Z>
+		<Flying />
+		<ShadowSize>60</ShadowSize>
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD23E" id="Lil' Cyclops (Doomed)">
+		<DisplayId>Lil' Cyclops</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>42</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD23F" id="Snowy Owl (Doomed)">
+		<DisplayId>Snowy Owl</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>43</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+		<ShadowSize>80</ShadowSize>
+		<WhileMoving>
+			<Z>0.24</Z>
+			<Flying />
+		</WhileMoving>
+	</Object>
+	<Object type="0xD240" id="Turkey (Doomed)">
+		<DisplayId>Turkey</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>44</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD241" id="Baby (Doomed)">
+		<DisplayId>Baby</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>45</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD242" id="Baby Dragon (Doomed)">
+		<DisplayId>Baby Dragon</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>46</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD243" id="Robobuddy (Doomed)">
+		<DisplayId>Robobuddy</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rPets1</File>
+			<Index>51</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>60</Size>
+	</Object>
+	<Object type="0xD244" id="Shroom (Doomed)">
+		<DisplayId>Shroom</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dMountains1</File>
+			<Index>0x1d</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<ShadowSize>120</ShadowSize>
+		<NoMiniMap />
+		<Projectile id="0">
+			<ObjectId>Small Mush Proj 1</ObjectId>
+			<Speed>150</Speed>
+			<Damage>185</Damage>
+			<LifetimeMS>1800</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Large Mush Proj 1</ObjectId>
+			<Speed>150</Speed>
+			<Damage>310</Damage>
+			<LifetimeMS>1800</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD245" id="Lil' Oryx (Doomed)">
+		<DisplayId>Lil' Oryx</DisplayId>
+		<Class>Character</Class>
+		<Group>Hexable</Group>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>36</Index>
+		</AnimatedTexture>
+		<Projectile id="0">
+			<ObjectId>Kythal Proj 1</ObjectId>
+			<Speed>150</Speed>
+			<Damage>185</Damage>
+			<LifetimeMS>1800</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Kythal Proj 2</ObjectId>
+			<Speed>150</Speed>
+			<Damage>310</Damage>
+			<LifetimeMS>1800</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<NoMiniMap />
+		<Size>40</Size>
+		<ShadowSize>70</ShadowSize>
 	</Object>
 </Objects>

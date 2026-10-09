@@ -90,6 +90,7 @@ namespace WorldServer.logic
                 catch (Exception e)
                 {
                     Console.WriteLine($"[Behavior] {id} Error -> {e}");
+                    Log.Error($"[Behavior] {id} Error -> {e.Message}");
                 }
                 return this;
             }

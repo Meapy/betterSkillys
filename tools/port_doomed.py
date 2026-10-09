@@ -161,13 +161,41 @@ def select(dr, bs):
             skipped[oid] = "opens " + portals[0]
             continue
         chosen[oid] = o
-    # add what they reference (projectile objects, pets, ...), transitively
+    # add what they reference (projectile objects, pets, ...), transitively. A referenced Doomed
+    # Realms character whose id betterSkillys uses for something else (e.g. "Black Cat", a pet-yard
+    # Pet there) is ported under its own id, "<id> (Doomed)", keeping its display name.
+    renames = {}
     todo = list(chosen.values())
     while todo:
         for ref in references(todo.pop()):
-            if ref in dr and ref not in bs and ref not in chosen and dr[ref].findtext("Class") != "Portal":
-                chosen[ref] = dr[ref]
-                todo.append(dr[ref])
+            if ref not in dr or ref in chosen or ref in renames or dr[ref].findtext("Class") == "Portal":
+                continue
+            if ref in bs:
+                if dr[ref].findtext("Class") != "Character" or bs[ref].findtext("Class") == "Character":
+                    continue
+                renames[ref] = ref + " (Doomed)"
+                continue
+            chosen[ref] = dr[ref]
+            todo.append(dr[ref])
+    for old, new in renames.items():
+        o = copy.deepcopy(dr[old])
+        o.set("id", new)
+        if o.find("DisplayId") is None:
+            display = ET.Element("DisplayId")
+            display.text = old
+            o.insert(0, display)
+        chosen[new] = o
+    if renames:
+        for oid in list(chosen):
+            o = chosen[oid] if oid in renames.values() else copy.deepcopy(chosen[oid])
+            for a in list(o.iter("Activate")) + list(o.iter("ActivateOnEquip")):
+                if a.get("objectId") in renames:
+                    a.set("objectId", renames[a.get("objectId")])
+            for p in o.iter("Projectile"):
+                oid_el = p.find("ObjectId")
+                if oid_el is not None and (oid_el.text or "").strip() in renames:
+                    oid_el.text = renames[oid_el.text.strip()]
+            chosen[oid] = o
     return chosen, skipped
 
 
