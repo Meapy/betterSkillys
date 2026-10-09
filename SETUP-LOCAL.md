@@ -52,6 +52,25 @@ source\Redis\redis-cli.exe hset account.2 rank 6
 
 The new rank applies from the player's next login. The commands are in `source/WorldServer/core/commands/`.
 
+Full admin powers come from a separate `admin` flag. It passes every command check, and lets the player fire items from any inventory slot (for the admin class weapons) and visit other players' vaults. It is stored as a single byte:
+
+```
+echo HSET account.2 admin "\x01" | source\Redis\redis-cli.exe
+```
+
+## Code history
+
+The `local` branch is HaloCelsius/betterSkillys, plus this setup, merged with [Aurusenth/betterSkillys](https://github.com/Aurusenth/betterSkillys) (remote `aurusenth`). Aurusenth adds item tiers and glow, an admin class, the Admin Arena and Shaitan dungeons, Battle for the Nexus, a new nexus and vault, and more.
+
+To pick up later changes:
+
+```
+git fetch aurusenth
+git merge aurusenth/main
+```
+
+In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and projectile-count checks for players who aren't admins.
+
 ## Changes from upstream
 
 - `client/src/WebMain.as`: on a first run the map scale setting (`mscale`) is undefined until the player enters the game. The first window resize divided by it and asked for a 0-pixel-wide Stage3D back buffer (Error #3780); it now defaults to 1.
