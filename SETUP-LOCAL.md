@@ -76,3 +76,23 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
 - `client/src/WebMain.as`: on a first run the map scale setting (`mscale`) is undefined until the player enters the game. The first window resize divided by it and asked for a 0-pixel-wide Stage3D back buffer (Error #3780); it now defaults to 1.
 - `source/App`: `char/list` and `app/serverList` send 127.0.0.1 as the world server address to clients on this PC.
 - `wServer.json`: port 2051 instead of 2050, and the public address.
+
+## Content ported from Doomed Realms
+
+- **Commands:** `source/WorldServer/core/commands/doomed/DoomedRealmsCommands.cs` has 29 commands:
+  - Everyone: `/swho`, `/getquest`, `/rules`, `/stats`, `/nothing`.
+  - Supporter: `/d`, `/say`, `/stars`.
+  - Admin: `/level`, `/summon`, `/god`, `/ci`, `/fame`, `/gold`, `/hp`, `/mp`, `/att`, `/def`, `/spd`, `/dex`, `/vit`, `/wis`, `/addeff`, `/remeff`, `/osay`, `/kill`, `/rank`, `/ip`.
+- **Items and pets:** `python tools\port_doomed.py --dr "..\Doomed Realms\Doomed Realms"` regenerates them:
+  - About 390 items and dyes, 122 pets and their projectiles, written to `custom/DoomedRealms.xml` for both the server and the client.
+  - Type codes are 0xD000–0xDFFF. `tools/doomed/types.json` keeps them stable, because characters store items by type.
+  - Sprites use copies of the Doomed Realms sprite sheets, registered with a `dr` prefix (`client/src/kabam/rotmg/assets/doomed`).
+  - Remote textures are saved in `tools/doomed/remote`.
+  - Pets whose id is already used in betterSkillys get a " (Doomed)" suffix and keep their display name.
+  - Pet behaviour is in `BehaviorDb.DoomedPets.cs`: PetFollow, plus PetHeal and PetStrike with the Doomed Realms amounts and cooldowns. Pets that fired projectiles hit the nearest enemy directly for that projectile's damage.
+  - Doomed Realms items are kept out of the random tier drops.
+- **Chat:** public chat no longer needs 2 stars (`PlayerTextHandler.cs`).
+- **Not ported yet:**
+  - The abilities of the Doomed Realms classes (turrets, halos, summon scrolls, samurai cuts, pearls) and the classes themselves.
+  - The dungeons, their monsters and keys.
+  - Commands that depend on those systems (forge, shop, arenas, ...).
