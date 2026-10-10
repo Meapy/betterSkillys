@@ -280,6 +280,7 @@ public class EmbeddedData
         private static const customEntities:Class = CustomEntities;
         private static const customItems:Class = CustomItems;
         private static const customProj:Class = CustomProj;
+        private static const doomedRealmsGrounds:Class = DoomedRealmsGrounds;
         private static const doomedRealms:Class = DoomedRealms;
 
         public static const skins:Array = [new SkinsCXML()];
@@ -315,7 +316,8 @@ public class EmbeddedData
             new oryxSanctuaryGroundCXML(),
             new archbishopGroundCXML(),
             new ancientRuinsGroundCXML(),
-            new customGrounds()
+            new customGrounds(),
+            new doomedRealmsGrounds()
         ];
 
         public static const objectFiles:Array = [

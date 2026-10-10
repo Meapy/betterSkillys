@@ -5373,6 +5373,66 @@
 		<Activate objectId="Nightmareee" cooldown="10">PermaPet</Activate>
 		<OldSound>use_potion</OldSound>
 	</Object>
+	<Object type="0xD148" id="Lil' Oryx 2">
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>oryxSanctuaryChars16x16</File>
+			<Index>15</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>140</Size>
+		<Projectile id="0">
+			<ObjectId>Fire Bolt</ObjectId>
+			<Damage>335</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Green Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Blade</ObjectId>
+			<Damage>440</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>450</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Purple Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Blue Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>105</Speed>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Blue Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>45</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Red Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<ArmorPiercing />
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Fire Boomerang</ObjectId>
+			<Damage>100</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<Boomerang />
+			<MultiHit />
+		</Projectile>
+	</Object>
 	<Object type="0xD149" id="TestAuraa">
 		<Class>Character</Class>
 		<AnimatedTexture>
@@ -5389,6 +5449,66 @@
 			<Boomerang />
 			<MultiHit />
 			<Size>50</Size>
+		</Projectile>
+	</Object>
+	<Object type="0xD14A" id="Lil' Oryx 3">
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>oryxSanctuaryChars16x16</File>
+			<Index>15</Index>
+		</AnimatedTexture>
+		<NoMiniMap />
+		<Size>140</Size>
+		<Projectile id="0">
+			<ObjectId>Fire Bolt</ObjectId>
+			<Damage>335</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Green Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Blade</ObjectId>
+			<Damage>440</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>450</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Purple Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Blue Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>105</Speed>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Blue Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>45</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Red Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<ArmorPiercing />
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Fire Boomerang</ObjectId>
+			<Damage>100</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<Boomerang />
+			<MultiHit />
 		</Projectile>
 	</Object>
 	<Object type="0xD14B" id="Zombie Penguin Generator">
@@ -12009,5 +12129,5478 @@
 			<File>drLofiObj6</File>
 			<Index>0xd8</Index>
 		</Texture>
+	</Object>
+	<Object type="0xD2AF" id="Kitchen Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Kitchen</DungeonName>
+		<Texture>
+			<File>drLofiEnvironment</File>
+			<Index>0x7c</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2B0" id="April Fools Chicken">
+		<DisplayId>April Fools Chicken</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16rEncounters</File>
+			<Index>22</Index>
+		</AnimatedTexture>
+		<MaxHitPoints>65000</MaxHitPoints>
+		<Defense>55</Defense>
+		<XpMult>0.35</XpMult>
+		<Size>150</Size>
+		<ShadowSize>300</ShadowSize>
+		<HitSound>monster/chicken_hit</HitSound>
+		<DeathSound>monster/chicken_death</DeathSound>
+		<Projectile id="0">
+			<ObjectId>Pink Dot</ObjectId>
+			<Damage>100</Damage>
+			<Speed>65</Speed>
+			<Size>120</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Rainbow Magic</ObjectId>
+			<Damage>150</Damage>
+			<Speed>40</Speed>
+			<Size>120</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Rainbow Magic Star Super</ObjectId>
+			<Damage>300</Damage>
+			<Speed>20</Speed>
+			<Size>200</Size>
+			<LifetimeMS>3500</LifetimeMS>
+			<MultiHit />
+			<ConditionEffect duration="5">Confused</ConditionEffect>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Rainbow Magic Star</ObjectId>
+			<Damage>150</Damage>
+			<Speed>50</Speed>
+			<Size>100</Size>
+			<LifetimeMS>2250</LifetimeMS>
+			<MultiHit />
+			<ConditionEffect duration="2.5">Confused</ConditionEffect>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Rainbow Blaster</ObjectId>
+			<Damage>100</Damage>
+			<Speed>75</Speed>
+			<Size>140</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Pink Dot</ObjectId>
+			<Damage>100</Damage>
+			<Speed>45</Speed>
+			<Size>140</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Feather</ObjectId>
+			<Damage>0</Damage>
+			<Speed>30</Speed>
+			<Size>80</Size>
+			<LifetimeMS>1200</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Rainbow Baller</ObjectId>
+			<Damage>100</Damage>
+			<Speed>65</Speed>
+			<Size>100</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Rainbow Baller</ObjectId>
+			<Damage>150</Damage>
+			<Speed>40</Speed>
+			<Size>140</Size>
+			<LifetimeMS>2000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2B1" id="April Fools Egg">
+		<DisplayId>Egg</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiObjBig</File>
+			<Index>0x27</Index>
+		</Texture>
+		<AltTexture id="1">
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x28</Index>
+			</Texture>
+		</AltTexture>
+		<AltTexture id="2">
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x29</Index>
+			</Texture>
+		</AltTexture>
+		<AltTexture id="3">
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x2a</Index>
+			</Texture>
+		</AltTexture>
+		<AltTexture id="4">
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x2b</Index>
+			</Texture>
+		</AltTexture>
+		<HitSound>monster/eggs_hit</HitSound>
+		<DeathSound>monster/eggs_death</DeathSound>
+		<MaxHitPoints>650000</MaxHitPoints>
+		<Defense>0</Defense>
+		<XpMult>0.0</XpMult>
+		<Size>130</Size>
+		<ShadowSize>100</ShadowSize>
+	</Object>
+	<Object type="0xD2B2" id="Island Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x75</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to the Forgotten Island.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Island Portal">CreatePortal</Activate>
+	</Object>
+	<Object type="0xD2B3" id="Island Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Forgotten Island</DungeonName>
+		<Texture>
+			<File>drLofiEnvironment</File>
+			<Index>0x7c</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2B4" id="Septavius Summoner">
+		<Class>Character</Class>
+		<Texture>
+			<File>invisible</File>
+			<Index>0</Index>
+		</Texture>
+		<NoMiniMap />
+		<MaxHitPoints>10</MaxHitPoints>
+		<Size>0</Size>
+	</Object>
+	<Object type="0xD2B5" id="Wood Panel Big Window A">
+		<Class>Wall</Class>
+		<Texture>
+			<File>drLofiEnvironment3</File>
+			<Index>0xe9</Index>
+		</Texture>
+		<Top>
+			<Texture>
+				<File>drLofiEnvironment2</File>
+				<Index>0x58</Index>
+			</Texture>
+		</Top>
+		<HitSound>monster/wooden_walls_hit</HitSound>
+		<DeathSound>monster/wooden_walls_death</DeathSound>
+		<Static />
+		<FullOccupy />
+		<OccupySquare />
+		<EnemyOccupySquare />
+		<BlocksSight />
+	</Object>
+	<Object type="0xD2B6" id="Wood Panel Big Window B">
+		<Class>Wall</Class>
+		<Texture>
+			<File>drLofiEnvironment3</File>
+			<Index>0xea</Index>
+		</Texture>
+		<Top>
+			<Texture>
+				<File>drLofiEnvironment2</File>
+				<Index>0x58</Index>
+			</Texture>
+		</Top>
+		<HitSound>monster/wooden_walls_hit</HitSound>
+		<DeathSound>monster/wooden_walls_death</DeathSound>
+		<Static />
+		<FullOccupy />
+		<OccupySquare />
+		<EnemyOccupySquare />
+		<BlocksSight />
+	</Object>
+	<Object type="0xD2B7" id="Battle Arena Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Battle Arena</DungeonName>
+		<Texture>
+			<File>drLofiEnvironment</File>
+			<Index>0x5b</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2B8" id="Hash Cellar Incantation">
+		<Class>Equipment</Class>
+		<Item />
+		<Key>500</Key>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x14a</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>
+      An incantation that leads to the Hash Cellar, which lies beneath the Wine Cellar.
+    </Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Hash Cellar Portal">CreatePortal</Activate>
+	</Object>
+	<Object type="0xD2B9" id="Hash Cellar Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Hash Cellar</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x149</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2BA" id="Free Battle Arena Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Free Battle Arena</DungeonName>
+		<Texture>
+			<File>drLofiEnvironment</File>
+			<Index>0x5b</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2BB" id="Secret Portal">
+		<DisplayId>?????</DisplayId>
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>?????</DungeonName>
+		<Texture>
+			<File>drLofiEnvironment</File>
+			<Index>0x7c</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2BC" id="Zombies Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Zombies</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x11e</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2BD" id="Zombies Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x11f</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key that opens a portal to Zombies mode.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Zombies Portal">CreatePortal</Activate>
+	</Object>
+	<Object type="0xD2BE" id="Mega Sheep">
+		<Enemy />
+		<God />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rBeach</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/djinn_hit</HitSound>
+		<DeathSound>monster/djinn_death</DeathSound>
+		<MaxHitPoints>85000</MaxHitPoints>
+		<Projectile id="0">
+			<ObjectId>SheepProj</ObjectId>
+			<Speed>65</Speed>
+			<Damage>130</Damage>
+			<LifetimeMS>1000</LifetimeMS>
+			<Size>100</Size>
+			<ConditionEffect duration="4">Bleeding</ConditionEffect>
+		</Projectile>
+		<Defense>50</Defense>
+		<KeepDamageRecord />
+		<Size>500</Size>
+		<XpMult>7.0</XpMult>
+	</Object>
+	<Object type="0xD2BF" id="SheepProj">
+		<Class>Projectile</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rBeach</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Rotation>180</Rotation>
+	</Object>
+	<Object type="0xD2C0" id="Mega Sheep Minion">
+		<Group>Sheep</Group>
+		<Enemy />
+		<HitSound>monster/djinn_hit</HitSound>
+		<DeathSound>monster/djinn_death</DeathSound>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rBeach</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<XpMult>7.0</XpMult>
+	</Object>
+	<Object type="0xD2C1" id="Oryx the Mad God 4">
+		<DisplayId>Oryx the Mad God</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_935820711</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/oryx_hit</HitSound>
+		<DeathSound>monster/oryx_death</DeathSound>
+		<Quest />
+		<God />
+		<Oryx />
+		<StasisImmune />
+		<NoArticle />
+		<Size>170</Size>
+		<MaxHitPoints>150000</MaxHitPoints>
+		<Defense>65</Defense>
+		<XpMult>0.65</XpMult>
+		<Projectile id="0">
+			<ObjectId>White Bullet</ObjectId>
+			<Speed>30</Speed>
+			<Damage>260</Damage>
+			<Size>120</Size>
+			<LifetimeMS>700</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>White Flame</ObjectId>
+			<Speed>100</Speed>
+			<Damage>480</Damage>
+			<Size>250</Size>
+			<LifetimeMS>800</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>White Bolt</ObjectId>
+			<Speed>80</Speed>
+			<Damage>190</Damage>
+			<LifetimeMS>1600</LifetimeMS>
+			<ArmorPiercing />
+			<MultiHit />
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Fire Bolt</ObjectId>
+			<Speed>100</Speed>
+			<Damage>140</Damage>
+			<LifetimeMS>2000</LifetimeMS>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Green Star</ObjectId>
+			<Speed>80</Speed>
+			<Damage>160</Damage>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="9">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>White Blue Bubble</ObjectId>
+			<Speed>30</Speed>
+			<Damage>200</Damage>
+			<Size>90</Size>
+			<LifetimeMS>4000</LifetimeMS>
+			<ConditionEffect duration="3">Weak</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>White Ball</ObjectId>
+			<Speed>30</Speed>
+			<Damage>220</Damage>
+			<Size>100</Size>
+			<LifetimeMS>800</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Silver Shield</ObjectId>
+			<Speed>30</Speed>
+			<Damage>390</Damage>
+			<Size>130</Size>
+			<LifetimeMS>500</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>White Bullet</ObjectId>
+			<Speed>40</Speed>
+			<Damage>190</Damage>
+			<Size>90</Size>
+			<LifetimeMS>2500</LifetimeMS>
+			<ConditionEffect duration="2">Blind</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="9">
+			<ObjectId>White Bullet</ObjectId>
+			<Speed>55</Speed>
+			<Damage>450</Damage>
+			<Size>200</Size>
+			<LifetimeMS>2100</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="12">
+			<ObjectId>White Bullet</ObjectId>
+			<Speed>30</Speed>
+			<Damage>220</Damage>
+			<Size>75</Size>
+			<LifetimeMS>1900</LifetimeMS>
+		</Projectile>
+		<Projectile id="13">
+			<ObjectId>Dark Gray Spinner</ObjectId>
+			<Speed>90</Speed>
+			<Size>100</Size>
+			<Damage>10</Damage>
+			<LifetimeMS>1800</LifetimeMS>
+			<ConditionEffect duration="8">Quiet</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="14">
+			<ObjectId>Gray Spinner</ObjectId>
+			<Speed>90</Speed>
+			<Size>100</Size>
+			<Damage>10</Damage>
+			<LifetimeMS>1800</LifetimeMS>
+			<ConditionEffect duration="8">Weak</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="15">
+			<ObjectId>White Ball</ObjectId>
+			<Speed>10</Speed>
+			<Size>100</Size>
+			<Damage>200</Damage>
+			<LifetimeMS>2000</LifetimeMS>
+			<Parametric />
+			<Magnitude>1</Magnitude>
+			<ConditionEffect duration="8">Weak</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="16">
+			<ObjectId>White Superblast</ObjectId>
+			<Speed>55</Speed>
+			<Size>240</Size>
+			<Damage>410</Damage>
+			<LifetimeMS>3000</LifetimeMS>
+			<MultiHit />
+			<ConditionEffect duration="4">Weak</ConditionEffect>
+		</Projectile>
+		<Projectile id="17">
+			<ObjectId>White Ball Blast</ObjectId>
+			<Speed>85</Speed>
+			<Size>120</Size>
+			<Damage>280</Damage>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="18">
+			<ObjectId>White Star Stunner</ObjectId>
+			<Speed>40</Speed>
+			<Size>100</Size>
+			<Damage>500</Damage>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="4">Dazed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="19">
+			<ObjectId>White Ball Blast</ObjectId>
+			<Speed>35</Speed>
+			<Size>90</Size>
+			<Damage>200</Damage>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="3">Weak</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2C2" id="Knight of Doom">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_9772594</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound />
+		<DeathSound />
+		<Size>100</Size>
+		<MaxHitPoints>5000</MaxHitPoints>
+		<Defense>75</Defense>
+		<XpMult>0.1</XpMult>
+		<Projectile id="0">
+			<ObjectId>Knight DoomB</ObjectId>
+			<Damage>300</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>350</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2C3" id="Tree of Doom">
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_220164173</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/trees_hit</HitSound>
+		<DeathSound>monster/trees_death</DeathSound>
+		<MaxHitPoints>2000</MaxHitPoints>
+		<Size>140</Size>
+		<Enemy />
+		<XpMult>0.0</XpMult>
+	</Object>
+	<Object type="0xD2C4" id="Doom Crystal Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Key>30</Key>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x14d</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to the Forgotten Island.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Doom Crystal Portal">CreatePortal</Activate>
+	</Object>
+	<Object type="0xD2C5" id="Doom Crystal Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Doom Crystal Dungeon</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x14c</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2C6" id="Doomed Cellar Incantation">
+		<Class>Equipment</Class>
+		<Item />
+		<Key>1000</Key>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x14b</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>
+      An incantation that leads to the Doomed Cellar, which lies beneath the Hash Cellar.
+    </Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Doomed Cellar Portal">CreatePortal</Activate>
+	</Object>
+	<Object type="0xD2C7" id="Doomed Cellar Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Doomed Cellar</DungeonName>
+		<Texture>
+			<File>drRemote_draw_16642062</File>
+			<Index>0</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2C8" id="Green Power Orb">
+		<Class>Projectile</Class>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x134</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2C9" id="Red Power Orb">
+		<Class>Projectile</Class>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x132</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2CA" id="Blue Power Orb">
+		<Class>Projectile</Class>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x130</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD2CB" id="Green Forest Wisp">
+		<Class>Character</Class>
+		<Group>Forest Wisps</Group>
+		<AnimatedTexture>
+			<File>drRemote_draw_5598893832142848</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ghost_god_hit</HitSound>
+		<DeathSound>monster/djinn_death</DeathSound>
+		<MaxHitPoints>1500</MaxHitPoints>
+		<Defense>25</Defense>
+		<Size>90</Size>
+		<Enemy />
+		<XpMult>1</XpMult>
+		<Projectile id="0">
+			<ObjectId>Green Power Wave</ObjectId>
+			<Damage>20</Damage>
+			<Speed>35</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="5">Slowed</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2CC" id="Blue Forest Wisp">
+		<Class>Character</Class>
+		<Group>Forest Wisps</Group>
+		<AnimatedTexture>
+			<File>drRemote_draw_6518802275631104</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ghost_god_hit</HitSound>
+		<DeathSound>monster/djinn_death</DeathSound>
+		<MaxHitPoints>1500</MaxHitPoints>
+		<Defense>25</Defense>
+		<Size>90</Size>
+		<Enemy />
+		<XpMult>1</XpMult>
+		<Projectile id="0">
+			<ObjectId>Blue Power Wave</ObjectId>
+			<Damage>20</Damage>
+			<Speed>35</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="5">Quiet</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2CD" id="Red Forest Wisp">
+		<Class>Character</Class>
+		<Group>Forest Wisps</Group>
+		<AnimatedTexture>
+			<File>drRemote_draw_5964462121025536</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ghost_god_hit</HitSound>
+		<DeathSound>monster/djinn_death</DeathSound>
+		<MaxHitPoints>1500</MaxHitPoints>
+		<Defense>25</Defense>
+		<Size>90</Size>
+		<Enemy />
+		<XpMult>1</XpMult>
+		<Projectile id="0">
+			<ObjectId>Red Power Wave</ObjectId>
+			<Damage>20</Damage>
+			<Speed>35</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="5">Confused</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2CE" id="Green Guardian Wisp">
+		<Class>Character</Class>
+		<Group>Guardian Wisps</Group>
+		<AnimatedTexture>
+			<File>drRemote_draw_5598893832142848</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ghost_god_hit</HitSound>
+		<DeathSound>monster/djinn_death</DeathSound>
+		<MaxHitPoints>3500</MaxHitPoints>
+		<Defense>25</Defense>
+		<Size>130</Size>
+		<Enemy />
+		<XpMult>1.5</XpMult>
+		<Projectile id="0">
+			<ObjectId>Green Power Wave</ObjectId>
+			<Damage>40</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>75</Size>
+			<ConditionEffect duration="5">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Green Power Orb</ObjectId>
+			<Damage>40</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>40</Size>
+			<ConditionEffect duration="5">Hallucinating</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2CF" id="Blue Guardian Wisp">
+		<Class>Character</Class>
+		<Group>Guardian Wisps</Group>
+		<AnimatedTexture>
+			<File>drRemote_draw_6518802275631104</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ghost_god_hit</HitSound>
+		<DeathSound>monster/djinn_death</DeathSound>
+		<MaxHitPoints>3500</MaxHitPoints>
+		<Defense>25</Defense>
+		<Size>130</Size>
+		<Enemy />
+		<XpMult>1.5</XpMult>
+		<Projectile id="0">
+			<ObjectId>Blue Power Wave</ObjectId>
+			<Damage>40</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>75</Size>
+			<ConditionEffect duration="5">Quiet</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Blue Power Orb</ObjectId>
+			<Damage>40</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>40</Size>
+			<ConditionEffect duration="5">Blind</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2D0" id="Red Guardian Wisp">
+		<Class>Character</Class>
+		<Group>Guardian Wisps</Group>
+		<AnimatedTexture>
+			<File>drRemote_draw_5964462121025536</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ghost_god_hit</HitSound>
+		<DeathSound>monster/djinn_death</DeathSound>
+		<MaxHitPoints>3500</MaxHitPoints>
+		<Defense>25</Defense>
+		<Size>130</Size>
+		<Enemy />
+		<XpMult>1.5</XpMult>
+		<Projectile id="0">
+			<ObjectId>Red Power Wave</ObjectId>
+			<Damage>40</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>80</Size>
+			<ConditionEffect duration="5">Confused</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Red Power Orb</ObjectId>
+			<Damage>40</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>40</Size>
+			<ConditionEffect duration="5">Dazed</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2D1" id="Wisp Queen">
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_5227654307381248</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drRemote_draw_6046102470000640</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="2">
+			<AnimatedTexture>
+				<File>drRemote_draw_5683160285184000</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drRemote_draw_4613116478357504</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/ghost_god_hit</HitSound>
+		<DeathSound>monster/djinn_death</DeathSound>
+		<MaxHitPoints>12500</MaxHitPoints>
+		<Defense>50</Defense>
+		<Size>130</Size>
+		<Enemy />
+		<God />
+		<XpMult>4</XpMult>
+		<Projectile id="0">
+			<ObjectId>Red Power Wave</ObjectId>
+			<Damage>80</Damage>
+			<Speed>30</Speed>
+			<LifetimeMS>10000</LifetimeMS>
+			<Size>125</Size>
+			<ConditionEffect duration="5">Confused</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Red Power Orb</ObjectId>
+			<Damage>80</Damage>
+			<Speed>20</Speed>
+			<LifetimeMS>10000</LifetimeMS>
+			<Size>175</Size>
+			<ConditionEffect duration="5">Dazed</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Blue Power Wave</ObjectId>
+			<Damage>80</Damage>
+			<Speed>30</Speed>
+			<LifetimeMS>10000</LifetimeMS>
+			<Size>125</Size>
+			<ConditionEffect duration="5">Quiet</ConditionEffect>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Blue Power Orb</ObjectId>
+			<Damage>80</Damage>
+			<Speed>20</Speed>
+			<LifetimeMS>10000</LifetimeMS>
+			<Size>175</Size>
+			<ConditionEffect duration="5">Blind</ConditionEffect>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Green Power Wave</ObjectId>
+			<Damage>80</Damage>
+			<Speed>30</Speed>
+			<LifetimeMS>10000</LifetimeMS>
+			<Size>125</Size>
+			<ConditionEffect duration="5">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Green Power Orb</ObjectId>
+			<Damage>80</Damage>
+			<Speed>20</Speed>
+			<LifetimeMS>10000</LifetimeMS>
+			<Size>175</Size>
+			<ConditionEffect duration="5">Hallucinating</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2D2" id="Knight DoomB">
+		<Class>Projectile</Class>
+		<Texture>
+			<File>drRemote_draw_21442058</File>
+			<Index>0</Index>
+		</Texture>
+		<ParticleTrail />
+		<AngleCorrection>1</AngleCorrection>
+	</Object>
+	<Object type="0xD2D3" id="Elder Red Spider">
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar8x8</File>
+			<Index>0xc9</Index>
+		</Texture>
+		<HitSound>monster/spiders_hit</HitSound>
+		<DeathSound>monster/spiders_death</DeathSound>
+		<Size>50</Size>
+		<MaxHitPoints>150</MaxHitPoints>
+		<Enemy />
+		<BloodProb>0.5</BloodProb>
+		<BloodColor>0x50d71b</BloodColor>
+		<Terrain>MidForest</Terrain>
+		<SpawnProb>1.0</SpawnProb>
+		<Spawn>
+			<Mean>3</Mean>
+			<StdDev>2</StdDev>
+			<Min>1</Min>
+			<Max>10</Max>
+		</Spawn>
+		<Projectile>
+			<ObjectId>Green Magic</ObjectId>
+			<Speed>50</Speed>
+			<Damage>25</Damage>
+			<LifetimeMS>2000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2D4" id="Elder Spider Egg Sac">
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar8x8</File>
+			<Index>0xe9</Index>
+		</Texture>
+		<HitSound>monster/eggs_hit</HitSound>
+		<DeathSound>monster/eggs_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>1</MaxHitPoints>
+	</Object>
+	<Object type="0xD2D5" id="Elder Green Den Spider Hatchling">
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar8x8</File>
+			<Index>0xca</Index>
+		</Texture>
+		<HitSound>monster/spiders_hit</HitSound>
+		<DeathSound>monster/spiders_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>5000</MaxHitPoints>
+		<Enemy />
+		<XpMult>0.2</XpMult>
+		<Projectile>
+			<ObjectId>Green Magic</ObjectId>
+			<Speed>50</Speed>
+			<Damage>250</Damage>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="3">Quiet</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2D6" id="Elder Red Spotted Den Spider">
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x11</Index>
+		</Texture>
+		<HitSound>monster/spiders_hit</HitSound>
+		<DeathSound>monster/spiders_death</DeathSound>
+		<Size>140</Size>
+		<MaxHitPoints>40000</MaxHitPoints>
+		<Enemy />
+		<Projectile>
+			<ObjectId>Blue Magic</ObjectId>
+			<Speed>80</Speed>
+			<Damage>350</Damage>
+			<LifetimeMS>1250</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2D7" id="Elder Brown Den Spider">
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x13</Index>
+		</Texture>
+		<HitSound>monster/spiders_hit</HitSound>
+		<DeathSound>monster/spiders_death</DeathSound>
+		<Size>90</Size>
+		<MaxHitPoints>20000</MaxHitPoints>
+		<Enemy />
+		<Projectile>
+			<ObjectId>Purple Magic</ObjectId>
+			<Speed>80</Speed>
+			<Damage>200</Damage>
+			<LifetimeMS>1250</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2D8" id="Elder Fire Python">
+		<Group>Pythons</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar8x8</File>
+			<Index>0xed</Index>
+		</Texture>
+		<HitSound>monster/pythons_hit</HitSound>
+		<DeathSound>monster/pythons_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>2000</MaxHitPoints>
+		<Defense>5</Defense>
+		<Projectile>
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>80</Speed>
+			<Damage>250</Damage>
+			<LifetimeMS>2000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2D9" id="Elder Brown Python">
+		<Group>Pythons</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar8x8</File>
+			<Index>0xee</Index>
+		</Texture>
+		<HitSound>monster/pythons_hit</HitSound>
+		<DeathSound>monster/pythons_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>2000</MaxHitPoints>
+		<Defense>20</Defense>
+		<Projectile>
+			<ObjectId>Blue Magic</ObjectId>
+			<Speed>80</Speed>
+			<Damage>250</Damage>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2DA" id="Elder Greater Pit Snake">
+		<Group>Greater Pit Snakes</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar16x8</File>
+			<Index>0x7f</Index>
+		</Texture>
+		<HitSound>monster/greater_pit_snakes_hit</HitSound>
+		<DeathSound>monster/greater_pit_snakes_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>5000</MaxHitPoints>
+		<Defense>10</Defense>
+		<Projectile>
+			<ObjectId>Green Magic</ObjectId>
+			<Speed>80</Speed>
+			<Damage>500</Damage>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2DB" id="Elder Greater Pit Viper">
+		<Group>Greater Pit Snakes</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar216x8</File>
+			<Index>0x58</Index>
+		</Texture>
+		<HitSound>monster/greater_pit_snakes_hit</HitSound>
+		<DeathSound>monster/greater_pit_snakes_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>5000</MaxHitPoints>
+		<Defense>10</Defense>
+		<Projectile>
+			<ObjectId>Purple Magic</ObjectId>
+			<Speed>60</Speed>
+			<Damage>500</Damage>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2DC" id="Christmas Oryx">
+		<DisplayId>Oryx the Christmas God</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_5918944999243776</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<MaxHitPoints>65000</MaxHitPoints>
+		<Defense>55</Defense>
+		<XpMult>0.35</XpMult>
+		<Size>150</Size>
+		<ShadowSize>300</ShadowSize>
+		<HitSound>monster/minion_of_oryx_hit</HitSound>
+		<DeathSound>monster/minion_of_oryx_death</DeathSound>
+		<Projectile id="0">
+			<ObjectId>Pink Dot</ObjectId>
+			<Damage>100</Damage>
+			<Speed>65</Speed>
+			<Size>120</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Rainbow Magic</ObjectId>
+			<Damage>150</Damage>
+			<Speed>40</Speed>
+			<Size>120</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Rainbow Magic Star Super</ObjectId>
+			<Damage>300</Damage>
+			<Speed>20</Speed>
+			<Size>200</Size>
+			<LifetimeMS>3500</LifetimeMS>
+			<MultiHit />
+			<ConditionEffect duration="5">Confused</ConditionEffect>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Rainbow Magic Star</ObjectId>
+			<Damage>150</Damage>
+			<Speed>50</Speed>
+			<Size>100</Size>
+			<LifetimeMS>2250</LifetimeMS>
+			<MultiHit />
+			<ConditionEffect duration="2.5">Confused</ConditionEffect>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Rainbow Blaster</ObjectId>
+			<Damage>100</Damage>
+			<Speed>75</Speed>
+			<Size>140</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Pink Dot</ObjectId>
+			<Damage>100</Damage>
+			<Speed>45</Speed>
+			<Size>140</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Feather</ObjectId>
+			<Damage>0</Damage>
+			<Speed>30</Speed>
+			<Size>80</Size>
+			<LifetimeMS>1200</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Rainbow Baller</ObjectId>
+			<Damage>100</Damage>
+			<Speed>65</Speed>
+			<Size>100</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Rainbow Baller</ObjectId>
+			<Damage>150</Damage>
+			<Speed>40</Speed>
+			<Size>140</Size>
+			<LifetimeMS>2000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2DD" id="Christmas Present">
+		<DisplayId>Present</DisplayId>
+		<Group>Crystals</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_6261539245916160</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ents_hit</HitSound>
+		<DeathSound>monster/ents_death</DeathSound>
+		<Size>120</Size>
+		<MaxHitPoints>1000000</MaxHitPoints>
+		<Defense>0</Defense>
+		<XpMult>0</XpMult>
+		<Projectile id="0">
+			<ObjectId>White Bullet</ObjectId>
+			<Damage>10</Damage>
+			<Speed>10</Speed>
+			<LifetimeMS>6000</LifetimeMS>
+			<ConditionEffect duration="20">Quiet</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2DE" id="Cake">
+		<Class>Projectile</Class>
+		<Texture>
+			<File>drRemote_draw_9212218</File>
+			<Index>0</Index>
+		</Texture>
+		<Rotation>50</Rotation>
+	</Object>
+	<Object type="0xD2DF" id="Cake1">
+		<Class>Projectile</Class>
+		<Texture>
+			<File>drRemote_draw_17221762</File>
+			<Index>0</Index>
+		</Texture>
+		<Rotation>50</Rotation>
+	</Object>
+	<Object type="0xD2E0" id="Cake2">
+		<Class>Projectile</Class>
+		<Texture>
+			<File>drRemote_draw_17903110</File>
+			<Index>0</Index>
+		</Texture>
+		<Rotation>50</Rotation>
+	</Object>
+	<Object type="0xD2E1" id="Elder Imp of the Abyss">
+		<Group>Abyss Demons</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x20</Index>
+		</Texture>
+		<HitSound>monster/abyss_demons_hit</HitSound>
+		<DeathSound>monster/abyss_demons_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>30000</MaxHitPoints>
+		<Defense>30</Defense>
+		<Flying />
+		<Projectile id="0">
+			<ObjectId>Fire Bolt</ObjectId>
+			<Damage>600</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2E2" id="Elder Demon of the Abyss">
+		<Group>Abyss Demons</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x21</Index>
+		</Texture>
+		<HitSound>monster/abyss_demons_hit</HitSound>
+		<DeathSound>monster/abyss_demons_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>40000</MaxHitPoints>
+		<Defense>30</Defense>
+		<Projectile id="0">
+			<ObjectId>Red Fire</ObjectId>
+			<Damage>1200</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<Size>140</Size>
+		</Projectile>
+	</Object>
+	<Object type="0xD2E3" id="Elder Demon Warrior of the Abyss">
+		<Group>Abyss Demons</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x22</Index>
+		</Texture>
+		<HitSound>monster/abyss_demons_hit</HitSound>
+		<DeathSound>monster/abyss_demons_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>40000</MaxHitPoints>
+		<Defense>30</Defense>
+		<Projectile id="0">
+			<ObjectId>Red Fire</ObjectId>
+			<Damage>800</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2E4" id="Elder Demon Mage of the Abyss">
+		<Group>Abyss Demons</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x23</Index>
+		</Texture>
+		<HitSound>monster/abyss_demons_hit</HitSound>
+		<DeathSound>monster/abyss_demons_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>35000</MaxHitPoints>
+		<Defense>30</Defense>
+		<Projectile id="0">
+			<ObjectId>Red Fire</ObjectId>
+			<Damage>800</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2E5" id="Elder Brute of the Abyss">
+		<Group>Abyss Brutes</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x24</Index>
+		</Texture>
+		<HitSound>monster/abyss_brutes_hit</HitSound>
+		<DeathSound>monster/abyss_brutes_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>50000</MaxHitPoints>
+		<Defense>30</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>800</Damage>
+			<Speed>120</Speed>
+			<LifetimeMS>400</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2E6" id="Elder Brute Warrior of the Abyss">
+		<Group>Abyss Brutes</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x25</Index>
+		</Texture>
+		<HitSound>monster/abyss_brutes_hit</HitSound>
+		<DeathSound>monster/abyss_brutes_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>50000</MaxHitPoints>
+		<Defense>30</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>800</Damage>
+			<Speed>120</Speed>
+			<LifetimeMS>400</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2E7" id="Elder Malphas Protector">
+		<Group>Demons</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_5126358615195648</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/demons_hit</HitSound>
+		<DeathSound>monster/demons_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>90000</MaxHitPoints>
+		<Defense>7</Defense>
+		<XpMult>0.1</XpMult>
+		<Projectile id="0">
+			<ObjectId>Red Fire</ObjectId>
+			<Damage>500</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>600</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2E8" id="Elder Malphas Missile">
+		<Group>Missiles</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x47</Index>
+		</Texture>
+		<Projectile id="0">
+			<ObjectId>Red Star</ObjectId>
+			<Speed>66</Speed>
+			<Damage>400</Damage>
+			<Size>100</Size>
+			<LifetimeMS>760</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<MaxHitPoints>4000</MaxHitPoints>
+		<Size>140</Size>
+		<Defense>30</Defense>
+		<XpMult>0.0</XpMult>
+	</Object>
+	<Object type="0xD2E9" id="Elder Archdemon Malphas">
+		<Group>Demons</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Flying />
+		<Quest />
+		<Level>1</Level>
+		<God />
+		<StasisImmune />
+		<AnimatedTexture>
+			<File>drRemote_draw_5594580514766848</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/demons_hit</HitSound>
+		<DeathSound>monster/demons_death</DeathSound>
+		<MaxHitPoints>350000</MaxHitPoints>
+		<Size>150</Size>
+		<Defense>35</Defense>
+		<XpMult>0.7</XpMult>
+		<Projectile id="0">
+			<ObjectId>White Bullet</ObjectId>
+			<Speed>75</Speed>
+			<Damage>600</Damage>
+			<Size>60</Size>
+			<LifetimeMS>1500</LifetimeMS>
+			<MultiHit />
+			<ArmorPiercing />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Silver Shield</ObjectId>
+			<Speed>42</Speed>
+			<Damage>650</Damage>
+			<Size>65</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<MultiHit />
+			<ConditionEffect Duration="4">Weak</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>White Bullet</ObjectId>
+			<Speed>40</Speed>
+			<Damage>1500</Damage>
+			<Size>150</Size>
+			<LifetimeMS>4000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Silver Shield</ObjectId>
+			<Speed>60</Speed>
+			<Damage>1100</Damage>
+			<Size>120</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<MultiHit />
+			<ConditionEffect Duration="4">Weak</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2EA" id="Elder Malphas Flamer">
+		<Group>Flamers</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_5126358615195648</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/demons_hit</HitSound>
+		<DeathSound>monster/demons_death</DeathSound>
+		<Projectile id="0">
+			<ObjectId>White Flame</ObjectId>
+			<Speed>80</Speed>
+			<Damage>200</Damage>
+			<Size>100</Size>
+			<LifetimeMS>500</LifetimeMS>
+			<MultiHit />
+			<Amplitude>0.3</Amplitude>
+			<Frequency>0.5</Frequency>
+		</Projectile>
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Size>100</Size>
+		<Defense>6</Defense>
+		<XpMult>0.0</XpMult>
+	</Object>
+	<Object type="0xD2EB" id="Elder Stheno the Snake Queen">
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_5670227773751296</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/snake_queen_hit</HitSound>
+		<DeathSound>monster/snake_queen_death</DeathSound>
+		<Size>200</Size>
+		<MaxHitPoints>200000</MaxHitPoints>
+		<Defense>40</Defense>
+		<Enemy />
+		<God />
+		<StasisImmune />
+		<Quest />
+		<Level>20</Level>
+		<XpMult>5.7</XpMult>
+		<NoArticle />
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Speed>70</Speed>
+			<Damage>1000</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1500</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>White Bullet</ObjectId>
+			<Speed>62</Speed>
+			<Damage>600</Damage>
+			<Size>60</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="1.4">Blind</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2EC" id="Elder Stheno Pet">
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_5778162776539136</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/snakes_hit</HitSound>
+		<DeathSound>monster/snakes_death</DeathSound>
+		<Size>120</Size>
+		<MaxHitPoints>5000</MaxHitPoints>
+		<Defense>7</Defense>
+		<Enemy />
+		<Level>1</Level>
+		<XpMult>0.1</XpMult>
+		<Projectile id="0">
+			<ObjectId>Aqua Missile</ObjectId>
+			<Speed>60</Speed>
+			<Damage>750</Damage>
+			<Size>100</Size>
+			<LifetimeMS>900</LifetimeMS>
+			<ConditionEffect duration="2">Slowed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2ED" id="Elder Stheno Swarm">
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>3</Index>
+		</AnimatedTexture>
+		<HitSound>monster/snakes_hit</HitSound>
+		<DeathSound>monster/snakes_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<Defense>4</Defense>
+		<Enemy />
+		<Level>1</Level>
+		<XpMult>0.1</XpMult>
+		<Projectile id="0">
+			<ObjectId>Aqua Missile</ObjectId>
+			<Speed>60</Speed>
+			<Damage>400</Damage>
+			<Size>70</Size>
+			<LifetimeMS>1000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2EE" id="Elder Arachna the Spider Queen">
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_16813741</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/spider_queen_hit</HitSound>
+		<DeathSound>monster/spider_queen_death</DeathSound>
+		<Size>200</Size>
+		<MaxHitPoints>150000</MaxHitPoints>
+		<Defense>4</Defense>
+		<Enemy />
+		<God />
+		<StasisImmune />
+		<Quest />
+		<Level>20</Level>
+		<XpMult>0.8</XpMult>
+		<NoArticle />
+		<Projectile id="0">
+			<ObjectId>Green Magic</ObjectId>
+			<Speed>56</Speed>
+			<Damage>600</Damage>
+			<LifetimeMS>2600</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Green Blob</ObjectId>
+			<Speed>40</Speed>
+			<Damage>750</Damage>
+			<Size>185</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<MultiHit />
+			<ConditionEffect duration="5">Weak</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2EF" id="Elder Arachna Web Spoke 1">
+		<DisplayId>Arachna Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x49</Index>
+		</Texture>
+		<Size>250</Size>
+		<StasisImmune />
+		<Enemy />
+		<Projectile id="0">
+			<ObjectId>Web Thread</ObjectId>
+			<Damage>0</Damage>
+			<Size>170</Size>
+			<Speed>70</Speed>
+			<LifetimeMS>1450</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2F0" id="Elder Arachna Web Spoke 2">
+		<DisplayId>Arachna Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x49</Index>
+		</Texture>
+		<Size>250</Size>
+		<StasisImmune />
+		<Enemy />
+		<Projectile id="0">
+			<ObjectId>Web Thread</ObjectId>
+			<Damage>0</Damage>
+			<Size>170</Size>
+			<Speed>70</Speed>
+			<LifetimeMS>1450</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2F1" id="Elder Arachna Web Spoke 3">
+		<DisplayId>Arachna Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x49</Index>
+		</Texture>
+		<Size>250</Size>
+		<StasisImmune />
+		<Enemy />
+		<Projectile id="0">
+			<ObjectId>Web Thread</ObjectId>
+			<Damage>0</Damage>
+			<Size>170</Size>
+			<Speed>70</Speed>
+			<LifetimeMS>1450</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2F2" id="Elder Arachna Web Spoke 4">
+		<DisplayId>Arachna Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x49</Index>
+		</Texture>
+		<Size>250</Size>
+		<StasisImmune />
+		<Enemy />
+		<Projectile id="0">
+			<ObjectId>Web Thread</ObjectId>
+			<Damage>0</Damage>
+			<Size>170</Size>
+			<Speed>70</Speed>
+			<LifetimeMS>1450</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2F3" id="Elder Arachna Web Spoke 5">
+		<DisplayId>Arachna Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x49</Index>
+		</Texture>
+		<Size>250</Size>
+		<StasisImmune />
+		<Enemy />
+		<Projectile id="0">
+			<ObjectId>Web Thread</ObjectId>
+			<Damage>0</Damage>
+			<Size>170</Size>
+			<Speed>70</Speed>
+			<LifetimeMS>1450</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2F4" id="Elder Arachna Web Spoke 6">
+		<DisplayId>Arachna Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x49</Index>
+		</Texture>
+		<Size>250</Size>
+		<StasisImmune />
+		<Enemy />
+		<Projectile id="0">
+			<ObjectId>Web Thread</ObjectId>
+			<Damage>0</Damage>
+			<Size>170</Size>
+			<Speed>70</Speed>
+			<LifetimeMS>1450</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2F5" id="Elder Arachna Web Spoke 7">
+		<DisplayId>Arachna Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x49</Index>
+		</Texture>
+		<Size>250</Size>
+		<StasisImmune />
+		<Enemy />
+		<Projectile id="0">
+			<ObjectId>Web Thread</ObjectId>
+			<Damage>0</Damage>
+			<Size>170</Size>
+			<Speed>70</Speed>
+			<LifetimeMS>880</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2F6" id="Elder Arachna Web Spoke 8">
+		<DisplayId>Arachna Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x49</Index>
+		</Texture>
+		<Size>250</Size>
+		<StasisImmune />
+		<Enemy />
+		<Projectile id="0">
+			<ObjectId>Web Thread</ObjectId>
+			<Damage>0</Damage>
+			<Size>170</Size>
+			<Speed>70</Speed>
+			<LifetimeMS>880</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2F7" id="Elder Arachna Web Spoke 9">
+		<DisplayId>Arachna Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<Texture>
+			<File>drLofiObj2</File>
+			<Index>0x49</Index>
+		</Texture>
+		<Size>250</Size>
+		<StasisImmune />
+		<Enemy />
+		<Projectile id="0">
+			<ObjectId>Web Thread</ObjectId>
+			<Damage>0</Damage>
+			<Size>170</Size>
+			<Speed>70</Speed>
+			<LifetimeMS>880</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2F8" id="Elder Native Fire Sprite">
+		<Group>Native Sprites</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rMid</File>
+			<Index>0x00</Index>
+		</AnimatedTexture>
+		<HitSound>monster/sprites_hit</HitSound>
+		<DeathSound>monster/sprites_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Red Fire</ObjectId>
+			<Damage>170</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>4000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2F9" id="Elder Native Ice Sprite">
+		<Group>Native Sprites</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rMid</File>
+			<Index>0x01</Index>
+		</AnimatedTexture>
+		<HitSound>monster/sprites_hit</HitSound>
+		<DeathSound>monster/sprites_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Ice Spinner</ObjectId>
+			<Damage>140</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>1800</LifetimeMS>
+			<Size>70</Size>
+			<ConditionEffect duration="1.6">Slowed</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD2FA" id="Elder Native Magic Sprite">
+		<Group>Native Sprites</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rMid</File>
+			<Index>0x02</Index>
+		</AnimatedTexture>
+		<HitSound>monster/sprites_hit</HitSound>
+		<DeathSound>monster/sprites_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Green Magic</ObjectId>
+			<Damage>180</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>4000</LifetimeMS>
+			<Size>120</Size>
+		</Projectile>
+	</Object>
+	<Object type="0xD2FB" id="Elder Native Nature Sprite">
+		<Group>Native Sprites</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x30</Index>
+		</Texture>
+		<HitSound>monster/sprites_hit</HitSound>
+		<DeathSound>monster/sprites_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Green Bolt</ObjectId>
+			<Damage>160</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2FC" id="Elder Native Darkness Sprite">
+		<Group>Native Sprites</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x31</Index>
+		</Texture>
+		<HitSound>monster/sprites_hit</HitSound>
+		<DeathSound>monster/sprites_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Darkness Bolt</ObjectId>
+			<Damage>160</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD2FD" id="Elder Native Sprite God">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dMountains1</File>
+			<Index>0x01</Index>
+		</AnimatedTexture>
+		<HitSound>monster/sprite_god_hit</HitSound>
+		<DeathSound>monster/sprite_god_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>20000</MaxHitPoints>
+		<Defense>12</Defense>
+		<God />
+		<Projectile id="0">
+			<ObjectId>Purple Magic</ObjectId>
+			<Damage>1000</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Grey Boomerang</ObjectId>
+			<Damage>100</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>2400</LifetimeMS>
+			<ConditionEffect duration="10">Quiet</ConditionEffect>
+			<MultiHit />
+			<ParticleTrail />
+		</Projectile>
+	</Object>
+	<Object type="0xD2FE" id="Elder Limon the Sprite God">
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_4560923003977728</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/sprite_god_hit</HitSound>
+		<DeathSound>monster/sprite_god_death</DeathSound>
+		<MaxHitPoints>250000</MaxHitPoints>
+		<Size>150</Size>
+		<Defense>16</Defense>
+		<God />
+		<StasisImmune />
+		<Quest />
+		<Level>1</Level>
+		<Enemy />
+		<XpMult>0.7</XpMult>
+		<NoArticle />
+		<Projectile id="0">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>80</Speed>
+			<Damage>700</Damage>
+			<Size>110</Size>
+			<LifetimeMS>2300</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD2FF" id="Elder Limon Element 1">
+		<DisplayId>Limon Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<Enemy />
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<Projectile id="0">
+			<ObjectId>White Flame</ObjectId>
+			<Damage>500</Damage>
+			<Size>90</Size>
+			<Speed>90</Speed>
+			<LifetimeMS>1940</LifetimeMS>
+			<MultiHit />
+			<PassesCover />
+		</Projectile>
+	</Object>
+	<Object type="0xD300" id="Elder Limon Element 2">
+		<DisplayId>Limon Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<Enemy />
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<Projectile id="0">
+			<ObjectId>White Flame</ObjectId>
+			<Damage>500</Damage>
+			<Size>90</Size>
+			<Speed>90</Speed>
+			<LifetimeMS>1940</LifetimeMS>
+			<MultiHit />
+			<PassesCover />
+		</Projectile>
+	</Object>
+	<Object type="0xD301" id="Elder Limon Element 3">
+		<DisplayId>Limon Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<Enemy />
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<Projectile id="0">
+			<ObjectId>White Flame</ObjectId>
+			<Damage>500</Damage>
+			<Size>90</Size>
+			<Speed>90</Speed>
+			<LifetimeMS>1940</LifetimeMS>
+			<MultiHit />
+			<PassesCover />
+		</Projectile>
+	</Object>
+	<Object type="0xD302" id="Elder Limon Element 4">
+		<DisplayId>Limon Element</DisplayId>
+		<Group>AttackType</Group>
+		<Class>Character</Class>
+		<Enemy />
+		<StasisImmune />
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>1000</Defense>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<Projectile id="0">
+			<ObjectId>White Flame</ObjectId>
+			<Damage>500</Damage>
+			<Size>90</Size>
+			<Speed>90</Speed>
+			<LifetimeMS>1940</LifetimeMS>
+			<MultiHit />
+			<PassesCover />
+		</Projectile>
+	</Object>
+	<Object type="0xD303" id="Elder Septavius the Ghost God">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_6686819211018240</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ghost_god_hit</HitSound>
+		<DeathSound>monster/ghost_god_death</DeathSound>
+		<Size>150</Size>
+		<MaxHitPoints>300000</MaxHitPoints>
+		<Defense>12</Defense>
+		<Flying />
+		<Quest />
+		<God />
+		<StasisImmune />
+		<Level>1</Level>
+		<XpMult>0.7</XpMult>
+		<NoArticle />
+		<Projectile id="0">
+			<ObjectId>White Bullet</ObjectId>
+			<Speed>80</Speed>
+			<Damage>750</Damage>
+			<Size>25</Size>
+			<LifetimeMS>1500</LifetimeMS>
+			<ArmorPiercing />
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Brown Magic</ObjectId>
+			<Speed>90</Speed>
+			<MinDamage>400</MinDamage>
+			<MaxDamage>450</MaxDamage>
+			<Size>40</Size>
+			<LifetimeMS>2600</LifetimeMS>
+			<MultiHit />
+			<Boomerang />
+			<Amplitude>2</Amplitude>
+			<Frequency>2.5</Frequency>
+			<ConditionEffect duration="1">Quiet</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Yellow Star</ObjectId>
+			<Speed>57</Speed>
+			<Damage>650</Damage>
+			<Size>80</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<MultiHit />
+			<ConditionEffect duration="1.5">Confused</ConditionEffect>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>White Bullet</ObjectId>
+			<Speed>40</Speed>
+			<Damage>1600</Damage>
+			<Size>80</Size>
+			<LifetimeMS>4000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>White Bullet</ObjectId>
+			<Speed>70</Speed>
+			<Damage>600</Damage>
+			<Size>60</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Object type="0x5d91" id="Elder Lair Skeleton">
+			<Group>Lair Skeletons</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x60</Index>
+			</Texture>
+			<HitSound>monster/skeletons_hit</HitSound>
+			<DeathSound>monster/skeletons_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>35000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Blade</ObjectId>
+				<Damage>300</Damage>
+				<Speed>120</Speed>
+				<LifetimeMS>400</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d92" id="Elder Lair Skeleton Swordsman">
+			<Group>Lair Skeletons</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x61</Index>
+			</Texture>
+			<HitSound>monster/skeletons_hit</HitSound>
+			<DeathSound>monster/skeletons_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>40000</MaxHitPoints>
+			<Defense>2</Defense>
+			<Projectile id="0">
+				<ObjectId>Blade</ObjectId>
+				<Damage>350</Damage>
+				<Speed>120</Speed>
+				<LifetimeMS>400</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d93" id="Elder Lair Skeleton Veteran">
+			<Group>Lair Skeletons</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x62</Index>
+			</Texture>
+			<HitSound>monster/skeletons_hit</HitSound>
+			<DeathSound>monster/skeletons_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>45000</MaxHitPoints>
+			<Defense>4</Defense>
+			<Projectile id="0">
+				<ObjectId>Blade</ObjectId>
+				<Damage>400</Damage>
+				<Speed>120</Speed>
+				<LifetimeMS>400</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d94" id="Elder Lair Skeleton Mage">
+			<Group>Lair Skeletons</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x63</Index>
+			</Texture>
+			<HitSound>monster/skeletons_hit</HitSound>
+			<DeathSound>monster/skeletons_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>50000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Blue Magic</ObjectId>
+				<Damage>450</Damage>
+				<Speed>60</Speed>
+				<LifetimeMS>3000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d95" id="Elder Lair Skeleton King">
+			<Group>Lair Skeletons</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x64</Index>
+			</Texture>
+			<HitSound>monster/skeletons_hit</HitSound>
+			<DeathSound>monster/skeletons_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>60000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Blue Bolt</ObjectId>
+				<Damage>500</Damage>
+				<Speed>70</Speed>
+				<LifetimeMS>3000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d96" id="Elder Lair Mummy">
+			<Group>Lair Mummies</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x6a</Index>
+			</Texture>
+			<HitSound>monster/mummies_hit</HitSound>
+			<DeathSound>monster/mummies_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>40000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Green Magic</ObjectId>
+				<Damage>400</Damage>
+				<Speed>80</Speed>
+				<LifetimeMS>2000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d97" id="Elder Lair Mummy King">
+			<Group>Lair Mummies</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x6b</Index>
+			</Texture>
+			<HitSound>monster/mummies_hit</HitSound>
+			<DeathSound>monster/mummies_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>50000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Green Magic</ObjectId>
+				<Damage>500</Damage>
+				<Speed>50</Speed>
+				<LifetimeMS>3000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d98" id="Elder Lair Mummy Pharaoh">
+			<Group>Lair Mummies</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x6c</Index>
+			</Texture>
+			<HitSound>monster/mummies_hit</HitSound>
+			<DeathSound>monster/mummies_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>60000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Green Magic</ObjectId>
+				<Damage>600</Damage>
+				<Speed>70</Speed>
+				<LifetimeMS>3000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d99" id="Elder Lair Construct Giant">
+			<Group>Lair Constructs</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar16x16</File>
+				<Index>0x4c</Index>
+			</Texture>
+			<HitSound>monster/dwarf_god_hit</HitSound>
+			<DeathSound>monster/dwarf_god_death</DeathSound>
+			<Size>110</Size>
+			<MaxHitPoints>70000</MaxHitPoints>
+			<Defense>20</Defense>
+			<Projectile id="0">
+				<ObjectId>White Bolt</ObjectId>
+				<Damage>800</Damage>
+				<Speed>50</Speed>
+				<LifetimeMS>3000</LifetimeMS>
+				<Size>120</Size>
+			</Projectile>
+			<Projectile id="1">
+				<ObjectId>Blue Star</ObjectId>
+				<Damage>100</Damage>
+				<Speed>80</Speed>
+				<LifetimeMS>3000</LifetimeMS>
+				<ConditionEffect duration="3">Confused</ConditionEffect>
+			</Projectile>
+		</Object>
+		<Object type="0x5d9a" id="Elder Lair Construct Titan">
+			<Group>Lair Constructs</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar16x16</File>
+				<Index>0x4d</Index>
+			</Texture>
+			<HitSound>monster/dwarf_god_hit</HitSound>
+			<DeathSound>monster/dwarf_god_death</DeathSound>
+			<Size>120</Size>
+			<MaxHitPoints>80000</MaxHitPoints>
+			<Defense>20</Defense>
+			<Projectile id="0">
+				<ObjectId>Blue Bolt</ObjectId>
+				<Damage>500</Damage>
+				<Speed>70</Speed>
+				<LifetimeMS>3000</LifetimeMS>
+			</Projectile>
+			<Projectile id="1">
+				<ObjectId>Blue Star</ObjectId>
+				<Damage>100</Damage>
+				<Speed>80</Speed>
+				<LifetimeMS>3000</LifetimeMS>
+				<ConditionEffect duration="3">Confused</ConditionEffect>
+			</Projectile>
+		</Object>
+		<Object type="0x5d9b" id="Elder Lair Big Black Slime">
+			<Group>Lair Slimes</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0xb0</Index>
+			</Texture>
+			<HitSound>monster/slimes_hit</HitSound>
+			<DeathSound>monster/slimes_death</DeathSound>
+			<Size>150</Size>
+			<MaxHitPoints>30000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Black Magic</ObjectId>
+				<Damage>1000</Damage>
+				<Speed>80</Speed>
+				<LifetimeMS>1000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d9c" id="Elder Lair Medium Black Slime">
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0xb0</Index>
+			</Texture>
+			<HitSound>monster/slimes_hit</HitSound>
+			<DeathSound>monster/slimes_death</DeathSound>
+			<Size>120</Size>
+			<MaxHitPoints>15000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Black Magic</ObjectId>
+				<Damage>800</Damage>
+				<Speed>80</Speed>
+				<LifetimeMS>1000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d9d" id="Elder Lair Little Black Slime">
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0xb0</Index>
+			</Texture>
+			<HitSound>monster/slimes_hit</HitSound>
+			<DeathSound>monster/slimes_death</DeathSound>
+			<Size>75</Size>
+			<MaxHitPoints>5000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Black Magic</ObjectId>
+				<Damage>500</Damage>
+				<Speed>80</Speed>
+				<LifetimeMS>1000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d9e" id="Elder Lair Big Brown Slime">
+			<Group>Lair Slimes</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0xb1</Index>
+			</Texture>
+			<HitSound>monster/slimes_hit</HitSound>
+			<DeathSound>monster/slimes_death</DeathSound>
+			<Size>150</Size>
+			<MaxHitPoints>30000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Brown Magic</ObjectId>
+				<Damage>1000</Damage>
+				<Speed>80</Speed>
+				<LifetimeMS>1000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5d9f" id="Elder Lair Little Brown Slime">
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0xb1</Index>
+			</Texture>
+			<HitSound>monster/slimes_hit</HitSound>
+			<DeathSound>monster/slimes_death</DeathSound>
+			<Size>75</Size>
+			<MaxHitPoints>15000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Brown Magic</ObjectId>
+				<Damage>500</Damage>
+				<Speed>80</Speed>
+				<LifetimeMS>1000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5da0" id="Elder Lair Brown Bat">
+			<Group>Lair Bats</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0xce</Index>
+			</Texture>
+			<HitSound>monster/bats_hit</HitSound>
+			<DeathSound>monster/bats_death</DeathSound>
+			<Size>50</Size>
+			<MaxHitPoints>20000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Flying />
+			<Projectile id="0">
+				<ObjectId>Blue Magic</ObjectId>
+				<Damage>500</Damage>
+				<Speed>100</Speed>
+				<LifetimeMS>200</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5da1" id="Elder Lair Ghost Bat">
+			<Group>Lair Bats</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x79</Index>
+			</Texture>
+			<HitSound>monster/bats_hit</HitSound>
+			<DeathSound>monster/bats_death</DeathSound>
+			<Size>50</Size>
+			<MaxHitPoints>20000</MaxHitPoints>
+			<Defense>30</Defense>
+			<Flying />
+			<Projectile id="0">
+				<ObjectId>Blue Magic</ObjectId>
+				<Damage>500</Damage>
+				<Speed>100</Speed>
+				<LifetimeMS>200</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5da2" id="Elder Lair Burst Trap">
+			<Group>Lair Traps</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiEnvironment</File>
+				<Index>0x61</Index>
+			</Texture>
+			<HitSound>monster/traps_hit</HitSound>
+			<DeathSound>monster/traps_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>10000</MaxHitPoints>
+			<Defense>0</Defense>
+			<DrawOnGround />
+			<NoMiniMap />
+			<Projectile id="0">
+				<ObjectId>Red Fire</ObjectId>
+				<Damage>1000</Damage>
+				<Speed>80</Speed>
+				<LifetimeMS>1000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5da3" id="Elder Lair Blast Trap">
+			<Group>Lair Traps</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiEnvironment</File>
+				<Index>0x51</Index>
+			</Texture>
+			<HitSound>monster/traps_hit</HitSound>
+			<DeathSound>monster/traps_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>10000</MaxHitPoints>
+			<Defense>0</Defense>
+			<DrawOnGround />
+			<NoMiniMap />
+			<Projectile id="0">
+				<ObjectId>Red Fire</ObjectId>
+				<Damage>1000</Damage>
+				<Speed>80</Speed>
+				<LifetimeMS>1000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5da4" id="Elder Lair Reaper">
+			<Group>Lair Reapers</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x6d</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>80000</MaxHitPoints>
+			<Defense>20</Defense>
+			<Projectile id="0">
+				<ObjectId>Fire Bolt</ObjectId>
+				<Damage>400</Damage>
+				<Speed>120</Speed>
+				<LifetimeMS>200</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5da5" id="Elder Lair Vampire">
+			<Group>Lair Vampires</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x6e</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>30000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Green Star</ObjectId>
+				<Damage>800</Damage>
+				<Speed>100</Speed>
+				<LifetimeMS>2000</LifetimeMS>
+				<ConditionEffect duration="3">Slowed</ConditionEffect>
+			</Projectile>
+			<Projectile id="1">
+				<ObjectId>Green Bolt</ObjectId>
+				<Damage>1000</Damage>
+				<Speed>100</Speed>
+				<LifetimeMS>200</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5da6" id="Elder Lair Vampire King">
+			<Group>Lair Vampires</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x6f</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>40000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Projectile id="0">
+				<ObjectId>Grey Star</ObjectId>
+				<Damage>800</Damage>
+				<Speed>100</Speed>
+				<LifetimeMS>2000</LifetimeMS>
+				<ConditionEffect duration="3">Quiet</ConditionEffect>
+			</Projectile>
+			<Projectile id="1">
+				<ObjectId>Green Bolt</ObjectId>
+				<Damage>1200</Damage>
+				<Speed>100</Speed>
+				<LifetimeMS>200</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5da7" id="Elder Lair Grey Spectre">
+			<Group>Lair Spectres</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x76</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>20000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Flying />
+			<Projectile id="0">
+				<ObjectId>Pink Bolt</ObjectId>
+				<Damage>1000</Damage>
+				<Speed>70</Speed>
+				<LifetimeMS>2000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5da8" id="Elder Lair Blue Spectre">
+			<Group>Lair Spectres</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x77</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>115</Size>
+			<MaxHitPoints>30000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Flying />
+			<Projectile id="0">
+				<ObjectId>Pink Bolt</ObjectId>
+				<Damage>1200</Damage>
+				<Speed>70</Speed>
+				<LifetimeMS>2000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5da9" id="Elder Lair White Spectre">
+			<Group>Lair Spectres</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x78</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>130</Size>
+			<MaxHitPoints>40000</MaxHitPoints>
+			<Defense>0</Defense>
+			<Flying />
+			<Projectile id="0">
+				<ObjectId>Pink Bolt</ObjectId>
+				<Damage>1400</Damage>
+				<Speed>70</Speed>
+				<LifetimeMS>2000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5daa" id="Elder Lair Ghost Archer">
+			<Group>Lair Ghosts</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x7a</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>70000</MaxHitPoints>
+			<Defense>15</Defense>
+			<Projectile id="0">
+				<ObjectId>Blue Arrow</ObjectId>
+				<Damage>600</Damage>
+				<Speed>60</Speed>
+				<LifetimeMS>2500</LifetimeMS>
+				<Size>110</Size>
+			</Projectile>
+		</Object>
+		<Object type="0x5dab" id="Elder Lair Ghost Warrior">
+			<Group>Lair Ghosts</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x7b</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>40000</MaxHitPoints>
+			<Defense>15</Defense>
+			<Projectile id="0">
+				<ObjectId>Blade</ObjectId>
+				<Damage>350</Damage>
+				<Speed>120</Speed>
+				<LifetimeMS>400</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5dac" id="Elder Lair Ghost Mage">
+			<Group>Lair Ghosts</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x7c</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>40000</MaxHitPoints>
+			<Defense>15</Defense>
+			<Projectile id="0">
+				<ObjectId>Blue Bolt</ObjectId>
+				<Damage>400</Damage>
+				<Speed>50</Speed>
+				<LifetimeMS>3000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5dad" id="Elder Lair Ghost Rogue">
+			<Group>Lair Ghosts</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x7d</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>40000</MaxHitPoints>
+			<Defense>15</Defense>
+			<Projectile id="0">
+				<ObjectId>Blade</ObjectId>
+				<Damage>300</Damage>
+				<Speed>120</Speed>
+				<LifetimeMS>400</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5dae" id="Elder Lair Ghost Paladin">
+			<Group>Lair Ghosts</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x7e</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>40000</MaxHitPoints>
+			<Defense>15</Defense>
+			<Projectile id="0">
+				<ObjectId>Blade</ObjectId>
+				<Damage>400</Damage>
+				<Speed>120</Speed>
+				<LifetimeMS>400</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5daf" id="Elder Lair Ghost Knight">
+			<Group>Lair Ghosts</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x7f</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>100</Size>
+			<MaxHitPoints>40000</MaxHitPoints>
+			<Defense>15</Defense>
+			<Projectile id="0">
+				<ObjectId>Blade</ObjectId>
+				<Damage>500</Damage>
+				<Speed>120</Speed>
+				<LifetimeMS>400</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5db0" id="Elder Ghost Warrior of Septavius">
+			<Group>Lair Ghosts</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x7b</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>120</Size>
+			<MaxHitPoints>60000</MaxHitPoints>
+			<Defense>20</Defense>
+			<XpMult>0</XpMult>
+			<Projectile id="0">
+				<ObjectId>Blade</ObjectId>
+				<Damage>350</Damage>
+				<Speed>120</Speed>
+				<LifetimeMS>400</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5db1" id="Elder Ghost Mage of Septavius">
+			<Group>Lair Ghosts</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x7c</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>120</Size>
+			<MaxHitPoints>60000</MaxHitPoints>
+			<Defense>20</Defense>
+			<XpMult>0</XpMult>
+			<Projectile id="0">
+				<ObjectId>Blue Bolt</ObjectId>
+				<Damage>400</Damage>
+				<Speed>50</Speed>
+				<LifetimeMS>3000</LifetimeMS>
+			</Projectile>
+		</Object>
+		<Object type="0x5db2" id="Elder Ghost Rogue of Septavius">
+			<Group>Lair Ghosts</Group>
+			<Enemy />
+			<Class>Character</Class>
+			<Texture>
+				<File>drLofiChar8x8</File>
+				<Index>0x7d</Index>
+			</Texture>
+			<HitSound>monster/ghosts_hit</HitSound>
+			<DeathSound>monster/ghosts_death</DeathSound>
+			<Size>120</Size>
+			<MaxHitPoints>60000</MaxHitPoints>
+			<Defense>20</Defense>
+			<XpMult>0</XpMult>
+			<Projectile id="0">
+				<ObjectId>Blade</ObjectId>
+				<Damage>300</Damage>
+				<Speed>120</Speed>
+				<LifetimeMS>400</LifetimeMS>
+			</Projectile>
+		</Object>
+	</Object>
+	<Object type="0xD304" id="Elder Snakepit Guard">
+		<Class>Character</Class>
+		<Enemy />
+		<NoMiniMap />
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>39</Index>
+		</AnimatedTexture>
+		<HitSound>monster/greater_pit_snakes_death</HitSound>
+		<DeathSound>monster/scorpions_death</DeathSound>
+		<XpMult>1.0</XpMult>
+		<Size>0</Size>
+		<MaxHitPoints>5500</MaxHitPoints>
+		<Defense>50</Defense>
+		<Projectile id="0">
+			<ObjectId>Snake Spit</ObjectId>
+			<Speed>45</Speed>
+			<Damage>650</Damage>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>100</Size>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Snake Spinner</ObjectId>
+			<Speed>45</Speed>
+			<Damage>550</Damage>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>100</Size>
+			<ConditionEffect duration="2">Dazed</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Snake Ball Spinner</ObjectId>
+			<Speed>30</Speed>
+			<Damage>1000</Damage>
+			<LifetimeMS>3000</LifetimeMS>
+			<Size>150</Size>
+			<ConditionEffect duration="4">Dazed</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD305" id="Elder Snakepit Button">
+		<Class>Character</Class>
+		<Enemy />
+		<NoMiniMap />
+		<DrawOnGround />
+		<StasisImmune />
+		<Texture>
+			<File>drLofiObj3</File>
+			<Index>0x08</Index>
+		</Texture>
+		<AltTexture id="1">
+			<Texture>
+				<File>drLofiObj3</File>
+				<Index>0x09</Index>
+			</Texture>
+		</AltTexture>
+		<MaxHitPoints>10</MaxHitPoints>
+		<XpMult>0.0</XpMult>
+		<Size>100</Size>
+		<ShadowSize>0</ShadowSize>
+	</Object>
+	<Object type="0xD306" id="Oryx's Christmas Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Christmas Oryxs Chamber</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x187</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD307" id="Christmas Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x188</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key that lets you into a winter wonderland.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<BagType>4</BagType>
+		<Activate id="Oryx's Christmas Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD308" id="Elder Pirate">
+		<Group>Pirates</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rBeach</File>
+			<Index>1</Index>
+		</AnimatedTexture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>5</MaxHitPoints>
+		<Defense>0</Defense>
+		<Terrain>ShoreSand</Terrain>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>4</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>600</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD309" id="Elder Piratess">
+		<Group>Pirates</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rBeach</File>
+			<Index>2</Index>
+		</AnimatedTexture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>6</MaxHitPoints>
+		<Defense>0</Defense>
+		<Terrain>ShoreSand</Terrain>
+		<SpawnProb>1.0</SpawnProb>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>4</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>600</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD30A" id="Elder Pirate Lieutenant">
+		<Group>Cave Pirate Bosses</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x00</Index>
+		</Texture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>205</Size>
+		<MaxHitPoints>16500</MaxHitPoints>
+		<Defense>15</Defense>
+		<Projectile id="0">
+			<ObjectId>Black Ball</ObjectId>
+			<Damage>80</Damage>
+			<Speed>180</Speed>
+			<LifetimeMS>500</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD30B" id="Elder Pirate Commander">
+		<Group>Cave Pirate Bosses</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x05</Index>
+		</Texture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>210</Size>
+		<MaxHitPoints>17500</MaxHitPoints>
+		<Defense>15</Defense>
+		<Projectile id="0">
+			<ObjectId>Black Ball</ObjectId>
+			<Damage>100</Damage>
+			<Speed>180</Speed>
+			<LifetimeMS>500</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD30C" id="Elder Pirate Captain">
+		<Group>Cave Pirate Bosses</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x06</Index>
+		</Texture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>215</Size>
+		<MaxHitPoints>18500</MaxHitPoints>
+		<Defense>15</Defense>
+		<Projectile id="0">
+			<ObjectId>Black Ball</ObjectId>
+			<Damage>220</Damage>
+			<Speed>180</Speed>
+			<LifetimeMS>500</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD30D" id="Elder Pirate Admiral">
+		<Group>Cave Pirate Bosses</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x07</Index>
+		</Texture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>220</Size>
+		<MaxHitPoints>18500</MaxHitPoints>
+		<Defense>15</Defense>
+		<Projectile id="0">
+			<ObjectId>Black Ball</ObjectId>
+			<Damage>240</Damage>
+			<Speed>180</Speed>
+			<LifetimeMS>500</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD30E" id="Elder Cave Pirate Brawler">
+		<Group>Cave Pirates</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x02</Index>
+		</Texture>
+		<HitSound>monster/cave_pirates_hit</HitSound>
+		<DeathSound>monster/cave_pirates_death</DeathSound>
+		<Size>200</Size>
+		<MaxHitPoints>5000</MaxHitPoints>
+		<Defense>15</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>180</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>600</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD30F" id="Elder Cave Pirate Sailor">
+		<Group>Cave Pirates</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x03</Index>
+		</Texture>
+		<HitSound>monster/cave_pirates_hit</HitSound>
+		<DeathSound>monster/cave_pirates_death</DeathSound>
+		<Size>200</Size>
+		<MaxHitPoints>10500</MaxHitPoints>
+		<Defense>15</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>160</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>600</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD310" id="Elder Cave Pirate Veteran">
+		<Group>Cave Pirates</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x04</Index>
+		</Texture>
+		<HitSound>monster/cave_pirates_hit</HitSound>
+		<DeathSound>monster/cave_pirates_death</DeathSound>
+		<Size>200</Size>
+		<MaxHitPoints>6000</MaxHitPoints>
+		<Defense>15</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>160</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>600</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD311" id="Elder Cave Pirate Moll">
+		<Group>Cave Pirate Pets</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x08</Index>
+		</Texture>
+		<HitSound>monster/cave_pirates_hit</HitSound>
+		<DeathSound>monster/cave_pirates_death</DeathSound>
+		<Size>200</Size>
+		<MaxHitPoints>500</MaxHitPoints>
+		<Defense>10</Defense>
+	</Object>
+	<Object type="0xD312" id="Elder Cave Pirate Parrot">
+		<Group>Cave Pirate Pets</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x09</Index>
+		</Texture>
+		<HitSound>monster/cave_pirates_hit</HitSound>
+		<DeathSound>monster/cave_pirates_death</DeathSound>
+		<Size>170</Size>
+		<MaxHitPoints>500</MaxHitPoints>
+		<Defense>15</Defense>
+	</Object>
+	<Object type="0xD313" id="Elder Cave Pirate Macaw">
+		<Group>Cave Pirate Pets</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x0a</Index>
+		</Texture>
+		<HitSound>monster/cave_pirates_hit</HitSound>
+		<DeathSound>monster/cave_pirates_death</DeathSound>
+		<Size>170</Size>
+		<MaxHitPoints>500</MaxHitPoints>
+		<Defense>15</Defense>
+	</Object>
+	<Object type="0xD314" id="Elder Cave Pirate Monkey">
+		<Group>Cave Pirate Pets</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x0b</Index>
+		</Texture>
+		<HitSound>monster/cave_pirates_hit</HitSound>
+		<DeathSound>monster/cave_pirates_death</DeathSound>
+		<Size>170</Size>
+		<MaxHitPoints>500</MaxHitPoints>
+		<Defense>15</Defense>
+	</Object>
+	<Object type="0xD315" id="Elder Cave Pirate Hunchback">
+		<Group>Cave Pirate Pets</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x0c</Index>
+		</Texture>
+		<HitSound>monster/cave_pirates_hit</HitSound>
+		<DeathSound>monster/cave_pirates_death</DeathSound>
+		<Size>170</Size>
+		<MaxHitPoints>500</MaxHitPoints>
+		<Defense>15</Defense>
+	</Object>
+	<Object type="0xD316" id="Elder Cave Pirate Cabin Boy">
+		<Group>Cave Pirate Pets</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar28x8</File>
+			<Index>0x0d</Index>
+		</Texture>
+		<HitSound>monster/cave_pirates_hit</HitSound>
+		<DeathSound>monster/cave_pirates_death</DeathSound>
+		<Size>170</Size>
+		<MaxHitPoints>500</MaxHitPoints>
+		<Defense>15</Defense>
+	</Object>
+	<Object type="0xD317" id="Elder Pirate Cave Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Shop>
+			<Name>donorkeys</Name>
+			<Price>50</Price>
+		</Shop>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x163</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to a Elder Pirate Cave.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Pirate Cave Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD318" id="Elder Tomb Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Shop>
+			<Name>donorkeys</Name>
+			<Price>500</Price>
+		</Shop>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x16b</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to a Elder Tomb of Ancients.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Tomb Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD319" id="Elder Pirate Cave Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Pirate Cave</DungeonName>
+		<Texture>
+			<File>drRemote_draw_9431554</File>
+			<Index>0</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD31A" id="Elder Tomb Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Tomb of the Ancients</DungeonName>
+		<Texture>
+			<File>drRemote_draw_11474033</File>
+			<Index>0</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD31B" id="Elder Spider Den Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Shop>
+			<Name>donorkeys</Name>
+			<Price>70</Price>
+		</Shop>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x165</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to a Elder Spider Den.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Spider Den Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD31C" id="Elder Snake Pit Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Shop>
+			<Name>donorkeys</Name>
+			<Price>100</Price>
+		</Shop>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x164</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to a Elder Snake Pit.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Snake Pit Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD31D" id="Elder Spider Den Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Spider Den</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x166</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD31E" id="Elder Undead Lair Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Shop>
+			<Name>donorkeys</Name>
+			<Price>200</Price>
+		</Shop>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x16a</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to a Undead Lair.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Undead Lair Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD31F" id="Elder Snake Pit Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Snake Pit</DungeonName>
+		<Texture>
+			<File>drRemote_draw_17898648</File>
+			<Index>0</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD320" id="Elder Undead Lair Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Undead Lair</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x169</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD321" id="Elder Sprite World Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Shop>
+			<Name>donorkeys</Name>
+			<Price>100</Price>
+		</Shop>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x168</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to a Elder Sprite World.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Sprite World Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD322" id="Elder Abyss Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Abyss</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x15e</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD323" id="Elder Sprite World Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Sprite World</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x167</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD324" id="Elder Abyss Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Shop>
+			<Name>donorkeys</Name>
+			<Price>300</Price>
+		</Shop>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x15f</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to a Elder Abyss.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Abyss Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD325" id="Elder Dreadstump the Pirate King">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_9372349</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/pirate_king_hit</HitSound>
+		<DeathSound>monster/pirate_king_death</DeathSound>
+		<Size>280</Size>
+		<MaxHitPoints>80000</MaxHitPoints>
+		<Defense>23</Defense>
+		<Quest />
+		<StasisImmune />
+		<Level>20</Level>
+		<XpMult>5</XpMult>
+		<NoArticle />
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>500</Damage>
+			<Speed>75</Speed>
+			<LifetimeMS>1500</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Black Ball</ObjectId>
+			<Damage>580</Damage>
+			<Speed>130</Speed>
+			<LifetimeMS>1100</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD326" id="Elder Draconis Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>drRemote_draw_5394924042190848</File>
+			<Index>0</Index>
+		</Texture>
+		<ScaleValue>3</ScaleValue>
+		<SlotType>10</SlotType>
+		<Description>When this key is destroyed, it rips a portal in time and space to a dimension where death is a constant.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Draconis Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD327" id="Elder Draconis Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Lair of Elder Draconis</DungeonName>
+		<Texture>
+			<File>drRemote_draw_910137173</File>
+			<Index>0</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD328" id="Oryx the Birthday God">
+		<DisplayId>Oryx the Birthday God</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar216x16</File>
+			<Index>0x32</Index>
+		</Texture>
+		<HitSound>monster/oryx_hit</HitSound>
+		<DeathSound>monster/oryx_death</DeathSound>
+		<Size>120</Size>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<Defense>20</Defense>
+		<Quest />
+		<God />
+		<StasisImmune />
+		<Level>1</Level>
+		<XpMult>1</XpMult>
+		<NoArticle />
+		<Projectile id="0">
+			<ObjectId>Balloon</ObjectId>
+			<Damage>5</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Cake</ObjectId>
+			<Damage>7</Damage>
+			<Speed>20</Speed>
+			<LifetimeMS>4500</LifetimeMS>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Cake1</ObjectId>
+			<Damage>7</Damage>
+			<Speed>20</Speed>
+			<LifetimeMS>4500</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Cake2</ObjectId>
+			<Damage>7</Damage>
+			<Speed>20</Speed>
+			<LifetimeMS>4500</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD329" id="Birthday Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Party Cellar</DungeonName>
+		<Texture>
+			<File>drRemote_draw_167943966</File>
+			<Index>0</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD32A" id="Birthday Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>drRemote_draw_14738124</File>
+			<Index>0</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>I hope you brought him a present...</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Birthday Portal">CreatePortal</Activate>
+	</Object>
+	<Object type="0xD32B" id="Red Balloon">
+		<DisplayId>Red Balloon</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0xf1</Index>
+		</Texture>
+		<HitSound>monster/night_elves_hit</HitSound>
+		<DeathSound>monster/night_elves_death</DeathSound>
+		<Size>120</Size>
+		<MaxHitPoints>100</MaxHitPoints>
+		<Defense>20</Defense>
+		<Level>1</Level>
+		<XpMult>1</XpMult>
+	</Object>
+	<Object type="0xD32C" id="Green Balloon">
+		<DisplayId>Green Balloon</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0xf3</Index>
+		</Texture>
+		<HitSound>monster/night_elves_hit</HitSound>
+		<DeathSound>monster/night_elves_death</DeathSound>
+		<Size>120</Size>
+		<MaxHitPoints>100</MaxHitPoints>
+		<Defense>20</Defense>
+		<Level>1</Level>
+		<XpMult>1</XpMult>
+	</Object>
+	<Object type="0xD32D" id="Blue Balloon">
+		<DisplayId>Blue Balloon</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0xf5</Index>
+		</Texture>
+		<HitSound>monster/night_elves_hit</HitSound>
+		<DeathSound>monster/night_elves_death</DeathSound>
+		<Size>120</Size>
+		<MaxHitPoints>100</MaxHitPoints>
+		<Defense>20</Defense>
+		<Level>1</Level>
+		<XpMult>1</XpMult>
+	</Object>
+	<Object type="0xD32E" id="Ent Minion">
+		<Group>TreeMinions</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dHero1</File>
+			<Index>3</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ents_hit</HitSound>
+		<DeathSound>monster/ents_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>750</MaxHitPoints>
+		<Defense>0</Defense>
+		<XpMult>0.1</XpMult>
+		<Projectile id="0">
+			<ObjectId>Leaf Bolt</ObjectId>
+			<Damage>25</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<Size>75</Size>
+			<ConditionEffect duration="2">Slowed</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD32F" id="Elder Tree">
+		<Group>Ents</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiCharBig</File>
+			<Index>0x10</Index>
+		</Texture>
+		<HitSound>monster/ents_hit</HitSound>
+		<DeathSound>monster/ents_death</DeathSound>
+		<Size>200</Size>
+		<MaxHitPoints>12500</MaxHitPoints>
+		<Defense>20</Defense>
+		<God />
+		<Projectile id="0">
+			<ObjectId>Green Bolt</ObjectId>
+			<Damage>50</Damage>
+			<Speed>150</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD330" id="Elder Tree Roots">
+		<Group>TreeMinions</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drRedLootBag</File>
+			<Index>0x04</Index>
+		</Texture>
+		<AltTexture id="1">
+			<Texture>
+				<File>drRedLootBag</File>
+				<Index>0x05</Index>
+			</Texture>
+		</AltTexture>
+		<AltTexture id="2">
+			<Texture>
+				<File>drRedLootBag</File>
+				<Index>0x06</Index>
+			</Texture>
+		</AltTexture>
+		<AltTexture id="3">
+			<Texture>
+				<File>drRedLootBag</File>
+				<Index>0x07</Index>
+			</Texture>
+		</AltTexture>
+		<HitSound>monster/ents_hit</HitSound>
+		<DeathSound>monster/ents_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>1000</MaxHitPoints>
+		<Defense>10</Defense>
+		<Projectile id="0">
+			<ObjectId>FS Stick Proj</ObjectId>
+			<Damage>5</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>50</LifetimeMS>
+			<Size>50</Size>
+			<ConditionEffect duration="3">Paralyzed</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>FS Stick Proj</ObjectId>
+			<Damage>0</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>50</LifetimeMS>
+			<Size>50</Size>
+			<ConditionEffect duration="9">Slowed</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD331" id="FS Stick Proj">
+		<Class>Projectile</Class>
+		<Texture>
+			<File>drRedLootBag</File>
+			<Index>0x03</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD332" id="Native Ent God">
+		<DisplayId>Ent God</DisplayId>
+		<Group>Gods</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dMountains1</File>
+			<Index>0x04</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ents_hit</HitSound>
+		<DeathSound>monster/ents_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>1000</MaxHitPoints>
+		<Defense>18</Defense>
+		<Terrain>Mountains</Terrain>
+		<SpawnProb>1.0</SpawnProb>
+		<Spawn>
+			<Mean>3</Mean>
+			<StdDev>1</StdDev>
+			<Min>2</Min>
+			<Max>5</Max>
+		</Spawn>
+		<God />
+		<Projectile id="0">
+			<ObjectId>Fire Bolt</ObjectId>
+			<Damage>70</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD333" id="Sheep Herding Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Sheep Herding Minigame</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x12e</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD334" id="Zombie Minigame Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Zombies Minigame</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x12f</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD335" id="Forest Sanctuary Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Forest Sanctuary</DungeonName>
+		<Texture>
+			<File>drLofiObj5</File>
+			<Index>0x15c</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD336" id="Blue Dragon God">
+		<DisplayId>Nikao the Azure Dragon</DisplayId>
+		<Group>Dragon Gods</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>45</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drChars16x16dEncounters2</File>
+				<Index>46</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drChars16x16dEncounters2</File>
+				<Index>45</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/skeletons_hit</HitSound>
+		<DeathSound>monster/skeletons_death</DeathSound>
+		<Size>225</Size>
+		<MaxHitPoints>60000</MaxHitPoints>
+		<Defense>70</Defense>
+		<XpMult>5.0</XpMult>
+		<Level>20</Level>
+		<StasisImmune />
+		<Projectile id="0">
+			<ObjectId>Dragon Attack Blue Bullet</ObjectId>
+			<Speed>55</Speed>
+			<Damage>125</Damage>
+			<Size>75</Size>
+			<LifetimeMS>2000</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Dragon Attack Blue Fireball</ObjectId>
+			<Speed>75</Speed>
+			<Damage>90</Damage>
+			<Size>140</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="1.5">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Dragon Attack Blue Blast</ObjectId>
+			<Speed>55</Speed>
+			<Damage>125</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1700</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Blue Missile</ObjectId>
+			<Speed>100</Speed>
+			<Damage>200</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>100</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Dragon Attack Green Spin Ball</ObjectId>
+			<Damage>95</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+			<ConditionEffect effect="5">Sick</ConditionEffect>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Dragon Attack Red Spinning Fireball</ObjectId>
+			<Speed>55</Speed>
+			<Damage>120</Damage>
+			<Size>75</Size>
+			<LifetimeMS>1700</LifetimeMS>
+			<ConditionEffect duration="2">Armor Broken</ConditionEffect>
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>100</Speed>
+			<Damage>50</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>55</Speed>
+			<Damage>80</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="9">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>55</Speed>
+			<Damage>50</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="10">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>25</Speed>
+			<Damage>350</Damage>
+			<Size>200</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD337" id="Black Dragon God">
+		<DisplayId>Thanatos the Obsidian Dragon</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>51</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drChars16x16dEncounters2</File>
+				<Index>52</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="2">
+			<Texture>
+				<File>invisible</File>
+				<Index>0</Index>
+			</Texture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drChars16x16dEncounters2</File>
+				<Index>51</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/skeletons_hit</HitSound>
+		<DeathSound>monster/skeletons_death</DeathSound>
+		<Size>240</Size>
+		<MaxHitPoints>50000</MaxHitPoints>
+		<Defense>70</Defense>
+		<XpMult>7.5</XpMult>
+		<StasisImmune />
+		<Projectile id="0">
+			<ObjectId>Dragon Attack Black Ray</ObjectId>
+			<Speed>55</Speed>
+			<Damage>200</Damage>
+			<Size>240</Size>
+			<LifetimeMS>1500</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Dragon Attack Black Spin</ObjectId>
+			<Speed>100</Speed>
+			<Damage>200</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1200</LifetimeMS>
+			<ConditionEffect duration="2">Weak</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Dragon Attack Black Shot</ObjectId>
+			<Speed>55</Speed>
+			<Damage>100</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Dragon Attack Black Bullet</ObjectId>
+			<Speed>100</Speed>
+			<Damage>200</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Black Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>100</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Dragon Attack Blue Fireball</ObjectId>
+			<Speed>100</Speed>
+			<Damage>100</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1700</LifetimeMS>
+			<ConditionEffect duration="2">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Dragon Attack Red Spinning Fireball</ObjectId>
+			<Speed>55</Speed>
+			<Damage>120</Damage>
+			<Size>75</Size>
+			<LifetimeMS>400</LifetimeMS>
+			<ConditionEffect duration="2">Armor Broken</ConditionEffect>
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Dragon Attack Green Spin Ball</ObjectId>
+			<Damage>120</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+			<ConditionEffect effect="3">Sick</ConditionEffect>
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Black Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>50</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="9">
+			<ObjectId>Black Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>50</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="10">
+			<ObjectId>Black Missile</ObjectId>
+			<Speed>25</Speed>
+			<Damage>350</Damage>
+			<Size>200</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD338" id="Green Dragon God">
+		<DisplayId>Limoz the Veridian Dragon</DisplayId>
+		<Group>Dragon Gods</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>49</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drChars16x16dEncounters2</File>
+				<Index>50</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drChars16x16dEncounters2</File>
+				<Index>49</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/skeletons_hit</HitSound>
+		<DeathSound>monster/skeletons_death</DeathSound>
+		<Size>225</Size>
+		<MaxHitPoints>55000</MaxHitPoints>
+		<Defense>40</Defense>
+		<XpMult>5.0</XpMult>
+		<Level>20</Level>
+		<StasisImmune />
+		<Projectile id="0">
+			<ObjectId>Dragon Attack Green Ball</ObjectId>
+			<Damage>135</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>1900</LifetimeMS>
+			<PassesCover />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Dragon Attack Green Spin Ball</ObjectId>
+			<Damage>95</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect effect="3">Sick</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Dragon Attack Green Arrow</ObjectId>
+			<Speed>100</Speed>
+			<Damage>75</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Dragon Attack Green Bullet</ObjectId>
+			<Damage>120</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>1000</LifetimeMS>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Dragon Attack Green Spine</ObjectId>
+			<Speed>55</Speed>
+			<Damage>100</Damage>
+			<Size>100</Size>
+			<LifetimeMS>2500</LifetimeMS>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Dragon Attack Blue Fireball</ObjectId>
+			<Speed>100</Speed>
+			<Damage>100</Damage>
+			<Size>140</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="2">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Dragon Attack Red Orb</ObjectId>
+			<Speed>75</Speed>
+			<Damage>60</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+			<ConditionEffect duration="2">Armor Broken</ConditionEffect>
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>100</Speed>
+			<Damage>50</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>50</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="9">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>50</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="10">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>25</Speed>
+			<Damage>350</Damage>
+			<Size>200</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD339" id="Elder Blue Dragon God">
+		<DisplayId>Nikao the Azure Dragon</DisplayId>
+		<Group>Dragon Gods</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_5696575399526400</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drRemote_draw_5696575399526400</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drRemote_draw_5696575399526400</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/skeletons_hit</HitSound>
+		<DeathSound>monster/skeletons_death</DeathSound>
+		<Size>425</Size>
+		<MaxHitPoints>600000</MaxHitPoints>
+		<Defense>700</Defense>
+		<XpMult>50.0</XpMult>
+		<Level>20</Level>
+		<StasisImmune />
+		<God />
+		<StunImmume />
+		<Projectile id="0">
+			<ObjectId>Dragon Attack Blue Bullet</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1250</Damage>
+			<Size>75</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="3">Quiet</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Dragon Attack Blue Fireball</ObjectId>
+			<Speed>75</Speed>
+			<Damage>900</Damage>
+			<Size>140</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="1.5">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Dragon Attack Blue Blast</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1250</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1700</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Blue Missile</ObjectId>
+			<Speed>100</Speed>
+			<Damage>2000</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1000</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Dragon Attack Green Spin Ball</ObjectId>
+			<Damage>950</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+			<ConditionEffect effect="5">Sick</ConditionEffect>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Dragon Attack Red Spinning Fireball</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1200</Damage>
+			<Size>75</Size>
+			<LifetimeMS>1700</LifetimeMS>
+			<ConditionEffect duration="2">Armor Broken</ConditionEffect>
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>100</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>55</Speed>
+			<Damage>800</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="9">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>55</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="10">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>25</Speed>
+			<Damage>3500</Damage>
+			<Size>200</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD33A" id="Elder Black Dragon God">
+		<DisplayId>Thanatos the Obsidian Dragon</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_4753894108299264</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drRemote_draw_4753894108299264</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="2">
+			<Texture>
+				<File>invisible</File>
+				<Index>0</Index>
+			</Texture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drRemote_draw_4753894108299264</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/skeletons_hit</HitSound>
+		<DeathSound>monster/skeletons_death</DeathSound>
+		<Size>440</Size>
+		<MaxHitPoints>500000</MaxHitPoints>
+		<Defense>700</Defense>
+		<XpMult>70.5</XpMult>
+		<StasisImmune />
+		<God />
+		<StunImmume />
+		<Projectile id="0">
+			<ObjectId>Dragon Attack Black Ray</ObjectId>
+			<Speed>55</Speed>
+			<Damage>2000</Damage>
+			<Size>240</Size>
+			<LifetimeMS>1500</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Dragon Attack Black Spin</ObjectId>
+			<Speed>100</Speed>
+			<Damage>2000</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1200</LifetimeMS>
+			<ConditionEffect duration="2">Weak</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Dragon Attack Black Shot</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1000</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Dragon Attack Black Bullet</ObjectId>
+			<Speed>100</Speed>
+			<Damage>2000</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1200</LifetimeMS>
+			<ConditionEffect duration="3">Quiet</ConditionEffect>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Black Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1000</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Dragon Attack Blue Fireball</ObjectId>
+			<Speed>100</Speed>
+			<Damage>1000</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1700</LifetimeMS>
+			<ConditionEffect duration="2">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Dragon Attack Red Spinning Fireball</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1200</Damage>
+			<Size>75</Size>
+			<LifetimeMS>400</LifetimeMS>
+			<ConditionEffect duration="2">Armor Broken</ConditionEffect>
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Dragon Attack Green Spin Ball</ObjectId>
+			<Damage>1200</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+			<ConditionEffect effect="3">Sick</ConditionEffect>
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Black Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="9">
+			<ObjectId>Black Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="10">
+			<ObjectId>Black Missile</ObjectId>
+			<Speed>25</Speed>
+			<Damage>3500</Damage>
+			<Size>200</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD33B" id="Elder Green Dragon God">
+		<DisplayId>Limoz the Veridian Dragon</DisplayId>
+		<Group>Dragon Gods</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_1074024110</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drRemote_draw_1074024110</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drRemote_draw_1074024110</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/skeletons_hit</HitSound>
+		<DeathSound>monster/skeletons_death</DeathSound>
+		<Size>425</Size>
+		<MaxHitPoints>550000</MaxHitPoints>
+		<Defense>400</Defense>
+		<XpMult>50.0</XpMult>
+		<Level>20</Level>
+		<StasisImmune />
+		<God />
+		<StunImmume />
+		<Projectile id="0">
+			<ObjectId>Dragon Attack Green Ball</ObjectId>
+			<Damage>1350</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>1900</LifetimeMS>
+			<PassesCover />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Dragon Attack Green Spin Ball</ObjectId>
+			<Damage>950</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect effect="3">Sick</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Dragon Attack Green Arrow</ObjectId>
+			<Speed>100</Speed>
+			<Damage>750</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Dragon Attack Green Bullet</ObjectId>
+			<Damage>1200</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>1000</LifetimeMS>
+			<ConditionEffect duration="3">Quiet</ConditionEffect>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Dragon Attack Green Spine</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1000</Damage>
+			<Size>100</Size>
+			<LifetimeMS>2500</LifetimeMS>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Dragon Attack Blue Fireball</ObjectId>
+			<Speed>100</Speed>
+			<Damage>1000</Damage>
+			<Size>140</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="2">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Dragon Attack Red Orb</ObjectId>
+			<Speed>75</Speed>
+			<Damage>600</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+			<ConditionEffect duration="2">Armor Broken</ConditionEffect>
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>100</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="9">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="10">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>25</Speed>
+			<Damage>3500</Damage>
+			<Size>200</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD33C" id="Elder Red Dragon God">
+		<DisplayId>Pyyr the Crimson Dragon</DisplayId>
+		<Group>Red Dragon God Group</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_980207997</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drRemote_draw_980207997</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drRemote_draw_980207997</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/skeletons_hit</HitSound>
+		<DeathSound>monster/skeletons_death</DeathSound>
+		<Size>425</Size>
+		<MaxHitPoints>500000</MaxHitPoints>
+		<Defense>400</Defense>
+		<XpMult>50.0</XpMult>
+		<Level>20</Level>
+		<StasisImmune />
+		<God />
+		<StunImmume />
+		<Projectile id="0">
+			<ObjectId>Dragon Attack Red Big Fireball</ObjectId>
+			<Speed>60</Speed>
+			<Damage>1650</Damage>
+			<Size>400</Size>
+			<LifetimeMS>2500</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Dragon Attack Red Firewave</ObjectId>
+			<Speed>85</Speed>
+			<Damage>1000</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Dragon Attack Red Spinning Fireball</ObjectId>
+			<Speed>65</Speed>
+			<Damage>750</Damage>
+			<Size>150</Size>
+			<LifetimeMS>1200</LifetimeMS>
+			<ConditionEffect duration="3">Bleeding</ConditionEffect>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Dragon Attack Red Orb</ObjectId>
+			<Speed>60</Speed>
+			<Damage>750</Damage>
+			<Size>200</Size>
+			<LifetimeMS>1200</LifetimeMS>
+			<ConditionEffect duration="3">Quiet</ConditionEffect>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Green Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1000</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Dragon Attack Blue Fireball</ObjectId>
+			<Speed>100</Speed>
+			<Damage>1000</Damage>
+			<Size>140</Size>
+			<LifetimeMS>1200</LifetimeMS>
+			<ConditionEffect duration="2">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>140</Speed>
+			<Damage>500</Damage>
+			<Size>80</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>100</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>55</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="9">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>55</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="10">
+			<ObjectId>Red Fire</ObjectId>
+			<Speed>25</Speed>
+			<Damage>3500</Damage>
+			<Size>200</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD33D" id="Elder NM Green Dragon Shield">
+		<DisplayId>Abundant Shield</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+    -
+    <Texture>
+			<File>drLofiObj3</File>
+			<Index>0x3ac</Index>
+		</Texture>
+		<Size>200</Size>
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Defense>20</Defense>
+    -
+    <Projectile id="0">
+			<ObjectId>Black Missile</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1000</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD33E" id="Elder Blue Swarm Minions">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>9</Index>
+		</AnimatedTexture>
+		<HitSound>monster/scorpions_hit</HitSound>
+		<DeathSound>monster/scorpions_death</DeathSound>
+		<Size>40</Size>
+		<MaxHitPoints>200</MaxHitPoints>
+		<Defense>5</Defense>
+		<XpMult>0.0</XpMult>
+		<Projectile id="0">
+			<ObjectId>Blue Missile</ObjectId>
+			<Damage>0</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>700</LifetimeMS>
+			<ConditionEffect duration="1.2">Weak</ConditionEffect>
+			<MultiHit />
+			<Size>140</Size>
+		</Projectile>
+	</Object>
+	<Object type="0xD33F" id="Elder Blue Swarm Masters">
+		<Group>Tomb Swarms</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>9</Index>
+		</AnimatedTexture>
+		<HitSound>monster/scorpions_hit</HitSound>
+		<DeathSound>monster/scorpions_death</DeathSound>
+		<Size>120</Size>
+		<MaxHitPoints>3000</MaxHitPoints>
+		<Defense>20</Defense>
+		<XpMult>1.2</XpMult>
+		<Projectile id="0">
+			<ObjectId>Blue Magic</ObjectId>
+			<Damage>60</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<Wavy />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Blue Missile</ObjectId>
+			<Damage>100</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="1.2">Weak</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Blue Magic</ObjectId>
+			<Damage>60</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<Wavy />
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Blue Missile</ObjectId>
+			<Damage>100</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="1.2">Weak</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD340" id="Elder Jackal Warrior">
+		<Group>Tomb Jackals</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/cyclops_hit</HitSound>
+		<DeathSound>monster/cyclops_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>1400</MaxHitPoints>
+		<Defense>10</Defense>
+		<XpMult>0.6</XpMult>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>80</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD341" id="Elder Jackal Veteran">
+		<Group>Tomb Jackals</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>1</Index>
+		</AnimatedTexture>
+		<HitSound>monster/cyclops_hit</HitSound>
+		<DeathSound>monster/cyclops_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>1800</MaxHitPoints>
+		<Defense>20</Defense>
+		<XpMult>0.8</XpMult>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>120</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD342" id="Elder Jackal Assassin">
+		<Group>Tomb Jackals</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>2</Index>
+		</AnimatedTexture>
+		<HitSound>monster/cyclops_hit</HitSound>
+		<DeathSound>monster/cyclops_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>2000</MaxHitPoints>
+		<Defense>30</Defense>
+		<XpMult>1.1</XpMult>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>100</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>800</LifetimeMS>
+			<Wavy />
+		</Projectile>
+	</Object>
+	<Object type="0xD343" id="Elder Jackal Lord">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters</File>
+			<Index>13</Index>
+		</AnimatedTexture>
+		<HitSound>monster/cyclops_hit</HitSound>
+		<DeathSound>monster/cyclops_death</DeathSound>
+		<Size>120</Size>
+		<MaxHitPoints>6000</MaxHitPoints>
+		<Defense>40</Defense>
+		<XpMult>1.4</XpMult>
+		<Projectile id="0">
+			<ObjectId>Darkness Bolt</ObjectId>
+			<Damage>140</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD344" id="Elder Sphinx Artifact 1">
+		<DisplayId>Sphinx Artifact</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>11</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<MaxHitPoints>2000</MaxHitPoints>
+		<Defense>20</Defense>
+		<XpMult>0.0</XpMult>
+		<Projectile id="0">
+			<ObjectId>Green Spinner</ObjectId>
+			<Damage>90</Damage>
+			<Speed>80</Speed>
+			<Size>80</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Green Spinner</ObjectId>
+			<Damage>130</Damage>
+			<Speed>80</Speed>
+			<Size>120</Size>
+			<LifetimeMS>1000</LifetimeMS>
+			<ConditionEffect duration="5">Slowed</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD345" id="Elder Sphinx Artifact 2">
+		<DisplayId>Sphinx Artifact</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>11</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<MaxHitPoints>2000</MaxHitPoints>
+		<Defense>20</Defense>
+		<XpMult>0.0</XpMult>
+		<Projectile id="0">
+			<ObjectId>Green Spinner</ObjectId>
+			<Damage>90</Damage>
+			<Speed>80</Speed>
+			<Size>80</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Green Spinner</ObjectId>
+			<Damage>130</Damage>
+			<Speed>80</Speed>
+			<Size>120</Size>
+			<LifetimeMS>1000</LifetimeMS>
+			<ConditionEffect duration="5">Slowed</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD346" id="Elder Sphinx Artifact 3">
+		<DisplayId>Sphinx Artifact</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>11</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<MaxHitPoints>2000</MaxHitPoints>
+		<Defense>20</Defense>
+		<XpMult>0.0</XpMult>
+		<Projectile id="0">
+			<ObjectId>Green Spinner</ObjectId>
+			<Damage>90</Damage>
+			<Speed>100</Speed>
+			<Size>80</Size>
+			<LifetimeMS>2000</LifetimeMS>
+			<ConditionEffect duration="3">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Green Spinner</ObjectId>
+			<Damage>130</Damage>
+			<Speed>80</Speed>
+			<Size>120</Size>
+			<LifetimeMS>1000</LifetimeMS>
+			<ConditionEffect duration="5">Slowed</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD347" id="Elder Nile Artifact 1">
+		<DisplayId>Nile Artifact</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>12</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<MaxHitPoints>2500</MaxHitPoints>
+		<Defense>20</Defense>
+		<XpMult>0.0</XpMult>
+		<Projectile id="0">
+			<ObjectId>Black Missile</ObjectId>
+			<Damage>190</Damage>
+			<Speed>40</Speed>
+			<Size>120</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD348" id="Elder Nile Artifact 2">
+		<DisplayId>Nile Artifact</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>12</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<MaxHitPoints>2500</MaxHitPoints>
+		<Defense>20</Defense>
+		<XpMult>0.0</XpMult>
+		<Projectile id="0">
+			<ObjectId>Black Missile</ObjectId>
+			<Damage>190</Damage>
+			<Speed>40</Speed>
+			<Size>120</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD349" id="Elder Nile Artifact 3">
+		<DisplayId>Nile Artifact</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>12</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<MaxHitPoints>2500</MaxHitPoints>
+		<Defense>20</Defense>
+		<XpMult>0.0</XpMult>
+		<Projectile id="0">
+			<ObjectId>Black Missile</ObjectId>
+			<Damage>190</Damage>
+			<Speed>40</Speed>
+			<Size>120</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD34A" id="Elder Pyramid Artifact 1">
+		<DisplayId>Pyramid Artifact</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x8dEncounters</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>120</Size>
+		<MaxHitPoints>3000</MaxHitPoints>
+		<Defense>50</Defense>
+		<XpMult>0.0</XpMult>
+		<Projectile id="0">
+			<ObjectId>Beam</ObjectId>
+			<Damage>50</Damage>
+			<Speed>200</Speed>
+			<Size>140</Size>
+			<LifetimeMS>200</LifetimeMS>
+			<ConditionEffect duration="2">Weak</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD34B" id="Elder Pyramid Artifact 2">
+		<DisplayId>Pyramid Artifact</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x8dEncounters</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>120</Size>
+		<MaxHitPoints>3000</MaxHitPoints>
+		<Defense>50</Defense>
+		<XpMult>0.0</XpMult>
+		<Projectile id="0">
+			<ObjectId>Beam</ObjectId>
+			<Damage>50</Damage>
+			<Speed>200</Speed>
+			<Size>140</Size>
+			<LifetimeMS>200</LifetimeMS>
+			<ConditionEffect duration="2">Weak</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD34C" id="Elder Pyramid Artifact 3">
+		<DisplayId>Pyramid Artifact</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x8dEncounters</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>120</Size>
+		<MaxHitPoints>3000</MaxHitPoints>
+		<Defense>50</Defense>
+		<XpMult>0.0</XpMult>
+		<Projectile id="0">
+			<ObjectId>Beam</ObjectId>
+			<Damage>50</Damage>
+			<Speed>200</Speed>
+			<Size>140</Size>
+			<LifetimeMS>200</LifetimeMS>
+			<ConditionEffect duration="2">Weak</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD34D" id="Elder Tomb Support">
+		<Group>Tomb Bosses</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<DisplayId>Nut</DisplayId>
+		<Quest />
+		<Level>1</Level>
+		<AnimatedTexture>
+			<File>drRemote_draw_1014509324</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/medusa_hit</HitSound>
+		<DeathSound>monster/medusa_death</DeathSound>
+		<MaxHitPoints>800000</MaxHitPoints>
+		<Size>240</Size>
+		<Defense>1500</Defense>
+		<XpMult>10</XpMult>
+		<God />
+		<NoArticle />
+		<StasisImmune />
+		<Projectile id="0">
+			<ObjectId>Darkness Bolt</ObjectId>
+			<Damage>1800</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>120</Size>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Grey Boomerang</ObjectId>
+			<Damage>400</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>4000</LifetimeMS>
+			<ConditionEffect duration="1">Quiet</ConditionEffect>
+			<Boomerang />
+			<MultiHit />
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Blue Boomerang</ObjectId>
+			<Damage>400</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>4000</LifetimeMS>
+			<ConditionEffect duration="5">Weak</ConditionEffect>
+			<Boomerang />
+			<MultiHit />
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Green Boomerang</ObjectId>
+			<Damage>400</Damage>
+			<Speed>20</Speed>
+			<LifetimeMS>4000</LifetimeMS>
+			<ConditionEffect duration="5">Slowed</ConditionEffect>
+			<Boomerang />
+			<MultiHit />
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Purple Boomerang</ObjectId>
+			<Damage>400</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>4000</LifetimeMS>
+			<ConditionEffect duration="5">Blind</ConditionEffect>
+			<Boomerang />
+			<MultiHit />
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Black Arrow</ObjectId>
+			<Damage>400</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>4000</LifetimeMS>
+			<ConditionEffect duration="3">Armor Broken</ConditionEffect>
+			<Size>100</Size>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Spring Green Arrow</ObjectId>
+			<Damage>2000</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>4000</LifetimeMS>
+			<ConditionEffect duration="1.4">Paralyzed</ConditionEffect>
+			<MultiHit />
+			<Size>200</Size>
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Dark Gray Spinner</ObjectId>
+			<Damage>10</Damage>
+			<Speed>120</Speed>
+			<LifetimeMS>5000</LifetimeMS>
+			<ConditionEffect duration="10">Weak</ConditionEffect>
+			<MultiHit />
+			<Size>200</Size>
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Ice Magic</ObjectId>
+			<Damage>500</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>4000</LifetimeMS>
+			<ConditionEffect duration="1.0">Paralyzed</ConditionEffect>
+			<Size>120</Size>
+		</Projectile>
+	</Object>
+	<Object type="0xD34E" id="Elder Tomb Attacker">
+		<Group>Tomb Bosses</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<DisplayId>Geb</DisplayId>
+		<Quest />
+		<Level>1</Level>
+		<AnimatedTexture>
+			<File>drRemote_draw_1099102726</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/medusa_hit</HitSound>
+		<DeathSound>monster/medusa_death</DeathSound>
+		<MaxHitPoints>900000</MaxHitPoints>
+		<Size>240</Size>
+		<Defense>3000</Defense>
+		<XpMult>1</XpMult>
+		<God />
+		<NoArticle />
+		<StunImmume />
+		<Projectile id="0">
+			<ObjectId>Darkness Bolt</ObjectId>
+			<Damage>2800</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>140</Size>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Green Boomerang</ObjectId>
+			<Damage>1000</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>3600</LifetimeMS>
+			<ConditionEffect duration="5">Slowed</ConditionEffect>
+			<Boomerang />
+			<MultiHit />
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Fire Magic</ObjectId>
+			<Damage>300</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<ArmorPiercing />
+			<Size>100</Size>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Dark Gray Spinner</ObjectId>
+			<Damage>10</Damage>
+			<Speed>120</Speed>
+			<LifetimeMS>5000</LifetimeMS>
+			<ConditionEffect duration="10">Weak</ConditionEffect>
+			<MultiHit />
+			<Size>200</Size>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Fireball</ObjectId>
+			<Damage>800</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>140</Size>
+			<Parametric />
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Darkness Bolt</ObjectId>
+			<Damage>2000</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>4000</LifetimeMS>
+			<Size>140</Size>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD34F" id="Elder Tomb Defender">
+		<Group>Tomb Bosses</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<DisplayId>Bes</DisplayId>
+		<Quest />
+		<Level>1</Level>
+		<AnimatedTexture>
+			<File>drRemote_draw_1014370454</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/medusa_hit</HitSound>
+		<DeathSound>monster/medusa_death</DeathSound>
+		<MaxHitPoints>1000000</MaxHitPoints>
+		<Size>240</Size>
+		<Defense>5000</Defense>
+		<XpMult>10</XpMult>
+		<God />
+		<NoArticle />
+		<StunImmume />
+		<Projectile id="0">
+			<ObjectId>Darkness Bolt</ObjectId>
+			<Damage>2400</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>180</Size>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Fire Boomerang</ObjectId>
+			<Damage>1500</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>5000</LifetimeMS>
+			<ConditionEffect duration="5">Armor Broken</ConditionEffect>
+			<ConditionEffect duration="5">Quiet</ConditionEffect>
+			<Boomerang />
+			<MultiHit />
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Silver Shield</ObjectId>
+			<Damage>1600</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>540</LifetimeMS>
+			<ConditionEffect duration="1.2">Stunned</ConditionEffect>
+			<Size>200</Size>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Dark Gray Spinner</ObjectId>
+			<Damage>10</Damage>
+			<Speed>120</Speed>
+			<LifetimeMS>5000</LifetimeMS>
+			<ConditionEffect duration="10">Weak</ConditionEffect>
+			<MultiHit />
+			<Size>200</Size>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Silver Shield</ObjectId>
+			<Damage>600</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>1200</LifetimeMS>
+			<ConditionEffect duration="1.2">Stunned</ConditionEffect>
+			<Size>200</Size>
+		</Projectile>
+	</Object>
+	<Object type="0xD350" id="Elder Active Sarcophagus">
+		<Group>Support Beam</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<DisplayId>Sarcophagus</DisplayId>
+		<Quest />
+		<Level>20</Level>
+		<Texture>
+			<File>drLofiChar216x16</File>
+			<Index>0x0e</Index>
+		</Texture>
+		<HitSound>monster/medusa_hit</HitSound>
+		<DeathSound>monster/medusa_death</DeathSound>
+		<MaxHitPoints>15000</MaxHitPoints>
+		<Size>140</Size>
+		<Defense>100</Defense>
+		<StasisImmune />
+		<XpMult>1.4</XpMult>
+		<God />
+		<Projectile id="0">
+			<ObjectId>Silver Shield</ObjectId>
+			<Damage>0</Damage>
+			<Speed>120</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>200</Size>
+			<ConditionEffect duration="3">Stunned</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD351" id="Elder Beam Priest">
+		<Group>Beam Priests</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<DisplayId>Worshiping Priest</DisplayId>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>5</Index>
+		</AnimatedTexture>
+		<HitSound>monster/medusa_hit</HitSound>
+		<DeathSound>monster/medusa_death</DeathSound>
+		<MaxHitPoints>8000</MaxHitPoints>
+		<Size>100</Size>
+		<Defense>20</Defense>
+		<XpMult>1.0</XpMult>
+		<God />
+		<Projectile id="0">
+			<ObjectId>Purple Boomerang</ObjectId>
+			<Damage>60</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>80</Size>
+			<ConditionEffect duration="5">Weak</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Violet Missile</ObjectId>
+			<Damage>100</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>120</Size>
+		</Projectile>
+	</Object>
+	<Object type="0xD352" id="Elder Beam Priestess">
+		<Group>Beam Priests</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<DisplayId>Worshiping Priestess</DisplayId>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>6</Index>
+		</AnimatedTexture>
+		<HitSound>monster/medusa_hit</HitSound>
+		<DeathSound>monster/medusa_death</DeathSound>
+		<MaxHitPoints>7000</MaxHitPoints>
+		<Size>100</Size>
+		<Defense>15</Defense>
+		<XpMult>1.0</XpMult>
+		<God />
+		<Projectile id="0">
+			<ObjectId>Blue Boomerang</ObjectId>
+			<Damage>0</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>80</Size>
+			<ConditionEffect duration="7">Weak</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Blue Missile</ObjectId>
+			<Damage>80</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>120</Size>
+		</Projectile>
+	</Object>
+	<Object type="0xD353" id="Elder Inactive Sarcophagus">
+		<Group>Tomb Treasure</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<DisplayId>Treasure Sarcophagus</DisplayId>
+		<Texture>
+			<File>drLofiChar216x16</File>
+			<Index>0x0f</Index>
+		</Texture>
+		<HitSound>monster/medusa_hit</HitSound>
+		<DeathSound>monster/medusa_death</DeathSound>
+		<MaxHitPoints>50000</MaxHitPoints>
+		<Size>180</Size>
+		<Defense>100</Defense>
+		<XpMult>0.0</XpMult>
+		<God />
+	</Object>
+	<Object type="0xD354" id="Elder Eagle Sentry">
+		<Group>Tomb Gang</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>8</Index>
+		</AnimatedTexture>
+		<HitSound>monster/elves_hit</HitSound>
+		<DeathSound>monster/elves_death</DeathSound>
+		<MaxHitPoints>4000</MaxHitPoints>
+		<Size>120</Size>
+		<Defense>35</Defense>
+		<XpMult>1.2</XpMult>
+		<God />
+		<Projectile id="0">
+			<ObjectId>Stick</ObjectId>
+			<Damage>70</Damage>
+			<Speed>90</Speed>
+			<LifetimeMS>700</LifetimeMS>
+			<Size>100</Size>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Stick</ObjectId>
+			<Damage>90</Damage>
+			<Speed>90</Speed>
+			<LifetimeMS>700</LifetimeMS>
+			<Size>120</Size>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Brown Claw</ObjectId>
+			<Damage>70</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>700</LifetimeMS>
+			<Size>100</Size>
+		</Projectile>
+	</Object>
+	<Object type="0xD355" id="Elder Jackal Priest">
+		<Group>Tomb Gang</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>9</Index>
+		</AnimatedTexture>
+		<HitSound>monster/elves_hit</HitSound>
+		<DeathSound>monster/elves_death</DeathSound>
+		<MaxHitPoints>2500</MaxHitPoints>
+		<Size>120</Size>
+		<Defense>5</Defense>
+		<XpMult>1.2</XpMult>
+		<God />
+		<Projectile id="0">
+			<ObjectId>Violet Missile</ObjectId>
+			<Damage>100</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<Size>100</Size>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Violet Missile</ObjectId>
+			<Damage>140</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<Size>120</Size>
+		</Projectile>
+	</Object>
+	<Object type="0xD356" id="Elder Lion Archer">
+		<Group>Tomb Gang</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>7</Index>
+		</AnimatedTexture>
+		<HitSound>monster/elves_hit</HitSound>
+		<DeathSound>monster/elves_death</DeathSound>
+		<MaxHitPoints>3200</MaxHitPoints>
+		<Size>120</Size>
+		<Defense>20</Defense>
+		<XpMult>1.2</XpMult>
+		<God />
+		<Projectile id="0">
+			<ObjectId>Indigo Arrow</ObjectId>
+			<Damage>70</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>1200</LifetimeMS>
+			<Size>100</Size>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Indigo Arrow</ObjectId>
+			<Damage>100</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>1200</LifetimeMS>
+			<Size>120</Size>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Spring Green Arrow</ObjectId>
+			<Damage>90</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+			<Size>140</Size>
+			<MultiHit />
+			<ConditionEffect duration="4">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Black Arrow</ObjectId>
+			<Damage>100</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<Size>140</Size>
+			<MultiHit />
+			<ConditionEffect duration="1.2">Paralyzed</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD357" id="Elder Tomb Support Statue">
+		<Group>Tomb Boss Statues</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<DisplayId>Nut Statue</DisplayId>
+		<Size>240</Size>
+		<MaxHitPoints>1000000</MaxHitPoints>
+		<AnimatedTexture>
+			<File>drRemote_draw_1004202760</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+	</Object>
+	<Object type="0xD358" id="Elder Tomb Attacker Statue">
+		<Group>Tomb Boss Statues</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<DisplayId>Geb Statue</DisplayId>
+		<Size>240</Size>
+		<MaxHitPoints>1000000</MaxHitPoints>
+		<AnimatedTexture>
+			<File>drRemote_draw_1099199083</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+	</Object>
+	<Object type="0xD359" id="Elder Tomb Defender Statue">
+		<Group>Tomb Boss Statues</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<DisplayId>Bes Statue</DisplayId>
+		<Size>240</Size>
+		<MaxHitPoints>1000000</MaxHitPoints>
+		<AnimatedTexture>
+			<File>drRemote_draw_1004113964</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+	</Object>
+	<Object type="0xD35A" id="Elder Jungle Fire">
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiObjBig</File>
+			<Index>0x0a</Index>
+		</Texture>
+		<Animation prob="1.0" period="0.0">
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x0b</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x0c</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x0d</Index>
+				</Texture>
+			</Frame>
+		</Animation>
+		<Animation prob="1.0" period="0.0">
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x0e</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x0f</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x10</Index>
+				</Texture>
+			</Frame>
+		</Animation>
+		<HitSound>monster/slimes_death</HitSound>
+		<DeathSound>monster/flying_brain_death</DeathSound>
+		<Size>100</Size>
+		<ShadowSize>85</ShadowSize>
+		<ShadowColor>0xFA9632</ShadowColor>
+		<MaxHitPoints>400</MaxHitPoints>
+		<Defense>80</Defense>
+		<Projectile id="0">
+			<ObjectId>Fireball 2</ObjectId>
+			<MinDamage>20</MinDamage>
+			<MaxDamage>30</MaxDamage>
+			<Speed>60</Speed>
+			<Size>80</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD35B" id="Oryx the Mad God 5">
+		<DisplayId>Oryx the Mad God</DisplayId>
+		<ShowName />
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>37</Index>
+		</AnimatedTexture>
+		<HitSound>monster/oryx_hit</HitSound>
+		<DeathSound>monster/oryx_death</DeathSound>
+		<Sound id="0">use_key</Sound>
+		<Sound id="1">spell/fire_spray</Sound>
+		<Sound id="2">spell/fire_nova</Sound>
+		<Size>220</Size>
+		<MaxHitPoints>200000</MaxHitPoints>
+		<Defense>100</Defense>
+		<Quest />
+		<God />
+		<Oryx />
+		<StasisImmune />
+		<Level>20</Level>
+		<XpMult>1</XpMult>
+		<NoArticle />
+		<Projectile id="0">
+			<ObjectId>Fire Bolt</ObjectId>
+			<Damage>335</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Green Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2500</LifetimeMS>
+			<ConditionEffect duration="10">Slowed</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Blade</ObjectId>
+			<Damage>440</Damage>
+			<Speed>100</Speed>
+			<LifetimeMS>450</LifetimeMS>
+			<ConditionEffect duration="2">Paralyzed</ConditionEffect>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Purple Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="5">Blind</ConditionEffect>
+		</Projectile>
+		<Projectile id="4">
+			<ObjectId>Blue Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>105</Speed>
+			<LifetimeMS>1200</LifetimeMS>
+			<ConditionEffect duration="3">Quiet</ConditionEffect>
+		</Projectile>
+		<Projectile id="5">
+			<ObjectId>Blue Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>45</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="3">Quiet</ConditionEffect>
+		</Projectile>
+		<Projectile id="6">
+			<ObjectId>Red Star</ObjectId>
+			<Damage>360</Damage>
+			<Speed>55</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="5">Armor Broken</ConditionEffect>
+			<ArmorPiercing />
+		</Projectile>
+		<Projectile id="7">
+			<ObjectId>Dark Gray Spinner</ObjectId>
+			<Speed>90</Speed>
+			<Size>100</Size>
+			<Damage>10</Damage>
+			<LifetimeMS>1800</LifetimeMS>
+			<ConditionEffect duration="10">Quiet</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="8">
+			<ObjectId>Gray Spinner</ObjectId>
+			<Speed>90</Speed>
+			<Size>100</Size>
+			<Damage>10</Damage>
+			<LifetimeMS>1800</LifetimeMS>
+			<ConditionEffect duration="10">Weak</ConditionEffect>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="9">
+			<ObjectId>Fire Boomerang</ObjectId>
+			<Damage>350</Damage>
+			<Speed>60</Speed>
+			<LifetimeMS>5000</LifetimeMS>
+			<ConditionEffect duration="5">Armor Broken</ConditionEffect>
+			<ConditionEffect duration="1">Paralyzed</ConditionEffect>
+			<ConditionEffect duration="5">Quiet</ConditionEffect>
+			<ConditionEffect duration="10">Weak</ConditionEffect>
+			<Boomerang />
+			<MultiHit />
+		</Projectile>
 	</Object>
 </Objects>

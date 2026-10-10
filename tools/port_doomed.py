@@ -150,8 +150,18 @@ def references(o):
     return refs
 
 
-def select(dr, bs):
+def select(dr, bs, extra=(), allowed_portals=frozenset(), behaviour_refs=None):
+    """extra: ids to port besides the item classes (dungeon map objects and portals);
+    allowed_portals: portals of ported dungeons; behaviour_refs: {id: ids its behaviour spawns}."""
+    behaviour_refs = behaviour_refs or {}
+
+    def refs_of(o):
+        return references(o) | behaviour_refs.get(o.get("id"), set())
+
     chosen, skipped, renames = {}, {}, {}
+    for oid in extra:
+        if oid in dr and oid not in bs:
+            chosen[oid] = dr[oid]
     for oid, o in dr.items():
         if o.findtext("Class") not in PORTED_CLASSES:
             continue
@@ -165,7 +175,8 @@ def select(dr, bs):
             skipped[oid] = "class ability: " + ", ".join(sorted(effects & PORT_LATER_EFFECTS))
             continue
         # keys that open Doomed Realms dungeons wait for the dungeons
-        portals = [r for r in references(o) if r in dr and r not in bs and dr[r].findtext("Class") == "Portal"]
+        portals = [r for r in references(o) if r in dr and r not in bs and dr[r].findtext("Class") == "Portal"
+                   and r not in allowed_portals]
         if portals:
             skipped[oid] = "opens " + portals[0]
             continue
@@ -175,8 +186,10 @@ def select(dr, bs):
     # Pet there) is ported under its own id, "<id> (Doomed)", keeping its display name.
     todo = list(chosen.values()) + [dr[old] for old in renames]
     while todo:
-        for ref in references(todo.pop()):
-            if ref not in dr or ref in chosen or ref in renames or dr[ref].findtext("Class") == "Portal":
+        for ref in refs_of(todo.pop()):
+            if ref not in dr or ref in chosen or ref in renames:
+                continue
+            if dr[ref].findtext("Class") == "Portal" and ref not in allowed_portals:
                 continue
             if ref in bs:
                 if dr[ref].findtext("Class") != "Character" or bs[ref].findtext("Class") == "Character":
@@ -370,6 +383,90 @@ def fix_class_references(converted, dr, bs, types):
                 o.remove(u)
 
 
+def fix_portals_and_keys(converted, portal_world):
+    """Portals point at their ported dungeon; keys create them (Doomed Realms "Create" is "CreatePortal")."""
+    portal_ids = {o.get("id") for o in converted if o.findtext("Class") == "Portal"}
+    for o in converted:
+        if o.findtext("Class") == "Portal" and o.get("id") in portal_world:
+            dn = o.find("DungeonName")
+            if dn is None:
+                dn = ET.SubElement(o, "DungeonName")
+            dn.text = portal_world[o.get("id")]
+            if o.find("IntergamePortal") is None:
+                ET.SubElement(o, "IntergamePortal")
+        for a in o.iter("Activate"):
+            if a.text == "Create" and (a.get("id") in portal_ids or a.get("id") in portal_world):
+                a.text = "CreatePortal"
+
+
+GROUNDS_SERVER = os.path.join(ROOT, "source", "Shared", "resources", "xml", "custom", "DoomedRealmsGrounds.xml")
+GROUNDS_CLIENT = os.path.join(CLIENT_ASSETS, "custom", "xmls", "DoomedRealmsGrounds.xml")
+GROUND_TYPE_START = 0xE000
+
+
+def write_grounds(dr_root, bs, worlds, types, sheets):
+    """Doomed Realms ground tiles the ported maps use and betterSkillys lacks."""
+    import port_doomed_worlds as pw
+    dr_files = glob.glob(os.path.join(dr_root, "db", "data", "*.xml"))
+    bs_files = [f for f in glob.glob(os.path.join(ROOT, "source", "Shared", "resources", "xml", "**", "*.xml"), recursive=True)
+                if os.path.abspath(f) != os.path.abspath(GROUNDS_SERVER)]
+    dr_grounds = pw.ground_names(dr_files)
+    bs_ids = set(pw.ground_names(bs_files).values())
+    used = {dr_grounds[g] for (_, _, _, maps) in worlds.values() for wm in maps for (g, _, _, _) in wm["dict"] if g in dr_grounds}
+    wanted = sorted(used - bs_ids)
+    elems = {}
+    for f in dr_files:
+        text = re.sub(r"<\?xml[^>]*\?>", "", open(f, encoding="utf-8", errors="replace").read())
+        try:
+            root = ET.fromstring("<r>" + text + "</r>")
+        except ET.ParseError:
+            continue
+        for g in root.iter("Ground"):
+            if g.get("id") in wanted:
+                elems[g.get("id")] = g
+    out = []
+    for gid in wanted:
+        key = "ground:" + gid
+        if key not in types:
+            used_t = {int(v, 16) for k, v in types.items() if k.startswith("ground:")}
+            t_ = GROUND_TYPE_START
+            while t_ in used_t:
+                t_ += 1
+            types[key] = "0x%04X" % t_
+        out.append(convert(elems[gid], types[key], sheets, {}))
+    with open(TYPES_JSON, "w") as f:
+        json.dump(dict(sorted(types.items(), key=lambda kv: kv[1])), f, indent=1)
+    for path in (GROUNDS_SERVER, GROUNDS_CLIENT):
+        root = ET.Element("GroundTypes")
+        for g in out:
+            root.append(g)
+        ET.indent(root, space="\t")
+        with open(path, "w", encoding="utf-8", newline="\r\n") as f:
+            f.write("<!-- Generated by tools/port_doomed.py from the Doomed Realms ground tiles. Do not edit. -->\n")
+            f.write(ET.tostring(root, encoding="unicode") + "\n")
+    hook_client_grounds()
+    return len(out)
+
+
+def hook_client_grounds():
+    as_file = os.path.join(CLIENT_ASSETS, "custom", "xmls", "DoomedRealmsGrounds.as")
+    if not os.path.exists(as_file):
+        with open(as_file, "w", newline="\r\n") as f:
+            f.write("package kabam.rotmg.assets.custom.xmls\n{\nimport mx.core.ByteArrayAsset;\n\n"
+                    '[Embed(source="DoomedRealmsGrounds.xml", mimeType="application/octet-stream")]\n'
+                    "    public class DoomedRealmsGrounds extends ByteArrayAsset\n    {\n    }\n}\n")
+    data_as = os.path.join(CLIENT_ASSETS, "EmbeddedData.as")
+    t = open(data_as, encoding="utf-8-sig").read()
+    if "doomedRealmsGrounds" not in t:
+        t = t.replace("        private static const customProj:Class = CustomProj;",
+                      "        private static const customProj:Class = CustomProj;\n"
+                      "        private static const doomedRealmsGrounds:Class = DoomedRealmsGrounds;", 1)
+        t = t.replace("            new customGrounds()", "            new customGrounds(),\n            new doomedRealmsGrounds()", 1)
+        if "new doomedRealmsGrounds()" not in t:
+            sys.exit("Could not hook DoomedRealmsGrounds.xml into EmbeddedData.as")
+        open(data_as, "w", encoding="utf-8", newline="").write(t)
+
+
 def write_xml(objs, path):
     root = ET.Element("Objects")
     root.text = "\n"
@@ -491,7 +588,22 @@ def main():
     dr = load_objects(glob.glob(os.path.join(args.dr, "db", "data", "*.xml")))
     bs = load_objects([f for f in glob.glob(os.path.join(ROOT, "source", "Shared", "resources", "xml", "**", "*.xml"), recursive=True)
                        if os.path.abspath(f) != os.path.abspath(SERVER_XML)])
-    chosen, skipped = select(dr, bs)
+    # dungeons: what their maps place, their portals, and what the monsters' behaviours spawn
+    import port_doomed_worlds as pw
+    import port_doomed_monsters as pm
+    worlds = pw.world_maps(args.dr)
+    map_objs = {o for (_, _, _, maps) in worlds.values() for wm in maps for (_, o, _, _) in wm["dict"] if o}
+    portal_world = {pid: worlds[cls][0] for cls, pids in pw.PORTED_WORLDS.items() for pid in pids}
+    dr_by_type = {int(o.get("type"), 16): oid for oid, o in dr.items() if o.get("type")}
+    blocks = pm.load_blocks(args.dr)
+    behaviour_refs = {}
+    for t_, oid in dr_by_type.items():
+        if t_ in blocks:
+            refs = {dr_by_type[r] for r in pm.referenced_types(args.dr, [t_], blocks) if r in dr_by_type}
+            if refs:
+                behaviour_refs[oid] = refs
+    chosen, skipped = select(dr, bs, extra=map_objs | set(portal_world), allowed_portals=set(portal_world),
+                             behaviour_refs=behaviour_refs)
     classes = {}
     for o in chosen.values():
         classes[o.findtext("Class")] = classes.get(o.findtext("Class"), 0) + 1
@@ -505,6 +617,26 @@ def main():
         return
     if args.fetch_remote:
         fetch_remote(remotes)
+    # objects whose remote sprite no longer exists borrow the sprite of a betterSkillys object with
+    # the same base name ("Oryx the Mad God 5" -> "Oryx the Mad God"); otherwise they are left out
+    for oid, o in list(chosen.items()):
+        if not any(not os.path.exists(remote_file(r)) for r in remote_ids({oid: o})):
+            continue
+        base = re.sub(r"[\s\d']+$", "", (o.findtext("DisplayId") or oid).replace("Lil' ", "")).strip()
+        animated = o.findtext("Class") == "Character"
+        donor = next((b for bid, b in sorted(bs.items()) if bid.startswith(base) and
+                      b.find("AnimatedTexture" if animated else "Texture") is not None), None)
+        if donor is None:
+            continue
+        o = copy.deepcopy(o)
+        for parent in list(o.iter()):
+            for child in list(parent):
+                if child.tag == "RemoteTexture":
+                    idx = list(parent).index(child)
+                    parent.remove(child)
+                    parent.insert(idx, copy.deepcopy(donor.find("AnimatedTexture" if animated else "Texture")))
+        chosen[oid] = o
+        print("  %s: sprite unavailable, using %s's" % (oid, donor.get("id")))
     # leave out objects whose remote sprite no longer exists, and the items that give them
     dropped = {oid for oid, o in chosen.items()
                if any(not os.path.exists(remote_file(r)) for r in remote_ids({oid: o}))}
@@ -522,6 +654,8 @@ def main():
     converted = [convert(o, types[oid], sheets, remote_used)
                  for oid, o in sorted(chosen.items(), key=lambda kv: types[kv[0]])]
     fix_class_references(converted, dr, bs, types)
+    fix_portals_and_keys(converted, portal_world)
+    grounds = write_grounds(args.dr, bs, worlds, types, sheets)
     write_xml(converted, SERVER_XML)
     write_xml(converted, CLIENT_XML)
     n = write_assets(sheets, remote_used, export_dr_images(args.dr))
@@ -534,6 +668,38 @@ def main():
     import port_doomed_allies
     n = port_doomed_allies.write_ally_behaviors(args.dr, chosen)
     print("Wrote %s: %d turrets, summons and pearl substitutes." % (port_doomed_allies.ALLY_BEHAVIORS_CS, n))
+
+    def final_id(oid):
+        if oid in bs or oid in types:
+            return oid
+        if oid + " (Doomed)" in types:
+            return oid + " (Doomed)"
+        return oid
+
+    def known(oid):
+        return oid in bs or oid in types
+
+    dr_grounds = pw.ground_names(glob.glob(os.path.join(args.dr, "db", "data", "*.xml")))
+    missing = sorted({o for o in map_objs if not known(final_id(o))})
+    if missing:
+        print("  map objects with no definition (left as is): %s" % ", ".join(missing))
+    ids = pw.write_worlds(worlds, dr_grounds, final_id)
+    print("Wrote %d dungeons to %s and %s (%d new ground tiles)." % (len(ids), pw.WORLDS_DIR, pw.WORLDS_XML, grounds))
+
+    pets = {a.get("objectId") for o in chosen.values() for a in o.iter("Activate") if a.text == "PermaPet"}
+    ally_types = set(port_doomed_allies.parse_ally_behaviors(args.dr))
+    monsters = {oid: int(o.get("type"), 16) for oid, o in chosen.items()
+                if o.findtext("Class") == "Character" and oid not in pets
+                and int(o.get("type"), 16) not in ally_types and int(o.get("type"), 16) in blocks}
+
+    def type_to_id(t_):
+        if t_ not in dr_by_type:
+            return None
+        oid = final_id(dr_by_type[t_])
+        return oid if known(oid) else None
+
+    _, n = pm.write_monsters(args.dr, monsters, None, type_to_id)
+    print("Wrote %s: %d monsters." % (pm.DEFS_CS, n))
 
 
 if __name__ == "__main__":

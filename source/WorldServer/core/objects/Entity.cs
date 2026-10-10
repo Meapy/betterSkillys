@@ -302,6 +302,9 @@ namespace WorldServer.core.objects
 
         public void OnChatTextReceived(Player player, string text)
         {
+            // ChatEvent behaviours of monsters ported from Doomed Realms
+            WorldServer.logic.doomed.DoomedRuntime.OnChat(this, player, text, default);
+
             var state = CurrentState;
 
             while (state != null)

@@ -455,6 +455,41 @@ namespace WorldServer.core.commands.doomed
         }
     }
 
+    // Opens a new instance of a dungeon and sends you there. Several Doomed Realms areas have no
+    // natural entrance (Battle Arena, Kitchen, Mine, Gauntlet, ...).
+    internal class DungeonCommand : Command
+    {
+        public override RankingType RankRequirement => RankingType.Admin;
+        public override string CommandName => "dungeon";
+
+        protected override bool Process(Player player, TickTime time, string args)
+        {
+            var worlds = player.GameServer.Resources.GameData.AllWorlds.ToList();
+            var name = args.Trim();
+            if (name.Length == 0)
+            {
+                player.SendInfo("Usage: /dungeon <name>. Doomed Realms dungeons: " +
+                    string.Join(", ", worlds.Where(w => w.MapJM.Any(m => m.StartsWith("Doomed/"))).Select(w => w.IdName).OrderBy(n => n)));
+                return false;
+            }
+            var world = worlds.FirstOrDefault(w => string.Equals(w.IdName, name, StringComparison.OrdinalIgnoreCase))
+                        ?? worlds.FirstOrDefault(w => w.IdName.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0);
+            if (world == null)
+            {
+                player.SendError($"No dungeon called '{name}'.");
+                return false;
+            }
+            var instance = player.GameServer.WorldManager.CreateNewWorld(world.IdName, null, player.World);
+            if (instance == null)
+            {
+                player.SendError($"Couldn't open {world.IdName}.");
+                return false;
+            }
+            player.Reconnect(instance);
+            return true;
+        }
+    }
+
     internal class IpCommand : Command
     {
         public override RankingType RankRequirement => RankingType.Admin;
