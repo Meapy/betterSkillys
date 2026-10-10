@@ -492,6 +492,18 @@ namespace WorldServer.core.worlds
             return closestObj;
         }
 
+        // Set when a player's message arrives, so the world thread can sleep between ticks
+        // instead of polling for messages.
+        private readonly System.Threading.ManualResetEventSlim IOSignal = new System.Threading.ManualResetEventSlim(false, 0);
+
+        public void SignalIO() => IOSignal.Set();
+
+        public void WaitForIO(int timeoutMs)
+        {
+            IOSignal.Wait(timeoutMs);
+            IOSignal.Reset();
+        }
+
         public void ProcessPlayerIO(ref TickTime time)
         {
             foreach (var player in Players.Values)

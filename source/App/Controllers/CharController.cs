@@ -16,12 +16,6 @@ namespace App.Controllers
             _core = core;
         }
 
-        private bool IsLocalRequest()
-        {
-            var ip = HttpContext.Connection.RemoteIpAddress;
-            return ip != null && System.Net.IPAddress.IsLoopback(ip);
-        }
-
 
         [HttpPost("purchaseClassUnlock")]
         public void PurchaseClassUnlock([FromForm] string guid, [FromForm] string password, [FromForm] string classType)
@@ -81,7 +75,7 @@ namespace App.Controllers
                     acc = _core.Database.CreateGuestAccount(guid);
 
                 var list = CharList.FromDb(_core, acc);
-                list.Servers = _core.GetServerList(IsLocalRequest());
+                list.Servers = _core.GetServerList(HttpContext.Connection.RemoteIpAddress);
                 Response.CreateXml(list.ToXml(_core).ToString());
                 return;
             }

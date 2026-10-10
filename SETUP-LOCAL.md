@@ -30,6 +30,7 @@ The account server address is compiled into `LocalhostSetup.as`, so the script c
 - **Firewall:** right-click `Allow Remote Players.bat` and choose **Run as administrator**, once. It opens TCP 8080 and 2051.
 - **Router:** forward TCP 8080 and 2051 to this PC.
 - **If the public IP changes:** update `wServer.json` and rebuild the package.
+- **Play on this PC with `Play Client.bat`**, not the friends' package. The package connects to the public IP, so all of your game traffic goes out through the router and back in (NAT loopback), which loads the router and makes the game lag for players connecting from outside. The account server now sends this PC's LAN address to clients that arrive that way, but the local client avoids the router altogether.
 
 ## Admin
 
@@ -74,7 +75,15 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
 ## Changes from upstream
 
 - `client/src/WebMain.as`: on a first run the map scale setting (`mscale`) is undefined until the player enters the game. The first window resize divided by it and asked for a 0-pixel-wide Stage3D back buffer (Error #3780); it now defaults to 1.
-- `source/App`: `char/list` and `app/serverList` send 127.0.0.1 as the world server address to clients on this PC.
+- `source/App`: `char/list` and `app/serverList` send 127.0.0.1 as the world server address to clients on this PC, and this PC's LAN address to clients on the local network or reaching us through our own public IP.
+- **Network performance** (world server):
+  - Each world thread queues the messages it sends during one pass of its loop and sends them together at the end (`NetworkSendHandler.BeginBatch`/`FlushBatch`). A tick's messages leave in a few TCP segments per player instead of one segment per message.
+  - World threads sleep until a player's message arrives or the next tick is due, instead of polling and keeping a CPU core busy for every world with players in it. `Program.cs` asks Windows for 1 ms timer precision so ticks stay 100 ms apart.
+  - Fixed byte counting when a send needs more than two chunks, which could drop data and corrupt the stream. A message that doesn't fit in the send buffer now goes first in the next send, so messages stay in order.
+  - Quick Edit is turned off in the World Server console window. Clicking in it no longer pauses the server.
+  - Per-hit debug prints are gone from the console.
+  - Ticks slower than 200 ms are logged as "Slow tick" in `logs/wServer`.
+  - The WorldServer and Shared projects are compiled with optimisation, in the Debug build that `Run Server.bat` uses too.
 - `wServer.json`: port 2051 instead of 2050, and the public address.
 
 ## Content ported from Doomed Realms

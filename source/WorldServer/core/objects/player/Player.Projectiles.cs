@@ -182,7 +182,7 @@ namespace WorldServer.core.objects
             if (elapsedSinceStart > projectileDesc.LifetimeMS)
             {
                 projectile.Disabled = true;
-                Console.WriteLine("[EnemyHit] -> A expired shot tried to hit entity");
+                //Console.WriteLine("[EnemyHit] -> A expired shot tried to hit entity");
                 return;
             }
 
@@ -341,7 +341,7 @@ namespace WorldServer.core.objects
                 return;
             }
 
-            Console.WriteLine($"[OtherHit] {Name} -> Failure Unknown OtherHit target END OF LOGIC");
+            //Console.WriteLine($"[OtherHit] {Name} -> Failure Unknown OtherHit target END OF LOGIC");
         }
 
         public void HandleProjectileDetection(int time, float x, float y, ref TimedPosition[] moveRecords)

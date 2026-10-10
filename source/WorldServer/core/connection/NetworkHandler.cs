@@ -27,6 +27,15 @@ namespace WorldServer.core.connection
         private readonly object sendLock;
         private SendState sendState;
         private ConcurrentQueue<OutgoingMessage> Pending;
+        private OutgoingMessage Overflow; // didn't fit in the last send; goes first in the next one
+
+        // Clients sent to by this thread since BeginBatch, or null when the thread isn't batching.
+        // World threads batch each pass of their loop, so the messages of a tick leave in one send
+        // (a few TCP segments) per client instead of one segment per message.
+        [ThreadStatic]
+        private static HashSet<NetworkSendHandler> Batch;
+        [ThreadStatic]
+        private static HashSet<NetworkSendHandler> Flushing;
 
         public NetworkSendHandler(Client client, SocketAsyncEventArgs e)
         {
@@ -40,10 +49,31 @@ namespace WorldServer.core.connection
             Pending = new ConcurrentQueue<OutgoingMessage>();
         }
 
+        public static void BeginBatch() => Batch ??= new HashSet<NetworkSendHandler>();
+
+        public static void FlushBatch()
+        {
+            var batch = Batch;
+            if (batch == null || batch.Count == 0)
+                return;
+
+            // swap sets first: a send can fail and disconnect a client, which may send to others
+            Batch = Flushing ?? new HashSet<NetworkSendHandler>();
+            Flushing = batch;
+            foreach (var handler in batch)
+                handler.Tick();
+            batch.Clear();
+        }
+
         public void SendMessage(OutgoingMessage message)
         {
             Pending.Enqueue(message);
-            Tick();
+
+            var batch = Batch;
+            if (batch != null)
+                batch.Add(this);
+            else
+                Tick();
         }
 
         public void SetSocket(Socket socket)
@@ -87,7 +117,7 @@ namespace WorldServer.core.connection
             }
 
             s.BytesSent += e.BytesTransferred;
-            s.BytesAvailable -= s.BytesSent;
+            s.BytesAvailable -= e.BytesTransferred;
 
             if (s.BytesAvailable <= 0)
             {
@@ -116,6 +146,17 @@ namespace WorldServer.core.connection
                 var s = (SendToken)e.UserToken;
                 s.Reset();
 
+                if (Overflow != null)
+                {
+                    var packet = Overflow;
+                    Overflow = null;
+                    var bytesWritten = packet.Write(s.Data, 0);
+                    if (bytesWritten == 0)
+                        StaticLogger.Instance.Error($"Dropped a {packet.MessageId} message to {Client.Account?.Name} that is bigger than the send buffer");
+                    else if (bytesWritten.HasValue)
+                        s.BytesAvailable += bytesWritten.Value;
+                }
+
                 while (Pending.TryDequeue(out var packet))
                 {
                     var bytesWritten = packet.Write(s.Data, s.BytesAvailable);
@@ -124,9 +165,9 @@ namespace WorldServer.core.connection
 
                     if (bytesWritten == 0)
                     {
-                        Pending.Enqueue(packet);
-                        sendState = SendState.Ready;
-                        return true;
+                        // the buffer is full: send it and keep this message for the next send, in order
+                        Overflow = packet;
+                        break;
                     }
                     s.BytesAvailable += bytesWritten.Value;
                 }
@@ -143,6 +184,7 @@ namespace WorldServer.core.connection
         {
             ((SendToken)SocketAsyncEventArgs.UserToken).Reset();
             Pending = new ConcurrentQueue<OutgoingMessage>();
+            Overflow = null;
             sendState = SendState.Awaiting;
         }
     }
@@ -281,7 +323,11 @@ namespace WorldServer.core.connection
                             }
                         }
                         else
-                            Client.Player.IncomingMessages.Enqueue(new InboundBuffer(Client, id, payload));
+                        {
+                            var player = Client.Player;
+                            player.IncomingMessages.Enqueue(new InboundBuffer(Client, id, payload));
+                            player.World?.SignalIO();
+                        }
                     }
                     r.Reset();
                 }
@@ -357,6 +403,9 @@ namespace WorldServer.core.connection
         }
 
         public void SendPacket(OutgoingMessage pkt) => NetworkSendHandler.SendMessage(pkt);
+
+        // sends what is queued for this client now, without waiting for the end of a batch
+        public void Flush() => NetworkSendHandler.Tick();
 
         public void SendPackets(IEnumerable<OutgoingMessage> pkts)
         {
