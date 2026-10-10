@@ -17,10 +17,16 @@ package kabam.rotmg.assets.doomed
       private static const chars16x16rEncounters:Class;
       [Embed(source="images/chars16x8dEncounters.png")]
       private static const chars16x8dEncounters:Class;
+      [Embed(source="images/chars8x8dBeach.png")]
+      private static const chars8x8dBeach:Class;
+      [Embed(source="images/chars8x8rBeach.png")]
+      private static const chars8x8rBeach:Class;
       [Embed(source="images/chars8x8rEncounters.png")]
       private static const chars8x8rEncounters:Class;
       [Embed(source="images/chars8x8rLow2.png")]
       private static const chars8x8rLow2:Class;
+      [Embed(source="images/chars8x8rMid2.png")]
+      private static const chars8x8rMid2:Class;
       [Embed(source="images/chars8x8rPets1.png")]
       private static const chars8x8rPets1:Class;
       [Embed(source="images/chars8x8rPets1Mask.png")]
@@ -135,6 +141,8 @@ package kabam.rotmg.assets.doomed
       private static const drRemote_draw_5901058008154112:Class;
       [Embed(source="images/drRemote_draw_5945738800398336.png")]
       private static const drRemote_draw_5945738800398336:Class;
+      [Embed(source="images/drRemote_draw_5964462121025536.png")]
+      private static const drRemote_draw_5964462121025536:Class;
       [Embed(source="images/drRemote_draw_6077797936136192.png")]
       private static const drRemote_draw_6077797936136192:Class;
       [Embed(source="images/drRemote_draw_6323904540835840.png")]
@@ -175,11 +183,15 @@ package kabam.rotmg.assets.doomed
          AnimatedChars.add("drChars16x16dMountains1", new chars16x16dMountains1().bitmapData, null, 16, 16, 112, 16, AnimatedChar.DOWN);
          AnimatedChars.add("drChars16x16rEncounters", new chars16x16rEncounters().bitmapData, null, 16, 16, 112, 16, AnimatedChar.RIGHT);
          AnimatedChars.add("drChars16x8dEncounters", new chars16x8dEncounters().bitmapData, null, 16, 8, 112, 8, AnimatedChar.DOWN);
+         AnimatedChars.add("drChars8x8dBeach", new chars8x8dBeach().bitmapData, null, 8, 8, 56, 8, AnimatedChar.DOWN);
+         AnimatedChars.add("drChars8x8rBeach", new chars8x8rBeach().bitmapData, null, 8, 8, 56, 8, AnimatedChar.RIGHT);
          AnimatedChars.add("drChars8x8rEncounters", new chars8x8rEncounters().bitmapData, null, 8, 8, 56, 8, AnimatedChar.RIGHT);
          AnimatedChars.add("drChars8x8rLow2", new chars8x8rLow2().bitmapData, null, 8, 8, 56, 8, AnimatedChar.RIGHT);
+         AnimatedChars.add("drChars8x8rMid2", new chars8x8rMid2().bitmapData, null, 8, 8, 56, 8, AnimatedChar.RIGHT);
          AnimatedChars.add("drChars8x8rPets1", new chars8x8rPets1().bitmapData, new chars8x8rPets1Mask().bitmapData, 8, 8, 56, 8, AnimatedChar.RIGHT);
          AssetLibrary.addImageSet("drLofiChar16x16", new lofiChar().bitmapData, 16, 16);
          AssetLibrary.addImageSet("drLofiChar216x16", new lofiChar2().bitmapData, 16, 16);
+         AssetLibrary.addImageSet("drLofiChar216x8", new lofiChar2().bitmapData, 16, 8);
          AssetLibrary.addImageSet("drLofiChar28x8", new lofiChar2().bitmapData, 8, 8);
          AssetLibrary.addImageSet("drLofiChar8x8", new lofiChar().bitmapData, 8, 8);
          AssetLibrary.addImageSet("drLofiEnvironment", new lofiEnvironment().bitmapData, 8, 8);
@@ -246,6 +258,7 @@ package kabam.rotmg.assets.doomed
          AssetLibrary.addImageSet("drRemote_draw_5757939698630656", new drRemote_draw_5757939698630656().bitmapData, 8, 8);
          AssetLibrary.addImageSet("drRemote_draw_5901058008154112", new drRemote_draw_5901058008154112().bitmapData, 8, 8);
          AssetLibrary.addImageSet("drRemote_draw_5945738800398336", new drRemote_draw_5945738800398336().bitmapData, 16, 16);
+         AnimatedChars.add("drRemote_draw_5964462121025536", new drRemote_draw_5964462121025536().bitmapData, null, 8, 8, 56, 8, AnimatedChar.DOWN);
          AssetLibrary.addImageSet("drRemote_draw_6077797936136192", new drRemote_draw_6077797936136192().bitmapData, 112, 16);
          AssetLibrary.addImageSet("drRemote_draw_6323904540835840", new drRemote_draw_6323904540835840().bitmapData, 16, 16);
          AssetLibrary.addImageSet("drRemote_draw_6488147892371456", new drRemote_draw_6488147892371456().bitmapData, 8, 8);

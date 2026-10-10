@@ -522,6 +522,36 @@ namespace WorldServer.core.objects
                     case ActivateEffects.Gold:
                         AEGold(time, item, target, eff);
                         break;
+                    case ActivateEffects.PearlAbility:
+                        AEPearlAbility(time, item, target, eff);
+                        break;
+                    case ActivateEffects.BuildTower:
+                        AEBuildTower(time, item, target, eff);
+                        break;
+                    case ActivateEffects.MonsterToss:
+                        AEMonsterToss(time, item, target, eff);
+                        break;
+                    case ActivateEffects.PartyAOE:
+                        AEPartyAOE(time, item, target, eff);
+                        break;
+                    case ActivateEffects.MiniPot:
+                        AEMiniPot(time, item, target, eff);
+                        break;
+                    case ActivateEffects.Halo:
+                        AEHalo(time, item, target, eff);
+                        break;
+                    case ActivateEffects.SamuraiAbility:
+                        AESamuraiAbility(time, item, target, eff);
+                        break;
+                    case ActivateEffects.Summon:
+                        AESummon(time, item, target, eff);
+                        break;
+                    case ActivateEffects.TomeDamage:
+                        AETomeDamage(time, item, target, eff);
+                        break;
+                    case ActivateEffects.MultiDecoy:
+                        AEMultiDecoy(time, item, target, eff);
+                        break;
                     case ActivateEffects.LevelTwenty:
                     case ActivateEffects.MarkAndTeleport:
                     case ActivateEffects.SelfTransform:

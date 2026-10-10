@@ -48,10 +48,12 @@ CLIENT_IMAGES = os.path.join(CLIENT_ASSETS, "doomed", "images")
 CLIENT_ASSETS_AS = os.path.join(CLIENT_ASSETS, "doomed", "DoomedAssets.as")
 
 TYPE_START, TYPE_END = 0xD000, 0xDFFF
-PORTED_CLASSES = {"Equipment", "Dye"}
-# Abilities of the Doomed Realms-only classes; ported together with those classes.
-PORT_LATER_EFFECTS = {"PearlAbility", "BuildTower", "MonsterToss", "PartyAOE", "MiniPot", "Halo",
-                      "SamuraiAbility", "Summon", "TomeDamage", "MultiDecoy"}
+PORTED_CLASSES = {"Equipment", "Dye", "Player"}
+# Item abilities that need code not ported yet (none: the class abilities are implemented in
+# source/WorldServer/core/objects/player/Player.UseItem.Doomed.cs).
+PORT_LATER_EFFECTS = set()
+# Doomed Realms slot types that mean something else in betterSkillys (26 = pet egg, 28 = lute).
+SLOT_TYPE_REMAP = {"26": "126", "28": "128"}
 REMOTE_URL = "https://realmofthemadgod.appspot.com/picture/get?id={}"
 
 # Doomed Realms client sheet registrations (its util/loadEmbeds): name -> (embed image, mask, kind, args)
@@ -143,13 +145,20 @@ def references(o):
         for attr in ("objectId", "id", "dungeonName"):
             if a.get(attr):
                 refs.add(a.get(attr))
+        if a.text == "Summon" and a.get("objectId"):
+            refs.add(a.get("objectId") + " Summon")  # Summon spawns "<objectId> Summon"
     return refs
 
 
 def select(dr, bs):
-    chosen, skipped = {}, {}
+    chosen, skipped, renames = {}, {}, {}
     for oid, o in dr.items():
-        if oid in bs or o.findtext("Class") not in PORTED_CLASSES:
+        if o.findtext("Class") not in PORTED_CLASSES:
+            continue
+        if oid in bs:
+            # a Doomed Realms class whose name betterSkillys uses for a monster (Pirate, Snowman)
+            if o.findtext("Class") == "Player" and bs[oid].findtext("Class") != "Player":
+                renames[oid] = oid + " (Doomed)"
             continue
         effects = {a.text for a in o.iter("Activate")}
         if effects & PORT_LATER_EFFECTS:
@@ -164,8 +173,7 @@ def select(dr, bs):
     # add what they reference (projectile objects, pets, ...), transitively. A referenced Doomed
     # Realms character whose id betterSkillys uses for something else (e.g. "Black Cat", a pet-yard
     # Pet there) is ported under its own id, "<id> (Doomed)", keeping its display name.
-    renames = {}
-    todo = list(chosen.values())
+    todo = list(chosen.values()) + [dr[old] for old in renames]
     while todo:
         for ref in references(todo.pop()):
             if ref not in dr or ref in chosen or ref in renames or dr[ref].findtext("Class") == "Portal":
@@ -277,6 +285,10 @@ def convert(o, new_type, sheets, remotes):
     for tier in o.findall("Tier"):
         if not (tier.text or "").strip().lstrip("-").isdigit():
             o.remove(tier)
+    for slot in o.findall("SlotType"):
+        slot.text = SLOT_TYPE_REMAP.get((slot.text or "").strip(), slot.text)
+    for slots in o.findall("SlotTypes"):
+        slots.text = ", ".join(SLOT_TYPE_REMAP.get(s.strip(), s.strip()) for s in slots.text.split(","))
     for tex in o.iter():
         if tex.tag in ("Texture", "AnimatedTexture", "Mask") or tex.tag == "AltTexture":
             f = tex.find("File")
@@ -306,6 +318,56 @@ def convert(o, new_type, sheets, remotes):
             use["animated" if animated else "static"] = True
             use["right"] = use["right"] or child.find("Right") is not None
     return o
+
+
+def fix_class_references(converted, dr, bs, types):
+    """Ported classes list their starting equipment and unlock requirements by type code."""
+    dr_by_type = {int(o.get("type"), 16): oid for oid, o in dr.items() if o.get("type")}
+
+    def new_type(oid):
+        for candidate in (oid, oid + " (Doomed)"):
+            if candidate in types:
+                return types[candidate], candidate
+        if oid in bs and bs[oid].get("type"):
+            return bs[oid].get("type"), oid
+        return None, oid
+
+    # lowest-tier item per slot type, for starting slots Doomed Realms left empty or got wrong
+    slot_of, starter = {}, {}
+    for o in list(bs.values()) + converted:
+        if o.findtext("Class") != "Equipment" or not o.get("type"):
+            continue
+        slot = (o.findtext("SlotType") or "").strip()
+        slot_of[o.get("type").lower()] = slot
+        tier = o.findtext("Tier")
+        rank = int(tier) if tier and tier.strip().isdigit() else 99
+        if slot not in starter or rank < starter[slot][0]:
+            starter[slot] = (rank, o.get("type"))
+
+    for o in converted:
+        if o.findtext("Class") != "Player":
+            continue
+        eq = o.find("Equipment")
+        slots = [s.strip() for s in (o.findtext("SlotTypes") or "").split(",")]
+        if eq is not None and eq.text:
+            codes = []
+            for i, code in enumerate(eq.text.split(",")):
+                code = code.strip()
+                t = None
+                if code not in ("-1", "") and int(code, 16) in dr_by_type:
+                    t, _ = new_type(dr_by_type[int(code, 16)])
+                # weapon and ability: replace a missing or wrong-slot starting item
+                if i < 2 and i < len(slots) and (t is None or slot_of.get(t.lower()) != slots[i]):
+                    t = starter.get(slots[i], (0, None))[1]
+                codes.append(t or "-1")
+            eq.text = ", ".join(codes)
+        for u in o.findall("UnlockLevel"):
+            t, name = new_type((u.text or "").strip())
+            if t:
+                u.set("type", t)
+                u.text = name
+            else:
+                o.remove(u)
 
 
 def write_xml(objs, path):
@@ -459,6 +521,7 @@ def main():
     sheets, remote_used = set(), {}
     converted = [convert(o, types[oid], sheets, remote_used)
                  for oid, o in sorted(chosen.items(), key=lambda kv: types[kv[0]])]
+    fix_class_references(converted, dr, bs, types)
     write_xml(converted, SERVER_XML)
     write_xml(converted, CLIENT_XML)
     n = write_assets(sheets, remote_used, export_dr_images(args.dr))
@@ -468,6 +531,9 @@ def main():
     dr_pets, bs_pets = port_doomed_pets.write_pet_behaviors(args.dr, dr, chosen, bs, types)
     print("Wrote %s: %d Doomed Realms pets, %d betterSkillys pets given a follow."
           % (port_doomed_pets.PET_BEHAVIORS_CS, dr_pets, bs_pets))
+    import port_doomed_allies
+    n = port_doomed_allies.write_ally_behaviors(args.dr, chosen)
+    print("Wrote %s: %d turrets, summons and pearl substitutes." % (port_doomed_allies.ALLY_BEHAVIORS_CS, n))
 
 
 if __name__ == "__main__":

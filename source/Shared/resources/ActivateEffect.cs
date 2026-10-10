@@ -15,6 +15,7 @@ namespace Shared.resources
         public readonly ConditionEffectIndex? ConditionEffect;
         public readonly float Cooldown;
         public readonly int DurationMS;
+        public readonly int DurationMS2;
         public readonly float DurationSec;
         public readonly ActivateEffects Effect;
         public readonly float EffectDuration;
@@ -122,6 +123,7 @@ namespace Shared.resources
             EffectDuration = e.GetAttribute<float>("condDuration");
             DurationSec = e.GetAttribute<float>("duration");
             DurationMS = (int)(DurationSec * 1000.0f);
+            DurationMS2 = (int)(e.GetAttribute<float>("duration2") * 1000.0f);
             Amount = e.GetAttribute<int>("amount");
             Range = e.GetAttribute<float>("range");
             ObjectId = e.GetAttribute<string>("objectId");
