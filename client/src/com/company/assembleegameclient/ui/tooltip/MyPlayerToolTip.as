@@ -123,7 +123,7 @@ public class MyPlayerToolTip extends ToolTip
          if(nextStarFame > 0)
          {
             this.nextClassQuest_ = new SimpleText(13,16549442,false,174,0);
-            this.nextClassQuest_.text = "Next Goal: Earn " + nextStarFame + " Fame\n" + "  with a " + playerXML.@id;
+            this.nextClassQuest_.text = "Next Goal: Earn " + nextStarFame + " Fame\n" + "  with a " + (playerXML.hasOwnProperty("DisplayId") ? String(playerXML.DisplayId) : String(playerXML.@id));
             this.nextClassQuest_.updateMetrics();
             this.nextClassQuest_.filters = [new DropShadowFilter(0,0,0)];
             this.nextClassQuest_.x = 8;
