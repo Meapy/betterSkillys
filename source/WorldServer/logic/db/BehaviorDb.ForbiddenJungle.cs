@@ -1,6 +1,8 @@
 ﻿#region
 
 using WorldServer.logic.behaviors;
+using WorldServer.logic.loot;
+using Shared.resources;
 using WorldServer.logic.transitions;
 
 #endregion
@@ -54,5 +56,57 @@ namespace WorldServer.logic
                 )
             )
         ;
+
+        // the four Boss Totems guard Mixcoatl and go quiet once it dies
+        private _ ForbiddenJungleMixcoatl = () => Behav()
+        .Init("Mixcoatl the Masked God",
+            new State(
+                new ScaleHP2(20),
+                new State("Idle",
+                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                    new PlayerWithinTransition(8, "Wake")
+                    ),
+                new State("Wake",
+                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                    new Taunt("Who dares disturb the masked god?"),
+                    new TimedTransition(1500, "Waves")
+                    ),
+                new State("Waves",
+                    new StayCloseToSpawn(0.5, 4),
+                    new Wander(0.3),
+                    new Shoot(10, count: 3, shootAngle: 20, projectileIndex: 1, coolDown: 1000),
+                    new Shoot(0, count: 6, shootAngle: 60, projectileIndex: 0, fixedAngle: 0, coolDown: 2400),
+                    new HpLessTransition(0.5, "Fire")
+                    ),
+                new State("Fire",
+                    new Taunt("Burn!"),
+                    new Follow(0.4, 10, 3),
+                    new Shoot(10, count: 5, shootAngle: 12, projectileIndex: 2, coolDown: 1200),
+                    new Shoot(0, count: 8, shootAngle: 45, projectileIndex: 0, fixedAngle: 22.5, coolDown: 2000)
+                    )
+                ),
+            new Threshold(0.01,
+                new ItemLoot("Potion of Dexterity", 1),
+                new ItemLoot("Mark of Mixcoatl", 0.02)
+                )
+            )
+        .Init("Boss Totem",
+            new State(
+                new ConditionEffectBehavior(ConditionEffectIndex.Invincible, true),
+                new State("Init",
+                    new TimedTransition(2000, "Wait")
+                    ),
+                new State("Wait",
+                    new PlayerWithinTransition(10, "Fire"),
+                    new EntityNotExistsTransition("Mixcoatl the Masked God", 30, "Off")
+                    ),
+                new State("Fire",
+                    new Shoot(0, count: 4, shootAngle: 90, projectileIndex: 0, fixedAngle: 0, coolDown: 3000),
+                    new Shoot(0, count: 4, shootAngle: 90, projectileIndex: 0, fixedAngle: 45, coolDown: 3000, coolDownOffset: 1500),
+                    new EntityNotExistsTransition("Mixcoatl the Masked God", 30, "Off")
+                    ),
+                new State("Off")
+                )
+            );
     }
 }

@@ -443,5 +443,67 @@ namespace WorldServer.logic
                     )
                 )
             );
+
+        // Horrific Creation waits in the room north of Dr Terrible, behind the Blue Torch Walls (row 21)
+        private _ LabHorrificCreation = () => Behav()
+        .Init("Mad Lab Open Wall",
+            new State(
+                new ConditionEffectBehavior(ConditionEffectIndex.Invincible, true),
+                new State("Init",
+                    new TimedTransition(2000, "Wait")
+                    ),
+                new State("Wait",
+                    new EntityNotExistsTransition("Dr Terrible", 50, "Open")
+                    ),
+                new State("Open",
+                    new RemoveObject("Blue Torch Wall", 3),
+                    new TimedTransition(1000, "Done")
+                    ),
+                new State("Done")
+                )
+            )
+        .Init("Horrific Creation",
+            new State(
+                new ScaleHP2(20),
+                new State("Idle",
+                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                    new PlayerWithinTransition(8, "Wake")
+                    ),
+                new State("Wake",
+                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                    new Taunt("GRRAAAHHH!"),
+                    new Flash(0x00FF00, 0.5, 4),
+                    new TimedTransition(2000, "Lumber")
+                    ),
+                new State("Lumber",
+                    new Follow(0.3, 12, 2),
+                    new Shoot(12, count: 3, shootAngle: 15, projectileIndex: 1, coolDown: 1500),
+                    new Shoot(0, count: 8, shootAngle: 45, projectileIndex: 5, fixedAngle: 0, coolDown: 3000),
+                    new HpLessTransition(0.66, "Experiments")
+                    ),
+                new State("Experiments",
+                    new StayCloseToSpawn(0.5, 6),
+                    new Wander(0.4),
+                    new Shoot(12, count: 1, projectileIndex: 6, predictive: 0.5, coolDown: 800),
+                    new Shoot(0, count: 12, shootAngle: 30, projectileIndex: 2, fixedAngle: 15, coolDown: 4000),
+                    new HpLessTransition(0.33, "Rampage")
+                    ),
+                new State("Rampage",
+                    new Taunt("The experiment... is... COMPLETE!"),
+                    new Flash(0xFF0000, 0.5, 6),
+                    new Follow(0.5, 12, 1),
+                    new Shoot(12, count: 5, shootAngle: 12, projectileIndex: 4, coolDown: 1200),
+                    new Shoot(0, count: 16, shootAngle: 22.5, projectileIndex: 5, fixedAngle: 0, coolDown: 2000),
+                    new Shoot(12, count: 1, projectileIndex: 3, coolDown: 2500)
+                    )
+                ),
+            new Threshold(0.01,
+                new ItemLoot("Potion of Wisdom", 1),
+                new ItemLoot("SorcererST0", 0.005),
+                new ItemLoot("SorcererST1", 0.005),
+                new ItemLoot("SorcererST2", 0.005),
+                new ItemLoot("SorcererST3", 0.005)
+                )
+            );
     }
 }

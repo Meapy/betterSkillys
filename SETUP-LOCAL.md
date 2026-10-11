@@ -108,6 +108,7 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
   - Loot entries that named missing items were fixed (display names replaced by ids, such as `PriestST1` for Book of Geb) or removed (items not in these XMLs).
   - **Endgame:** when a realm closes, its players are sent to a new Oryx's Castle (`RealmManager.SendPlayersToCastle`) instead of being teleported inside the realm. In the castle, killing both Stone Guardians opens the wall to Janus the Doorwarden (`md dwGenerator`); Janus (new fight) drops the Oryx's Chamber portal, Oryx 1 the Wine Cellar portal.
   - **Portal sources:** Ghost Ship drops Davy Jones' Locker, the Killer Bee Nest The Hive, Oryx 2 Lost Halls (10%), Lord of the Lost Lands Ice Tomb (25%), Hermit God Cnidarian Reef (25%), the Statues altar Magic Woods (25%). Rock Dragon drops Lair of Shaitan, because Lair of Draconis has no map or world yet.
+  - **New boss fights** for bosses that stood still: Mixcoatl and its Boss Totems (Forbidden Jungle), Belladonna, the Masked Party God (Beachzone, no attacks), the Abyss Idols, and Horrific Creation in Mad Lab, whose room opens when Dr Terrible dies (`Mad Lab Open Wall` removes the Blue Torch Walls). Horrific Creation drops the Horrific Sorcerer set (`SorcererST0`-`3`).
   - Ice Tomb's chest spawner runs on the map's Ice Tomb Boss Anchor. The Magic Woods fountain gate waits for the Fountain Spirit (it waited for a nonexistent "Grim Reaper" and opened at once).
 
 ## Content ported from Doomed Realms
