@@ -108,7 +108,10 @@ def package(host, swf):
     shutil.copyfile(os.path.join(CLIENT, "src", "moe.png"), os.path.join(stage, "moe.png"))
 
     dist = os.path.join(ROOT, "dist")
-    out_dir = os.path.join(dist, NAME)
+    # Built beside the current package and swapped in at the end: the current one may be in use
+    # (someone playing from it), and deleting it half way breaks it.
+    final_dir = os.path.join(dist, NAME)
+    out_dir = final_dir + ".new"
     if os.path.isdir(out_dir):
         shutil.rmtree(out_dir)
     os.makedirs(dist, exist_ok=True)
@@ -130,6 +133,19 @@ def package(host, swf):
                 path = os.path.join(dirpath, f)
                 z.write(path, NAME + "/" + os.path.relpath(path, out_dir).replace(os.sep, "/"))
     print("Wrote %s (%.1f MB)" % (zip_path, os.path.getsize(zip_path) / 1e6))
+    old_dir = final_dir + ".old"
+    try:
+        if os.path.isdir(old_dir):
+            shutil.rmtree(old_dir)
+        if os.path.isdir(final_dir):
+            os.rename(final_dir, old_dir)
+        os.rename(out_dir, final_dir)
+        shutil.rmtree(old_dir, ignore_errors=True)
+        print("Updated %s" % final_dir)
+    except OSError as e:
+        if not os.path.isdir(final_dir) and os.path.isdir(old_dir):
+            os.rename(old_dir, final_dir)
+        print("%s is in use (%s); the new one is in %s. Close the client and run this again." % (final_dir, e, out_dir))
 
 
 def main():
