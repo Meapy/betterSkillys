@@ -31,6 +31,7 @@ namespace WorldServer.logic
         .Init("Pentaract",
             new State(
                 new ConditionEffectBehavior(ConditionEffectIndex.Invincible),
+                new DropPortalOnDeath("GC Gigantic Cave Portal", 0.25),
                 new State("Waiting",
                     new EntityNotExistsTransition("Pentaract Tower", 50, "Die")
                     ),
