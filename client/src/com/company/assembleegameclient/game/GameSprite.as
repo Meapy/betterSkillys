@@ -80,6 +80,8 @@ public class GameSprite extends Sprite
    public var creditDisplay_:CreditDisplay;
    public var isEditor:Boolean;
    public var lastUpdate_:int = 0;
+   private var sentViewRadius_:int = Map.MIN_VIEW_RADIUS; // the server's default
+   private var lastViewRadiusSend_:int = 0;
    public var moveRecords_:MoveRecords;
    public var mapModel:MapModel;
    public var model:PlayerModel;
@@ -586,11 +588,20 @@ public class GameSprite extends Sprite
          var drawStart:int = getTimer();
          this.map.draw(this.camera_,time);
          GameStatistics.mapDrawMs += getTimer() - drawStart;
+         // tell the server how far the view reaches (a big window or a low map scale sees more)
+         if(this.map.viewRadius_ != this.sentViewRadius_ && time - this.lastViewRadiusSend_ >= 1000)
+         {
+            this.sentViewRadius_ = this.map.viewRadius_;
+            this.lastViewRadiusSend_ = time;
+            this.gsc_.viewRadius(this.sentViewRadius_);
+         }
       }
       if(player != null)
       {
          this.creditDisplay_.draw(player.credits_,player.fame_);
+         var hudStart:int = getTimer();
          this.drawCharacterWindow.dispatch(player); // might be causing leak
+         GameStatistics.hudMs += getTimer() - hudStart;
          if(this.map.showDisplays_)
          {
             this.rankText_.draw(player.numStars_);

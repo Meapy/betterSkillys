@@ -158,6 +158,7 @@ import kabam.rotmg.messaging.impl.outgoing.CreateGuild;
 import kabam.rotmg.messaging.impl.outgoing.EditAccountList;
 import kabam.rotmg.messaging.impl.outgoing.EnemyHit;
 import kabam.rotmg.messaging.impl.outgoing.Escape;
+import kabam.rotmg.messaging.impl.outgoing.ViewRadius;
 import kabam.rotmg.messaging.impl.outgoing.GotoAck;
 import kabam.rotmg.messaging.impl.outgoing.GroundDamage;
 import kabam.rotmg.messaging.impl.outgoing.GuildInvite;
@@ -301,6 +302,7 @@ public class GameServerConnection
       public static const MARKET_MY_OFFERS_RESULT:int = 85;
       public static const BREAKDOWN_SLOT:int = 86;
       public static const IMMINENT_ARENA_WAVE:int = 87;
+      public static const VIEW_RADIUS:int = 88;
 
       private static const TO_MILLISECONDS:int = 1000;
 
@@ -504,6 +506,7 @@ public class GameServerConnection
          messages.map(SHOOTACK).toMessage(ShootAck);
          messages.map(BREAKDOWN_SLOT).toMessage(BreakdownSlot);
          messages.map(IMMINENT_ARENA_WAVE).toMessage(ImminentArenaWave).toMethod(this.onImminentArenaWave);
+         messages.map(VIEW_RADIUS).toMessage(ViewRadius);
       }
 
       private function unmapMessages() : void {
@@ -593,6 +596,7 @@ public class GameServerConnection
          messages.unmap(SWITCH_MUSIC);
          messages.unmap(BREAKDOWN_SLOT);
          messages.unmap(IMMINENT_ARENA_WAVE);
+         messages.unmap(VIEW_RADIUS);
       }
 
       private function onSwitchMusic(sm:SwitchMusic):void {
@@ -1003,6 +1007,18 @@ public class GameServerConnection
             return;
          }
          this.serverConnection.sendMessage(this.messages.require(ESCAPE));
+      }
+
+      // How far (in tiles) this client's view reaches, so the server sends tiles and objects that far.
+      public function viewRadius(radius:int) : void
+      {
+         if(this.playerId_ == -1)
+         {
+            return;
+         }
+         var message:ViewRadius = this.messages.require(VIEW_RADIUS) as ViewRadius;
+         message.radius_ = radius;
+         this.serverConnection.sendMessage(message);
       }
 
       public function joinGuild(guildName:String) : void

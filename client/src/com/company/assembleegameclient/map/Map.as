@@ -26,6 +26,7 @@ import flash.geom.Matrix;
 import flash.geom.Point;
 import flash.geom.Rectangle;
 import flash.utils.Dictionary;
+import flash.utils.getTimer;
 
 import kabam.rotmg.core.StaticInjectorContext;
 import kabam.rotmg.stage3D.GraphicsFillExtra;
@@ -152,6 +153,11 @@ public class Map extends Sprite {
     private var groundYx_:Number = 0;
     private var groundYy_:Number = 0;
     private var lastDrawTime_:int = -1;
+    // Performance Stats: time in each part of draw() since GameStatistics last read them
+    public static var profTiles:int = 0;
+    private var ownTiles_:Vector.<Square> = new Vector.<Square>();
+    public static var profCollect:int = 0;
+    public static var profObjects:int = 0;
     public static var chunking:Boolean = true; // debug switches
     public static var culling:Boolean = true;
 
@@ -349,21 +355,56 @@ public class Map extends Sprite {
         this.chunkPaths_ = null;
     }
 
-    // Only tiles within VIEW_RADIUS of the player are drawn (the server forgets the walls and
+    // Only tiles within the view radius of the player are drawn (the server forgets the walls and
     // objects further out), but a chunk image holds all its remembered tiles. The parts of the
     // visible chunks outside that circle are covered with black, one strip per row segment
     // (all batched into one GPU draw call), drawn right after the chunks and under everything else.
-    private static const VIEW_RADIUS:int = 15;
+    public static const MIN_VIEW_RADIUS:int = 15; // the server's default (Player.VISIBILITY_RADIUS)
+    public static const MAX_VIEW_RADIUS:int = 40; // its maximum (Player.MAX_VISIBILITY_RADIUS)
+    // the radius the view needs this frame (GameSprite sends it to the server when it changes)
+    public var viewRadius_:int = MIN_VIEW_RADIUS;
+    private var boundX0_:int = 0;
+    private var boundX1_:int = 0;
+    private var boundY0_:int = 0;
+    private var boundY1_:int = 0;
+
+    // The world tiles under the screen rectangle (l, t, r, b in map pixels, margins included):
+    // their bounding box, and the distance from the player to its farthest corner.
+    private function viewBounds(l:Number, t:Number, r:Number, b:Number, px:int, py:int):void {
+        var det:Number = this.groundXx_ * this.groundYy_ - this.groundYx_ * this.groundXy_;
+        if (det == 0) {
+            return;
+        }
+        var minX:Number = Number.MAX_VALUE, minY:Number = Number.MAX_VALUE;
+        var maxX:Number = -Number.MAX_VALUE, maxY:Number = -Number.MAX_VALUE;
+        var far:Number = 0;
+        for (var i:int = 0; i < 4; i++) {
+            var sx:Number = (i & 1) == 0 ? l : r;
+            var sy:Number = (i & 2) == 0 ? t : b;
+            var wx:Number = ((sx - this.groundOx_) * this.groundYy_ - (sy - this.groundOy_) * this.groundYx_) / det;
+            var wy:Number = ((sy - this.groundOy_) * this.groundXx_ - (sx - this.groundOx_) * this.groundXy_) / det;
+            minX = Math.min(minX, wx);
+            maxX = Math.max(maxX, wx);
+            minY = Math.min(minY, wy);
+            maxY = Math.max(maxY, wy);
+            far = Math.max(far, Math.sqrt((wx - px) * (wx - px) + (wy - py) * (wy - py)));
+        }
+        this.boundX0_ = Math.floor(minX);
+        this.boundX1_ = Math.ceil(maxX);
+        this.boundY0_ = Math.floor(minY);
+        this.boundY1_ = Math.ceil(maxY);
+        this.viewRadius_ = Math.max(MIN_VIEW_RADIUS, Math.min(MAX_VIEW_RADIUS, Math.ceil(far)));
+    }
     private static var maskTexture_:BitmapData = null;
     private var maskFills_:Vector.<GraphicsBitmapFill> = new Vector.<GraphicsBitmapFill>();
     private var maskPaths_:Vector.<GraphicsPath> = new Vector.<GraphicsPath>();
 
-    private function maskChunks(px:int, py:int):void {
+    private function maskChunks(px:int, py:int, radius:int):void {
         if (maskTexture_ == null) {
             maskTexture_ = new BitmapData(TEX, TEX, false, 0);
         }
         var used:int = 0;
-        var r2:int = VIEW_RADIUS * VIEW_RADIUS;
+        var r2:int = radius * radius;
         for each(var c:int in this.chunksVisible_) {
             var x0:int = c % this.chunksW_ * CHUNK;
             var y0:int = int(c / this.chunksW_) * CHUNK;
@@ -673,6 +714,7 @@ public class Map extends Sprite {
     }
 
     public function draw(camera:Camera, time:int):void {
+        var profStart:int = getTimer();
         var isGpuRender:Boolean = Parameters.isGpuRender(); // cache result for faster access
         Parameters.GPURenderFrame = isGpuRender;
         if (this.wasLastFrameGpu) {
@@ -750,10 +792,31 @@ public class Map extends Sprite {
         var sx:Number = 0;
         var sy:Number = 0;
         var c:int = 0;
-        for (var xi:int = -15; xi <= 15; xi++) {
-            for (yi = -15; yi <= 15; yi++) {
-                if (xi * xi + yi * yi <= 225) {
-                    square = lookupSquare(xi + player_.x_, yi + player_.y_);
+        // Draw out to the radius the view needs (the server sends that far once GameSprite tells
+        // it, see viewRadius_), and only walk the tiles in the screen's bounding box.
+        var px:int = int(player_.x_);
+        var py:int = int(player_.y_);
+        var radius:int = MIN_VIEW_RADIUS;
+        var bx0:int = -MIN_VIEW_RADIUS;
+        var bx1:int = MIN_VIEW_RADIUS;
+        var by0:int = -MIN_VIEW_RADIUS;
+        var by1:int = MIN_VIEW_RADIUS;
+        if (this.groundAffine_ && culling) {
+            this.viewBounds(cullL, cullT, cullR, cullB, px, py);
+            radius = this.viewRadius_;
+            bx0 = Math.max(-radius, this.boundX0_ - px);
+            bx1 = Math.min(radius, this.boundX1_ - px);
+            by0 = Math.max(-radius, this.boundY0_ - py);
+            by1 = Math.min(radius, this.boundY1_ - py);
+        }
+        else {
+            this.viewRadius_ = MIN_VIEW_RADIUS;
+        }
+        var r2:int = radius * radius;
+        for (var xi:int = bx0; xi <= bx1; xi++) {
+            for (yi = by0; yi <= by1; yi++) {
+                if (xi * xi + yi * yi <= r2) {
+                    square = lookupSquare(xi + px, yi + py);
                     if (square != null) {
                         if (this.groundAffine_ && culling) {
                             sx = this.groundOx_ + square.center_.x * this.groundXx_ + square.center_.y * this.groundYx_;
@@ -787,12 +850,19 @@ public class Map extends Sprite {
             this.drawChunk(c);
         }
         if (this.chunksVisible_.length > 0) {
-            this.maskChunks(int(player_.x_), int(player_.y_));
+            this.maskChunks(px, py, radius);
         }
+        // the tiles not in a ready chunk: all base faces, then all overlays (see Square.drawBase)
+        var own:Vector.<Square> = this.ownTiles_;
+        own.length = 0;
         for each(square in this.visibleSquares_) {
             if (!(this.groundAffine_ && square.chunkable_ && this.chunkReady_[int(square.x_ / CHUNK) + int(square.y_ / CHUNK) * this.chunksW_])) {
-                square.draw(this.graphicsData_, camera, time);
+                own.push(square);
+                square.drawBase(this.graphicsData_, camera, time);
             }
+        }
+        for each(square in own) {
+            square.drawOverlays(this.graphicsData_, camera, time);
         }
         if (this.chunks_ != null) {
             this.sweepChunks(time);
@@ -822,6 +892,8 @@ public class Map extends Sprite {
 //         }
 //      }
 
+        var profT:int = getTimer();
+        profTiles += profT - profStart;
         // visible game objects
         for each(go in this.goDict_) {
             go.drawn_ = false;
@@ -860,6 +932,8 @@ public class Map extends Sprite {
             }
         }
 
+        var profT2:int = getTimer();
+        profCollect += profT2 - profT;
         // draw visible under
         if (this.visibleUnder_.length > 0) {
             this.visibleUnder_.sortOn(VISIBLE_SORT_FIELDS, VISIBLE_SORT_PARAMS);
@@ -917,6 +991,7 @@ public class Map extends Sprite {
             this.gradientOverlay_.visible = false;
         }
 
+        profObjects += getTimer() - profT2;
         // draw hw capable screen filters
         if (isGpuRender && Renderer.inGame) {
             filter = this.getFilterIndex();

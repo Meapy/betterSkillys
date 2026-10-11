@@ -143,6 +143,60 @@ package com.company.assembleegameclient.map
          }
       }
       
+      // draw() in two parts, so Map can draw every tile's base face first and then every tile's
+      // overlays (blended edges): neighbouring tiles' faces then come in long runs of the same
+      // image, which the GPU renderer draws together. Tiles don't overlap, so the order between
+      // them doesn't matter.
+      private var overlaysOff_:Boolean = true;
+
+      public function drawBase(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int) : void
+      {
+         this.overlaysOff_ = true;
+         if(this.texture_ == null)
+         {
+            return;
+         }
+         if(this.faces_.length == 0)
+         {
+            this.rebuild3D();
+         }
+         if(this.faces_.length == 0)
+         {
+            return;
+         }
+         var face:SquareFace = this.faces_[0];
+         if(!face.draw(graphicsData,camera,time))
+         {
+            if(face.face_.vout_[1] < camera.clipRect_.bottom)
+            {
+               this.lastVisible_ = 0;
+            }
+            return;
+         }
+         this.overlaysOff_ = false;
+      }
+
+      public function drawOverlays(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int) : void
+      {
+         if(this.overlaysOff_)
+         {
+            return;
+         }
+         var face:SquareFace = null;
+         for(var i:int = 1; i < this.faces_.length; i++)
+         {
+            face = this.faces_[i];
+            if(!face.draw(graphicsData,camera,time))
+            {
+               if(face.face_.vout_[1] < camera.clipRect_.bottom)
+               {
+                  this.lastVisible_ = 0;
+               }
+               return;
+            }
+         }
+      }
+
       public function drawTop(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int) : void
       {
          this.topFace_.draw(graphicsData,camera,time);

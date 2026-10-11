@@ -3,6 +3,7 @@ package kabam.rotmg.stage3D
    import com.adobe.utils.AGALMiniAssembler;
    import com.company.assembleegameclient.map.Camera;
    import com.company.assembleegameclient.parameters.Parameters;
+   import flash.display.BitmapData;
    import flash.display.GraphicsBitmapFill;
    import flash.display.GraphicsEndFill;
    import flash.display.GraphicsPath;
@@ -21,9 +22,12 @@ import flash.display.StageScaleMode;
    import flash.display3D.VertexBuffer3D;
    import flash.display3D.textures.Texture;
    import flash.geom.Matrix;
+   import kabam.rotmg.stage3D.graphic3D.TextureAtlas;
+   import flash.geom.ColorTransform;
    import flash.geom.Matrix3D;
    import flash.geom.Vector3D;
    import flash.utils.ByteArray;
+   import flash.utils.getTimer;
    import kabam.rotmg.stage3D.Object3D.Object3DStage3D;
    import kabam.rotmg.stage3D.Object3D.Util;
    import kabam.rotmg.stage3D.graphic3D.Graphic3D;
@@ -47,26 +51,44 @@ import flash.display.StageScaleMode;
 
       // Draw calls in the last frame, for GameStatistics.
       public static var drawCalls:int = 0;
-      public static var batching:Boolean = true; // debug switch
-      public static var batchSingles:Boolean = false; // debug: every plain quad through the batch path
+      // draw calls by kind in the last frame: batched quads, own vertex buffers, shadows, 3D models
+      public static var drawsQuads:int = 0;
+      public static var drawsCustom:int = 0;
+      public static var drawsShadow:int = 0;
+      public static var draws3D:int = 0;
+      // Time spent sending the frame to the GPU (renderScene and present), for GameStatistics.
+      public static var renderMs:int = 0;
 
-      // Batching: consecutive quads with the same image (particles, projectiles, repeated
-      // sprites...) are drawn with one draw call instead of one each. Their corners are
-      // computed here the way Graphic3D places a quad, into a region of one big vertex buffer
-      // (a new region for every batch in a frame, so no upload waits for a pending draw).
+      // Batching (prepareQuads): every plain quad of a frame goes into one vertex buffer, and each
+      // run of them with the same image is drawn with one draw call.
+      public static var batching:Boolean = true; // debug switch
       private static const BATCH_QUADS:int = 8192;
       private static const ZERO_OFFSET:Vector.<Number> = new <Number>[0, 0, 0, 0];
+      private static const SHADOW_CONSTANTS:Vector.<Number> = new <Number>[0.5, 0.25, 0, 0];
       private var batchCtx_:Context3D;
       private var batchVB_:VertexBuffer3D;
       private var batchIB_:IndexBuffer3D;
       private var batchData_:Vector.<Number> = new Vector.<Number>();
-      private var batchCursor_:int = 0;
-      private var batchMatrix_:Matrix3D = new Matrix3D();
-      private var batchRaw_:Vector.<Number> = new Vector.<Number>(16, true);
-      private var batchOut_:Vector.<Number> = new Vector.<Number>(12, true);
-      // Graphic3D's unit quad (VertexBufferFactory): positions and texture coordinates
-      private static const UNIT_QUAD:Vector.<Number> = new <Number>[-0.5, 0.5, 0, 0.5, 0.5, 0, -0.5, -0.5, 0, 0.5, -0.5, 0];
-      private static const UNIT_UV:Vector.<Number> = new <Number>[0, 0, 1, 0, 0, 1, 1, 1];
+      private var quadOf_:Vector.<int> = new Vector.<int>();
+      // per entry: the atlas page its quad's image is on, or -1 (drawn with its own texture)
+      private var quadPage_:Vector.<int> = new Vector.<int>();
+      private var atlas_:TextureAtlas = new TextureAtlas();
+      private var atlasTextures_:Vector.<Texture> = null;
+      public static var atlasing:Boolean = true; // debug switch
+      // Shadows (GraphicsGradientFill) are batched the same way: their corners are placed on the
+      // CPU as Graphic3D.shadowTransform places them, into one vertex buffer.
+      private static const BATCH_SHADOWS:int = 2048;
+      // Graphic3D's shadow quad: position, colour (only alpha varies) and texture coordinates
+      private static const SHADOW_X:Vector.<Number> = new <Number>[-0.5, 0.5, -0.5, 0.5];
+      private static const SHADOW_Y:Vector.<Number> = new <Number>[0.5, 0.5, -0.5, -0.5];
+      private static const SHADOW_ALPHA:Vector.<Number> = new <Number>[0.01, 0.3, 0.1, 0.2];
+      private static const SHADOW_U:Vector.<Number> = new <Number>[0, 1, 0, 1];
+      private static const SHADOW_V:Vector.<Number> = new <Number>[1, 1, 0, 0];
+      private var shadowVB_:VertexBuffer3D;
+      private var shadowIB_:IndexBuffer3D;
+      private var shadowData_:Vector.<Number> = new Vector.<Number>();
+      private var shadowOf_:Vector.<int> = new Vector.<int>();
+      private var finalTransform_:Matrix3D = new Matrix3D();
 
       [Inject]
       public var context3D:Context3DProxy;
@@ -237,6 +259,7 @@ import flash.display.StageScaleMode;
          {
             this.setTranslationToTitle();
          }
+         var renderStart:int = getTimer();
          if(filterIndex > 0)
          {
             this.renderWithPostEffect(graphicsDatas,grahpicsData3d,mapWidth,mapHeight,camera,filterIndex);
@@ -246,6 +269,7 @@ import flash.display.StageScaleMode;
             this.renderScene(graphicsDatas,grahpicsData3d,mapWidth,mapHeight,camera);
          }
          this.context3D.present();
+         renderMs += getTimer() - renderStart;
          WebMain.STAGE.scaleMode = StageScaleMode.NO_SCALE;
       }
 
@@ -312,29 +336,130 @@ import flash.display.StageScaleMode;
          var test:int = 0;
          var graphicsData:IGraphicsData = null;
          this.context3D.clear();
-         var finalTransform:Matrix3D = new Matrix3D();
+         var finalTransform:Matrix3D = this.finalTransform_;
          var index3d:uint = 0;
+         var ctx:Context3D = this.context3D.GetContext3D();
          this.widthOffset_ = -mapWidth / 2;
          this.heightOffset_ = mapHeight / 2;
          this.UpdateCameraMatrix(camera);
-         this.batchCursor_ = 0;
-         drawCalls = 0;
+         drawCalls = drawsQuads = drawsCustom = drawsShadow = draws3D = 0;
          var count:int = graphicsDatas.length;
-         var run:int = 0;
+         var quads:int = batching ? this.prepareQuads(graphicsDatas) : 0;
+         var quadOf:Vector.<int> = this.quadOf_;
+         // what the batched quads need bound; anything drawn the original way unbinds it
+         var bound:Boolean = false;
+         var boundRepeat:Boolean = false;
+         var boundImage:BitmapData = null;
+         var boundPage:int = -1;
+         var page:int = -1;
+         var q:int = 0;
+         var k:int = 0;
+         var j:int = 0;
+         var fill:GraphicsBitmapFill = null;
+         var next:GraphicsBitmapFill = null;
+         ctx.setCulling(Context3DTriangleFace.NONE);
          for(var gi:int = 0; gi < count; gi++)
          {
-            graphicsData = graphicsDatas[gi];
-            this.context3D.GetContext3D().setCulling(Context3DTriangleFace.NONE);
-            run = batching ? this.runLength(graphicsDatas, gi) : 0;
-            if(run > 1 || run == 1 && batchSingles)
+            q = quads > 0 ? quadOf[gi] : -1;
+            if(q >= 0)
             {
-               this.drawBatch(graphicsDatas, gi, run, finalTransform);
-               gi = gi + run * 3 - 1;
+               // a run of batched quads with the same image: one draw call
+               fill = GraphicsBitmapFill(graphicsDatas[gi]);
+               page = this.quadPage_[gi];
+               k = 1;
+               j = gi + 3;
+               while(j < count && quadOf[j] == q + k)
+               {
+                  if(page >= 0)
+                  {
+                     // atlas quads: any image on the same page
+                     if(this.quadPage_[j] != page)
+                     {
+                        break;
+                     }
+                  }
+                  else
+                  {
+                     next = GraphicsBitmapFill(graphicsDatas[j]);
+                     if(this.quadPage_[j] >= 0 || next.bitmapData != fill.bitmapData || next.repeat != fill.repeat)
+                     {
+                        break;
+                     }
+                  }
+                  k++;
+                  j = j + 3;
+               }
+               if(!bound || boundRepeat != fill.repeat)
+               {
+                  this.context3D.setProgram(Program3DFactory.getInstance().getProgram(this.context3D,fill.repeat));
+                  boundRepeat = fill.repeat;
+               }
+               if(!bound)
+               {
+                  finalTransform.identity();
+                  finalTransform.appendScale(1 / Stage3DConfig.HALF_WIDTH,1 / Stage3DConfig.HALF_HEIGHT,1);
+                  finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
+                  this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
+                  ctx.setProgramConstantsFromVector(Context3DProgramType.VERTEX,4,ZERO_OFFSET);
+                  ctx.setVertexBufferAt(0,this.batchVB_,0,Context3DVertexBufferFormat.FLOAT_3);
+                  ctx.setVertexBufferAt(1,this.batchVB_,3,Context3DVertexBufferFormat.FLOAT_2);
+                  ctx.setVertexBufferAt(2,null);
+                  bound = true;
+                  boundImage = null;
+                  boundPage = -1;
+               }
+               if(page >= 0)
+               {
+                  if(boundPage != page)
+                  {
+                     ctx.setTextureAt(0,this.atlasTextures_[page]);
+                     this.graphic3D_.setIdentityColor(this.context3D);
+                     boundPage = page;
+                     boundImage = null;
+                  }
+               }
+               else if(boundImage != fill.bitmapData)
+               {
+                  this.context3D.setTextureAt(0,this.graphic3D_.setTextureAndColor(fill.bitmapData,this.context3D));
+                  boundImage = fill.bitmapData;
+                  boundPage = -1;
+               }
+               ctx.drawTriangles(this.batchIB_,q * 6,k * 2);
+               drawCalls++;
+               drawsQuads++;
+               gi = gi + k * 3 - 1;
                continue;
             }
+            q = quads > 0 ? this.shadowOf_[gi] : -1;
+            if(q >= 0)
+            {
+               // consecutive shadows: one draw call
+               k = 1;
+               j = gi + 3;
+               while(j < count && this.shadowOf_[j] == q + k)
+               {
+                  k++;
+                  j = j + 3;
+               }
+               ctx.setProgram(this.shadowProgram_);
+               finalTransform.identity();
+               finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
+               this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
+               this.context3D.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT,4,SHADOW_CONSTANTS);
+               ctx.setVertexBufferAt(0,this.shadowVB_,0,Context3DVertexBufferFormat.FLOAT_3);
+               ctx.setVertexBufferAt(1,this.shadowVB_,3,Context3DVertexBufferFormat.FLOAT_4);
+               ctx.setVertexBufferAt(2,this.shadowVB_,7,Context3DVertexBufferFormat.FLOAT_2);
+               ctx.setTextureAt(0,null);
+               ctx.drawTriangles(this.shadowIB_,q * 6,k * 2);
+               drawCalls++;
+               drawsShadow++;
+               bound = false;
+               gi = gi + k * 3 - 1;
+               continue;
+            }
+            graphicsData = graphicsDatas[gi];
             if(graphicsData is GraphicsBitmapFill && !GraphicsFillExtra.isSoftwareDraw(GraphicsBitmapFill(graphicsData)))
             {
-               drawCalls++;
                try
                {
                   test = GraphicsBitmapFill(graphicsData).bitmapData.width;
@@ -344,6 +469,9 @@ import flash.display.StageScaleMode;
                   //trace("ERROR CAUGHT -- Invalid Bitmap Data");
                   continue;
                }
+               drawCalls++;
+               drawsCustom++;
+               bound = false;
                this.graphic3D_.setGraphic(GraphicsBitmapFill(graphicsData),this.context3D);
                finalTransform.identity();
                finalTransform.append(this.graphic3D_.getMatrix3D());
@@ -354,21 +482,27 @@ import flash.display.StageScaleMode;
             }
             if(graphicsData is GraphicsGradientFill)
             {
-               this.context3D.GetContext3D().setProgram(this.shadowProgram_);
+               drawCalls++;
+               drawsShadow++;
+               bound = false;
+               ctx.setProgram(this.shadowProgram_);
                this.graphic3D_.setGradientFill(GraphicsGradientFill(graphicsData),this.context3D,Stage3DConfig.HALF_WIDTH,Stage3DConfig.HALF_HEIGHT);
                finalTransform.identity();
                finalTransform.append(this.graphic3D_.getMatrix3D());
                finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
                this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
-               this.context3D.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT,4,Vector.<Number>([0.5,0.25,0,0]));
+               this.context3D.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT,4,SHADOW_CONSTANTS);
                this.graphic3D_.renderShadow(this.context3D);
             }
             if(graphicsData == null && grahpicsData3d.length != 0)
             {
                try
                {
-                  this.context3D.GetContext3D().setProgram(this.program2);
-                  this.context3D.GetContext3D().setCulling(Context3DTriangleFace.BACK);
+                  drawCalls++;
+                  draws3D++;
+                  bound = false;
+                  ctx.setProgram(this.program2);
+                  ctx.setCulling(Context3DTriangleFace.BACK);
                   grahpicsData3d[index3d].UpdateModelMatrix(this.widthOffset_,this.heightOffset_);
                   finalTransform.identity();
                   finalTransform.append(grahpicsData3d[index3d].GetModelMatrix());
@@ -377,83 +511,177 @@ import flash.display.StageScaleMode;
                   finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT * 11.5,0);
                   this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
                   this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,8,grahpicsData3d[index3d].GetModelMatrix(),true);
-                  grahpicsData3d[index3d].draw(this.context3D.GetContext3D());
+                  grahpicsData3d[index3d].draw(ctx);
                   index3d++;
                }
                catch(e:Error)
                {
                   trace("ERROR CAUGHT -- Invalid Bitmap Data");
-                  continue;
+               }
+               ctx.setCulling(Context3DTriangleFace.NONE);
+            }
+         }
+      }
+
+      // Puts every plain quad of the frame (a bitmap fill drawn as Graphic3D's unit quad, without
+      // a vertex buffer of its own) into one vertex buffer, uploaded once: its four corners placed
+      // as Graphic3D.transform places them, with the fill's texture offset or sink baked into the
+      // texture coordinates (Graphic3D passes those as a constant instead). quadOf_ gets each
+      // entry's quad number, or -1. Returns the number of quads.
+      private function prepareQuads(datas:Vector.<IGraphicsData>) : int
+      {
+         var count:int = datas.length;
+         var quadOf:Vector.<int> = this.quadOf_;
+         quadOf.length = count;
+         var quadPage:Vector.<int> = this.quadPage_;
+         quadPage.length = count;
+         var shadowOf:Vector.<int> = this.shadowOf_;
+         shadowOf.length = count;
+         var sd:Vector.<Number> = this.shadowData_;
+         var shadows:int = 0;
+         var sp:int = 0;
+         var gradient:GraphicsGradientFill = null;
+         var gm:Matrix = null;
+         var k:int = 0;
+         var ctx:Context3D = this.context3D.GetContext3D();
+         this.atlas_.beginFrame(ctx);
+         var cell:int = 0;
+         var cx0:Number = 0;
+         var cy0:Number = 0;
+         var su:Number = 1;
+         var sv:Number = 1;
+         var ct:ColorTransform = null;
+         var d:Vector.<Number> = this.batchData_;
+         var n:int = 0;
+         var p:int = 0;
+         var fill:GraphicsBitmapFill = null;
+         var bmp:BitmapData = null;
+         var m:Matrix = null;
+         var w:Number = 0;
+         var h:Number = 0;
+         var ax:Number = 0;
+         var ay:Number = 0;
+         var cx:Number = 0;
+         var cy:Number = 0;
+         var u:Number = 0;
+         var v:Number = 0;
+         var sink:Number = 0;
+         var offset:Vector.<Number> = null;
+         for(var i:int = 0; i < count; i++)
+         {
+            quadOf[i] = -1;
+            quadPage[i] = -1;
+            shadowOf[i] = -1;
+            gradient = datas[i] as GraphicsGradientFill;
+            if(gradient != null)
+            {
+               if(shadows < BATCH_SHADOWS)
+               {
+                  gm = gradient.matrix;
+                  if(sd.length < sp + 36)
+                  {
+                     sd.length = sp + 36 * 64;
+                  }
+                  for(k = 0; k < 4; k++)
+                  {
+                     sd[sp++] = gm.a * 1.5 * SHADOW_X[k] - gm.c * SHADOW_Y[k] + gm.tx / Stage3DConfig.HALF_WIDTH;
+                     sd[sp++] = -gm.b * SHADOW_X[k] + gm.d * 1.5 * SHADOW_Y[k] - gm.ty / Stage3DConfig.HALF_HEIGHT;
+                     sd[sp++] = 0;
+                     sd[sp++] = 0;
+                     sd[sp++] = 0;
+                     sd[sp++] = 0;
+                     sd[sp++] = SHADOW_ALPHA[k];
+                     sd[sp++] = SHADOW_U[k];
+                     sd[sp++] = SHADOW_V[k];
+                  }
+                  shadowOf[i] = shadows;
+                  shadows++;
+               }
+               continue;
+            }
+            fill = datas[i] as GraphicsBitmapFill;
+            if(fill == null || n >= BATCH_QUADS || GraphicsFillExtra.isSoftwareDraw(fill) || GraphicsFillExtra.getVertexBuffer(fill) != null)
+            {
+               continue;
+            }
+            bmp = fill.bitmapData;
+            if(bmp == null)
+            {
+               continue;
+            }
+            try
+            {
+               // the texture's size: the image's, rounded up to powers of two (TextureFactory)
+               w = nextPowerOf2(bmp.width);
+               h = nextPowerOf2(bmp.height);
+            }
+            catch(e:Error)
+            {
+               continue; // disposed image
+            }
+            sink = GraphicsFillExtra.getSinkLevel(fill);
+            if(sink != 0)
+            {
+               u = 0;
+               v = -sink;
+            }
+            else
+            {
+               offset = GraphicsFillExtra.getOffsetUV(fill);
+               u = offset[0];
+               v = offset[1];
+            }
+            // in the atlas: texture coordinates within its cell instead of the whole texture
+            cx0 = 0;
+            cy0 = 0;
+            su = 1;
+            sv = 1;
+            if(atlasing && !fill.repeat && u == 0 && v == 0)
+            {
+               ct = GraphicsFillExtra.getColorTransform(bmp);
+               if(ct.redMultiplier == 1 && ct.greenMultiplier == 1 && ct.blueMultiplier == 1 && ct.alphaMultiplier == 1 && ct.redOffset == 0 && ct.greenOffset == 0 && ct.blueOffset == 0 && ct.alphaOffset == 0)
+               {
+                  cell = this.atlas_.cellOf(bmp,w,h);
+                  if(cell >= 0)
+                  {
+                     quadPage[i] = int(cell / 16777216);
+                     cx0 = int(cell / 4096) % 4096 / TextureAtlas.PAGE;
+                     cy0 = cell % 4096 / TextureAtlas.PAGE;
+                     su = w / TextureAtlas.PAGE;
+                     sv = h / TextureAtlas.PAGE;
+                  }
                }
             }
-         }
-      }
-
-      // The fill as a plain quad Graphic3D would draw (no custom vertices, sink or texture
-      // offset), or null.
-      private static function plainQuad(graphicsData:IGraphicsData) : GraphicsBitmapFill
-      {
-         var fill:GraphicsBitmapFill = graphicsData as GraphicsBitmapFill;
-         if(fill == null || fill.bitmapData == null || GraphicsFillExtra.isSoftwareDraw(fill) || GraphicsFillExtra.getVertexBuffer(fill) != null || GraphicsFillExtra.getSinkLevel(fill) != 0)
-         {
-            return null;
-         }
-         var offset:Vector.<Number> = GraphicsFillExtra.getOffsetUV(fill);
-         if(offset[0] != 0 || offset[1] != 0)
-         {
-            return null;
-         }
-         try
-         {
-            if(fill.bitmapData.width <= 0)
+            m = fill.matrix;
+            ax = m.a * w;
+            ay = m.b * w;
+            cx = m.c * h;
+            cy = m.d * h;
+            if(d.length < p + 20)
             {
-               return null;
+               d.length = p + 20 * 64;
             }
+            // texture pixels (0,0), (w,0), (0,h) and (w,h) through the fill's matrix, y flipped
+            d[p++] = m.tx; d[p++] = -m.ty; d[p++] = 0; d[p++] = cx0 + u * su; d[p++] = cy0 + v * sv;
+            d[p++] = m.tx + ax; d[p++] = -(m.ty + ay); d[p++] = 0; d[p++] = cx0 + (1 + u) * su; d[p++] = cy0 + v * sv;
+            d[p++] = m.tx + cx; d[p++] = -(m.ty + cy); d[p++] = 0; d[p++] = cx0 + u * su; d[p++] = cy0 + (1 + v) * sv;
+            d[p++] = m.tx + ax + cx; d[p++] = -(m.ty + ay + cy); d[p++] = 0; d[p++] = cx0 + (1 + u) * su; d[p++] = cy0 + (1 + v) * sv;
+            quadOf[i] = n;
+            n++;
          }
-         catch(e:Error)
-         {
-            return null; // disposed image
-         }
-         return fill;
-      }
-
-      // How many plain quads with the same image follow each other from i (each is a fill,
-      // its path and an end fill).
-      private function runLength(datas:Vector.<IGraphicsData>, i:int) : int
-      {
-         var first:GraphicsBitmapFill = plainQuad(datas[i]);
-         if(first == null)
+         if(n == 0 && shadows == 0)
          {
             return 0;
          }
-         var n:int = 1;
-         var j:int = i + 3;
-         var fill:GraphicsBitmapFill = null;
-         while(n < BATCH_QUADS && j < datas.length)
-         {
-            fill = datas[j] as GraphicsBitmapFill;
-            if(fill == null || fill.bitmapData != first.bitmapData || fill.repeat != first.repeat || !(datas[j - 2] is GraphicsPath) || !(datas[j - 1] is GraphicsEndFill) || plainQuad(fill) == null)
-            {
-               break;
-            }
-            n++;
-            j = j + 3;
-         }
-         return n;
-      }
-
-      private function drawBatch(datas:Vector.<IGraphicsData>, i:int, n:int, finalTransform:Matrix3D) : void
-      {
-         var ctx:Context3D = this.context3D.GetContext3D();
-         var q:int = 0;
+         this.atlasTextures_ = this.atlas_.upload();
          if(this.batchCtx_ != ctx || this.batchVB_ == null)
          {
             // (again after the GPU context is lost and recreated)
             this.batchCtx_ = ctx;
-            this.batchVB_ = ctx.createVertexBuffer(BATCH_QUADS * 4, 5);
+            this.batchVB_ = ctx.createVertexBuffer(BATCH_QUADS * 4,5);
             this.batchIB_ = ctx.createIndexBuffer(BATCH_QUADS * 6);
-            var indices:Vector.<uint> = new Vector.<uint>(BATCH_QUADS * 6, true);
-            for(q = 0; q < BATCH_QUADS; q++)
+            var indices:Vector.<uint> = new Vector.<uint>(BATCH_QUADS * 6,true);
+            for(var q:int = 0; q < BATCH_QUADS; q++)
             {
                indices[q * 6] = q * 4;
                indices[q * 6 + 1] = q * 4 + 1;
@@ -465,62 +693,33 @@ import flash.display.StageScaleMode;
             this.batchIB_.uploadFromVector(indices,0,BATCH_QUADS * 6);
             // Stage3D treats a vertex buffer as invalid (Error #3608, and silently skips the draw
             // without error checking) until all of it has been uploaded once
-            this.batchVB_.uploadFromVector(new Vector.<Number>(BATCH_QUADS * 4 * 5, true),0,BATCH_QUADS * 4);
+            this.batchVB_.uploadFromVector(new Vector.<Number>(BATCH_QUADS * 4 * 5,true),0,BATCH_QUADS * 4);
+            this.shadowVB_ = ctx.createVertexBuffer(BATCH_SHADOWS * 4,9);
+            this.shadowVB_.uploadFromVector(new Vector.<Number>(BATCH_SHADOWS * 4 * 9,true),0,BATCH_SHADOWS * 4);
+            // its own index buffer: Stage3D checks every index against the vertex buffer's size
+            this.shadowIB_ = ctx.createIndexBuffer(BATCH_SHADOWS * 6);
+            this.shadowIB_.uploadFromVector(indices,0,BATCH_SHADOWS * 6);
          }
-         if(this.batchCursor_ + n > BATCH_QUADS)
+         if(n > 0)
          {
-            this.batchCursor_ = 0;
+            this.batchVB_.uploadFromVector(d,0,n * 4);
          }
-         var first:GraphicsBitmapFill = GraphicsBitmapFill(datas[i]);
-         this.graphic3D_.setGraphic(first,this.context3D); // texture and colour transform
-         var w:Number = Math.ceil(this.graphic3D_.texture.getWidth());
-         var h:Number = Math.ceil(this.graphic3D_.texture.getHeight());
-         var d:Vector.<Number> = this.batchData_;
-         d.length = n * 20;
-         var p:int = 0;
-         var m:Matrix = null;
-         var raw:Vector.<Number> = this.batchRaw_;
-         var out:Vector.<Number> = this.batchOut_;
-         var k:int = 0;
-         for(q = 0; q < n; q++)
+         if(shadows > 0)
          {
-            // the corners Graphic3D.transform gives its unit quad for this fill, built the same way
-            m = GraphicsBitmapFill(datas[i + q * 3]).matrix;
-            this.batchMatrix_.identity();
-            this.batchMatrix_.copyRawDataTo(raw);
-            raw[0] = m.a;
-            raw[1] = -m.b;
-            raw[4] = -m.c;
-            raw[5] = m.d;
-            raw[12] = m.tx;
-            raw[13] = -m.ty;
-            this.batchMatrix_.copyRawDataFrom(raw);
-            this.batchMatrix_.prependScale(w,h,1);
-            this.batchMatrix_.prependTranslation(0.5,-0.5,0);
-            this.batchMatrix_.transformVectors(UNIT_QUAD,out);
-            for(k = 0; k < 4; k++)
-            {
-               d[p++] = out[k * 3];
-               d[p++] = out[k * 3 + 1];
-               d[p++] = 0;
-               d[p++] = UNIT_UV[k * 2];
-               d[p++] = UNIT_UV[k * 2 + 1];
-            }
+            this.shadowVB_.uploadFromVector(sd,0,shadows * 4);
          }
-         this.batchVB_.uploadFromVector(d,this.batchCursor_ * 4,n * 4);
-         finalTransform.identity();
-         finalTransform.appendScale(1 / Stage3DConfig.HALF_WIDTH,1 / Stage3DConfig.HALF_HEIGHT,1);
-         finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
-         this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
-         this.context3D.setProgram(Program3DFactory.getInstance().getProgram(this.context3D,first.repeat));
-         this.context3D.setTextureAt(0,this.graphic3D_.texture);
-         ctx.setVertexBufferAt(0,this.batchVB_,0,Context3DVertexBufferFormat.FLOAT_3);
-         ctx.setVertexBufferAt(1,this.batchVB_,3,Context3DVertexBufferFormat.FLOAT_2);
-         ctx.setVertexBufferAt(2,null);
-         ctx.setProgramConstantsFromVector(Context3DProgramType.VERTEX,4,ZERO_OFFSET);
-         ctx.drawTriangles(this.batchIB_,this.batchCursor_ * 6,n * 2);
-         this.batchCursor_ = this.batchCursor_ + n;
-         drawCalls++;
+         return n + shadows;
+      }
+
+      private static function nextPowerOf2(value:int) : int
+      {
+         value--;
+         value = value | value >> 1;
+         value = value | value >> 2;
+         value = value | value >> 4;
+         value = value | value >> 8;
+         value = value | value >> 16;
+         return value + 1;
       }
 
       private function setTranslationToGame() : void

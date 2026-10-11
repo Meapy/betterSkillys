@@ -8,6 +8,7 @@ import flash.system.System;
 import flash.utils.getTimer;
 
 import kabam.rotmg.stage3D.Renderer;
+import com.company.assembleegameclient.map.Map;
 
 public class GameStatistics extends Sprite {
 
@@ -16,9 +17,11 @@ public class GameStatistics extends Sprite {
    private var ping_:SimpleText;
    private var mem_:SimpleText;
    private var draw_:SimpleText;
+   private var parts_:SimpleText;
 
    // Time GameSprite spent in Map.draw since the last update of the display.
    public static var mapDrawMs:int = 0;
+   public static var hudMs:int = 0;
    private var lastPing_:int;
 
    public function GameStatistics() {
@@ -51,7 +54,7 @@ public class GameStatistics extends Sprite {
       addChild(this.mem_);
       // average map draw time per frame and the GPU draw calls of the last frame
       this.draw_ = new SimpleText(17, 0xFFFFFF);
-      this.draw_.text = "MAP: 99.9 ms, 9999 draws";
+      this.draw_.text = "MAP: 99.9 ms (GPU 99.9), 9999 draws";
       this.draw_.autoSize = "right";
       this.draw_.setBold(true);
       this.draw_.setAlignment("right");
@@ -59,6 +62,15 @@ public class GameStatistics extends Sprite {
       this.draw_.filters = FilterUtil.getTextOutlineFilter();
       this.draw_.y = (this.mem_.y + this.mem_.height - 2);
       addChild(this.draw_);
+      this.parts_ = new SimpleText(17, 0xFFFFFF);
+      this.parts_.text = "tiles 99.9, objects 99.9 + 99.9";
+      this.parts_.autoSize = "right";
+      this.parts_.setBold(true);
+      this.parts_.setAlignment("right");
+      this.parts_.useTextDimensions();
+      this.parts_.filters = FilterUtil.getTextOutlineFilter();
+      this.parts_.y = (this.draw_.y + this.draw_.height - 2);
+      addChild(this.parts_);
        this.container_ = new Sprite();
        this.container_.graphics.clear();
        this.container_.graphics.beginFill(0, 0);
@@ -99,8 +111,12 @@ public class GameStatistics extends Sprite {
 
             fps_.setText("FPS: " + fps);
             ping_.setText("PING: " + lastPing_);
-            draw_.setText("MAP: " + (fps > 0 ? (mapDrawMs / fps).toFixed(1) : "0") + " ms, " + Renderer.drawCalls + " draws");
+            draw_.setText("MAP: " + (fps > 0 ? (mapDrawMs / fps).toFixed(1) : "0") + " ms (GPU " + (fps > 0 ? (Renderer.renderMs / fps).toFixed(1) : "0") + "), " + Renderer.drawCalls + " draws");
             mapDrawMs = 0;
+            Renderer.renderMs = 0;
+            parts_.setText("tiles " + per(Map.profTiles) + ", objects " + per(Map.profCollect) + " + " + per(Map.profObjects) + ", hud " + per(hudMs) + " | draws q" + Renderer.drawsQuads + " c" + Renderer.drawsCustom + " s" + Renderer.drawsShadow + " 3d" + Renderer.draws3D);
+            hudMs = 0;
+            Map.profTiles = Map.profCollect = Map.profObjects = 0;
 
             fps = 0;
         }
@@ -112,6 +128,10 @@ public class GameStatistics extends Sprite {
         }
         fps++;
     }
+
+   private function per(ms:int):String {
+      return fps > 0 ? (ms / fps).toFixed(1) : "0";
+   }
 
    public function setPing(ping:int):void{
       this.lastPing_ = ping;

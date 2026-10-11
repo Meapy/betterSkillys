@@ -79,8 +79,35 @@ import flash.display3D.Context3DProgramType;
             this.offsetMatrix = sinkOffset;
          }
          this.transform();
+         this.setColorTransform(context3D);
+      }
 
-         this.ct = GraphicsFillExtra.getColorTransform(this.bitmapData);
+      // The texture for an image, with its colour transform loaded into the fragment constants
+      // (shared with setGraphic, which caches what it last loaded). For Renderer's batched quads.
+      public function setTextureAndColor(bitmapData:BitmapData, context3D:Context3DProxy) : TextureProxy
+      {
+         this.bitmapData = bitmapData;
+         this.texture = this.textureFactory.make(bitmapData);
+         this.setColorTransform(context3D);
+         return this.texture;
+      }
+
+      private static const IDENTITY_CT:ColorTransform = new ColorTransform();
+
+      // No colour transform (Renderer's atlas pages hold only images without one).
+      public function setIdentityColor(context3D:Context3DProxy) : void
+      {
+         this.applyColorTransform(IDENTITY_CT,context3D);
+      }
+
+      private function setColorTransform(context3D:Context3DProxy) : void
+      {
+         this.applyColorTransform(GraphicsFillExtra.getColorTransform(this.bitmapData),context3D);
+      }
+
+      private function applyColorTransform(ct:ColorTransform, context3D:Context3DProxy) : void
+      {
+         this.ct = ct;
          if(this.ctMult[0] != this.ct.redMultiplier || this.ctMult[1] != this.ct.greenMultiplier || this.ctMult[2] != this.ct.blueMultiplier || this.ctMult[3] != this.ct.alphaMultiplier || this.ctOffset[0] != this.ct.redOffset / 255 || this.ctOffset[1] != this.ct.greenOffset / 255 || this.ctOffset[2] != this.ct.blueOffset / 255 || this.ctOffset[3] != this.ct.alphaOffset / 255) {
             this.ctMult[0] = this.ct.redMultiplier;
             this.ctMult[1] = this.ct.greenMultiplier;
