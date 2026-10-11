@@ -139,5 +139,89 @@ namespace WorldServer.logic
                 new ItemLoot("Scholar's Seal", 0.01)
                 )
             );
+
+        // Optional event: walking up to a Corruption Trigger summons the Corruption Phantom, unless
+        // one is already loose. Each trigger fires once.
+        private _ CursedLibraryCorruption = () => Behav()
+        .Init("Library Corruption Trigger",
+            new State(
+                new State("Init",
+                    new TimedTransition(2000, "Wait")
+                    ),
+                new State("Wait",
+                    new PlayerWithinTransition(4, "Check")
+                    ),
+                new State("Check",
+                    new EntityNotExistsTransition("Library Corruption Phantom", 300, "Summon"),
+                    new TimedTransition(1000, "Wait")
+                    ),
+                new State("Summon",
+                    new Spawn("Library Corruption Phantom", 1, 1),
+                    new TimedTransition(500, "Done")
+                    ),
+                new State("Done")
+                )
+            )
+        .Init("Library Corruption Phantom",
+            new State(
+                new ScaleHP2(20),
+                new State("Rise",
+                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                    new Taunt("The corruption spreads..."),
+                    new Flash(0x6600CC, 0.5, 4),
+                    new TimedTransition(2000, "Haunt")
+                    ),
+                new State("Haunt",
+                    new Follow(0.5, 12, 3),
+                    new Wander(0.3),
+                    new Shoot(10, count: 3, shootAngle: 15, projectileIndex: 0, coolDown: 1500),
+                    new Shoot(10, count: 2, shootAngle: 30, projectileIndex: 1, coolDown: 2500),
+                    new HpLessTransition(0.5, "Wisps")
+                    ),
+                new State("Wisps",
+                    new Taunt("Rise, my wisps!"),
+                    new Spawn("Library Corruption Phantom Wisp Charger", 1, 1),
+                    new Spawn("Library Corruption Phantom Wisp Stalker", 1, 1),
+                    new Spawn("Library Corruption Phantom Wisp Watcher", 1, 1),
+                    new Spawn("Library Corruption Phantom Wisp Ravager", 1, 1),
+                    new StayCloseToSpawn(0.5, 6),
+                    new Wander(0.3),
+                    new Shoot(10, count: 3, shootAngle: 15, projectileIndex: 0, coolDown: 1200),
+                    new Shoot(0, count: 4, shootAngle: 90, projectileIndex: 2, fixedAngle: 45, coolDown: 4000)
+                    )
+                ),
+            new Threshold(0.01,
+                new ItemLoot("Potion of Wisdom", 1),
+                new ItemLoot("Skull of Corrupted Souls", 0.01)
+                )
+            )
+        .Init("Library Corruption Phantom Wisp Charger",
+            new State(
+                new Follow(1.2, 10, 1),
+                new Wander(0.4),
+                new Shoot(3, count: 2, shootAngle: 20, projectileIndex: 0, coolDown: 600),
+                new Shoot(2, count: 1, projectileIndex: 1, coolDown: 400)
+                )
+            )
+        .Init("Library Corruption Phantom Wisp Stalker",
+            new State(
+                new Orbit(0.8, 4, 15, "Library Corruption Phantom", speedVariance: 0.1, radiusVariance: 0.5),
+                new Shoot(10, count: 1, projectileIndex: 0, coolDown: 1500)
+                )
+            )
+        .Init("Library Corruption Phantom Wisp Watcher",
+            new State(
+                new StayBack(0.5, 7),
+                new Wander(0.3),
+                new Shoot(12, count: 1, projectileIndex: 0, predictive: 0.3, coolDown: 1000)
+                )
+            )
+        .Init("Library Corruption Phantom Wisp Ravager",
+            new State(
+                new StayCloseToSpawn(0.5, 6),
+                new Wander(0.4),
+                new Shoot(0, count: 4, shootAngle: 90, projectileIndex: 0, fixedAngle: 0, coolDown: 3000)
+                )
+            );
     }
 }
