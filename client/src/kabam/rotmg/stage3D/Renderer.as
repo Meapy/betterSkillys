@@ -47,6 +47,8 @@ import flash.display.StageScaleMode;
 
       // Draw calls in the last frame, for GameStatistics.
       public static var drawCalls:int = 0;
+      public static var batching:Boolean = true; // debug switch
+      public static var batchSingles:Boolean = false; // debug: every plain quad through the batch path
 
       // Batching: consecutive quads with the same image (particles, projectiles, repeated
       // sprites...) are drawn with one draw call instead of one each. Their corners are
@@ -59,6 +61,12 @@ import flash.display.StageScaleMode;
       private var batchIB_:IndexBuffer3D;
       private var batchData_:Vector.<Number> = new Vector.<Number>();
       private var batchCursor_:int = 0;
+      private var batchMatrix_:Matrix3D = new Matrix3D();
+      private var batchRaw_:Vector.<Number> = new Vector.<Number>(16, true);
+      private var batchOut_:Vector.<Number> = new Vector.<Number>(12, true);
+      // Graphic3D's unit quad (VertexBufferFactory): positions and texture coordinates
+      private static const UNIT_QUAD:Vector.<Number> = new <Number>[-0.5, 0.5, 0, 0.5, 0.5, 0, -0.5, -0.5, 0, 0.5, -0.5, 0];
+      private static const UNIT_UV:Vector.<Number> = new <Number>[0, 0, 1, 0, 0, 1, 1, 1];
 
       [Inject]
       public var context3D:Context3DProxy;
@@ -317,8 +325,8 @@ import flash.display.StageScaleMode;
          {
             graphicsData = graphicsDatas[gi];
             this.context3D.GetContext3D().setCulling(Context3DTriangleFace.NONE);
-            run = this.runLength(graphicsDatas, gi);
-            if(run > 1)
+            run = batching ? this.runLength(graphicsDatas, gi) : 0;
+            if(run > 1 || run == 1 && batchSingles)
             {
                this.drawBatch(graphicsDatas, gi, run, finalTransform);
                gi = gi + run * 3 - 1;
@@ -455,6 +463,9 @@ import flash.display.StageScaleMode;
                indices[q * 6 + 5] = q * 4 + 3;
             }
             this.batchIB_.uploadFromVector(indices,0,BATCH_QUADS * 6);
+            // Stage3D treats a vertex buffer as invalid (Error #3608, and silently skips the draw
+            // without error checking) until all of it has been uploaded once
+            this.batchVB_.uploadFromVector(new Vector.<Number>(BATCH_QUADS * 4 * 5, true),0,BATCH_QUADS * 4);
          }
          if(this.batchCursor_ + n > BATCH_QUADS)
          {
@@ -468,20 +479,33 @@ import flash.display.StageScaleMode;
          d.length = n * 20;
          var p:int = 0;
          var m:Matrix = null;
-         var ax:Number, ay:Number, cx:Number, cy:Number;
+         var raw:Vector.<Number> = this.batchRaw_;
+         var out:Vector.<Number> = this.batchOut_;
+         var k:int = 0;
          for(q = 0; q < n; q++)
          {
-            // the corners Graphic3D gives its unit quad: texture pixels (0,0), (w,0), (0,h) and
-            // (w,h) through the fill's matrix, with y flipped
+            // the corners Graphic3D.transform gives its unit quad for this fill, built the same way
             m = GraphicsBitmapFill(datas[i + q * 3]).matrix;
-            ax = m.a * w;
-            ay = m.b * w;
-            cx = m.c * h;
-            cy = m.d * h;
-            d[p++] = m.tx; d[p++] = -m.ty; d[p++] = 0; d[p++] = 0; d[p++] = 0;
-            d[p++] = m.tx + ax; d[p++] = -(m.ty + ay); d[p++] = 0; d[p++] = 1; d[p++] = 0;
-            d[p++] = m.tx + cx; d[p++] = -(m.ty + cy); d[p++] = 0; d[p++] = 0; d[p++] = 1;
-            d[p++] = m.tx + ax + cx; d[p++] = -(m.ty + ay + cy); d[p++] = 0; d[p++] = 1; d[p++] = 1;
+            this.batchMatrix_.identity();
+            this.batchMatrix_.copyRawDataTo(raw);
+            raw[0] = m.a;
+            raw[1] = -m.b;
+            raw[4] = -m.c;
+            raw[5] = m.d;
+            raw[12] = m.tx;
+            raw[13] = -m.ty;
+            this.batchMatrix_.copyRawDataFrom(raw);
+            this.batchMatrix_.prependScale(w,h,1);
+            this.batchMatrix_.prependTranslation(0.5,-0.5,0);
+            this.batchMatrix_.transformVectors(UNIT_QUAD,out);
+            for(k = 0; k < 4; k++)
+            {
+               d[p++] = out[k * 3];
+               d[p++] = out[k * 3 + 1];
+               d[p++] = 0;
+               d[p++] = UNIT_UV[k * 2];
+               d[p++] = UNIT_UV[k * 2 + 1];
+            }
          }
          this.batchVB_.uploadFromVector(d,this.batchCursor_ * 4,n * 4);
          finalTransform.identity();

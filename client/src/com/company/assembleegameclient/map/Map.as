@@ -152,11 +152,13 @@ public class Map extends Sprite {
     private var groundYx_:Number = 0;
     private var groundYy_:Number = 0;
     private var lastDrawTime_:int = -1;
+    public static var chunking:Boolean = true; // debug switches
+    public static var culling:Boolean = true;
 
     private function setupGround(camera:Camera):void {
         // Needs the orthographic camera, where a ground point (x, y, 0) lands at
         // (x * r0 + y * r4 + r12, x * r1 + y * r5 + r13).
-        this.groundAffine_ = camera.affineVersion_ != 0 && this.width_ > 0;
+        this.groundAffine_ = chunking && camera.affineVersion_ != 0 && this.width_ > 0;
         if (!this.groundAffine_) {
             return;
         }
@@ -681,7 +683,7 @@ public class Map extends Sprite {
                 if (xi * xi + yi * yi <= 225) {
                     square = lookupSquare(xi + player_.x_, yi + player_.y_);
                     if (square != null) {
-                        if (this.groundAffine_) {
+                        if (this.groundAffine_ && culling) {
                             sx = this.groundOx_ + square.center_.x * this.groundXx_ + square.center_.y * this.groundYx_;
                             sy = this.groundOy_ + square.center_.x * this.groundXy_ + square.center_.y * this.groundYy_;
                             if (sx < cullL || sx > cullR || sy < cullT || sy > cullB) {

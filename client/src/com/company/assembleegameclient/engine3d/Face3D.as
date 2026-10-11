@@ -100,6 +100,7 @@ package com.company.assembleegameclient.engine3d
       // the camera keeps the same affineVersion_. The corners (vin_) of tile and wall faces
       // never move, so only the camera can invalidate it; texture or UV changes (setTexture,
       // setUVT) recompute the texture matrix.
+      public static var caching:Boolean = true; // debug switch
       private var cacheVersion_:int = 0;
       private var texVersion_:int = 0;
       private var relOut_:Vector.<Number> = new Vector.<Number>();
@@ -111,7 +112,7 @@ package com.company.assembleegameclient.engine3d
       {
          var vS:Vector.<Number> = this.vout_;
          var rel:Vector.<Number> = this.relOut_;
-         var version:int = camera.affineVersion_;
+         var version:int = caching ? camera.affineVersion_ : 0;
          var tX:Number = camera.tX_;
          var tY:Number = camera.tY_;
          var len:int = 0;
