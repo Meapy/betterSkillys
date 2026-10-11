@@ -80,10 +80,10 @@ namespace WorldServer.logic
                 new TierLoot(5, ItemType.Ability, 0.07),
                 new ItemLoot("Potion of Wisdom", 1),
                 new ItemLoot("Doom Bow", 0.005),
-                new ItemLoot("Edictum Praetoris", 0.005),
-                new ItemLoot("Memento Mori", 0.005),
-                new ItemLoot("Toga Picta", 0.005),
-                new ItemLoot("Interregnum", 0.005),
+                new ItemLoot("NecroST0", 0.005),
+                new ItemLoot("NecroST1", 0.005),
+                new ItemLoot("NecroST2", 0.005),
+                new ItemLoot("NecroST3", 0.005),
                 new ItemLoot("Undead Lair Key", 0.009, 0, 0.03)
                 )
             )

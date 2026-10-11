@@ -543,7 +543,7 @@ namespace WorldServer.logic
                         )
                     ),
                     new Threshold(0.001,
-                        new ItemLoot("Potion of Health", 1),
+                        new ItemLoot("Potion of Life", 1),
                         new ItemLoot("Potion of Mana", 1),
                         new ItemLoot("Potion of Mana", 0.25),
                         new TierLoot(12, ItemType.Weapon, 0.4),

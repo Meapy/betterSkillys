@@ -530,7 +530,6 @@ namespace WorldServer.logic
                 ),
             new Threshold(0.03,
                 new ItemLoot("Potion of Defense", 0.09),
-                new ItemLoot("Sludge-Covered Cane", 0.001),
                 new ItemLoot("Void Blade", 0.01, threshold: 0.03),
                 new ItemLoot("Murky Toxin", 0.01)
                 )
@@ -542,7 +541,6 @@ namespace WorldServer.logic
                 ),
             new Threshold(0.03,
                 new ItemLoot("Potion of Defense", 0.09),
-                new ItemLoot("Sludge-Covered Cane", 0.001),
                 new ItemLoot("Void Blade", 0.01, threshold: 0.03),
                 new ItemLoot("Murky Toxin", 0.01)
                 )
@@ -554,7 +552,6 @@ namespace WorldServer.logic
                 ),
             new Threshold(0.03,
                 new ItemLoot("Potion of Defense", 0.09),
-                new ItemLoot("Sludge-Covered Cane", 0.001),
                 new ItemLoot("Void Blade", 0.01, threshold: 0.03),
                 new ItemLoot("Murky Toxin", 0.01)
                 )
@@ -566,7 +563,6 @@ namespace WorldServer.logic
                 ),
             new Threshold(0.03,
                 new ItemLoot("Potion of Defense", 0.09),
-                new ItemLoot("Sludge-Covered Cane", 0.001),
                 new ItemLoot("Void Blade", 0.01, threshold: 0.03),
                 new ItemLoot("Murky Toxin", 0.01)
                 )

@@ -444,7 +444,7 @@ namespace WorldServer.core.worlds
                         BroadcastMsg("ENOUGH WAITING!");
                         BroadcastMsg("YOU SHALL MEET YOUR DOOM BY MY HAND!!!");
                         BroadcastMsg("GUARDIANS AWAKEN AND KILL THESE FOOLS!!!");
-                        MovePeopleNearby(time);
+                        SendPlayersToCastle();
 
                         CurrentState = RealmState.DoNothing;
                     }
@@ -814,14 +814,21 @@ namespace WorldServer.core.worlds
             return ret;
         }
 
-        private void MovePeopleNearby(TickTime time)
+        private void SendPlayersToCastle()
         {
-            var regions = World.GetRegionPoints(TileRegion.Defender);
-            foreach (var player in World.Players.Values)
+            var players = World.Players.Values.ToArray();
+            if (players.Length == 0)
+                return;
+
+            var castle = World.GameServer.WorldManager.CreateNewWorld("Oryx's Castle", null, World);
+            if (castle == null)
             {
-                var pos = Random.Shared.NextLength(regions);
-                player.TeleportPosition(time, pos.Key.X, pos.Key.Y, true);
+                Log.Error("Unable to create Oryx's Castle for closing realm {0}.", World.IdName);
+                return;
             }
+
+            foreach (var player in players)
+                player.Reconnect(castle);
         }
 
         private void SpawnEvent(string name, ISetPiece setpiece, int x = 0, int y = 0)

@@ -465,9 +465,8 @@ namespace WorldServer.logic
                 new ItemLoot("Potion of Life", 1),
                 new ItemLoot("Potion of Life", 1),
                 new ItemLoot("Ring of the Nile", 0.009),
-                new ItemLoot("Book of Geb", 0.009),
-                new ItemLoot("Scepter of Geb", 0.009),
-                new ItemLoot("Geb's Ring of Wisdom", 0.009)
+                new ItemLoot("PriestST1", 0.009),
+                new ItemLoot("PriestST3", 0.009)
                 )
             )
         //Minions

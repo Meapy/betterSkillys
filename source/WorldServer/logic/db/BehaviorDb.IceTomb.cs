@@ -720,7 +720,7 @@ namespace WorldServer.logic
                     )
                 )
             )
-            .Init("iceTomb Chest Spawner",
+            .Init("Ice Tomb Boss Anchor",
                 new State(
                     new ConditionEffectBehavior(ConditionEffectIndex.Invincible),
                     new State("Wait",
@@ -733,11 +733,11 @@ namespace WorldServer.logic
                         new EntitiesNotExistsTransition(30, "Spawn", "Ice Tomb Support", "Ice Tomb Attacker", "Ice Tomb Defender")
                     ),
                     new State("Spawn",
-                        new Transform("iceTomb Chest")
+                        new Transform("Ice Tomb Chest")
                     )
                 )
             )
-            .Init("iceTomb Chest",
+            .Init("Ice Tomb Chest",
                 new State(
                     new State("Wait",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),

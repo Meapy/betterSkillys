@@ -65,9 +65,6 @@ namespace WorldServer.logic
                     new ItemLoot("Potion of Defense", 0.3),
                     new ItemLoot("Potion of Wisdom", 0.3)
                 ),
-                new Threshold(0.20,
-                    new ItemLoot("Oryx's Arena Key", 0.01)
-                ),
                 new Threshold(0.1,
                     new TierLoot(10, ItemType.Weapon, 0.07),
                     new TierLoot(11, ItemType.Weapon, 0.06),
@@ -204,9 +201,6 @@ namespace WorldServer.logic
                         new Flash(0xfFF0000, 0.5, 9000001)
                         )
                     ),
-                new Threshold(0.20,
-                    new ItemLoot("Oryx's Arena Key", 0.005)
-                ),
                 new Threshold(0.05,
                     new ItemLoot("Potion of Attack", 0.3),
                     new ItemLoot("Potion of Defense", 0.3)

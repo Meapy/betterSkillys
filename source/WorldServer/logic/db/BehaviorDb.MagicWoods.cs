@@ -499,11 +499,14 @@ namespace WorldServer.logic
                     new ConditionEffectBehavior(ConditionEffectIndex.Invincible, true),
                     new Taunt("Ah, so you must be the guest I have felt the presence of! Strike my flowing waters and I shall richly reward you!"),
                     new Taunt(cooldown: 4000, "In an eternity with US!"),
-                    new TimedTransition(6000, "Wait")
+                    new TimedTransition(6000, "Fight")
                 ),
-                new State("Wait",
+                new State("Fight",
                     new Spawn("MW Fountain Spirit", 1, 1),
-                    new EntityNotExistsTransition("Grim Reaper", 200, "Open")
+                    new TimedTransition(1000, "Check")
+                    ),
+                new State("Check",
+                    new EntityNotExistsTransition("MW Fountain Spirit", 200, "Open")
                     ),
                 new State("Open",
                     new OpenGate("MW Fountain Inner Left", 3),

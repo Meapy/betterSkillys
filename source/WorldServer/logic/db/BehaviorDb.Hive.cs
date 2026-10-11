@@ -33,7 +33,7 @@ namespace WorldServer.logic
                 ),
                 new Threshold(0.05,
                     new ItemLoot("Potion of Dexterity", 1),
-                    new ItemLoot("Bottled Honey", 0.5),
+                    new ItemLoot("TH Honey bottle", 0.5),
                     new ItemLoot("HoneyScepter", 0.05),
                     new ItemLoot("Orb of Sweet Demise", 0.05)
                 ),
@@ -93,7 +93,7 @@ namespace WorldServer.logic
                     new TransformOnDeath("TH Fat Bees", 2, 2)
                     )
                 ),
-                new ItemLoot("Bottled Honey", 0.25)
+                new ItemLoot("TH Honey bottle", 0.25)
             );
     }
 }

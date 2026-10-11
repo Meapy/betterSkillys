@@ -12,8 +12,8 @@ namespace WorldServer.logic
         private _ Avatar = () => Behav()
             .Init("shtrs Defense System",
                 new State(
-                    new PlaceMap("Setpieces/Avatar/Spawn.jm", true),
-                    new PlaceMapAtDeath("Setpieces/Avatar/Death.jm", true),
+                    new PlaceMap("Setpieces/avatar/spawn.jm", true),
+                    new PlaceMapAtDeath("Setpieces/avatar/death.jm", true),
                     new ScaleHP2(30),
                     new DropPortalOnDeath("The Shatters", probability: 1, timeout: 70),
                     new State("stars",

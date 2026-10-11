@@ -33,7 +33,10 @@ namespace Shared.resources
             if (!wServer)
                 LoadWebFiles(resourcePath + "/web");
             else
+            {
                 GameData.LoadMaps($"{resourcePath}/worlds");
+                GameData.ValidateWorlds();
+            }
         }
 
         private void LoadWebFiles(string dir)

@@ -29,7 +29,7 @@ namespace Shared.resources
         public Dictionary<ushort, string> TileTypeToId = new Dictionary<ushort, string>();
 
         private readonly Dictionary<string, WorldResource> Worlds = new Dictionary<string, WorldResource>();
-        private readonly Dictionary<string, byte[]> WorldDataCache = new Dictionary<string, byte[]>();
+        private readonly Dictionary<string, byte[]> WorldDataCache = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         public XElement ObjectCombinedXML;
@@ -217,6 +217,24 @@ namespace Shared.resources
             if (WorldDataCache.TryGetValue(name, out var ret))
                 return ret;
             return null;
+        }
+
+        // logs content that loads fine but can never be played: worlds whose map is missing and portals that lead to no world
+        public void ValidateWorlds()
+        {
+            foreach (var world in Worlds.Values)
+                foreach (var map in world.MapJM)
+                    if (!WorldDataCache.ContainsKey(map))
+                        Log.Warn("World '{0}' references missing map '{1}'.", world.IdName, map);
+
+            var unreachable = Portals.Values
+                .Where(p => !string.IsNullOrEmpty(p.DungeonName) && !Worlds.ContainsKey(p.DungeonName))
+                .Select(p => p.DungeonName)
+                .Distinct()
+                .OrderBy(n => n)
+                .ToList();
+            if (unreachable.Count > 0)
+                Log.Warn("{0} portal destination(s) have no world defined: {1}", unreachable.Count, string.Join(", ", unreachable));
         }
 
         public void AddWorlds(XElement root)

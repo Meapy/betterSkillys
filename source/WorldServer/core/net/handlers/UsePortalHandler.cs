@@ -10,6 +10,7 @@ namespace WorldServer.core.net.handlers
     public class UsePortalHandler : IMessageHandler
     {
         private const string PORTAL_TO_NEXUS = "Portal To Nexus";
+        private const string NEXUS_PORTAL = "Nexus Portal";
         private const string TOMB_PORTAL_OF_COWARDICE = "Tomb Portal of Cowardice";
         private const string PORTAL_OF_COWARDICE = "Portal of Cowardice";
         private const string GLOWING_PORTAL_OF_COWARDICE = "Glowing Portal of Cowardice";
@@ -78,6 +79,7 @@ namespace WorldServer.core.net.handlers
                 switch (portal.ObjectDesc.IdName)
                 {
                     case PORTAL_TO_NEXUS:
+                    case NEXUS_PORTAL:
                         world = player.GameServer.WorldManager.Nexus;
                         player.Reconnect(world);
                         break;
@@ -120,6 +122,11 @@ namespace WorldServer.core.net.handlers
             }
 
             dungeonName = portal.PortalDescr.DungeonName;
+            if (string.IsNullOrEmpty(dungeonName))
+            {
+                player.SendError($"[Bug] Portal \"{portal.ObjectDesc.IdName}\" has no destination.");
+                return;
+            }
 
             world = portal.GameServer.WorldManager.CreateNewWorld(dungeonName, null, player.World);
             if (world == null)

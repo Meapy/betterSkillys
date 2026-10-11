@@ -104,14 +104,91 @@ namespace WorldServer.logic
             )
             .Init("Oryx Guardian TaskMaster",
                 new State(
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invincible, true),
                     new State("Idle",
                         new EntitiesNotExistsTransition(100, "Death", "Oryx Stone Guardian Right", "Oryx Stone Guardian Left")
                     ),
                     new State("Death",
-                        new RemoveObjectOnDeath("Cthu Gate", 25),
-                        new Suicide()
+                        new Decay(0)
                     )
+                )
+            )
+            // sits directly above the wall between the guardian room and Janus' room (row 30)
+            .Init("md dwGenerator",
+                new State(
+                    new State("Init",
+                        new TimedTransition(2000, "Idle")
+                    ),
+                    new State("Idle",
+                        new EntitiesNotExistsTransition(100, "Open", "Oryx Stone Guardian Right", "Oryx Stone Guardian Left")
+                    ),
+                    new State("Open",
+                        new RemoveObject("Castle Brick Wall3", 6),
+                        new TimedTransition(1000, "Done")
+                    ),
+                    new State("Done")
+                )
+            )
+            .Init("md Janus the Doorwarden",
+                new State(
+                    new ScaleHP2(20),
+                    new DropPortalOnDeath("Oryx Chamber Portal", 1.0, timeout: 0),
+                    new State("Idle",
+                        new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                        new PlayerWithinTransition(8, "Wake")
+                    ),
+                    new State("Wake",
+                        new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                        new Taunt("None shall pass through the door of the Mad God!"),
+                        new Flash(0x9B30FF, 0.5, 4),
+                        new TimedTransition(2500, "Boomerangs")
+                    ),
+                    new State("Boomerangs",
+                        new StayCloseToSpawn(0.5, 4),
+                        new Wander(0.3),
+                        new Shoot(12, count: 3, shootAngle: 20, projectileIndex: 0, coolDown: 1200),
+                        new Shoot(0, count: 8, shootAngle: 45, projectileIndex: 1, fixedAngle: 0, coolDown: 3500),
+                        new HpLessTransition(0.4, "Rage"),
+                        new TimedTransition(9000, "Keys")
+                    ),
+                    new State("Keys",
+                        new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                        new ReturnToSpawn(1),
+                        new Taunt("Keys of Light and Darkness, guard this door!"),
+                        new Spawn("md LightKey", 1, 1),
+                        new Spawn("md DarkKey", 1, 1),
+                        new TimedTransition(1500, "Keys Wait")
+                    ),
+                    new State("Keys Wait",
+                        new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                        new Shoot(0, count: 4, shootAngle: 90, projectileIndex: 1, fixedAngle: 45, coolDown: 2500),
+                        new EntitiesNotExistsTransition(30, "Boomerangs", "md LightKey", "md DarkKey")
+                    ),
+                    new State("Rage",
+                        new Taunt("You will never reach my master!"),
+                        new Flash(0xFF0000, 0.5, 6),
+                        new Follow(0.4, 10, 3),
+                        new Shoot(12, count: 5, shootAngle: 15, projectileIndex: 0, coolDown: 900),
+                        new Shoot(0, count: 12, shootAngle: 30, projectileIndex: 1, fixedAngle: 0, coolDown: 3000)
+                    )
+                ),
+                new Threshold(0.01,
+                    new ItemLoot("Potion of Defense", 1),
+                    new ItemLoot("Potion of Attack", 0.5)
+                ),
+                new Threshold(.005,
+                    LootTemplates.BasicDrop()
+                )
+            )
+            .Init("md LightKey",
+                new State(
+                    new Orbit(0.6, 4, 15, "md Janus the Doorwarden", speedVariance: 0.1, radiusVariance: 0.5),
+                    new Shoot(10, count: 2, shootAngle: 10, projectileIndex: 0, coolDown: 1000)
+                )
+            )
+            .Init("md DarkKey",
+                new State(
+                    new Orbit(0.4, 6, 15, "md Janus the Doorwarden", speedVariance: 0.1, radiusVariance: 0.5, orbitClockwise: true),
+                    new Shoot(10, count: 3, shootAngle: 15, projectileIndex: 1, coolDown: 1600)
                 )
             )
             .Init("Oryx's Living Floor Fire Down",

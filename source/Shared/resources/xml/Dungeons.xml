@@ -191,7 +191,7 @@
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
-	<World id="Ivory Wyvern">
+	<World id="The Ivory Wyvern">
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Ivory Wyvern.jm</MapJM>
@@ -257,7 +257,7 @@
 	<World id="Cave of A Thousand Treasures">
 		<Width>256</Width>
 		<Height>256</Height>
-		<MapJM>Dungeons/Cave of A Thousand Treasures.jm</MapJM>
+		<MapJM>Dungeons/Cave of a Thousand Treasures.jm</MapJM>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
@@ -286,6 +286,13 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Oryx's Chamber.jm</MapJM>
+		<VisibilityType>1</VisibilityType>
+		<Dungeon/>
+	</World>
+	<World id="Wine Cellar">
+		<Width>256</Width>
+		<Height>256</Height>
+		<MapJM>Dungeons/Wine Cellar.jm</MapJM>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
