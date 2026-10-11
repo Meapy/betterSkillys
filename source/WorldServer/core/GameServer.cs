@@ -81,12 +81,6 @@ namespace WorldServer.core
 
         public bool IsWhitelisted(int accountId) => Configuration.serverSettings.whitelist.Contains(accountId);
 
-#if DEBUG
-        private static bool ExportXMLS = true;
-#else
-        private static bool ExportXMLS = false;
-#endif
-
         public void Run()
         {
 #if DEBUG

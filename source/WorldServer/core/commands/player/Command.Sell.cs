@@ -140,9 +140,6 @@ namespace WorldServer.core.commands
 
         private bool CanSellItem(Item item)
         {
-            if (item.Tier == null)
-                return true;
-
             if (IsArmor(item.SlotType) && item.Tier < 11)
                 return false;
             if (IsWeapon(item.SlotType) && item.Tier < 11)

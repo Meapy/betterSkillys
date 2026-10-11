@@ -17,6 +17,8 @@ namespace WorldServer.core.commands
     {
         internal class Spawn : Command
         {
+            // filled in by Json.NET
+#pragma warning disable CS0649
             private struct JsonSpawn
             {
                 public string notif;
@@ -34,6 +36,7 @@ namespace WorldServer.core.commands
                 public bool? target;
                 public string clasify;
             }
+#pragma warning restore CS0649
 
             private const int Delay = 0; // in seconds
 

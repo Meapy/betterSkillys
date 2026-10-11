@@ -47,25 +47,28 @@ namespace Shared.terrain
             return WorldMapExporter.Export(tiles);
         }
 
+        // filled in by Json.NET
+#pragma warning disable CS0649
         private struct json_dat
         {
             public byte[] data;
-            public loc[] dict;
+            public Loc[] dict;
             public int height;
             public int width;
         }
 
-        private struct loc
+        private struct Loc
         {
             public string ground;
-            public obj[] objs;
-            public obj[] regions;
+            public Obj[] objs;
+            public Obj[] regions;
         }
 
-        private struct obj
+        private struct Obj
         {
             public string id;
             public string name;
         }
+#pragma warning restore CS0649
     }
 }

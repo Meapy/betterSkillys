@@ -2,7 +2,6 @@
 using WorldServer.core.structures;
 using WorldServer.core.worlds;
 using WorldServer.logic.loot;
-using WorldServer.logic.loot;
 
 namespace WorldServer.core.setpieces
 {

@@ -5,7 +5,7 @@ namespace Shared.resources
 {
     public class PlayerDesc : ObjectDesc
     {
-        public ushort[] Equipment;
+        public new ushort[] Equipment;
         public Stat[] Stats;
         public UnlockClass Unlock;
 

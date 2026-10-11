@@ -126,13 +126,6 @@ namespace WorldServer.core.net.handlers.market
             player.SendInfo("<Marketplace> The purchase item has been sent to your gift chests at Vault.");
         }
 
-        internal class APIItem //if u want, you can remove this and make it different?
-        {
-            public string secret = "NEW_SECRET_KEY_HERE_TODO_SOMEONE_DONT_LET_THEM_KNOW_YOUR_NEXT_MOVE_OK2";
-            public int itemID;
-            public int value;
-        }
-
         private int GetTax(int price) => TAX_PERCENTAGE * price / 100;
     }
 }

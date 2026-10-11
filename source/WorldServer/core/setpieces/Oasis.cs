@@ -5,8 +5,6 @@ using System.Linq;
 using WorldServer.core.objects;
 using WorldServer.core.worlds;
 using WorldServer.logic.loot;
-using WorldServer.core.objects;
-using WorldServer.logic.loot;
 using WorldServer.core.objects.containers;
 using WorldServer.core.structures;
 

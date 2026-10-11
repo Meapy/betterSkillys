@@ -110,7 +110,7 @@ namespace WorldServer.core.commands.player
                 //}, ref time);
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //SLogger.Instance.Warn(e);
                 return false;
@@ -160,7 +160,7 @@ namespace WorldServer.core.commands.player
 
                 DB.RemoveParty(player.Client.Account, members, player.Client.Account.PartyId);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //SLogger.Instance.Warn(e);
                 return false;
@@ -206,7 +206,7 @@ namespace WorldServer.core.commands.player
                     return false;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //SLogger.Instance.Warn(e);
                 return false;
@@ -504,7 +504,7 @@ namespace WorldServer.core.commands.player
                 {
                     player.GameServer.Database.FlushParty(party.PartyId, party);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     //SLogger.Instance.Warn(e);
                     return false;
@@ -517,7 +517,7 @@ namespace WorldServer.core.commands.player
                     return true;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //SLogger.Instance.Warn(e);
                 return false;

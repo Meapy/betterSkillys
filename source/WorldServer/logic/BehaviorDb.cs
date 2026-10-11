@@ -66,11 +66,11 @@ namespace WorldServer.logic
                 entity.SwitchTo(def.Item1);
         }
 
-        private delegate ctor _();
+        private delegate Ctor _();
 
-        private struct ctor
+        private struct Ctor
         {
-            public ctor Init(string id, State rootState, params MobDrops[] defs)
+            public Ctor Init(string id, State rootState, params MobDrops[] defs)
             {
                 try
                 {
@@ -102,7 +102,7 @@ namespace WorldServer.logic
                 return this;
             }
 
-            public ctor InitMany(string objTypeMin, string objTypeMax, Func<string, State> rootState, params MobDrops[] defs)
+            public Ctor InitMany(string objTypeMin, string objTypeMax, Func<string, State> rootState, params MobDrops[] defs)
             {
                 XmlData dat = InitDb.GameServer.Resources.GameData;
                 ushort idMin = dat.IdToObjectType[objTypeMin];
@@ -116,9 +116,9 @@ namespace WorldServer.logic
             }
         }
 
-        private static ctor Behav()
+        private static Ctor Behav()
         {
-            return new ctor();
+            return new Ctor();
         }
 
         public Dictionary<ushort, Tuple<State, Loot>> Definitions { get; private set; } = new Dictionary<ushort, Tuple<State, Loot>>();

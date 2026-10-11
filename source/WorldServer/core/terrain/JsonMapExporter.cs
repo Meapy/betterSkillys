@@ -15,7 +15,7 @@ namespace WorldServer.core.terrain
             var dat = new byte[w * h * 2];
             var i = 0;
             var idxs = new Dictionary<TerrainTile, short>(new TileComparer());
-            var dict = new List<loc>();
+            var dict = new List<Loc>();
 
             for (var y = 0; y < h; y++)
                 for (var x = 0; x < w; x++)
@@ -25,12 +25,12 @@ namespace WorldServer.core.terrain
                     if (!idxs.TryGetValue(tile, out short idx))
                     {
                         idxs.Add(tile, idx = (short)dict.Count);
-                        dict.Add(new loc()
+                        dict.Add(new Loc()
                         {
                             ground = data.TileTypeToId[tile.TileId],
-                            objs = tile.TileObj == null ? null : new obj[]
+                            objs = tile.TileObj == null ? null : new Obj[]
                             {
-                                new obj()
+                                new Obj()
                                 {
                                     id = tile.TileObj,
                                     name = tile.Name ?? null
@@ -57,19 +57,19 @@ namespace WorldServer.core.terrain
         private struct json_dat
         {
             public byte[] data;
-            public loc[] dict;
+            public Loc[] dict;
             public int height;
             public int width;
         }
 
-        private struct loc
+        private struct Loc
         {
             public string ground;
-            public obj[] objs;
-            public obj[] regions;
+            public Obj[] objs;
+            public Obj[] regions;
         }
 
-        private struct obj
+        private struct Obj
         {
             public string id;
             public string name;

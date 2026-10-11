@@ -4,7 +4,6 @@ using System.Linq;
 using WorldServer.core.objects;
 using WorldServer.logic;
 using WorldServer.utils;
-using WorldServer.core.objects;
 using WorldServer.core.worlds;
 
 namespace WorldServer.logic.behaviors

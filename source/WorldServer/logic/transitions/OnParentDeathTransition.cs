@@ -5,28 +5,29 @@ namespace WorldServer.logic.transitions
 {
     internal class OnParentDeathTransition : Transition
     {
-        private bool parentDead;
-        private bool init;
+        // State storage: one ParentWatch per host. The transition object is shared by every
+        // monster using this behaviour, so the flag can't live on the transition itself.
+        private sealed class ParentWatch
+        {
+            public bool ParentDead;
+        }
+
         public OnParentDeathTransition(string targetState)
             : base(targetState)
         {
-            parentDead = false;
-            init = false;
         }
 
         protected override bool TickCore(Entity host, TickTime time, ref object state)
         {
-            if (!init && host is Enemy)
+            if (state is not ParentWatch watch)
             {
-                init = true;
-                var enemyHost = host as Enemy;
-                if (enemyHost.ParentEntity != null)
-                {
-                    (host as Enemy).ParentEntity.OnDeath += (sender, e) => parentDead = true;
-                }
+                watch = new ParentWatch();
+                state = watch;
+                if (host is Enemy enemyHost && enemyHost.ParentEntity != null)
+                    enemyHost.ParentEntity.OnDeath += (sender, e) => watch.ParentDead = true;
             }
 
-            return parentDead;
+            return watch.ParentDead;
         }
     }
 }

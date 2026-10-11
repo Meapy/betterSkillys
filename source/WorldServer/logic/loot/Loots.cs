@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using Org.BouncyCastle.Utilities;
 using Pipelines.Sockets.Unofficial.Buffers;
 using Shared;
 using Shared.database.character.inventory;

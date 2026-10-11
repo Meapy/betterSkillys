@@ -197,6 +197,7 @@ namespace WorldServer.core.objects
             {
                 DamageCounter.Death();
                 CurrentState?.OnDeath(this, ref time);
+                OnDeath?.Invoke(this, new BehaviorEventArgs(this, time));
                 if (GameServer.BehaviorDb.Definitions.TryGetValue(ObjectType, out var loot))
                     loot.Item2?.Handle(this, time);
             }

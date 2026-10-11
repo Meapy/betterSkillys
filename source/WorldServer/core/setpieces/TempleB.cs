@@ -2,7 +2,6 @@
 using System.Linq;
 using WorldServer.core.objects;
 using WorldServer.core.worlds;
-using WorldServer.core.objects;
 using WorldServer.core.objects.containers;
 using WorldServer.core.structures;
 

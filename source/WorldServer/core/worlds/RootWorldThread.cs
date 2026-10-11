@@ -30,8 +30,6 @@ namespace WorldServer.core.worlds
             {
                 var watch = Stopwatch.StartNew();
 
-                var sleep = TICK_TIME_MS;
-
                 var lastMS = 0L;
                 var mre = new ManualResetEvent(false);
 

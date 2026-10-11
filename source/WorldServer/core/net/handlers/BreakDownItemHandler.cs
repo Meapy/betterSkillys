@@ -4,7 +4,6 @@ using System.Numerics;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using NLog.LayoutRenderers;
-using Org.BouncyCastle.Security;
 using Shared;
 using Shared.resources;
 using WorldServer.core.net.datas;

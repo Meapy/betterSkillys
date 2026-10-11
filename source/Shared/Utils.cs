@@ -87,10 +87,7 @@ namespace Shared
 
         public static string GetAssemblyDirectory()
         {
-            var codeBase = Assembly.GetExecutingAssembly().CodeBase;
-            var uri = new UriBuilder(codeBase);
-            var path = Uri.UnescapeDataString(uri.Path);
-            return Path.GetDirectoryName(path);
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }
 
         public static T GetAttribute<T>(this XElement e, string n, T def = default)
@@ -320,20 +317,18 @@ namespace Shared
 
         public static byte[] SHA1(string val)
         {
-            var sha1 = new SHA1Managed();
-            return sha1.ComputeHash(Encoding.UTF8.GetBytes(val));
+            return System.Security.Cryptography.SHA1.HashData(Encoding.UTF8.GetBytes(val));
         }
 
         public static void Shuffle<T>(this IList<T> list)
         {
-            var provider = new RNGCryptoServiceProvider();
             var n = list.Count;
 
             while (n > 1)
             {
                 var box = new byte[1];
 
-                do provider.GetBytes(box);
+                do RandomNumberGenerator.Fill(box);
                 while (!(box[0] < n * (byte.MaxValue / n)));
 
                 var k = box[0] % n;

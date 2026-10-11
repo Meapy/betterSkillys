@@ -2,7 +2,6 @@
 using System.Linq;
 using WorldServer.core.objects;
 using WorldServer.utils;
-using WorldServer.core.objects;
 using WorldServer.networking;
 using WorldServer.networking.packets.outgoing;
 using WorldServer.core.worlds;

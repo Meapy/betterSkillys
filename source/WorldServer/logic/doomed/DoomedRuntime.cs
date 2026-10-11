@@ -34,7 +34,6 @@ namespace WorldServer.logic.doomed
         public string State = "idle";
         public string SubState = "1";
         public Definition Definition;
-        public bool BagDropped;
 
         public static DrHost Get(Entity entity) => Hosts.GetValue(entity, e => new DrHost { Self = e });
     }

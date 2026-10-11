@@ -15,7 +15,6 @@ namespace WorldServer.core.commands
             public override RankingType RankRequirement => RankingType.Admin;
             public override string CommandName => "smite";
 
-            private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
             protected override bool Process(Player player, TickTime time, string args)
             {

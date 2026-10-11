@@ -15,7 +15,6 @@ namespace WorldServer.core.objects
         private readonly int _duration;
         private readonly float _speed;
         private readonly float? _distance;
-        private readonly bool _isStatic;
         private readonly Position _pos;
 
         private Vector2 _direction;
