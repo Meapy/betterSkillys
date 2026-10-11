@@ -17603,4 +17603,1753 @@
 			<MultiHit />
 		</Projectile>
 	</Object>
+	<Object type="0xD35C" id="Portal to Nexus">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Nexus</DungeonName>
+		<Texture>
+			<File>drLofiEnvironment2</File>
+			<Index>0x36</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD35D" id="Thessal Summoner">
+		<Class>Character</Class>
+		<Texture>
+			<File>invisible</File>
+			<Index>0</Index>
+		</Texture>
+		<NoMiniMap />
+		<MaxHitPoints>10</MaxHitPoints>
+		<Size>0</Size>
+	</Object>
+	<Object type="0xD35E" id="Zombie">
+		<Group>Zombies</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_10517376</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>1000</MaxHitPoints>
+		<XpMult>0.0</XpMult>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>60</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD35F" id="Crawler">
+		<Group>Zombies</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_10614512</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>1000</MaxHitPoints>
+		<XpMult>0.0</XpMult>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>60</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD360" id="Hell Hound">
+		<Group>Zombies</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_10645224</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>1000</MaxHitPoints>
+		<XpMult>0.0</XpMult>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>100</Damage>
+			<Speed>40</Speed>
+			<LifetimeMS>500</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD361" id="Zombie of Draconis">
+		<Group>Zombies</Group>
+		<Enemy />
+		<God />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_24735694</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>200</Size>
+		<MaxHitPoints>85000</MaxHitPoints>
+		<Defense>50</Defense>
+		<KeepDamageRecord />
+		<Projectile id="0">
+			<ObjectId>Ghost Boss Slash</ObjectId>
+			<Speed>65</Speed>
+			<Damage>130</Damage>
+			<LifetimeMS>1000</LifetimeMS>
+			<Size>100</Size>
+			<ConditionEffect duration="4">Bleeding</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Ghost Boss Spinner</ObjectId>
+			<Speed>45</Speed>
+			<Damage>140</Damage>
+			<Size>200</Size>
+			<LifetimeMS>3600</LifetimeMS>
+			<Boomerang />
+			<ConditionEffect duration="4">Bleeding</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD362" id="Reaper of Doom">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>8</Index>
+		</AnimatedTexture>
+		<HitSound>monster/trees_hit</HitSound>
+		<DeathSound>monster/trees_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>20000</MaxHitPoints>
+		<Defense>100</Defense>
+		<XpMult>0.75</XpMult>
+		<Projectile id="0">
+			<ObjectId>Black Missile</ObjectId>
+			<Speed>70</Speed>
+			<Damage>120</Damage>
+			<Size>110</Size>
+			<LifetimeMS>1550</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Fire Missile</ObjectId>
+			<Speed>90</Speed>
+			<Damage>90</Damage>
+			<Size>80</Size>
+			<LifetimeMS>1400</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD363" id="HeartZ">
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiObj</File>
+			<Index>0xaf</Index>
+		</Texture>
+		<HitSound>monster/slimes_hit</HitSound>
+		<DeathSound>monster/slimes_death</DeathSound>
+		<Size>200</Size>
+		<MaxHitPoints>5000000</MaxHitPoints>
+		<Defense>100</Defense>
+		<XpMult>0.1</XpMult>
+	</Object>
+	<Object type="0xD364" id="Elder Lair Construct Giant">
+		<Group>Lair Constructs</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar16x16</File>
+			<Index>0x4c</Index>
+		</Texture>
+		<HitSound>monster/dwarf_god_hit</HitSound>
+		<DeathSound>monster/dwarf_god_death</DeathSound>
+		<Size>110</Size>
+		<MaxHitPoints>70000</MaxHitPoints>
+		<Defense>20</Defense>
+		<Projectile id="0">
+			<ObjectId>White Bolt</ObjectId>
+			<Damage>800</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<Size>120</Size>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Blue Star</ObjectId>
+			<Damage>100</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="3">Confused</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD365" id="Elder Lair Construct Titan">
+		<Group>Lair Constructs</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar16x16</File>
+			<Index>0x4d</Index>
+		</Texture>
+		<HitSound>monster/dwarf_god_hit</HitSound>
+		<DeathSound>monster/dwarf_god_death</DeathSound>
+		<Size>120</Size>
+		<MaxHitPoints>80000</MaxHitPoints>
+		<Defense>20</Defense>
+		<Projectile id="0">
+			<ObjectId>Blue Bolt</ObjectId>
+			<Damage>500</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Blue Star</ObjectId>
+			<Damage>100</Damage>
+			<Speed>80</Speed>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="3">Confused</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD366" id="Elder Lair Grey Spectre">
+		<Group>Lair Spectres</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar8x8</File>
+			<Index>0x76</Index>
+		</Texture>
+		<HitSound>monster/ghosts_hit</HitSound>
+		<DeathSound>monster/ghosts_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>20000</MaxHitPoints>
+		<Defense>0</Defense>
+		<Flying />
+		<Projectile id="0">
+			<ObjectId>Pink Bolt</ObjectId>
+			<Damage>1000</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD367" id="Elder Lair Blue Spectre">
+		<Group>Lair Spectres</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar8x8</File>
+			<Index>0x77</Index>
+		</Texture>
+		<HitSound>monster/ghosts_hit</HitSound>
+		<DeathSound>monster/ghosts_death</DeathSound>
+		<Size>115</Size>
+		<MaxHitPoints>30000</MaxHitPoints>
+		<Defense>0</Defense>
+		<Flying />
+		<Projectile id="0">
+			<ObjectId>Pink Bolt</ObjectId>
+			<Damage>1200</Damage>
+			<Speed>70</Speed>
+			<LifetimeMS>2000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD368" id="Elder Ocean Trench Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>drRemote_draw_148269362</File>
+			<Index>0</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to an Ocean Trench.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Ocean Trench Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD369" id="Elder Ocean Trench Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Ocean Trench</DungeonName>
+		<Texture>
+			<File>drRemote_draw_988954579</File>
+			<Index>0</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD36A" id="Elder Manor Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>drRemote_draw_24799885</File>
+			<Index>0</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to a Elder Manor.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Manor Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD36B" id="Elder Manor Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Manor</DungeonName>
+		<Texture>
+			<File>drRemote_draw_19845460</File>
+			<Index>0</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD36C" id="Elder Jungle Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>drRemote_draw_73960319</File>
+			<Index>0</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to a Elder Jungle.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Jungle Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD36D" id="Elder Jungle Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Jungle</DungeonName>
+		<Texture>
+			<File>drRemote_draw_19089083</File>
+			<Index>0</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD36E" id="Elder Davy Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>drRemote_draw_665337254</File>
+			<Index>0</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to Elder Davy Jones' Locker.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Davy Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD36F" id="Elder Davy Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Davy Jones' Locker</DungeonName>
+		<Texture>
+			<File>drRemote_draw_58561314</File>
+			<Index>0</Index>
+		</Texture>
+	</Object>
+	<Object type="0xD370" id="Herding Sheep">
+		<Group>Sheep</Group>
+		<DisplayId>Sheep</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rBeach</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<XpMult>0.0</XpMult>
+	</Object>
+	<Object type="0xD371" id="Giant Herding Sheep">
+		<Group>Sheep</Group>
+		<DisplayId>Giant Sheep</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rBeach</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>200</Size>
+		<XpMult>0.0</XpMult>
+	</Object>
+	<Object type="0xD372" id="Black Herding Sheep">
+		<Group>Sheep</Group>
+		<DisplayId>Sheep</DisplayId>
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_5749294074167296</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<Size>100</Size>
+		<XpMult>0.0</XpMult>
+	</Object>
+	<Object type="0xD373" id="Regular Zombie">
+		<Group>Zombies</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_10517376</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>500</MaxHitPoints>
+		<XpMult>0.0</XpMult>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>60</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD374" id="Tank Zombie">
+		<Group>Zombies</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_10517376</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>150</Size>
+		<MaxHitPoints>1000</MaxHitPoints>
+		<XpMult>0.0</XpMult>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>60</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD375" id="Speedy Zombie">
+		<Group>Zombies</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_10517376</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/pirates_death</DeathSound>
+		<Size>75</Size>
+		<MaxHitPoints>250</MaxHitPoints>
+		<XpMult>0.0</XpMult>
+		<Defense>0</Defense>
+		<Projectile id="0">
+			<ObjectId>Blade</ObjectId>
+			<Damage>60</Damage>
+			<Speed>50</Speed>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD376" id="Zombie Tower">
+		<Class>GameObject</Class>
+		<Texture>
+			<File>drLofiObjBig</File>
+			<Index>0x21</Index>
+		</Texture>
+		<Static />
+		<Size>200</Size>
+	</Object>
+	<Object type="0xD377" id="Elder Fishman Warrior">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16rEncounters</File>
+			<Index>10</Index>
+		</AnimatedTexture>
+		<HitSound>monster/elves_death</HitSound>
+		<DeathSound>monster/flaming_skulls_death</DeathSound>
+		<MaxHitPoints>100000</MaxHitPoints>
+		<Projectile id="0">
+			<ObjectId>FishWarrior Spear</ObjectId>
+			<Speed>50</Speed>
+			<Damage>650</Damage>
+			<Size>120</Size>
+			<LifetimeMS>1600</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Fishman Boomerang</ObjectId>
+			<Speed>50</Speed>
+			<Damage>800</Damage>
+			<Size>130</Size>
+			<LifetimeMS>2200</LifetimeMS>
+			<ConditionEffect duration="3.4">Confused</ConditionEffect>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Coral Shot</ObjectId>
+			<Speed>55</Speed>
+			<Damage>450</Damage>
+			<Size>110</Size>
+			<LifetimeMS>1600</LifetimeMS>
+		</Projectile>
+		<Size>150</Size>
+		<Defense>520</Defense>
+	</Object>
+	<Object type="0xD378" id="Elder Coral Bomb Big">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>15</Index>
+		</AnimatedTexture>
+		<HitSound>monster/skeletons_hit</HitSound>
+		<DeathSound>monster/dark_elves_death</DeathSound>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<XpMult>0.0</XpMult>
+		<Size>220</Size>
+		<Defense>2000</Defense>
+		<Projectile id="0">
+			<ObjectId>Coral Spike</ObjectId>
+			<Speed>55</Speed>
+			<Damage>400</Damage>
+			<Size>100</Size>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD379" id="Elder Coral Bomb Small">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8dEncounters</File>
+			<Index>17</Index>
+		</AnimatedTexture>
+		<HitSound>monster/skeletons_hit</HitSound>
+		<DeathSound>monster/dark_elves_death</DeathSound>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<XpMult>0.0</XpMult>
+		<Size>90</Size>
+		<Defense>2000</Defense>
+		<Projectile id="0">
+			<ObjectId>Coral Spike</ObjectId>
+			<Speed>45</Speed>
+			<Damage>400</Damage>
+			<Size>80</Size>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD37A" id="Elder Thessal the Mermaid Goddess Wounded">
+		<DisplayId>Thessal the Mermaid Goddess</DisplayId>
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<StasisImmune />
+		<StunImmume />
+		<AnimatedTexture>
+			<File>drRemote_draw_992396809</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drRemote_draw_992396809</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/medusa_hit</HitSound>
+		<DeathSound>monster/medusa_death</DeathSound>
+		<MaxHitPoints>100000</MaxHitPoints>
+		<ShadowSize>0</ShadowSize>
+		<God />
+		<Quest />
+		<PerRealmMax>1</PerRealmMax>
+		<Level>20</Level>
+		<XpMult>1</XpMult>
+		<Size>240</Size>
+		<Defense>60</Defense>
+		<NoArticle />
+		<Projectile id="0">
+			<ObjectId>Thunder Swirl</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1000</Damage>
+			<Size>110</Size>
+			<LifetimeMS>1600</LifetimeMS>
+			<ConditionEffect duration="2.4">Armor Broken</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Trident</ObjectId>
+			<Speed>70</Speed>
+			<Damage>650</Damage>
+			<Size>100</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Super Trident</ObjectId>
+			<Speed>60</Speed>
+			<Damage>1000</Damage>
+			<Size>110</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Yellow Wall</ObjectId>
+			<Speed>60</Speed>
+			<Damage>1200</Damage>
+			<Size>160</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD37B" id="Elder Coral Gift">
+		<Group>Ocean Trench</Group>
+		<Class>Character</Class>
+		<StasisImmune />
+		<Enemy />
+		<NoMiniMap />
+		<MaxHitPoints>12000</MaxHitPoints>
+		<XpMult>0.1</XpMult>
+		<Size>140</Size>
+		<Defense>50</Defense>
+		<Texture>
+			<File>drLofiEnvironment3</File>
+			<Index>0x22</Index>
+		</Texture>
+		<AltTexture id="1">
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x23</Index>
+			</Texture>
+		</AltTexture>
+		<AltTexture id="2">
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x24</Index>
+			</Texture>
+		</AltTexture>
+		<HitSound>monster/djinn_hit</HitSound>
+		<DeathSound>monster/flaming_skulls_death</DeathSound>
+	</Object>
+	<Object type="0xD37C" id="Elder Thessal the Mermaid Goddess">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_992396809</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/medusa_hit</HitSound>
+		<DeathSound>monster/medusa_death</DeathSound>
+		<MaxHitPoints>690000</MaxHitPoints>
+		<ShadowSize>0</ShadowSize>
+		<God />
+		<StasisImmune />
+		<StunImmume />
+		<Quest />
+		<PerRealmMax>1</PerRealmMax>
+		<Level>20</Level>
+		<XpMult>1</XpMult>
+		<Size>240</Size>
+		<Defense>600</Defense>
+		<NoArticle />
+		<Projectile id="0">
+			<ObjectId>Thunder Swirl</ObjectId>
+			<Speed>55</Speed>
+			<Damage>1000</Damage>
+			<Size>110</Size>
+			<LifetimeMS>1600</LifetimeMS>
+			<ConditionEffect duration="2.4">Armor Broken</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Trident</ObjectId>
+			<Speed>70</Speed>
+			<Damage>650</Damage>
+			<Size>100</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Super Trident</ObjectId>
+			<Speed>60</Speed>
+			<Damage>1000</Damage>
+			<Size>110</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Yellow Wall</ObjectId>
+			<Speed>60</Speed>
+			<Damage>1200</Damage>
+			<Size>160</Size>
+			<LifetimeMS>3000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD37D" id="Elder Deep Sea Beast">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>10</Index>
+		</AnimatedTexture>
+		<HitSound>monster/abyss_demons_hit</HitSound>
+		<DeathSound>monster/abyss_brutes_death</DeathSound>
+		<MaxHitPoints>150000</MaxHitPoints>
+		<ShadowSize>0</ShadowSize>
+		<StasisImmune />
+		<PerRealmMax>1</PerRealmMax>
+		<XpMult>0.3</XpMult>
+		<Size>90</Size>
+		<Defense>600</Defense>
+		<Projectile id="0">
+			<ObjectId>Deep Sea Blast</ObjectId>
+			<Speed>30</Speed>
+			<Damage>120</Damage>
+			<Size>60</Size>
+			<LifetimeMS>600</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Deep Sea Blast</ObjectId>
+			<Speed>42</Speed>
+			<Damage>210</Damage>
+			<Size>88</Size>
+			<LifetimeMS>600</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Deep Sea Blast</ObjectId>
+			<Speed>55</Speed>
+			<Damage>370</Damage>
+			<Size>154</Size>
+			<LifetimeMS>600</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Deep Sea Blast</ObjectId>
+			<Speed>70</Speed>
+			<Damage>640</Damage>
+			<Size>270</Size>
+			<LifetimeMS>600</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD37E" id="Elder Fishman">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>13</Index>
+		</AnimatedTexture>
+		<HitSound>monster/dragons_hit</HitSound>
+		<DeathSound>monster/flaming_skulls_death</DeathSound>
+		<MaxHitPoints>25000</MaxHitPoints>
+		<Projectile id="0">
+			<ObjectId>Fishman Spear</ObjectId>
+			<Speed>55</Speed>
+			<Damage>500</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Fishman Boomerang</ObjectId>
+			<Speed>70</Speed>
+			<Damage>650</Damage>
+			<Size>100</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="1.8">Confused</ConditionEffect>
+		</Projectile>
+		<Size>160</Size>
+		<Defense>400</Defense>
+	</Object>
+	<Object type="0xD37F" id="Elder Sea Horse">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_26077305</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<HitSound>monster/elves_death</HitSound>
+		<DeathSound>monster/night_elves_death</DeathSound>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<Flying />
+		<Z>0.26</Z>
+		<ShadowSize>100</ShadowSize>
+		<Projectile id="0">
+			<ObjectId>Bubble</ObjectId>
+			<Speed>35</Speed>
+			<Damage>400</Damage>
+			<Size>60</Size>
+			<LifetimeMS>1000</LifetimeMS>
+		</Projectile>
+		<Size>80</Size>
+		<Defense>200</Defense>
+	</Object>
+	<Object type="0xD380" id="Elder Sea Mare">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16rEncounters</File>
+			<Index>13</Index>
+		</AnimatedTexture>
+		<HitSound>monster/ogres_hit</HitSound>
+		<DeathSound>monster/medusa_death</DeathSound>
+		<MaxHitPoints>60000</MaxHitPoints>
+		<Projectile id="0">
+			<ObjectId>Squid Shot</ObjectId>
+			<Speed>50</Speed>
+			<Damage>400</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1400</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Sea Horse Spinner</ObjectId>
+			<Speed>35</Speed>
+			<Damage>1000</Damage>
+			<Size>120</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<ConditionEffect duration="1.6">Paralyzed</ConditionEffect>
+		</Projectile>
+		<Size>140</Size>
+		<Defense>600</Defense>
+	</Object>
+	<Object type="0xD381" id="Elder Giant Squid">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>17</Index>
+		</AnimatedTexture>
+		<HitSound>monster/spider_queen_hit</HitSound>
+		<DeathSound>monster/scorpions_death</DeathSound>
+		<MaxHitPoints>60000</MaxHitPoints>
+		<Projectile id="0">
+			<ObjectId>Squid Sucker</ObjectId>
+			<Speed>0</Speed>
+			<Damage>850</Damage>
+			<Size>80</Size>
+			<LifetimeMS>3000</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Squid Shot</ObjectId>
+			<Speed>55</Speed>
+			<Damage>500</Damage>
+			<Size>80</Size>
+			<LifetimeMS>1000</LifetimeMS>
+		</Projectile>
+		<Size>190</Size>
+		<Defense>400</Defense>
+	</Object>
+	<Object type="0xD382" id="Elder Sea Slurp Home">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiChar216x16</File>
+			<Index>0x0b</Index>
+		</Texture>
+		<AltTexture id="1">
+			<Texture>
+				<File>drLofiEnvironment2</File>
+				<Index>0x6d</Index>
+			</Texture>
+		</AltTexture>
+		<HitSound>monster/trees_hit</HitSound>
+		<DeathSound>monster/stone_walls_hit</DeathSound>
+		<MaxHitPoints>50000</MaxHitPoints>
+		<Projectile id="0">
+			<ObjectId>Oryx Insect Sting</ObjectId>
+			<Speed>65</Speed>
+			<Damage>550</Damage>
+			<Size>100</Size>
+			<LifetimeMS>1000</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Oryx Insect Sting Status</ObjectId>
+			<Speed>50</Speed>
+			<Damage>600</Damage>
+			<Size>120</Size>
+			<LifetimeMS>1000</LifetimeMS>
+		</Projectile>
+		<Size>190</Size>
+		<Defense>400</Defense>
+	</Object>
+	<Object type="0xD383" id="Elder Grey Sea Slurp">
+		<Group>Ocean Trench</Group>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>19</Index>
+		</AnimatedTexture>
+		<HitSound>monster/cubes_hit</HitSound>
+		<DeathSound>monster/blobs_death</DeathSound>
+		<MaxHitPoints>10000</MaxHitPoints>
+		<Projectile id="0">
+			<ObjectId>Purple Spit</ObjectId>
+			<Speed>60</Speed>
+			<Damage>400</Damage>
+			<Size>80</Size>
+			<LifetimeMS>1400</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Yellow Wave</ObjectId>
+			<Speed>60</Speed>
+			<Damage>400</Damage>
+			<Size>100</Size>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+		<Size>140</Size>
+		<Defense>200</Defense>
+		<XpMult>0.05</XpMult>
+	</Object>
+	<Object type="0xD384" id="Elder Lord Ruthven">
+		<Enemy />
+		<Class>Character</Class>
+		<Group>Vampires</Group>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>34</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<Texture>
+				<File>invisible</File>
+				<Index>0</Index>
+			</Texture>
+		</AltTexture>
+		<AltTexture id="2">
+			<AnimatedTexture>
+				<File>drChars16x16dEncounters2</File>
+				<Index>35</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/slimes_death</HitSound>
+		<DeathSound>monster/flying_brain_death</DeathSound>
+		<Size>120</Size>
+		<ShadowSize>40</ShadowSize>
+		<Z>0.2</Z>
+		<Flying />
+		<MaxHitPoints>15000</MaxHitPoints>
+		<Defense>95</Defense>
+		<XpMult>0.9</XpMult>
+		<LeachHealth />
+		<God />
+		<StasisImmune />
+		<Quest />
+		<Level>1</Level>
+		<Projectile id="0">
+			<ObjectId>Dagger</ObjectId>
+			<Damage>100</Damage>
+			<Speed>50</Speed>
+			<Size>100</Size>
+			<LifetimeMS>2400</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Ruthven Shot</ObjectId>
+			<Damage>90</Damage>
+			<Speed>65</Speed>
+			<Size>100</Size>
+			<LifetimeMS>3400</LifetimeMS>
+			<MultiHit />
+		</Projectile>
+	</Object>
+	<Object type="0xD385" id="Elder Vampire Bat">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>26</Index>
+		</AnimatedTexture>
+		<HitSound>monster/bats_hit</HitSound>
+		<DeathSound>monster/bats_death</DeathSound>
+		<MaxHitPoints>200</MaxHitPoints>
+		<Defense>25</Defense>
+		<XpMult>0.0</XpMult>
+		<Z>0.24</Z>
+		<Flying />
+		<Size>80</Size>
+		<ShadowSize>80</ShadowSize>
+		<Projectile id="0">
+			<ObjectId>Invisible</ObjectId>
+			<Damage>40</Damage>
+			<Speed>0</Speed>
+			<Size>80</Size>
+			<LifetimeMS>100</LifetimeMS>
+			<ConditionEffect duration="3.6">Confused</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD386" id="Elder Coffin Creature">
+		<Enemy />
+		<Class>Character</Class>
+		<Texture>
+			<File>drLofiObjBig</File>
+			<Index>0x22</Index>
+		</Texture>
+		<Animation prob="1" period="0">
+			<Frame time="0.4">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x22</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x23</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x24</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x25</Index>
+				</Texture>
+			</Frame>
+			<Frame time="3">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x26</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x25</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x24</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x23</Index>
+				</Texture>
+			</Frame>
+		</Animation>
+		<HitSound>monster/wooden_walls_hit</HitSound>
+		<DeathSound>monster/stone_walls_death</DeathSound>
+		<MaxHitPoints>1000</MaxHitPoints>
+		<Defense>75</Defense>
+		<XpMult>0</XpMult>
+		<Size>120</Size>
+		<ShadowSize>80</ShadowSize>
+		<Projectile id="0">
+			<ObjectId>Coffin Bullet</ObjectId>
+			<Damage>65</Damage>
+			<Speed>60</Speed>
+			<Size>80</Size>
+			<LifetimeMS>1600</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD387" id="Elder Vampire Bat Swarmer 1">
+		<DisplayId>Vampire Bat Swarmer</DisplayId>
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>26</Index>
+		</AnimatedTexture>
+		<HitSound>monster/bats_hit</HitSound>
+		<DeathSound>monster/bats_death</DeathSound>
+		<MaxHitPoints>200</MaxHitPoints>
+		<Defense>25</Defense>
+		<XpMult>0</XpMult>
+		<Z>0.24</Z>
+		<Flying />
+		<Size>80</Size>
+		<ShadowSize>80</ShadowSize>
+		<Projectile id="0">
+			<ObjectId>Invisible</ObjectId>
+			<Damage>40</Damage>
+			<Speed>0</Speed>
+			<Size>80</Size>
+			<LifetimeMS>100</LifetimeMS>
+			<ConditionEffect duration="3.6">Confused</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD388" id="Elder Mixcoatl the Masked God">
+		<Enemy />
+		<Class>Character</Class>
+		<Group>Jungle Men</Group>
+		<AnimatedTexture>
+			<File>drRemote_draw_157565266</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drRemote_draw_157565266</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="2">
+			<AnimatedTexture>
+				<File>drRemote_draw_157565266</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drRemote_draw_157565266</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="4">
+			<AnimatedTexture>
+				<File>drRemote_draw_157565266</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="5">
+			<AnimatedTexture>
+				<File>drRemote_draw_157565266</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="6">
+			<AnimatedTexture>
+				<File>drRemote_draw_157565266</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/slimes_death</HitSound>
+		<DeathSound>monster/flying_brain_death</DeathSound>
+		<Size>140</Size>
+		<ShadowSize>100</ShadowSize>
+		<MaxHitPoints>4200</MaxHitPoints>
+		<Defense>15</Defense>
+		<XpMult>0.85</XpMult>
+		<God />
+		<StasisImmune />
+		<Quest />
+		<Level>1</Level>
+		<NoArticle />
+		<Projectile id="0">
+			<ObjectId>Mask Powerwave</ObjectId>
+			<Damage>60</Damage>
+			<Speed>30</Speed>
+			<Size>100</Size>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Mask Powershot</ObjectId>
+			<Damage>60</Damage>
+			<Speed>60</Speed>
+			<Size>80</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Fireball 2</ObjectId>
+			<MinDamage>45</MinDamage>
+			<MaxDamage>65</MaxDamage>
+			<Speed>60</Speed>
+			<Size>80</Size>
+			<LifetimeMS>1200</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD389" id="Elder Boss Totem">
+		<Enemy />
+		<Class>GameObject</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>31</Index>
+		</AnimatedTexture>
+		<HitSound>monster/stone_walls_hit</HitSound>
+		<DeathSound>monster/stone_walls_death</DeathSound>
+		<Size>120</Size>
+		<ShadowSize>80</ShadowSize>
+		<OccupySquare />
+		<Projectile id="0">
+			<ObjectId>Totem Fire Wall</ObjectId>
+			<Damage>50</Damage>
+			<Speed>40</Speed>
+			<Size>100</Size>
+			<LifetimeMS>1600</LifetimeMS>
+			<PassesCover />
+		</Projectile>
+	</Object>
+	<Object type="0xD38A" id="Elder Jungle Spear">
+		<Class>GameObject</Class>
+		<RandomTexture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x00</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x01</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x02</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x03</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x04</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x05</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x06</Index>
+			</Texture>
+		</RandomTexture>
+		<Static />
+		<Size>80</Size>
+		<ShadowSize>60</ShadowSize>
+	</Object>
+	<Object type="0xD38B" id="Elder Jungle Brazier">
+		<Class>GameObject</Class>
+		<Texture>
+			<File>drLofiObjBig</File>
+			<Index>0x07</Index>
+		</Texture>
+		<Animation prob="1.0" period="0.0">
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x07</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x08</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>drLofiObjBig</File>
+					<Index>0x09</Index>
+				</Texture>
+			</Frame>
+		</Animation>
+		<Size>100</Size>
+		<Static />
+		<OccupySquare />
+		<ShadowSize>80</ShadowSize>
+	</Object>
+	<Object type="0xD38C" id="Elder Jungle Grass Solid">
+		<Class>GameObject</Class>
+		<RandomTexture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x63</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x64</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x65</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x66</Index>
+			</Texture>
+		</RandomTexture>
+		<Static />
+		<OccupySquare />
+	</Object>
+	<Object type="0xD38D" id="Elder Jungle Flowers Solid">
+		<Class>GameObject</Class>
+		<RandomTexture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x67</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x68</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x69</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x6a</Index>
+			</Texture>
+		</RandomTexture>
+		<DrawOnGround />
+		<OccupySquare />
+		<NoMiniMap />
+		<Static />
+	</Object>
+	<Object type="0xD38E" id="Elder Jungle Plant Unbreakable">
+		<Class>GameObject</Class>
+		<RandomTexture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x6b</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x6c</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x6d</Index>
+			</Texture>
+		</RandomTexture>
+		<Static />
+		<OccupySquare />
+		<HitSound>monster/trees_hit</HitSound>
+		<DeathSound>monster/tress_death</DeathSound>
+	</Object>
+	<Object type="0xD38F" id="Elder Totem Spirit">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>22</Index>
+		</AnimatedTexture>
+		<Flying />
+		<HitSound>monster/wooden_walls_hit</HitSound>
+		<DeathSound>monster/stone_walls_death</DeathSound>
+		<Size>80</Size>
+		<ShadowSize>90</ShadowSize>
+		<MaxHitPoints>125</MaxHitPoints>
+		<Defense>25</Defense>
+		<XpMult>0.2</XpMult>
+		<Z>0.26</Z>
+		<Projectile id="0">
+			<ObjectId>Ghost Shot</ObjectId>
+			<Damage>25</Damage>
+			<Speed>45</Speed>
+			<Size>90</Size>
+			<LifetimeMS>1000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD390" id="Elder Jungle Totem">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>32</Index>
+		</AnimatedTexture>
+		<HitSound>monster/wooden_walls_hit</HitSound>
+		<DeathSound>monster/stone_walls_death</DeathSound>
+		<Size>130</Size>
+		<ShadowSize>90</ShadowSize>
+		<MaxHitPoints>900</MaxHitPoints>
+		<Defense>10</Defense>
+		<Projectile id="0">
+			<ObjectId>Totem Blast</ObjectId>
+			<Damage>40</Damage>
+			<Speed>50</Speed>
+			<Size>100</Size>
+			<LifetimeMS>1000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD391" id="Elder Basilisk Baby">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x8dEncounters</File>
+			<Index>1</Index>
+		</AnimatedTexture>
+		<HitSound>monster/slimes_death</HitSound>
+		<DeathSound>monster/flying_brain_death</DeathSound>
+		<Size>100</Size>
+		<ShadowSize>100</ShadowSize>
+		<MaxHitPoints>200</MaxHitPoints>
+		<Defense>10</Defense>
+		<Projectile id="0">
+			<ObjectId>Basilisk Acid</ObjectId>
+			<MinDamage>15</MinDamage>
+			<MaxDamage>30</MaxDamage>
+			<Speed>65</Speed>
+			<Size>100</Size>
+			<LifetimeMS>1000</LifetimeMS>
+			<Amplitude>0.05</Amplitude>
+			<Frequency>5</Frequency>
+		</Projectile>
+	</Object>
+	<Object type="0xD392" id="Elder Basilisk">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drChars16x16dEncounters2</File>
+			<Index>33</Index>
+		</AnimatedTexture>
+		<HitSound>monster/slimes_death</HitSound>
+		<DeathSound>monster/flying_brain_death</DeathSound>
+		<Size>100</Size>
+		<ShadowSize>100</ShadowSize>
+		<MaxHitPoints>370</MaxHitPoints>
+		<Defense>10</Defense>
+		<Projectile id="0">
+			<ObjectId>Basilisk Acid</ObjectId>
+			<MinDamage>15</MinDamage>
+			<MaxDamage>30</MaxDamage>
+			<Speed>65</Speed>
+			<Size>100</Size>
+			<LifetimeMS>1000</LifetimeMS>
+			<Amplitude>0.05</Amplitude>
+			<Frequency>5</Frequency>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Basilisk Beam</ObjectId>
+			<MinDamage>15</MinDamage>
+			<MaxDamage>30</MaxDamage>
+			<Speed>38</Speed>
+			<Size>80</Size>
+			<LifetimeMS>800</LifetimeMS>
+			<PassesCover />
+		</Projectile>
+		<Projectile id="2">
+			<ObjectId>Basilisk Beam</ObjectId>
+			<MinDamage>25</MinDamage>
+			<MaxDamage>35</MaxDamage>
+			<Speed>45</Speed>
+			<Size>130</Size>
+			<LifetimeMS>800</LifetimeMS>
+			<PassesCover />
+		</Projectile>
+		<Projectile id="3">
+			<ObjectId>Basilisk Beam</ObjectId>
+			<MinDamage>30</MinDamage>
+			<MaxDamage>45</MaxDamage>
+			<Speed>55</Speed>
+			<Size>180</Size>
+			<LifetimeMS>800</LifetimeMS>
+			<PassesCover />
+		</Projectile>
+	</Object>
+	<Object type="0xD393" id="Elder Mask Shaman">
+		<Enemy />
+		<Class>Character</Class>
+		<Group>Jungle Men</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>23</Index>
+		</AnimatedTexture>
+		<HitSound>monster/slimes_death</HitSound>
+		<DeathSound>monster/flying_brain_death</DeathSound>
+		<Size>100</Size>
+		<ShadowSize>100</ShadowSize>
+		<MaxHitPoints>250</MaxHitPoints>
+		<Defense>5</Defense>
+		<Projectile id="0">
+			<ObjectId>Shaman Star</ObjectId>
+			<Damage>10</Damage>
+			<Speed>45</Speed>
+			<Size>80</Size>
+			<LifetimeMS>1000</LifetimeMS>
+			<ConditionEffect duration="4">Hallucinating</ConditionEffect>
+			<ConditionEffect duration="1">Quiet</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD394" id="Elder Mask Warrior">
+		<Enemy />
+		<Class>Character</Class>
+		<Group>Jungle Men</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>24</Index>
+		</AnimatedTexture>
+		<HitSound>monster/slimes_death</HitSound>
+		<DeathSound>monster/flying_brain_death</DeathSound>
+		<Size>100</Size>
+		<ShadowSize>100</ShadowSize>
+		<MaxHitPoints>300</MaxHitPoints>
+		<Defense>20</Defense>
+		<Projectile id="0">
+			<ObjectId>Mask Blast</ObjectId>
+			<Damage>10</Damage>
+			<Speed>30</Speed>
+			<Size>80</Size>
+			<LifetimeMS>800</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD395" id="Elder Mask Hunter">
+		<Enemy />
+		<Class>Character</Class>
+		<Group>Jungle Men</Group>
+		<AnimatedTexture>
+			<File>drChars8x8rEncounters</File>
+			<Index>25</Index>
+		</AnimatedTexture>
+		<HitSound>monster/slimes_death</HitSound>
+		<DeathSound>monster/flying_brain_death</DeathSound>
+		<Size>100</Size>
+		<ShadowSize>100</ShadowSize>
+		<MaxHitPoints>300</MaxHitPoints>
+		<Defense>10</Defense>
+		<Projectile id="0">
+			<ObjectId>Hunter Spear</ObjectId>
+			<Damage>25</Damage>
+			<Speed>60</Speed>
+			<Size>80</Size>
+			<LifetimeMS>1000</LifetimeMS>
+		</Projectile>
+	</Object>
+	<Object type="0xD396" id="Elder Jungle Ground Flowers">
+		<Class>GameObject</Class>
+		<RandomTexture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x67</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x68</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x69</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x6a</Index>
+			</Texture>
+		</RandomTexture>
+		<DrawOnGround />
+		<Static />
+	</Object>
+	<Object type="0xD397" id="Elder Jungle Grass">
+		<Class>GameObject</Class>
+		<RandomTexture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x63</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x64</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x65</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x66</Index>
+			</Texture>
+		</RandomTexture>
+		<Static />
+	</Object>
+	<Object type="0xD398" id="Elder Jungle Flower Bright">
+		<Class>GameObject</Class>
+		<RandomTexture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x6e</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x6f</Index>
+			</Texture>
+		</RandomTexture>
+		<Static />
+	</Object>
+	<Object type="0xD399" id="Elder Jungle Plant">
+		<Class>GameObject</Class>
+		<RandomTexture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x70</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x71</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x72</Index>
+			</Texture>
+		</RandomTexture>
+		<Static />
+	</Object>
+	<Object type="0xD39A" id="Elder Jungle Rock">
+		<Class>GameObject</Class>
+		<RandomTexture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x73</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x38</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x74</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiEnvironment3</File>
+				<Index>0x75</Index>
+			</Texture>
+		</RandomTexture>
+		<Static />
+		<OccupySquare />
+		<HitSound>monster/trees_hit</HitSound>
+		<DeathSound>monster/tress_death</DeathSound>
+	</Object>
+	<Object type="0xD39B" id="Elder Jungle Tree Big">
+		<Class>GameObject</Class>
+		<RandomTexture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x11</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x12</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x13</Index>
+			</Texture>
+			<Texture>
+				<File>drLofiObjBig</File>
+				<Index>0x14</Index>
+			</Texture>
+		</RandomTexture>
+		<Static />
+		<OccupySquare />
+		<HitSound>monster/trees_hit</HitSound>
+		<DeathSound>monster/tress_death</DeathSound>
+	</Object>
+	<Object type="0xD39C" id="Elder Davy Jones">
+		<Class>Character</Class>
+		<Enemy />
+		<AnimatedTexture>
+			<File>drRemote_draw_4961852222078976</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drRemote_draw_4961852222078976</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="2">
+			<AnimatedTexture>
+				<File>drRemote_draw_4961852222078976</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drChars16x16rEncounters</File>
+				<Index>27</Index>
+			</AnimatedTexture>
+			<Effect particle="SwirlingMist" cooldown="0.2">XMLEffect</Effect>
+		</AltTexture>
+		<AltTexture id="4">
+			<AnimatedTexture>
+				<File>drRemote_draw_4961852222078976</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="5">
+			<AnimatedTexture>
+				<File>drRemote_draw_4961852222078976</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="6">
+			<AnimatedTexture>
+				<File>drRemote_draw_4961852222078976</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/pirates_hit</HitSound>
+		<DeathSound>monster/skull_shrine_death</DeathSound>
+		<Size>100</Size>
+		<MaxHitPoints>400000</MaxHitPoints>
+		<StasisImmune />
+		<Defense>850</Defense>
+		<God />
+		<Quest />
+		<Level>20</Level>
+		<XpMult>10.75</XpMult>
+		<KeepDamageRecord />
+		<Projectile id="0">
+			<ObjectId>Ghost Boss Slash</ObjectId>
+			<Speed>65</Speed>
+			<Damage>1300</Damage>
+			<LifetimeMS>1700</LifetimeMS>
+			<Size>100</Size>
+			<ConditionEffect duration="4">Bleeding</ConditionEffect>
+		</Projectile>
+		<Projectile id="1">
+			<ObjectId>Ghost Boss Spinner</ObjectId>
+			<Speed>45</Speed>
+			<Damage>1400</Damage>
+			<Size>110</Size>
+			<LifetimeMS>3600</LifetimeMS>
+			<Boomerang />
+			<ConditionEffect duration="4">Bleeding</ConditionEffect>
+		</Projectile>
+	</Object>
+	<Object type="0xD39D" id="Elder Masked Party God">
+		<Enemy />
+		<Class>Character</Class>
+		<AnimatedTexture>
+			<File>drRemote_draw_183307176</File>
+			<Index>0</Index>
+		</AnimatedTexture>
+		<AltTexture id="1">
+			<AnimatedTexture>
+				<File>drRemote_draw_183307176</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="2">
+			<AnimatedTexture>
+				<File>drRemote_draw_183307176</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<AltTexture id="3">
+			<AnimatedTexture>
+				<File>drRemote_draw_183307176</File>
+				<Index>0</Index>
+			</AnimatedTexture>
+		</AltTexture>
+		<HitSound>monster/default_hit</HitSound>
+		<DeathSound>monster/dark_elves_death</DeathSound>
+		<Size>140</Size>
+		<ShadowSize>70</ShadowSize>
+		<MaxHitPoints>30000</MaxHitPoints>
+		<Defense>80</Defense>
+	</Object>
+	<Object type="0xD39E" id="Elder Beach Key">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>drRemote_draw_24362609</File>
+			<Index>0</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>A key which opens an entrance to the Elder Beach Zone.</Description>
+		<Sound>use_key</Sound>
+		<Consumable />
+		<Activate id="Elder Beach Portal">CreatePortal</Activate>
+		<OldSound>use_key</OldSound>
+	</Object>
+	<Object type="0xD39F" id="Elder Beach Portal">
+		<Class>Portal</Class>
+		<IntergamePortal />
+		<DungeonName>Elder Beach Zone</DungeonName>
+		<Texture>
+			<File>drLofiObj3</File>
+			<Index>0x192</Index>
+		</Texture>
+	</Object>
 </Objects>

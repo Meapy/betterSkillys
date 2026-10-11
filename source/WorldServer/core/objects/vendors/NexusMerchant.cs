@@ -197,7 +197,7 @@ namespace WorldServer.core.objects.vendors
             }
 
             if (MinsLeft == 0 || Count == 0)
-                (World as NexusWorld).ReturnMerchant(MerchantData);
+                (World as IMerchantWorld)?.ReturnMerchant(MerchantData);
             base.Tick(ref time);
         }
 

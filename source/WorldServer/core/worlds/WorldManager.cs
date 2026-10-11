@@ -128,7 +128,9 @@ namespace WorldServer.core.worlds
                     world = new TestWorld(GameServer, nextId, worldResource);
                     break;
                 default:
-                    world = new World(GameServer, nextId, worldResource, parent);
+                    // ported Doomed Realms minigames and shop
+                    world = impl.doomed.DoomedWorlds.Create(GameServer, nextId, worldResource, parent)
+                        ?? new World(GameServer, nextId, worldResource, parent);
                     break;
             }
 

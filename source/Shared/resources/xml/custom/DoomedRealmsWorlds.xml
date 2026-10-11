@@ -57,12 +57,54 @@
 		<DisableTeleport/>
 		<Dungeon/>
 	</World>
+	<World id="Elder Beach Zone">
+		<Width>136</Width>
+		<Height>127</Height>
+		<MapJM>Doomed/Elder Beach Zone.jm</MapJM>
+		<VisibilityType>1</VisibilityType>
+		<Dungeon/>
+	</World>
+	<World id="Elder Davy Jones' Locker">
+		<Width>130</Width>
+		<Height>88</Height>
+		<MapJM>Doomed/Elder Davy Jones' Locker.jm</MapJM>
+		<VisibilityType>1</VisibilityType>
+		<Dungeon/>
+	</World>
 	<World id="Lair of Elder Draconis">
 		<Width>138</Width>
 		<Height>148</Height>
 		<MapJM>Doomed/Lair of Elder Draconis.jm</MapJM>
 		<VisibilityType>1</VisibilityType>
 		<DisableTeleport/>
+		<Dungeon/>
+	</World>
+	<World id="Elder Jungle">
+		<Width>84</Width>
+		<Height>142</Height>
+		<MapJM>Doomed/Elder Jungle.jm</MapJM>
+		<VisibilityType>1</VisibilityType>
+		<Dungeon/>
+	</World>
+	<World id="Elder Manor">
+		<Width>99</Width>
+		<Height>121</Height>
+		<MapJM>Doomed/Elder Manor 1.jm</MapJM>
+		<MapJM>Doomed/Elder Manor 2.jm</MapJM>
+		<MapJM>Doomed/Elder Manor 3.jm</MapJM>
+		<VisibilityType>1</VisibilityType>
+		<Dungeon/>
+	</World>
+	<World id="Elder Ocean Trench">
+		<Width>127</Width>
+		<Height>107</Height>
+		<MapJM>Doomed/Elder Ocean Trench 1.jm</MapJM>
+		<MapJM>Doomed/Elder Ocean Trench 2.jm</MapJM>
+		<MapJM>Doomed/Elder Ocean Trench 3.jm</MapJM>
+		<MapJM>Doomed/Elder Ocean Trench 4.jm</MapJM>
+		<MapJM>Doomed/Elder Ocean Trench 5.jm</MapJM>
+		<MapJM>Doomed/Elder Ocean Trench 6.jm</MapJM>
+		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
 	<World id="Elder Pirate Cave">
@@ -170,6 +212,13 @@
 		<MapJM>Doomed/Secret.jm</MapJM>
 		<VisibilityType>1</VisibilityType>
 		<DisableTeleport/>
+		<Dungeon/>
+	</World>
+	<World id="Shop">
+		<Width>31</Width>
+		<Height>31</Height>
+		<MapJM>Doomed/Shop.jm</MapJM>
+		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
 	<World id="Turkey Hunting Grounds">

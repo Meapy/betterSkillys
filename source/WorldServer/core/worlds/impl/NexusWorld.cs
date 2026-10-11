@@ -19,7 +19,13 @@ namespace WorldServer.core.worlds.impl
         public int RankRequired;
     }
 
-    public sealed class NexusWorld : World
+    // a world whose merchants go back to it when they sell out or time out
+    public interface IMerchantWorld
+    {
+        void ReturnMerchant(MerchantData merchantData);
+    }
+
+    public sealed class NexusWorld : World, IMerchantWorld
     {
         // i dont really want to use static but it works so?
         private readonly List<MerchantData> _inactiveStorePoints = new List<MerchantData>();

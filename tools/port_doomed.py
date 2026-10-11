@@ -383,6 +383,31 @@ def fix_class_references(converted, dr, bs, types):
                 o.remove(u)
 
 
+# objects the Doomed Realms minigame worlds spawn from code (wserver/realm/worlds/ZombieMap.cs,
+# ZombieMG.cs, Herding.cs); the battle arenas only spawn betterSkillys monsters
+MINIGAME_SPAWNS = {"Zombie", "Hell Hound", "Crawler", "Zombie of Draconis", "Regular Zombie", "Tank Zombie",
+                   "Speedy Zombie", "Zombie Tower", "Herding Sheep", "Giant Herding Sheep", "Black Herding Sheep"}
+
+
+# sprite donors for objects whose remote sprite is gone and whose name matches nothing in betterSkillys
+SPRITE_DONORS = {"Elder Beach Portal": "Beachzone Portal"}
+
+
+def fix_doomed_data(dr):
+    """Mistakes in the Doomed Realms data, fixed before porting."""
+    key = dr.get("Elder Beach Key")
+    if key is not None:  # it opened the Elder Jungle
+        for a in key.iter("Activate"):
+            if a.get("id") == "Elder Jungle Portal":
+                a.set("id", "Elder Beach Portal")
+        desc = key.find("Description")
+        if desc is not None:
+            desc.text = "A key which opens an entrance to the Elder Beach Zone."
+    key = dr.get("Elder Davy Key")
+    if key is not None and key.find("Description") is not None:
+        key.find("Description").text = "A key which opens an entrance to Elder Davy Jones' Locker."
+
+
 def fix_portals_and_keys(converted, portal_world):
     """Portals point at their ported dungeon; keys create them (Doomed Realms "Create" is "CreatePortal")."""
     portal_ids = {o.get("id") for o in converted if o.findtext("Class") == "Portal"}
@@ -588,18 +613,35 @@ def main():
     dr = load_objects(glob.glob(os.path.join(args.dr, "db", "data", "*.xml")))
     bs = load_objects([f for f in glob.glob(os.path.join(ROOT, "source", "Shared", "resources", "xml", "**", "*.xml"), recursive=True)
                        if os.path.abspath(f) != os.path.abspath(SERVER_XML)])
-    # dungeons: what their maps place, their portals, and what the monsters' behaviours spawn
+    fix_doomed_data(dr)
+    # dungeons: what their maps place, their portals, what the minigames spawn and what the
+    # monsters' behaviours spawn
     import port_doomed_worlds as pw
     import port_doomed_monsters as pm
-    worlds = pw.world_maps(args.dr)
+    worlds = pw.world_maps(args.dr, set(dr))
     map_objs = {o for (_, _, _, maps) in worlds.values() for wm in maps for (_, o, _, _) in wm["dict"] if o}
-    portal_world = {pid: worlds[cls][0] for cls, pids in pw.PORTED_WORLDS.items() for pid in pids}
+    map_objs |= MINIGAME_SPAWNS
+    portal_world = {pid: worlds[cls][0] for pid, cls in pw.portal_worlds().items()}
     dr_by_type = {int(o.get("type"), 16): oid for oid, o in dr.items() if o.get("type")}
     blocks = pm.load_blocks(args.dr)
+    # Elder monsters Doomed Realms gave no behaviour of their own use their regular version's,
+    # spawning the Elder versions of its minions
+    elder_base = {}
+    for t_, oid in dr_by_type.items():
+        base = dr.get(oid[len("Elder "):]) if oid.startswith("Elder ") else None
+        if t_ not in blocks and base is not None and dr[oid].findtext("Class") == "Character":
+            elder_base[oid] = int(base.get("type"), 16)
+
+    def elderize(oid):
+        return "Elder " + oid if "Elder " + oid in dr else oid
+
     behaviour_refs = {}
     for t_, oid in dr_by_type.items():
-        if t_ in blocks:
-            refs = {dr_by_type[r] for r in pm.referenced_types(args.dr, [t_], blocks) if r in dr_by_type}
+        src = t_ if t_ in blocks else elder_base.get(oid)
+        if src in blocks:
+            refs = {dr_by_type[r] for r in pm.referenced_types(args.dr, [src], blocks) if r in dr_by_type}
+            if src != t_:
+                refs = {elderize(r) for r in refs}
             if refs:
                 behaviour_refs[oid] = refs
     chosen, skipped = select(dr, bs, extra=map_objs | set(portal_world), allowed_portals=set(portal_world),
@@ -624,8 +666,9 @@ def main():
             continue
         base = re.sub(r"[\s\d']+$", "", (o.findtext("DisplayId") or oid).replace("Lil' ", "")).strip()
         animated = o.findtext("Class") == "Character"
-        donor = next((b for bid, b in sorted(bs.items()) if bid.startswith(base) and
-                      b.find("AnimatedTexture" if animated else "Texture") is not None), None)
+        donor = bs.get(SPRITE_DONORS.get(oid, "")) or next(
+            (b for bid, b in sorted(bs.items()) if bid.startswith(base) and
+             b.find("AnimatedTexture" if animated else "Texture") is not None), None)
         if donor is None:
             continue
         o = copy.deepcopy(o)
@@ -688,18 +731,32 @@ def main():
 
     pets = {a.get("objectId") for o in chosen.values() for a in o.iter("Activate") if a.text == "PermaPet"}
     ally_types = set(port_doomed_allies.parse_ally_behaviors(args.dr))
-    monsters = {oid: int(o.get("type"), 16) for oid, o in chosen.items()
-                if o.findtext("Class") == "Character" and oid not in pets
-                and int(o.get("type"), 16) not in ally_types and int(o.get("type"), 16) in blocks}
-
     def type_to_id(t_):
         if t_ not in dr_by_type:
             return None
         oid = final_id(dr_by_type[t_])
         return oid if known(oid) else None
 
-    _, n = pm.write_monsters(args.dr, monsters, None, type_to_id)
-    print("Wrote %s: %d monsters." % (pm.DEFS_CS, n))
+    def elder_type_to_id(t_):
+        oid = type_to_id(t_)
+        return elderize(oid) if oid and known(elderize(oid)) else oid
+
+    monsters, aliases = {}, {}
+    for oid, o in chosen.items():
+        t_ = int(o.get("type"), 16)
+        if o.findtext("Class") != "Character" or oid in pets or t_ in ally_types:
+            continue
+        if t_ in blocks:
+            monsters[oid] = (t_, type_to_id)
+        elif elder_base.get(oid) in blocks:
+            monsters[oid] = (elder_base[oid], elder_type_to_id)
+        elif oid in elder_base and oid[len("Elder "):] in bs:
+            aliases[oid] = oid[len("Elder "):]  # only betterSkillys has a behaviour for the regular one
+
+    _, n = pm.write_monsters(args.dr, monsters, aliases)
+    print("Wrote %s: %d monsters, %d Elder monsters sharing a betterSkillys behaviour." % (pm.DEFS_CS, n, len(aliases)))
+    import port_doomed_economy
+    port_doomed_economy.write_economy(args.dr, dr, bs, final_id, known)
 
 
 if __name__ == "__main__":

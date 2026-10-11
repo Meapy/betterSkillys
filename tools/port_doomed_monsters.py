@@ -139,12 +139,15 @@ def definition(block, type_to_id, refs):
     return name, behaviours, cond, loot
 
 
-def write_monsters(dr_root, monsters, dr_type_of, type_to_id):
-    """monsters: ported monster id -> Doomed Realms type. Returns the object ids their behaviours use."""
+def write_monsters(dr_root, monsters, aliases=None):
+    """monsters: ported monster id -> (Doomed Realms type whose behaviour it uses, type -> object id
+    lookup for its arguments); aliases: monster id -> betterSkillys monster whose behaviour it shares.
+    Returns the object ids their behaviours use."""
     blocks = load_blocks(dr_root)
     refs, members, inits = set(), [], []
     for oid in sorted(monsters):
-        block = blocks.get(monsters[oid])
+        dr_type, type_to_id = monsters[oid]
+        block = blocks.get(dr_type)
         if block is None or "PetBehaves" in block or "PetChasing" in block:
             continue  # pets have their own behaviours (port_doomed_pets.py)
         _, behaviours, cond, loot = definition(block, type_to_id, refs)
@@ -170,7 +173,12 @@ def write_monsters(dr_root, monsters, dr_type_of, type_to_id):
         f.write("using WorldServer.logic.doomed;\n\n")
         f.write("namespace WorldServer.logic\n{\n    partial class BehaviorDb\n    {\n")
         f.write("        private _ DoomedMonsters = () => Behav()\n")
-        f.write("\n".join(inits) + ";\n")
+        f.write("\n".join(inits) + ";\n\n")
+        f.write("        // Elder monsters that share the behaviour of their regular betterSkillys version\n")
+        f.write("        // (applied by Initialize once every behaviour is registered)\n")
+        f.write("        private static readonly (string Elder, string Regular)[] DoomedAliases =\n        {\n")
+        f.write("".join("            (%s, %s),\n" % (cs_string(k), cs_string(v)) for k, v in sorted((aliases or {}).items())))
+        f.write("        };\n")
         f.write("    }\n}\n")
     return refs, len(inits)
 

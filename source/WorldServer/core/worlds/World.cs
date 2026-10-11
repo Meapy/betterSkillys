@@ -394,7 +394,7 @@ namespace WorldServer.core.worlds
             }
             else if (entity is SellableObject)
                 SellableObjects.Remove(entity.Id);
-            else if (entity.ObjectDesc.Enemy)
+            else if (entity is Enemy) // as AddToWorld: characters without <Enemy/> (e.g. sheep) are Enemies too
             {
                 Enemies.Remove(entity.Id);
                 EnemiesCollision.Remove(entity);

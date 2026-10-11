@@ -27,8 +27,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORLDS_DIR = os.path.join(ROOT, "source", "Shared", "resources", "worlds", "Doomed")
 WORLDS_XML = os.path.join(ROOT, "source", "Shared", "resources", "xml", "custom", "DoomedRealmsWorlds.xml")
 
+# Doomed Realms' TileRegion (wserver/realm/JsonMap.cs), in order
 REGIONS = ["None", "Spawn", "Realm_Portals", "Store_1", "Store_2", "Store_3", "Store_4", "Store_5", "Store_6",
-           "Store_7", "Store_8", "Store_9", "Store_10", "Vault", "Loot", "Defender", "Hallway", "Hallway_1",
+           "Store_7", "Store_8", "Store_9", "Vault", "Loot", "Defender", "Hallway", "Hallway_1",
            "Hallway_2", "Hallway_3", "Enemy"]
 
 # Doomed Realms worlds ported as dungeons: world class -> portal ids that lead there.
@@ -60,7 +61,21 @@ PORTED_WORLDS = {
     "GauntletMap": [],
     "TurkeyMap": [],
     "Admin": [],
+    "ShopMap": [],
 }
+
+# Elder dungeons Doomed Realms left unfinished (it made their keys, portals and monsters, but no
+# maps): built like its finished ones, from the regular dungeon's maps with every object that has
+# an "Elder <id>" version swapped for it. world -> (regular world class, name, portal ids)
+ELDER_WORLDS = {
+    "ElderManor": ("Manor", "Elder Manor", ["Elder Manor Portal"]),
+    "ElderOceanTrench": ("OceanTrench", "Elder Ocean Trench", ["Elder Ocean Trench Portal"]),
+    "ElderJungle": ("Jungle", "Elder Jungle", ["Elder Jungle Portal"]),
+    "ElderBeachZone": ("BeachZone", "Elder Beach Zone", ["Elder Beach Portal"]),
+    "ElderDavy": ("Davy", "Elder Davy Jones' Locker", ["Elder Davy Portal"]),
+}
+# Doomed Realms' shop map places merchants as objects; betterSkillys places them on store regions
+SHOP_WORLD = "ShopMap"
 
 
 class Reader:
@@ -177,13 +192,39 @@ def to_jm(wmap, dr_grounds, object_id):
                        "data": base64.b64encode(zlib.compress(data, 9)).decode("ascii")})
 
 
-def world_maps(dr_root):
-    """{class: (world name, background, allow teleport, [read wmaps])} for PORTED_WORLDS."""
+def elder_swap(wmap, dr_ids):
+    """The map with each object id X replaced by "Elder X" where Doomed Realms defines one."""
+    entries = [(g, "Elder " + o if o and "Elder " + o in dr_ids else o, n, r) for (g, o, n, r) in wmap["dict"]]
+    return dict(wmap, dict=entries)
+
+
+def shop_regions(wmap):
+    """Merchant objects become Store_1 region tiles (where the shop world puts its merchants)."""
+    store = REGIONS.index("Store_1")
+    entries = [(g, "", "", store) if o == "Merchant" else (g, o, n, r) for (g, o, n, r) in wmap["dict"]]
+    return dict(wmap, dict=entries)
+
+
+def world_maps(dr_root, dr_ids=frozenset()):
+    """{class: (world name, background, allow teleport, [read wmaps])} for PORTED_WORLDS and ELDER_WORLDS."""
     classes = parse_world_classes(dr_root)
     out = {}
     for cls in PORTED_WORLDS:
         name, bg, tp, maps = classes[cls]
-        out[cls] = (name, bg, tp, [read_wmap(find_map(dr_root, m)) for m in maps])
+        maps = [read_wmap(find_map(dr_root, m)) for m in maps]
+        if cls == SHOP_WORLD:
+            maps = [shop_regions(m) for m in maps]
+        out[cls] = (name, bg, tp, maps)
+    for cls, (base, name, _) in ELDER_WORLDS.items():
+        _, bg, tp, maps = classes[base]
+        out[cls] = (name, bg, tp, [elder_swap(read_wmap(find_map(dr_root, m)), dr_ids) for m in maps])
+    return out
+
+
+def portal_worlds():
+    """{portal id: world class} for the ported worlds."""
+    out = {pid: cls for cls, pids in PORTED_WORLDS.items() for pid in pids}
+    out.update({pid: cls for cls, (_, _, pids) in ELDER_WORLDS.items() for pid in pids})
     return out
 
 

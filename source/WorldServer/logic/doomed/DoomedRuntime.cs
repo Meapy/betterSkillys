@@ -107,6 +107,16 @@ namespace WorldServer.logic.doomed
                     c.Behave(BehaviorCondition.OnChat, h, time, text, player);
         }
 
+        public static void OnHit(Entity entity, Player player, TickTime time)
+        {
+            var h = DrHost.Get(entity);
+            if (h.Definition == null)
+                return;
+            foreach (var c in h.Definition.CondBehaviors)
+                if ((c.Condition & BehaviorCondition.OnHit) != 0)
+                    c.Behave(BehaviorCondition.OnHit, h, time, null, player);
+        }
+
         // Object types are written by id in the generated definitions.
         public static ushort? T(string id)
         {
@@ -827,6 +837,41 @@ namespace WorldServer.logic.doomed
         protected override bool TickCore(TickTime time) => true; // monster sounds are played by the client
     }
 
+    // whether the monster stands on a tile of the region
+    internal class CheckRegion : Behavior
+    {
+        private readonly TileRegion region;
+        private CheckRegion(TileRegion region) => this.region = region;
+        public static CheckRegion Instance(TileRegion region) => Cached(region, () => new CheckRegion(region));
+
+        protected override bool TickCore(TickTime time)
+        {
+            var map = Host.Self.World?.Map;
+            if (map == null || !map.Contains((int)Host.Self.X, (int)Host.Self.Y))
+                return false;
+            return map[(int)Host.Self.X, (int)Host.Self.Y].Region == region;
+        }
+    }
+
+    // tells the world's minigame something happened ("sheep", "dmg:2", ...)
+    internal class WorldEvent : Behavior
+    {
+        private readonly string type;
+        private WorldEvent(string type) => this.type = type;
+        public static WorldEvent Instance(string type) => Cached(type, () => new WorldEvent(type));
+
+        protected override bool TickCore(TickTime time)
+        {
+            (Host.Self.World as IDoomedEventWorld)?.BehaviorEvent(type);
+            return true;
+        }
+    }
+
+    public interface IDoomedEventWorld
+    {
+        void BehaviorEvent(string type);
+    }
+
     #endregion
 
     #region States and events
@@ -919,6 +964,23 @@ namespace WorldServer.logic.doomed
         public OnDeath(Behavior behav) => this.behav = behav;
         public override BehaviorCondition Condition => BehaviorCondition.OnDeath;
         protected override void BehaveCore(BehaviorCondition cond, TickTime time, string msg, Player player) => behav.Tick(Host, time);
+    }
+
+    internal class OnHit : ConditionalBehavior
+    {
+        private readonly Behavior behav;
+        public OnHit(Behavior behav) => this.behav = behav;
+        public override BehaviorCondition Condition => BehaviorCondition.OnHit;
+        protected override void BehaveCore(BehaviorCondition cond, TickTime time, string msg, Player player) => behav.Tick(Host, time);
+    }
+
+    // runs the behaviour percent% of the time
+    internal class RandomDo : Behavior
+    {
+        private readonly int percent;
+        private readonly Behavior result;
+        public RandomDo(int percent, Behavior result) { this.percent = percent; this.result = result; }
+        protected override bool TickCore(TickTime time) => Rng.Next(1, 100) <= percent && result.Tick(Host, time);
     }
 
     internal class ConditionalState : ConditionalBehavior
@@ -1096,6 +1158,22 @@ namespace WorldServer.logic.doomed
         {
             if (Stunned) return false;
             DoomedRuntime.Fire(Host.Self, projectileIndex, angle, 0, 1);
+            return true;
+        }
+    }
+
+    internal class AngleMultiAttack : AttackBase
+    {
+        private readonly float angle, projAngle;
+        private readonly int numShot, projectileIndex;
+        private AngleMultiAttack(float angle, float projAngle, int numShot, int projectileIndex) { this.angle = angle; this.projAngle = projAngle; this.numShot = numShot; this.projectileIndex = projectileIndex; }
+        public static AngleMultiAttack Instance(float angle, float projAngle, int numShot, int projectileIndex = 0) =>
+            Cached(Tuple.Create(angle, projAngle, numShot, projectileIndex), () => new AngleMultiAttack(angle, projAngle, numShot, projectileIndex));
+
+        protected override bool TickCore(TickTime time)
+        {
+            if (Stunned) return false;
+            DoomedRuntime.Fire(Host.Self, projectileIndex, angle - projAngle * (numShot - 1) / 2, projAngle, numShot);
             return true;
         }
     }
