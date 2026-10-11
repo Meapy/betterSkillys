@@ -12,6 +12,7 @@ namespace WorldServer.logic
             new State(
                 new PlaceMap("Setpieces/Skull Shrine.jm", true),
                 new ScaleHP2(35),
+                new DropPortalOnDeath("Cursed Library Portal", 0.25),
                 new Shoot(30, 13, 10, coolDown: 600, predictive: 1), // add prediction after fixing it...
                 new Reproduce("Red Flaming Skull", 40, 20, coolDown: 300),
                 new Reproduce("Blue Flaming Skull", 40, 20, coolDown: 300)
