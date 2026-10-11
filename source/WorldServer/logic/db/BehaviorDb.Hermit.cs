@@ -137,6 +137,7 @@ namespace WorldServer.logic
                 new State(
                     new ConditionEffectBehavior(ConditionEffectIndex.Invincible, true),
                     new DropPortalOnDeath("Ocean Trench Portal", 1),
+                    new DropPortalOnDeath("Cnidarian Reef Portal", 0.25, xAdjustment: 2),
                     new State("Wait",
                         new EntityNotExistsTransition("Hermit God", 50, "Transform")
                         ),

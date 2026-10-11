@@ -418,6 +418,7 @@ namespace WorldServer.logic
            )
         .Init("EH Event Hive Corpse",
             new State(
+                new DropPortalOnDeath("The Hive Portal", 1.0),
                 new ConditionEffectBehavior(ConditionEffectIndex.Invincible),
                 new State("init",
                     new ConditionEffectBehavior(ConditionEffectIndex.Invincible),

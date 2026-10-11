@@ -11,6 +11,7 @@ namespace WorldServer.logic
             .Init("Oryx the Mad God 2",
                 new State(
                     new ScaleHP2(30),
+                    new DropPortalOnDeath("Lost Halls Portal", 0.1, timeout: 120),
                     new State("Attack",
                         new Wander(.05),
                         new Shoot(25, projectileIndex: 0, count: 8, shootAngle: 45, coolDown: 1500, coolDownOffset: 1500),

@@ -12,6 +12,7 @@ namespace WorldServer.logic
             new State(
                 new ScaleHP2(20),
                 new DropPortalOnDeath("Ice Cave Portal", 0.5),
+                new DropPortalOnDeath("Ice Tomb Portal", 0.25, xAdjustment: 2),
                 new State("Waiting",
                     new HpLessTransition(0.99, "Start1.0")
                     ),

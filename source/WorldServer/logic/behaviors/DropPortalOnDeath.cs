@@ -12,10 +12,12 @@ namespace WorldServer.logic.behaviors
         private readonly float xAdjustment;
         private readonly float yAdjustment;
 
-        public DropPortalOnDeath(string target, double probability = 1, int? timeout = null)
+        public DropPortalOnDeath(string target, double probability = 1, int? timeout = null, float xAdjustment = 0, float yAdjustment = 0)
         {
             _target = GetObjType(target);
             _probability = (float)probability;
+            this.xAdjustment = xAdjustment;
+            this.yAdjustment = yAdjustment;
             _timeout = timeout; // a value of 0 means never timeout,
             // null means use xml timeout,
             // a value means override xml timeout with that value (in seconds)
