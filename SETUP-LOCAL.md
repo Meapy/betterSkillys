@@ -22,6 +22,8 @@ python tools\build_client.py                            # client\bin\client.swf 
 python tools\build_client.py 188.141.12.3 --package     # dist\betterSkillys-Client.zip for other players
 ```
 
+For testing changes without touching the live servers or your own client, `tools/testclient/` has isolated test servers (ports 6380, 8081, 2052) and a separate test client; see `client/AGENTS.md`.
+
 The account server address is compiled into `LocalhostSetup.as`, so the script copies the sources to `build/src` and sets it there. The package is a self-contained Windows app (AIR captive runtime) signed with a self-signed certificate in `build/`.
 
 ## Letting other people play
@@ -90,11 +92,13 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
   - **Tile culling** (`Map.draw`): of the 15-tile circle around the player, only tiles whose centre is on screen (with 2 tiles of margin, 4 below for tall sprites) are drawn.
   - **Batching** (`Renderer`): every plain quad of a frame goes into one vertex buffer, uploaded once, and each run of quads with the same image (or the same atlas page) is one draw call; GPU state that is already bound isn't set again. Shadows are one draw call. This is the GPU counterpart of Doomed Realms' particle batching.
   - **Texture atlas** (`TextureAtlas`): images up to 128 px that stay in use (sprites, wall faces, tile edges) are packed into up to six 1024x1024 textures, so runs of different sprites share a draw call. Tiles drawn on their own draw all base faces first and then all edge overlays, to keep the same images together.
-  - **Fullscreen** fills the whole screen: the client works out how far its view reaches and asks the server for that sight radius (`VIEW_RADIUS` message, 15 to 40 tiles; `Player.SightRadius`). Players with a normal window keep 15 and its cost. At 4K the whole view draws at about 49 fps (with ~340 draw calls instead of ~1060).
+  - **Fullscreen** fills the whole screen: the client works out how far its view reaches and asks the server for that sight radius (`VIEW_RADIUS` message, 15 to 40 tiles; `Player.SightRadius`). Players with a normal window keep 15 and its cost. At 4K the whole view draws at about 78 fps (with ~340 draw calls instead of ~1060).
   - **Projection cache** (`Camera`, `Face3D`): while the camera only moves (no rotation or zoom), wall and tile faces reuse their projected shape and texture matrix, shifted by the camera translation. Tiles also no longer rebuild their texture matrix every frame when their offset hasn't changed (`SquareFace`).
   - **Projectiles** check the distance to each target before anything else.
+  - **Flashing objects:** the renderer's atlas check only peeks at an image's one-frame tint (`GraphicsFillExtra.peekColorTransform`); it used to use it up, so objects stopped flashing.
   - **Errors:** `GameSprite` keeps its frame time up to date even when a frame throws, so the player can't run away at the speed of the time since the error.
-  - **Performance Stats** (Options) also shows the map draw time per frame (and how much of it is the GPU), the time in tiles, objects and the HUD, and the draw calls by kind.
+  - **No garbage per frame:** the game used to create about 4,000 objects every frame at 4K, now about 40. `TextureRedrawer` finds cached images without building string keys, the boss damage text is only set when it changes (it was set and measured once per object in the world, every frame), and `GraphicsFillExtra` no longer makes a new ColorTransform per lookup. A normal-sized window went from 139 to 201 fps.
+  - **Performance Stats** (Options) also shows the map draw time per frame (and how much of it is the GPU), the time in tiles, objects and the HUD, the draw calls by kind, and `frame = game + flash`: the game's own time per frame against the AIR runtime's. The runtime needs about 4 ms per frame at 4K to composite the screen, whatever the game does, so about 240 fps is the ceiling there.
   - Not ported, because betterSkillys already has them or they only mattered in Ruffle/Flash: the frame-rate option and render-quality toggle (both exist), projectile hit lists (exist), the fullscreen zoom (betterSkillys has map scale), and the Ruffle fixes (outline glow, chat text, 32-bit float drift).
 
 ## Content ported from Doomed Realms
