@@ -349,6 +349,78 @@ public class Map extends Sprite {
         this.chunkPaths_ = null;
     }
 
+    // Only tiles within VIEW_RADIUS of the player are drawn (the server forgets the walls and
+    // objects further out), but a chunk image holds all its remembered tiles. The parts of the
+    // visible chunks outside that circle are covered with black, one strip per row segment
+    // (all batched into one GPU draw call), drawn right after the chunks and under everything else.
+    private static const VIEW_RADIUS:int = 15;
+    private static var maskTexture_:BitmapData = null;
+    private var maskFills_:Vector.<GraphicsBitmapFill> = new Vector.<GraphicsBitmapFill>();
+    private var maskPaths_:Vector.<GraphicsPath> = new Vector.<GraphicsPath>();
+
+    private function maskChunks(px:int, py:int):void {
+        if (maskTexture_ == null) {
+            maskTexture_ = new BitmapData(TEX, TEX, false, 0);
+        }
+        var used:int = 0;
+        var r2:int = VIEW_RADIUS * VIEW_RADIUS;
+        for each(var c:int in this.chunksVisible_) {
+            var x0:int = c % this.chunksW_ * CHUNK;
+            var y0:int = int(c / this.chunksW_) * CHUNK;
+            var x1:int = x0 + CHUNK - 1;
+            for (var y:int = y0; y < y0 + CHUNK; y++) {
+                var dy:int = y - py;
+                if (dy * dy > r2) {
+                    used = this.maskRun(used, x0, x1, y);
+                    continue;
+                }
+                // the row's tiles inside the circle are px - hw .. px + hw (the loop in draw())
+                var hw:int = int(Math.sqrt(r2 - dy * dy));
+                if (x0 < px - hw) {
+                    used = this.maskRun(used, x0, Math.min(x1, px - hw - 1), y);
+                }
+                if (x1 > px + hw) {
+                    used = this.maskRun(used, Math.max(x0, px + hw + 1), x1, y);
+                }
+            }
+        }
+    }
+
+    // A black strip over tiles xa..xb of row y; returns the number of strips used this frame.
+    private function maskRun(used:int, xa:int, xb:int, y:int):int {
+        if (xb < xa) {
+            return used;
+        }
+        if (used == this.maskFills_.length) {
+            this.maskFills_.push(new GraphicsBitmapFill(maskTexture_, new Matrix(), false, false));
+            this.maskPaths_.push(new GraphicsPath(new <int>[1, 2, 2, 2], new Vector.<Number>(8)));
+        }
+        var fill:GraphicsBitmapFill = this.maskFills_[used];
+        var path:GraphicsPath = this.maskPaths_[used];
+        var w:int = xb - xa + 1;
+        var m:Matrix = fill.matrix;
+        m.a = this.groundXx_ * w / TEX;
+        m.b = this.groundXy_ * w / TEX;
+        m.c = this.groundYx_ / TEX;
+        m.d = this.groundYy_ / TEX;
+        m.tx = this.groundOx_ + xa * this.groundXx_ + y * this.groundYx_;
+        m.ty = this.groundOy_ + xa * this.groundXy_ + y * this.groundYy_;
+        fill.matrix = m;
+        var d:Vector.<Number> = path.data;
+        d[0] = m.tx;
+        d[1] = m.ty;
+        d[2] = m.tx + w * this.groundXx_;
+        d[3] = m.ty + w * this.groundXy_;
+        d[4] = m.tx + w * this.groundXx_ + this.groundYx_;
+        d[5] = m.ty + w * this.groundXy_ + this.groundYy_;
+        d[6] = m.tx + this.groundYx_;
+        d[7] = m.ty + this.groundYy_;
+        this.graphicsData_.push(fill);
+        this.graphicsData_.push(path);
+        this.graphicsData_.push(GraphicsUtil.END_FILL);
+        return used + 1;
+    }
+
     // Fills in a chunked tile's projected corners (Face3D.vout_), for objects drawn on it.
     private function projectSquare(square:Square):void {
         if (!this.groundAffine_ || square == null || !square.chunkable_ || square.faces_.length == 0) {
@@ -713,6 +785,9 @@ public class Map extends Sprite {
         // chunks first, under the tiles drawn on their own (animated water, edges...)
         for each(c in this.chunksVisible_) {
             this.drawChunk(c);
+        }
+        if (this.chunksVisible_.length > 0) {
+            this.maskChunks(int(player_.x_), int(player_.y_));
         }
         for each(square in this.visibleSquares_) {
             if (!(this.groundAffine_ && square.chunkable_ && this.chunkReady_[int(square.x_ / CHUNK) + int(square.y_ / CHUNK) * this.chunksW_])) {
