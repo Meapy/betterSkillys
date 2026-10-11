@@ -72,7 +72,7 @@ namespace WorldServer.core.objects
             }
 
             if (World is DailyQuestWorld)
-            {   
+            {
                 entity.ForceUpdate(slot);
                 SendInfo("You cannot use items while in the Marketplace!");
                 Client.SendPacket(new InvResult() { Result = 1 });
@@ -187,14 +187,22 @@ namespace WorldServer.core.objects
             }
             else
                 FameCounter.DrinkPot();
-            if (item.InvUse || item.Consumable || item.SlotType == slotType)
+
+            bool canUse = item.InvUse || item.Consumable || item.SlotType == slotType || Client.Account.Admin;
+
+            if (canUse)
             {
                 Activate(clientTime, time, item, slot, pos, objId, useType);
-                if (item.SlotType == slotType)
+
+                if (item.SlotType == slotType || (Client.Account.Admin && slot == 1))
+                {
                     AbilityUseEffects(pos);
+                }
             }
             else
+            {
                 Client.SendPacket(new InvResult() { Result = 1 });
+            }
         }
 
         public static void HealDiscrete(Player player, int amount, bool magic)
@@ -367,6 +375,17 @@ namespace WorldServer.core.objects
         {
             Mana -= item.MpCost;
 
+            // OBSŁUGA NOWEGO POLA EXP
+            if (item.Exp > 0)
+            {
+                Experience += item.Exp;
+                // Pętla sprawdzająca, czy obecne XP pozwala na awans (maksymalnie do 20 poziomu)
+                while (Level < 20 && Experience >= ExperienceGoal)
+                {
+                    Level++;
+                }
+            }
+
             var entity1 = World.GetEntity(objId);
 
             if (entity1 is GiftChest)
@@ -500,6 +519,39 @@ namespace WorldServer.core.objects
                     case ActivateEffects.Fame:
                         AEFame(time, item, target, eff);
                         break;
+                    case ActivateEffects.Gold:
+                        AEGold(time, item, target, eff);
+                        break;
+                    case ActivateEffects.PearlAbility:
+                        AEPearlAbility(time, item, target, eff);
+                        break;
+                    case ActivateEffects.BuildTower:
+                        AEBuildTower(time, item, target, eff);
+                        break;
+                    case ActivateEffects.MonsterToss:
+                        AEMonsterToss(time, item, target, eff);
+                        break;
+                    case ActivateEffects.PartyAOE:
+                        AEPartyAOE(time, item, target, eff);
+                        break;
+                    case ActivateEffects.MiniPot:
+                        AEMiniPot(time, item, target, eff);
+                        break;
+                    case ActivateEffects.Halo:
+                        AEHalo(time, item, target, eff);
+                        break;
+                    case ActivateEffects.SamuraiAbility:
+                        AESamuraiAbility(time, item, target, eff);
+                        break;
+                    case ActivateEffects.Summon:
+                        AESummon(time, item, target, eff);
+                        break;
+                    case ActivateEffects.TomeDamage:
+                        AETomeDamage(time, item, target, eff);
+                        break;
+                    case ActivateEffects.MultiDecoy:
+                        AEMultiDecoy(time, item, target, eff);
+                        break;
                     case ActivateEffects.LevelTwenty:
                     case ActivateEffects.MarkAndTeleport:
                     case ActivateEffects.SelfTransform:
@@ -570,6 +622,21 @@ namespace WorldServer.core.objects
                 .ContinueWith(t =>
                 {
                     CurrentFame = acc.Fame;
+                });
+            trans.Execute(CommandFlags.FireAndForget);
+        }
+
+        private void AEGold(TickTime time, Item item, Position target, ActivateEffect eff)
+        {
+            if (World is TestWorld || Client.Account == null)
+                return;
+
+            var acc = Client.Account;
+            var trans = GameServer.Database.Conn.CreateTransaction();
+            GameServer.Database.UpdateCurrency(acc, eff.Amount, CurrencyType.Gold, trans)
+                .ContinueWith(t =>
+                {
+                    Credits = acc.Credits;
                 });
             trans.Execute(CommandFlags.FireAndForget);
         }
@@ -837,8 +904,8 @@ namespace WorldServer.core.objects
             float? distance = eff.Distance != 0 ? eff.Distance : null;
             ushort objType = eff.ObjectId != null ? Resolve(GameServer, eff.ObjectId).ObjectType : (ushort)1813;
 
-            var decoy = new Decoy(this, eff.DurationMS, facing + angleOffset, 
-                speed == 0 ? target : Position, 
+            var decoy = new Decoy(this, eff.DurationMS, facing + angleOffset,
+                speed == 0 ? target : Position,
                 speed, distance, objType);
             decoy.Move(X, Y);
             World.EnterWorld(decoy);
@@ -962,7 +1029,7 @@ namespace WorldServer.core.objects
                             SendInfo($"Added multiple {statname} potions to your storage! [{storedAmount}/50]");
                             break;
                     }
-                } 
+                }
                 else
                 {
                     var ent = World.GetEntity(objId);
@@ -973,7 +1040,8 @@ namespace WorldServer.core.objects
                     SendError("Your potion storage is full..");
                     return;
                 }
-            } else
+            }
+            else
             {
                 Stats.Base[idx] += amount;
                 if (Stats.Base[idx] >= statInfo[idx].MaxValue)
@@ -988,7 +1056,7 @@ namespace WorldServer.core.objects
             var acc = Client.Account;
             if (potions[idx] < 50)
                 potions[idx] += amount;
-            else 
+            else
                 return -1;
 
             acc.StoredPotions = potions;
@@ -998,10 +1066,7 @@ namespace WorldServer.core.objects
 
         private void AELDBoost(TickTime time, Item item, Position target, ActivateEffect eff)
         {
-            //  if (LDBoostTime < 0 || (LDBoostTime > eff.DurationMS && eff.DurationMS >= 0))
-            //      return;
-
-            if (LDBoostTime < 0) //|| (LDBoostTime > eff.DurationMS && eff.DurationMS >= 0))
+            if (LDBoostTime < 0)
                 return;
 
             if (LDBoostTime <= 0)
@@ -1017,11 +1082,9 @@ namespace WorldServer.core.objects
             const double coneRange = Math.PI / 4;
             var mouseAngle = Math.Atan2(target.Y - Y, target.X - X);
 
-            // get starting target
             var startTarget = this.GetNearestEntity(MAX_ABILITY_DIST, false, e => e is Enemy &&
                 Math.Abs(mouseAngle - Math.Atan2(e.Y - Y, e.X - X)) <= coneRange);
 
-            // no targets? bolt air animation
             if (startTarget == null)
             {
                 var angles = new double[] { mouseAngle, mouseAngle - coneRange, mouseAngle + coneRange };
@@ -1310,80 +1373,7 @@ namespace WorldServer.core.objects
 
         private void AEUnlockPortal(TickTime time, Item item, Position target, ActivateEffect eff)
         {
-            //var gameData = CoreServerManager.Resources.GameData;
-
-            //// find locked portal
-            //var portals = World.StaticObjects
-            //    .Values.Where(_ => _ is Portal
-            //    && _.ObjectDesc.ObjectId.Equals(eff.LockedName)
-            //    && _.DistSqr(this) <= 9d)
-            //    .Select(_ => _ as Portal);
-            //if (!portals.Any())
-            //    return;
-            //var portal = portals.Aggregate(
-            //    (curmin, x) => curmin == null || x.DistSqr(this) < curmin.DistSqr(this) ? x : curmin);
-            //if (portal == null)
-            //    return;
-
-            //// get proto of world
-            //if (!CoreServerManager.Resources.Worlds.Data.TryGetValue(eff.DungeonName, out ProtoWorld proto))
-            //{
-            //    SLogger.Instance.Error("Unable to unlock portal. \"" + eff.DungeonName + "\" does not exist.");
-            //    return;
-            //}
-
-            //if (proto.portals == null || proto.portals.Length < 1)
-            //{
-            //    SLogger.Instance.Error("World is not associated with any portals.");
-            //    return;
-            //}
-
-            //// create portal of unlocked world
-            //var portalType = (ushort)proto.portals[0];
-            //if (!(Resolve(CoreServerManager, portalType) is Portal uPortal))
-            //{
-            //    SLogger.Instance.Error("Error creating portal: {0}", portalType);
-            //    return;
-            //}
-
-            //var portalDesc = gameData.Portals[portal.ObjectType];
-            //var uPortalDesc = gameData.Portals[portalType];
-
-            //// create world
-            //World world;
-            //if (proto.id < 0)
-            //    world = CoreServerManager.WorldManager.GetWorld(proto.id);
-            //else
-            //{
-            //    DynamicWorld.TryGetWorld(proto, Client, out world);
-            //    world = CoreServerManager.WorldManager.CreateNewWorld(world ?? new World(proto));
-            //}
-            //uPortal.WorldInstance = world;
-
-            //// swap portals
-            //if (!portalDesc.NexusPortal || !CoreServerManager.WorldManager.PortalMonitor.RemovePortal(portal))
-            //    World.LeaveWorld(portal);
-            //uPortal.Move(portal.X, portal.Y);
-            //uPortal.Name = uPortalDesc.DisplayId;
-            //var uPortalPos = new Position() { X = portal.X - .5f, Y = portal.Y - .5f };
-            //if (!uPortalDesc.NexusPortal || !CoreServerManager.WorldManager.PortalMonitor.AddPortal(world.Id, uPortal, uPortalPos))
-            //    World.EnterWorld(uPortal);
-
-            //// setup timeout
-            //if (!uPortalDesc.NexusPortal)
-            //{
-            //    var timeoutTime = gameData.Portals[portalType].Timeout;
-            //    World.Timers.Add(new WorldTimer(timeoutTime * 1000, (w, t) => w.LeaveWorld(uPortal)));
-            //}
-
-            //// announce
-            //World.Broadcast(new Notification
-            //{
-            //    Color = new ARGB(0xFF00FF00),
-            //    ObjectId = Id,
-            //    Message = "Unlocked by " + Name
-            //});
-            //World.PlayersBroadcastAsParallel(_ => _.SendInfo($"{world.SBName} unlocked by {Name}!"));
+            // Implementation skipped as per original file
         }
 
         private void AEVampireBlast(TickTime time, Item item, Position target, ActivateEffect eff)
@@ -1492,7 +1482,7 @@ namespace WorldServer.core.objects
                 if (player.World == null || w == null)
                     return true;
 
-                if (x % 4 == 0) // make sure to change this if timer delay is changed
+                if (x % 4 == 0)
                 {
                     var thisHeal = perHeal;
                     if (remainingHeal < thisHeal)

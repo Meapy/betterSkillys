@@ -92,6 +92,27 @@ public class ItemConstants {
             return ("Wakizashi");
          case LUTE_TYPE:
             return ("Lute");
+         // slot types of the classes ported from Doomed Realms (tools/port_doomed.py)
+         case 30:
+            return "Pearl";
+         case 32:
+            return "Turret";
+         case 36:
+            return "Dual Blades";
+         case 37:
+            return "Jacket";
+         case 126:
+            return "Halo";
+         case 128:
+            return "Summon Scroll";
+         case 130:
+            return "Fountain";
+         case 200:
+            return "Martial Art";
+         case 5000:
+            return "Oceanic Spell";
+         case 5005:
+            return "Cannon";
          default:
             return "Invalid Type!";
       }

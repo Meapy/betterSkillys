@@ -55,7 +55,7 @@ namespace WorldServer.core.objects
                         tile.ObjType = 0;
                         tile.UpdateCount++;
 
-                        foreach (var player in World.PlayersCollision.HitTest(x, y, Player.VISIBILITY_RADIUS).Cast<Player>())
+                        foreach (var player in World.PlayersCollision.HitTest(x, y, Player.MAX_VISIBILITY_RADIUS).OfType<Player>())
                             player.UpdateTiles();
                     }
                 World.LeaveWorld(this);

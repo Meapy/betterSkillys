@@ -42,11 +42,15 @@ public class EquipmentToolTip extends ToolTip
 
 
    private static const MAX_WIDTH:int = 230;
+   private static const TOOLTIP_BACKGROUND_ALPHA:Number = 0.88;
    private static const CSS_TEXT:String = ".in { margin-left:10px; text-indent: -10px; }";
+   private static const UNUSABLE_UT_OUTLINE_COLOR:uint = 0xB30000;
+   private static const UNUSABLE_TITLE_COLOR:uint = 0xFFA3E4;
    private var iconSize:Number = 60;
    private var icon_:Bitmap;
    private var titleText_:SimpleText;
    private var tierText_:UILabel;
+   private var tierNameText_:UILabel;
    private var descText_:SimpleText;
    private var line1_:LineBreakDesign;
    private var line2_:LineBreakDesign;
@@ -112,10 +116,21 @@ public class EquipmentToolTip extends ToolTip
 
       this.props_ = ObjectLibrary.propsLibrary_[objectType];
 
-      this.backgroundColor = this.playerCanUse || this.player_ == null ? 0x363636 : 6036765;
-      this.outlineColor = this.playerCanUse || player == null ? 0x9B9B9B : 10965039;
-      super(backgroundColor, 1, outlineColor, 1, true);
+      var specialTierOutlineColor:Number = TierUtil.getSpecialTierColor(this.objectXML_);
 
+      this.backgroundColor = this.playerCanUse || this.player_ == null ? 0x363636 : 0x5A1A28;
+      this.outlineColor = this.playerCanUse || player == null ? 0x9B9B9B : 10965039;
+
+      if(!this.playerCanUse && this.player_ != null && TierUtil.isUntiered(this.objectXML_))
+      {
+         this.outlineColor = UNUSABLE_UT_OUTLINE_COLOR;
+      }
+      else if(!isNaN(specialTierOutlineColor))
+      {
+         this.outlineColor = uint(specialTierOutlineColor);
+      }
+
+      super(this.backgroundColor, TOOLTIP_BACKGROUND_ALPHA, this.outlineColor, 1, true);
       if(this.player_ == null)
       {
          this.curItemXML_ = this.objectXML_;
@@ -138,6 +153,7 @@ public class EquipmentToolTip extends ToolTip
       this.makeLineTwo();
       this.makeRestrictionList();
       this.makeRestrictionText();
+      this.addTierNameText();
    }
 
    private static function GetEquipIndex(slotType:int, items:Vector.<ItemAttributes>):int {
@@ -215,7 +231,8 @@ public class EquipmentToolTip extends ToolTip
 
    private function addTierText() : void
    {
-      this.tierText_ = TierUtil.getTierTag(props_,16);
+      this.tierText_ = TierUtil.getTierTag(this.props_, 16);
+
       if(this.tierText_)
       {
          switch(Parameters.data_.itemDataOutlines)
@@ -224,36 +241,86 @@ public class EquipmentToolTip extends ToolTip
                this.tierText_.filters = FilterUtil.getTextOutlineFilter();
                break;
             case 1:
-               this.tierText_.filters = [new DropShadowFilter(0,0,0,0.5,12,12)];
+               this.tierText_.filters = [new DropShadowFilter(0, 0, 0, 0.5, 12, 12)];
          }
+
+         this.tierText_.x = MAX_WIDTH - this.tierText_.width - 8;
+         this.tierText_.y = 6;
+
          addChild(this.tierText_);
       }
    }
 
-   private function addTitle() : void {
-      var color:int = this.playerCanUse ? 0xffffff : 10965039;
+   private function addTierNameText() : void
+   {
+      if(this.tierNameText_ && contains(this.tierNameText_))
+      {
+         removeChild(this.tierNameText_);
+      }
+
+      this.tierNameText_ = TierUtil.getTooltipTierTag(this.props_, 14);
+
+      if(this.tierNameText_)
+      {
+         switch(Parameters.data_.itemDataOutlines)
+         {
+            case 0:
+               this.tierNameText_.filters = FilterUtil.getTextOutlineFilter();
+               break;
+            case 1:
+               this.tierNameText_.filters = [new DropShadowFilter(0, 0, 0, 0.5, 12, 12)];
+               break;
+         }
+
+         addChild(this.tierNameText_);
+         setChildIndex(this.tierNameText_, numChildren - 1);
+      }
+   }
+
+   private function addTitle() : void
+   {
+      var specialTitleColor:Number = TierUtil.getSpecialTierTitleColor(this.objectXML_);
+      var isUnusable:Boolean = !this.playerCanUse && this.player_ != null;
+      var color:int = isUnusable ? UNUSABLE_TITLE_COLOR : 0xffffff;
+
+      if(!isUnusable && !isNaN(specialTitleColor))
+      {
+         color = uint(specialTitleColor);
+      }
+
       this.titleText_ = new SimpleText(16, color, false, MAX_WIDTH - this.icon_.width - 4 - 30, 0);
       this.titleText_.setBold(true);
       this.titleText_.wordWrap = true;
       this.titleText_.text = this.itemAtr.DisplayName;
+
       if(this.itemData_ != null)
       {
          if(this.itemData_.ObjectId != null)
+         {
             this.titleText_.text = this.itemData_.ObjectId;
+         }
+
          if(this.itemData_.Stack > 0)
+         {
             this.titleText_.text += " x" + this.itemData_.Stack;
+         }
       }
+
       this.titleText_.filters = [new DropShadowFilter(0, 0, 0, 0.5, 12, 12)];
       this.titleText_.x = this.icon_.width + 4;
       this.titleText_.y = this.icon_.height / 2 - this.titleText_.actualHeight_ / 2;
       this.titleText_.updateMetrics();
-      switch (Parameters.data_.itemDataOutlines) {
+
+      switch(Parameters.data_.itemDataOutlines)
+      {
          case 0:
             this.titleText_.filters = FilterUtil.getTextOutlineFilter();
             break;
          case 1:
             this.titleText_.filters = [new DropShadowFilter(0, 0, 0, 0.5, 12, 12)];
+            break;
       }
+
       addChild(this.titleText_);
    }
 
@@ -947,32 +1014,38 @@ public class EquipmentToolTip extends ToolTip
    override protected function alignUI():void {
       this.titleText_.x = (this.icon_.width + 4);
       this.titleText_.y = ((this.icon_.height / 2) - (this.titleText_.height / 2));
+
       if (this.tierText_) {
          this.tierText_.y = this.icon_.height / 2 - (this.tierText_.height / 2);
          this.tierText_.x = (MAX_WIDTH - 10) - (this.tierText_.width);
       }
+
       this.descText_.x = 4;
       this.descText_.y = (this.icon_.height + 2);
+
       if (this.line1_ != null && this.attributesText != null) {
          this.line1_.x = 8;
          this.line1_.y = ((this.descText_.y + this.descText_.height) + 4);
          this.attributesText.x = 4;
          this.attributesText.y = (this.line1_.y + 8);
       }
+
       this.line2_.x = 8;
       this.line2_.y = this.attributesText != null ? ((this.attributesText.y + this.attributesText.height) + 8) : ((this.descText_.y + this.descText_.height));
+
       var _local1:uint = (this.line2_.y + 8);
+
       if (this.restrictionsText_) {
          this.restrictionsText_.x = 4;
          this.restrictionsText_.y = _local1;
          _local1 = (_local1 + this.restrictionsText_.height);
       }
-      /*if (this.powerText) {
-         if (contains(this.powerText)) {
-            this.powerText.x = 4;
-            this.powerText.y = _local1;
-         }
-      }*/
+
+      if (this.tierNameText_) {
+         this.tierNameText_.x = MAX_WIDTH - this.tierNameText_.width - 8;
+         this.tierNameText_.y = _local1 + 4;
+         setChildIndex(this.tierNameText_, numChildren - 1);
+      }
    }
 
    private static function formatStringForPluralValue(amount:uint, string:String) : String

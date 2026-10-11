@@ -7,6 +7,7 @@
 			<Index>0x05</Index>
 		</Texture>
 		<SlotType>3</SlotType>
+		<Ethereal/>
 		<Description>A bow imbued with energy from faraway galaxies. It's origin is unknown.</Description>
 		<ExtraTooltipData>
 			<EffectInfo name="On Ability use" description=""/>
@@ -108,5 +109,452 @@
 		<Consumable />
 		<Potion/>
 		<BagType>5</BagType>
+	</Object>
+	<Object type="0x5715" id="100 Gold">
+		<Class>Equipment</Class>
+		<Item />
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x01</Index>
+		</Texture>
+		<SlotType>10</SlotType>
+		<Description>When consumed, gives fame.</Description>
+		<Sound>use_potion</Sound>
+		<Activate amount="100">Gold</Activate>
+		<Consumable />
+		<Potion />
+		<BagType>5</BagType>
+	</Object>
+	<Object type="0x5701" id="WIP Admin Cat">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x07</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Admin/>
+		<Description>Summons Orange Cat on ability use :D</Description>
+		<ActivateOnEquip stat="26" amount="60">IncrementStat</ActivateOnEquip>
+		<ActivateOnEquip stat="27" amount="70">IncrementStat</ActivateOnEquip>
+		<ActivateOnEquip stat="20" amount="20">IncrementStat</ActivateOnEquip>
+		<ActivateOnEquip stat="22" amount="20">IncrementStat</ActivateOnEquip>
+		<BagType>6</BagType>
+		<Soulbound/>
+		<feedPower>10000</feedPower>
+		<OnPlayerAbilityActivate objectId="Admin Cat" throwTime="0" color="0xff5050">ObjectToss</OnPlayerAbilityActivate>
+	</Object>
+	<Object type="0x5703" id="Admin Cato Weapon">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x07</Index>
+		</Texture>
+		<SlotType>3</SlotType>
+		<Admin/>
+		<Description>ROAR or MEW?</Description>
+		<ExtraTooltipData>
+			<EffectInfo name="On Ability use" description=""/>
+			<EffectInfo name="" description="Summons a Pirate that charges enemies for 5 seconds."/>
+			<EffectInfo name="Pirate" description="Fires a shot does 250 damage every 0.5 seconds."/>
+		</ExtraTooltipData>
+		<RateOfFire>1.1</RateOfFire>
+		<Sound>weapon/golden_bow</Sound>
+		<Projectile>
+			<ObjectId>Flying Cato</ObjectId>
+			<Speed>180</Speed>
+			<MinDamage>225</MinDamage>
+			<MaxDamage>385</MaxDamage>
+			<LifetimeMS>400</LifetimeMS>
+			<Amplitude>0.5</Amplitude>
+			<Frequency>1</Frequency>
+			<MultiHit/>
+		</Projectile>
+		<BagType>6</BagType>
+		<FameBonus>5</FameBonus>
+		<NumProjectiles>1</NumProjectiles>
+		<ArcGap>3</ArcGap>
+		<OldSound>arrowShoot</OldSound>
+		<feedPower>6500</feedPower>
+		<OnPlayerAbilityActivate objectId="Pirate Ally" throwTime="0" color="0xff5050">ObjectToss</OnPlayerAbilityActivate>
+		<Soulbound/>
+	</Object>
+	<Object type="0x5704" id="Reforged Doom Bow">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x0b</Index>
+		</Texture>
+		<SlotType>3</SlotType>
+		<Description>An upgraded catalyst of destruction. Its heavy shots tear through flesh and spell alike.</Description>
+		<RateOfFire>0.3</RateOfFire>
+		<Sound>weapon/golden_bow</Sound>
+		<Projectile>
+			<ObjectId>Reforged Doom Bow Shot</ObjectId>
+			<Speed>100</Speed>
+			<MinDamage>320</MinDamage>
+			<MaxDamage>475</MaxDamage>
+			<LifetimeMS>550</LifetimeMS>
+			<Frequency>1</Frequency>
+			<Size>125</Size>
+			<MultiHit/>
+			<PassesCover/>
+		</Projectile>
+		<NumProjectiles>2</NumProjectiles>
+		<ArcGap>20</ArcGap>
+		<ActivateOnEquip stat="20" amount="4">IncrementStat</ActivateOnEquip>
+		<BagType>6</BagType>
+		<FameBonus>8</FameBonus>
+		<feedPower>2000</feedPower>
+		<Soulbound/>
+		<DisplayId>Reforged Doom Bow</DisplayId>
+	</Object>
+	<Object type="0x5706" id="Reforged Dirk of Cronus">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x10</Index>
+		</Texture>
+		<SlotType>2</SlotType>
+		<Ethereal/>
+		<Description>A legendary blade perfected through masterful craftsmanship. It no longer merely proves the Dirk's worth—it embodies its ultimate supremacy.</Description>
+		<RateOfFire>0.95</RateOfFire>
+		<Sound>weapon/fire_dagger</Sound>
+		<Projectile>
+			<ObjectId>Reforged Cdirk Proj</ObjectId>
+			<Speed>200</Speed>
+			<MinDamage>195</MinDamage>
+			<MaxDamage>295</MaxDamage>
+			<LifetimeMS>250</LifetimeMS>
+			<Frequency>1</Frequency>
+			<Size>100</Size>
+			<MultiHit/>
+			<Wavy/>
+		</Projectile>
+		<NumProjectiles>1</NumProjectiles>
+		<ArcGap>11</ArcGap>
+		<ActivateOnEquip stat="27" amount="10">IncrementStat</ActivateOnEquip>
+		<BagType>6</BagType>
+		<FameBonus>6</FameBonus>
+		<feedPower>950</feedPower>
+		<Soulbound/>
+		<DisplayId>Reforged Dirk of Cronus</DisplayId>
+	</Object>
+	<Object type="0x5708" id="Reforged Forgotten Crown">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x0a</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Ethereal/>
+		<Description>Restored to its true, devastating splendor. To wear it is to command the absolute, ruinous power of a forgotten empire...</Description>
+		<ActivateOnEquip stat="28" amount="12">IncrementStat</ActivateOnEquip>
+		<ActivateOnEquip stat="20" amount="12">IncrementStat</ActivateOnEquip>
+		<ActivateOnEquip stat="0" amount="200">IncrementStat</ActivateOnEquip>
+		<BagType>6</BagType>
+		<FameBonus>8</FameBonus>
+		<feedPower>2000</feedPower>
+		<Soulbound/>
+	</Object>
+	<Object type="0x5712" id="Reforged Crystal Wand">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x0d</Index>
+		</Texture>
+		<SlotType>8</SlotType>
+		<Ethereal/>
+		<Description>The soft chime of wind has transformed into a deafening resonance of pure crystal power. Its polished core vibrates with relentless magic.</Description>
+		<RateOfFire>1.65</RateOfFire>
+		<Sound>weapon/wand_of_death</Sound>
+		<Projectile>
+			<ObjectId>Reforged Crystal Wand Shot</ObjectId>
+			<Speed>150</Speed>
+			<MinDamage>105</MinDamage>
+			<MaxDamage>175</MaxDamage>
+			<LifetimeMS>600</LifetimeMS>
+			<Frequency>1</Frequency>
+			<Size>100</Size>
+			<MultiHit/>
+			<Wavy/>
+			<ArmorPiercing/>
+		</Projectile>
+		<NumProjectiles>1</NumProjectiles>
+		<ArcGap>11</ArcGap>
+		<BagType>6</BagType>
+		<FameBonus>8</FameBonus>
+		<feedPower>2000</feedPower>
+		<Soulbound/>
+		<DisplayId>Crystal Wand</DisplayId>
+	</Object>
+	<Object type="0x5714" id="Reforged Helm of the Juggernaut">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x0f</Index>
+		</Texture>
+		<SlotType>16</SlotType>
+		<Ethereal/>
+		<Description>An extraterrestrial masterpiece, perfected by master smiths. The meteoric steel now vibrates with unstoppable, crushing durability.</Description>
+		<ActivateOnEquip stat="21" amount="15">IncrementStat</ActivateOnEquip>
+		<ActivateOnEquip stat="22" amount="7">IncrementStat</ActivateOnEquip>
+		<ActivateOnEquip stat="26" amount="7">IncrementStat</ActivateOnEquip>
+		<Usable/>
+		<BagType>6</BagType>
+		<FameBonus>6</FameBonus>
+		<MpCost>90</MpCost>
+		<Activate effect="Berserk" duration="6.5" range="4">ConditionEffectAura</Activate>
+		<Activate effect="Armored" duration="6.5">ConditionEffectSelf</Activate>
+		<Activate effect="Curse" duration="4.5">ConditionEffectSelf</Activate>
+		<Cooldown>8</Cooldown>
+		<feedPower>2000</feedPower>
+		<Soulbound/>
+	</Object>
+	<Object type="0x5722" id="Ring of Transcendent Attack">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x40</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>7</Tier>
+		<Description>An immaculately perfect spinel embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="20" amount="14">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5723" id="Ring of Transcendent Defense">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x41</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>7</Tier>
+		<Description>An immaculately perfect onyx embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="21" amount="14">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5724" id="Ring of Transcendent Speed">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x42</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>7</Tier>
+		<Description>An immaculately perfect emerald embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="22" amount="14">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5725" id="Ring of Transcendent Vitality">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x43</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>7</Tier>
+		<Description>An immaculately perfect ruby embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="26" amount="14">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5726" id="Ring of Transcendent Wisdom">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x44</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>7</Tier>
+		<Description>An immaculately perfect sapphire embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="27" amount="14">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5727" id="Ring of Transcendent Dexterity">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x45</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>7</Tier>
+		<Description>An immaculately perfect citrine embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="28" amount="14">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5728" id="Ring of Transcendent Health">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x46</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>7</Tier>
+		<Description>An immaculately perfect topaz embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="0" amount="220">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5729" id="Ring of Transcendent Magic">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x47</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>7</Tier>
+		<Description>An immaculately perfect amethyst embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="3" amount="220">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5730" id="Ring of Absolute Attack">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x50</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>8</Tier>
+		<Description>An immaculately perfect spinel embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="20" amount="18">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5731" id="Ring of Absolute Defense">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x51</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>8</Tier>
+		<Description>An immaculately perfect onyx embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="21" amount="18">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5732" id="Ring of Absolute Speed">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x52</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>8</Tier>
+		<Description>An immaculately perfect emerald embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="22" amount="18">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5733" id="Ring of Absolute Vitality">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x53</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>8</Tier>
+		<Description>An immaculately perfect ruby embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="26" amount="18">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5734" id="Ring of Absolute Wisdom">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x54</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>8</Tier>
+		<Description>An immaculately perfect sapphire embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="27" amount="18">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5735" id="Ring of Absolute Dexterity">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x55</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>8</Tier>
+		<Description>An immaculately perfect citrine embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="28" amount="18">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5736" id="Ring of Absolute Health">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x56</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>8</Tier>
+		<Description>An immaculately perfect topaz embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="0" amount="250">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
+	</Object>
+	<Object type="0x5737" id="Ring of Absolute Magic">
+		<Class>Equipment</Class>
+		<Item/>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x57</Index>
+		</Texture>
+		<SlotType>9</SlotType>
+		<Tier>8</Tier>
+		<Description>An immaculately perfect amethyst embedded in an exquisite gold ring.</Description>
+		<ActivateOnEquip stat="3" amount="250">IncrementStat</ActivateOnEquip>
+		<BagType>9</BagType>
+		<FameBonus>5</FameBonus>
+		<feedPower>325</feedPower>
 	</Object>
 </Objects>

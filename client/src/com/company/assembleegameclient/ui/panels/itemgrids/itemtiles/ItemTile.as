@@ -101,7 +101,15 @@ public class ItemTile extends Sprite
    {
       if(this.itemSprite.itemId != ItemConstants.NO_ITEM)
       {
-         this.restrictedUseIndicator.visible = !ObjectLibrary.isUsableByPlayer(this.itemSprite.itemId,player);
+         // Zaktualizowano na docelowe ID postaci 0x5719
+         if (player != null && player.objectType_ == 0x5719)
+         {
+            this.restrictedUseIndicator.visible = false;
+         }
+         else
+         {
+            this.restrictedUseIndicator.visible = !ObjectLibrary.isUsableByPlayer(this.itemSprite.itemId,player);
+         }
       }
       else
       {

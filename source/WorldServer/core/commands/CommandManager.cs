@@ -17,7 +17,7 @@ namespace WorldServer.core.commands
             var types = type.Assembly.GetTypes();
 
             for (var i = 0; i < types.Length; i++)
-                if (type.IsAssignableFrom(types[i]) && types[i] != type)
+                if (type.IsAssignableFrom(types[i]) && types[i] != type && !types[i].IsAbstract)
                 {
                     var instance = types[i].GetConstructor(new Type[] { typeof(GameServer) }) == null ? (Command)Activator.CreateInstance(types[i]) : (Command)Activator.CreateInstance(types[i], gameServer);
 

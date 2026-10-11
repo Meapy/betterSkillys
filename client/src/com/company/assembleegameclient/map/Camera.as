@@ -40,6 +40,27 @@ public class Camera
    private const JITTER_BUILDUP_MS:int = 10000;
    private var rd_:Vector.<Number>;
 
+   // wToS_ as 16 numbers, read once per configure (Matrix3D.rawData returns a new copy each
+   // time it is read).
+   public var wToSRaw_:Vector.<Number> = new Vector.<Number>(16);
+
+   // For Face3D's projection cache. While the camera is orthographic and only moves, every
+   // face lands on screen at the same shape, shifted by the camera translation (tX_, tY_).
+   // affineVersion_ changes whenever the rest of the transform does (rotation, scale);
+   // 0 means perspective, no caching. Versions come from one counter shared by all cameras.
+   private static var affineVersions_:int = 0;
+   public var affineVersion_:int = 0;
+   public var tX_:Number = 0;
+   public var tY_:Number = 0;
+   private var linear_:Vector.<Number> = new Vector.<Number>(6);
+
+   // clipRect_ grown by 10 pixels, which Face3D culls against (read once per frame instead of
+   // the Rectangle getters for every face).
+   public var cullLeft_:Number = 0;
+   public var cullTop_:Number = 0;
+   public var cullRight_:Number = 0;
+   public var cullBottom_:Number = 0;
+
    public function Camera()
    {
       this.pp_ = new PerspectiveProjection();
@@ -95,6 +116,28 @@ public class Camera
          return CENTER_SCREEN_RECT;
       }
       return OFFSET_SCREEN_RECT;
+   }
+
+   private function updateAffine(usePP:Boolean) : void
+   {
+      var r:Vector.<Number> = this.wToSRaw_;
+      if(usePP || r[3] != 0 || r[7] != 0 || r[11] != 0 || r[15] != 1)
+      {
+         this.affineVersion_ = 0;
+         return;
+      }
+      if(this.affineVersion_ == 0 || r[0] != this.linear_[0] || r[1] != this.linear_[1] || r[4] != this.linear_[2] || r[5] != this.linear_[3] || r[8] != this.linear_[4] || r[9] != this.linear_[5])
+      {
+         this.linear_[0] = r[0];
+         this.linear_[1] = r[1];
+         this.linear_[2] = r[4];
+         this.linear_[3] = r[5];
+         this.linear_[4] = r[8];
+         this.linear_[5] = r[9];
+         this.affineVersion_ = ++affineVersions_;
+      }
+      this.tX_ = r[12];
+      this.tY_ = r[13];
    }
 
    public function startJitter() : void
@@ -167,6 +210,12 @@ public class Camera
       this.wToS_.identity();
       this.wToS_.append(this.wToV_);
       this.wToS_.append(this.vToS_);
+      this.wToSRaw_ = this.wToS_.rawData;
+      this.updateAffine(usePP);
+      this.cullLeft_ = this.clipRect_.x - 10;
+      this.cullTop_ = this.clipRect_.y - 10;
+      this.cullRight_ = this.clipRect_.x + this.clipRect_.width + 10;
+      this.cullBottom_ = this.clipRect_.y + this.clipRect_.height + 10;
       if(usePP)
       {
          o = this.z_ * Math.tan(this.pp_.fieldOfView / 2 * Trig.toRadians);

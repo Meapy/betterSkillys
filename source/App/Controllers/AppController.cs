@@ -21,7 +21,7 @@ namespace App.Controllers
         [HttpPost("serverList")]
         public void ServerList()
         {
-            var servers = _core.GetServerList().Select(_ => _.ToXml());
+            var servers = _core.GetServerList(HttpContext.Connection.RemoteIpAddress).Select(_ => _.ToXml());
             if (servers.Any())
             {
                 var response = new XElement("Servers", new XElement("Servers", servers));

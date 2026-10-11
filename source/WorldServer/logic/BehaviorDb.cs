@@ -49,6 +49,13 @@ namespace WorldServer.logic
                 field.SetValue(this, null);
             }
 
+            // ported Doomed Realms Elder monsters that share their regular version's behaviour
+            var data = GameServer.Resources.GameData;
+            foreach (var (elder, regular) in DoomedAliases)
+                if (data.IdToObjectType.TryGetValue(elder, out var e) && data.IdToObjectType.TryGetValue(regular, out var r)
+                    && !Definitions.ContainsKey(e) && Definitions.TryGetValue(r, out var def))
+                    Definitions[e] = def;
+
             InitDb = null;
             _initializing = 0;
         }
@@ -90,6 +97,7 @@ namespace WorldServer.logic
                 catch (Exception e)
                 {
                     Console.WriteLine($"[Behavior] {id} Error -> {e}");
+                    Log.Error($"[Behavior] {id} Error -> {e.Message}");
                 }
                 return this;
             }

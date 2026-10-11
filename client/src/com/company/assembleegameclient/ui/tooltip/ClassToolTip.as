@@ -64,7 +64,7 @@ package com.company.assembleegameclient.ui.tooltip
          addChild(this.portrait_);
          this.nameText_ = new SimpleText(13,11776947,false,0,0);
          this.nameText_.setBold(true);
-         this.nameText_.text = playerXML.@id;
+         this.nameText_.text = (playerXML.hasOwnProperty("DisplayId") ? String(playerXML.DisplayId) : String(playerXML.@id));
          this.nameText_.updateMetrics();
          this.nameText_.filters = [new DropShadowFilter(0,0,0)];
          this.nameText_.x = 32;
@@ -130,7 +130,7 @@ package com.company.assembleegameclient.ui.tooltip
             if(nextStarFame > 0)
             {
                this.nextClassQuest_ = new SimpleText(13,16549442,false,174,0);
-               this.nextClassQuest_.text = "Next Goal: Earn " + nextStarFame + " Fame\n" + "  with a " + playerXML.@id;
+               this.nextClassQuest_.text = "Next Goal: Earn " + nextStarFame + " Fame\n" + "  with a " + (playerXML.hasOwnProperty("DisplayId") ? String(playerXML.DisplayId) : String(playerXML.@id));
                this.nextClassQuest_.updateMetrics();
                this.nextClassQuest_.filters = [new DropShadowFilter(0,0,0)];
                this.nextClassQuest_.x = 8;

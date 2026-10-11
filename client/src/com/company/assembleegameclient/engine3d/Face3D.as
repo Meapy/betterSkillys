@@ -95,37 +95,73 @@ package com.company.assembleegameclient.engine3d
          return maxY;
       }
       
+      // Projection cache (see Camera.affineVersion_): the screen corners relative to the camera
+      // translation, whether the face points away, and the texture matrix's offset, valid while
+      // the camera keeps the same affineVersion_. The corners (vin_) of tile and wall faces
+      // never move, so only the camera can invalidate it; texture or UV changes (setTexture,
+      // setUVT) recompute the texture matrix.
+      public static var caching:Boolean = true; // debug switch
+      private var cacheVersion_:int = 0;
+      private var texVersion_:int = 0;
+      private var relOut_:Vector.<Number> = new Vector.<Number>();
+      private var backFacing_:Boolean = false;
+      private var texRelX_:Number = 0;
+      private var texRelY_:Number = 0;
+
       public function draw(graphicsData:Vector.<IGraphicsData>, camera:Camera) : Boolean
       {
-         var vS:Vector.<Number> = null;
-         var ux:Number = NaN;
-         var uy:Number = NaN;
-         var vx:Number = NaN;
-         var vy:Number = NaN;
+         var vS:Vector.<Number> = this.vout_;
+         var rel:Vector.<Number> = this.relOut_;
+         var version:int = caching ? camera.affineVersion_ : 0;
+         var tX:Number = camera.tX_;
+         var tY:Number = camera.tY_;
+         var len:int = 0;
+         var i:int = 0;
          var iplus1:int = 0;
-         Utils3D.projectVectors(camera.wToS_,this.vin_,this.vout_,this.uvt_);
-         if(this.backfaceCull_)
+         if(version != 0 && this.cacheVersion_ == version)
          {
-            vS = this.vout_;
-            ux = vS[2] - vS[0];
-            uy = vS[3] - vS[1];
-            vx = vS[4] - vS[0];
-            vy = vS[5] - vS[1];
-            if(ux * vy - uy * vx > 0)
+            len = rel.length;
+            for(i = 0; i < len; i = i + 2)
             {
-               return false;
+               vS[i] = rel[i] + tX;
+               vS[i + 1] = rel[i + 1] + tY;
             }
          }
-         var minX:Number = camera.clipRect_.x - 10;
-         var minY:Number = camera.clipRect_.y - 10;
-         var maxX:Number = camera.clipRect_.right + 10;
-         var maxY:Number = camera.clipRect_.bottom + 10;
+         else
+         {
+            Utils3D.projectVectors(camera.wToS_,this.vin_,vS,this.uvt_);
+            this.backFacing_ = false;
+            if(this.backfaceCull_)
+            {
+               this.backFacing_ = (vS[2] - vS[0]) * (vS[5] - vS[1]) - (vS[3] - vS[1]) * (vS[4] - vS[0]) > 0;
+            }
+            this.cacheVersion_ = version;
+            this.texVersion_ = 0;
+            if(version != 0)
+            {
+               len = vS.length;
+               rel.length = len;
+               for(i = 0; i < len; i = i + 2)
+               {
+                  rel[i] = vS[i] - tX;
+                  rel[i + 1] = vS[i + 1] - tY;
+               }
+            }
+         }
+         if(this.backFacing_)
+         {
+            return false;
+         }
+         var minX:Number = camera.cullLeft_;
+         var minY:Number = camera.cullTop_;
+         var maxX:Number = camera.cullRight_;
+         var maxY:Number = camera.cullBottom_;
          var clip:Boolean = true;
-         var len:int = this.vout_.length;
-         for(var i:int = 0; i < len; i = i + 2)
+         len = vS.length;
+         for(i = 0; i < len; i = i + 2)
          {
             iplus1 = i + 1;
-            if(this.vout_[i] >= minX && this.vout_[i] <= maxX && this.vout_[iplus1] >= minY && this.vout_[iplus1] <= maxY)
+            if(vS[i] >= minX && vS[i] <= maxX && vS[iplus1] >= minY && vS[iplus1] <= maxY)
             {
                clip = false;
                break;
@@ -145,8 +181,20 @@ package com.company.assembleegameclient.engine3d
          if(this.needGen_)
          {
             this.generateTextureMatrix();
+            this.texVersion_ = 0;
          }
-         this.textureMatrix_.calculateTextureMatrix(this.vout_);
+         if(version != 0 && this.texVersion_ == version)
+         {
+            this.textureMatrix_.tToS_.tx = this.texRelX_ + tX;
+            this.textureMatrix_.tToS_.ty = this.texRelY_ + tY;
+         }
+         else
+         {
+            this.textureMatrix_.calculateTextureMatrix(vS);
+            this.texVersion_ = version;
+            this.texRelX_ = this.textureMatrix_.tToS_.tx - tX;
+            this.texRelY_ = this.textureMatrix_.tToS_.ty - tY;
+         }
          this.bitmapFill_.bitmapData = this.textureMatrix_.texture_;
          this.bitmapFill_.matrix = this.textureMatrix_.tToS_;
          graphicsData.push(this.bitmapFill_);

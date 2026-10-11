@@ -10,6 +10,7 @@ package kabam.rotmg.classes
    import kabam.rotmg.classes.control.ParseCharListXmlCommand;
    import kabam.rotmg.classes.control.ParseClassesXMLSignal;
    import kabam.rotmg.classes.control.ParseClassesXmlCommand;
+   import kabam.rotmg.assets.custom.xmls.DoomedRealms;
    import kabam.rotmg.classes.control.ParseSkinsXmlCommand;
    import kabam.rotmg.classes.control.ResetClassDataCommand;
    import kabam.rotmg.classes.model.ClassesModel;
@@ -74,6 +75,14 @@ package kabam.rotmg.classes
          var xml:XML = XML(new EmbeddedData.PlayersCXML());
          var parseClasses:ParseClassesXMLSignal = this.injector.getInstance(ParseClassesXMLSignal);
          parseClasses.dispatch(xml);
+
+         // classes ported from Doomed Realms live in custom/xmls/DoomedRealms.xml with their items
+         var doomed:XML = XML(new DoomedRealms());
+         var doomedClasses:XML = <Objects/>;
+         for each (var o:XML in doomed.Object)
+            if (o.hasOwnProperty("Player"))
+               doomedClasses.appendChild(o);
+         parseClasses.dispatch(doomedClasses);
       }
    }
 }

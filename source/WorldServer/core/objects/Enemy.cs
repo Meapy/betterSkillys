@@ -178,6 +178,7 @@ namespace WorldServer.core.objects
                 }, this);
 
                 DamageCounter?.HitBy(from, effDmg);
+                logic.doomed.DoomedRuntime.OnHit(this, from, time);
 
                 if (Health < 0 && World != null)
                     Death(ref time);

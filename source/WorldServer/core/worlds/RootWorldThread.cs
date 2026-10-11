@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using WorldServer.core.connection;
+using WorldServer.utils;
 
 namespace WorldServer.core.worlds
 {
@@ -36,6 +38,9 @@ namespace WorldServer.core.worlds
                 var realmTime = new TickTime();
 
                 var elapsed = 0L;
+
+                // messages sent by this thread go out together at the end of each pass
+                NetworkSendHandler.BeginBatch();
                 while (!Stopped)
                 {
                     World.ProcessPlayerIO(ref realmTime);
@@ -50,6 +55,7 @@ namespace WorldServer.core.worlds
                         realmTime.TickCount++;
                         realmTime.ElapsedMsDelta = (int)elapsed;
 
+                        var tickStart = watch.ElapsedMilliseconds;
                         try
                         {
                             if (World.Update(ref realmTime))
@@ -63,13 +69,28 @@ namespace WorldServer.core.worlds
                             Console.WriteLine($"[{World.IdName} {World.Id}] Tick: {e.StackTrace}");
                         }
 
+                        // a slow tick delays every player in this world
+                        var tickMs = watch.ElapsedMilliseconds - tickStart;
+                        if (tickMs > 200)
+                            StaticLogger.Instance.Warn($"[{World.IdName} {World.Id}] Slow tick: {tickMs} ms, {World.Players.Count} players");
+
                         elapsed = 0;
                     }
 
+                    NetworkSendHandler.FlushBatch();
+
                     if (World.Players.Count == 0)
                         Thread.Sleep(TICK_TIME_MS);
+                    else
+                    {
+                        // sleep until a player's message arrives or the next tick is due
+                        var untilTick = TICK_TIME_MS - elapsed - (watch.ElapsedMilliseconds - lastMS);
+                        if (untilTick > 0)
+                            World.WaitForIO((int)untilTick);
+                    }
                 }
 
+                NetworkSendHandler.FlushBatch();
                 WorldManager.RemoveWorld(World);
 
             }, TaskCreationOptions.LongRunning);

@@ -29,6 +29,7 @@ namespace Shared.resources
         public Dictionary<ushort, string> TileTypeToId = new Dictionary<ushort, string>();
 
         private readonly Dictionary<string, WorldResource> Worlds = new Dictionary<string, WorldResource>();
+        public IEnumerable<WorldResource> AllWorlds => Worlds.Values;
         private readonly Dictionary<string, byte[]> WorldDataCache = new Dictionary<string, byte[]>();
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 

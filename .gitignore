@@ -1,0 +1,9 @@
+# Local setup (see SETUP-LOCAL.md)
+/tools/airsdk/
+/tools/download/
+/tools/*.log
+/build/
+/dist/
+/source/Redis/data/
+*.local.txt
+/tools/__pycache__/

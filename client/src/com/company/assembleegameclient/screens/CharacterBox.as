@@ -77,7 +77,7 @@ package com.company.assembleegameclient.screens
          this.graphic_.addChild(this.bitmap_);
          this.classNameText_ = new SimpleText(14,16777215,false,0,0);
          this.classNameText_.setBold(true);
-         this.classNameText_.htmlText = "<p align=\"center\">" + this.playerXML_.@id + "</p>";
+         this.classNameText_.htmlText = "<p align=\"center\">" + (this.playerXML_.hasOwnProperty("DisplayId") ? String(this.playerXML_.DisplayId) : String(this.playerXML_.@id)) + "</p>";
          this.classNameText_.autoSize = TextFieldAutoSize.CENTER;
          this.classNameText_.updateMetrics();
          this.classNameText_.filters = [new DropShadowFilter(0,0,0,1,4,4)];

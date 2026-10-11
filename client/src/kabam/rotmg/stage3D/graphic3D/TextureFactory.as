@@ -89,7 +89,19 @@ package kabam.rotmg.stage3D.graphic3D
          }
          textures = new Dictionary();
       }
-      
+
+      // Frees the GPU texture made for one image (e.g. a ground chunk that is rebuilt or freed).
+      public static function disposeTexture(bitmapData:BitmapData) : void
+      {
+         var texture:TextureProxy = textures[bitmapData];
+         if(texture != null)
+         {
+            texture.dispose();
+            delete textures[bitmapData];
+            count--;
+         }
+      }
+
       public function make(bitmapData:BitmapData) : TextureProxy
       {
          var width:int = 0;

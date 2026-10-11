@@ -30,7 +30,9 @@ namespace WorldServer.core.net.handlers
             }
 
             var slot = -1;
-            for (var i = 0; i < 2; i++)
+            var searchRange = client.Account.Admin ? player.Inventory.Length : 2; // Admin przeszukuje wszystko
+
+            for (var i = 0; i < searchRange; i++)
                 if (player.Inventory[i] != null && player.Inventory[i].ObjectType == containerType)
                 {
                     slot = i;
@@ -44,27 +46,39 @@ namespace WorldServer.core.net.handlers
             }
 
             var newBulletId = player.GetNextBulletId();
-            if (newBulletId != bulletId)
+            if (newBulletId != bulletId && client.Account.Admin == false) // Jeśli nie jesteś adminem, blokuj
             {
                 Log.Warn($"{player.Name} ({player.ObjectDesc.DisplayId ?? player.ObjectDesc.IdName}) has desynced. [bID: {bulletId}, nbID: {newBulletId}");
                 return;
             }
 
-            if (!player.IsValidShootTime(time, item.RateOfFire))
+            // Jeśli jesteś adminem i wystąpił desync, musimy zrównać licznik serwera z klientem
+            if (newBulletId != bulletId && client.Account.Admin)
             {
-#if DEBUG
-                Log.Warn($"Invalid shoot time: Time: {time} Rof: {item.RateOfFire}");
-#endif
-                return;
+                while (newBulletId != bulletId)
+                    newBulletId = player.GetNextBulletId();
             }
 
-            if (!player.IsValidNumShots(time, item))
+            // Rate of fire and projectile count checks; admins are exempt, as they can fire
+            // items from any inventory slot (see searchRange above).
+            if (!client.Account.Admin)
             {
+                if (!player.IsValidShootTime(time, item.RateOfFire))
+                {
 #if DEBUG
-                Log.Warn($"Invalid number of shots: Real NumProjectiles: {item.NumProjectiles}");
+                    Log.Warn($"Invalid shoot time: Time: {time} Rof: {item.RateOfFire}");
 #endif
-                //client.Disconnect("Invalid numver of shots detected", true);
-                return;
+                    return;
+                }
+
+                if (!player.IsValidNumShots(time, item))
+                {
+#if DEBUG
+                    Log.Warn($"Invalid number of shots: Real NumProjectiles: {item.NumProjectiles}");
+#endif
+                    //client.Disconnect("Invalid numver of shots detected", true);
+                    return;
+                }
             }
 
             if (player.Inventory[slot] == null || player.Inventory[slot].ObjectType != containerType)

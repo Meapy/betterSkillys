@@ -1,4 +1,4 @@
-﻿// Decompiled by AS3 Sorcerer 6.08
+// Decompiled by AS3 Sorcerer 6.08
 // www.as3sorcerer.com
 
 //kabam.rotmg.assets.EmbeddedData
@@ -280,6 +280,8 @@ public class EmbeddedData
         private static const customEntities:Class = CustomEntities;
         private static const customItems:Class = CustomItems;
         private static const customProj:Class = CustomProj;
+        private static const doomedRealmsGrounds:Class = DoomedRealmsGrounds;
+        private static const doomedRealms:Class = DoomedRealms;
 
         public static const skins:Array = [new SkinsCXML()];
         public static const eqSets:Array = [new EquipmentSetsCXML()];
@@ -314,11 +316,13 @@ public class EmbeddedData
             new oryxSanctuaryGroundCXML(),
             new archbishopGroundCXML(),
             new ancientRuinsGroundCXML(),
-            new customGrounds()
+            new customGrounds(),
+            new doomedRealmsGrounds()
         ];
 
         public static const objectFiles:Array = [
             new customItems(),
+            new doomedRealms(),
             new customProj(),
             new customEntities(),
             new customObjects(),

@@ -46,7 +46,7 @@ package kabam.rotmg.classes.control
       {
          var node:XML = null;
          character.id = object.@type;
-         character.name = object.@id;
+         character.name = object.hasOwnProperty("DisplayId") ? String(object.DisplayId) : String(object.@id);
          character.description = object.Description;
          character.hitSound = object.HitSound;
          character.deathSound = object.DeathSound;

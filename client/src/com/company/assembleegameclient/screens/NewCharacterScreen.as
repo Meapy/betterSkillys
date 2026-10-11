@@ -37,6 +37,9 @@ import kabam.rotmg.core.model.PlayerModel;
 
       private var isInitialized:Boolean = false;
 
+      private var gridWidth:Number = 705;
+      private var gridHeight:Number = 105;
+
       public function NewCharacterScreen()
       {
          this.boxes_ = {};
@@ -85,7 +88,11 @@ import kabam.rotmg.core.model.PlayerModel;
          this.lines.width = width;
          this.graphic.width = width;
          this.graphic.y = height - 75;
-         this.container.x = (width / 2) - (this.container.width / 2);
+         // scale the class grid down when it doesn't fit between the title line and the bottom bar
+         var scale:Number = Math.min(1, (width - 20) / this.gridWidth, (height - 110 - 85) / this.gridHeight);
+         this.container.scaleX = this.container.scaleY = scale;
+         this.container.x = (width - this.gridWidth * scale) / 2;
+         this.container.y = 110;
          this.creditDisplay_.x = width;
          this.title.x = (width / 2) - (this.title.width / 2);
          this.backButton_.x = (width / 2) - (this.backButton_.width / 2);
@@ -129,19 +136,29 @@ import kabam.rotmg.core.model.PlayerModel;
          this.creditDisplay_.y = 32;
          this.container = new Sprite();
          addChild(this.container);
+         var shown:Array = [];
          for(var i:int = 0; i < ObjectLibrary.playerChars_.length; i++)
          {
-            playerXML = ObjectLibrary.playerChars_[i];
+            if(!model.isClassAvailability(String(ObjectLibrary.playerChars_[i].@id),SavedCharactersList.UNAVAILABLE))
+               shown.push(ObjectLibrary.playerChars_[i]);
+         }
+         // at least 6 columns, more when needed to keep it to 4 rows; the last row is centred
+         var cols:int = Math.max(6, Math.ceil(shown.length / 4));
+         var rows:int = Math.max(1, Math.ceil(shown.length / cols));
+         this.gridWidth = cols * 120 - 15;
+         this.gridHeight = rows * 120 - 15;
+         for(i = 0; i < shown.length; i++)
+         {
+            playerXML = shown[i];
             objectType = int(playerXML.@type);
             characterType = playerXML.@id;
-            if(!model.isClassAvailability(characterType,SavedCharactersList.UNAVAILABLE))
             {
                overrideIsAvailable = model.isClassAvailability(characterType,SavedCharactersList.UNRESTRICTED);
                charBox = new CharacterBox(playerXML,model.getCharStats()[objectType],model,overrideIsAvailable);
-               charBox.x = 120 * int(i % 6);
-               if (i > 11)
-                   charBox.x += 120;
-               charBox.y = 120 + 120 * int(i / 6);
+               var row:int = int(i / cols);
+               var inRow:int = row == rows - 1 ? shown.length - row * cols : cols;
+               charBox.x = 120 * (i % cols) + (cols - inRow) * 60;
+               charBox.y = 120 * row;
                this.boxes_[objectType] = charBox;
                charBox.addEventListener(MouseEvent.ROLL_OVER,this.onCharBoxOver);
                charBox.addEventListener(MouseEvent.ROLL_OUT,this.onCharBoxOut);

@@ -394,7 +394,7 @@ namespace WorldServer.core.worlds
             }
             else if (entity is SellableObject)
                 SellableObjects.Remove(entity.Id);
-            else if (entity.ObjectDesc.Enemy)
+            else if (entity is Enemy) // as AddToWorld: characters without <Enemy/> (e.g. sheep) are Enemies too
             {
                 Enemies.Remove(entity.Id);
                 EnemiesCollision.Remove(entity);
@@ -490,6 +490,18 @@ namespace WorldServer.core.worlds
                 }
             }
             return closestObj;
+        }
+
+        // Set when a player's message arrives, so the world thread can sleep between ticks
+        // instead of polling for messages.
+        private readonly System.Threading.ManualResetEventSlim IOSignal = new System.Threading.ManualResetEventSlim(false, 0);
+
+        public void SignalIO() => IOSignal.Set();
+
+        public void WaitForIO(int timeoutMs)
+        {
+            IOSignal.Wait(timeoutMs);
+            IOSignal.Reset();
         }
 
         public void ProcessPlayerIO(ref TickTime time)

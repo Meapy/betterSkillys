@@ -42,6 +42,19 @@
         Unlock,
         ObjectToss,
         Fame,
+        Gold,
+
+        // Doomed Realms class abilities (WorldServer/core/objects/player/Player.UseItem.Doomed.cs)
+        PearlAbility,
+        BuildTower,
+        MonsterToss,
+        PartyAOE,
+        MiniPot,
+        Halo,
+        SamuraiAbility,
+        Summon,
+        TomeDamage,
+        MultiDecoy,
 
         // to be added
         LevelTwenty,
