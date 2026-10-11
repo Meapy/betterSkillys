@@ -62,6 +62,8 @@ namespace WorldServer.logic
         .Init("Mixcoatl the Masked God",
             new State(
                 new ScaleHP2(20),
+                new DropPortalOnDeath("Realm Portal", 1.0),
+                new DropPortalOnDeath("Secluded Thicket Portal", 0.5, xAdjustment: 2),
                 new State("Idle",
                     new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                     new PlayerWithinTransition(8, "Wake")
