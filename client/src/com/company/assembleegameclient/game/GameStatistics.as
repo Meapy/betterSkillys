@@ -22,6 +22,10 @@ public class GameStatistics extends Sprite {
    // Time GameSprite spent in Map.draw since the last update of the display.
    public static var mapDrawMs:int = 0;
    public static var hudMs:int = 0;
+   // Time in GameSprite's frame update (game logic, map and HUD updates). The rest of each frame
+   // is Flash itself: drawing the display list (HUD, text) and putting it over the 3D view.
+   public static var gameMs:int = 0;
+   private var frame_:SimpleText;
    private var lastPing_:int;
 
    public function GameStatistics() {
@@ -71,6 +75,15 @@ public class GameStatistics extends Sprite {
       this.parts_.filters = FilterUtil.getTextOutlineFilter();
       this.parts_.y = (this.draw_.y + this.draw_.height - 2);
       addChild(this.parts_);
+      this.frame_ = new SimpleText(17, 0xFFFFFF);
+      this.frame_.text = "frame 99.9 ms = game 99.9 + flash 99.9";
+      this.frame_.autoSize = "right";
+      this.frame_.setBold(true);
+      this.frame_.setAlignment("right");
+      this.frame_.useTextDimensions();
+      this.frame_.filters = FilterUtil.getTextOutlineFilter();
+      this.frame_.y = (this.parts_.y + this.parts_.height - 2);
+      addChild(this.frame_);
        this.container_ = new Sprite();
        this.container_.graphics.clear();
        this.container_.graphics.beginFill(0, 0);
@@ -98,6 +111,7 @@ public class GameStatistics extends Sprite {
     private var memTimer:uint = 0;
     private var fps:uint = 0;
     private var ms_prev:uint = 0;
+    private var ms_prev_last:int = 0;
     private var mem_prev:uint = 0;
 
     private function update(e:Event) : void
@@ -116,6 +130,10 @@ public class GameStatistics extends Sprite {
             Renderer.renderMs = 0;
             parts_.setText("tiles " + per(Map.profTiles) + ", objects " + per(Map.profCollect) + " + " + per(Map.profObjects) + ", hud " + per(hudMs) + " | draws q" + Renderer.drawsQuads + " c" + Renderer.drawsCustom + " s" + Renderer.drawsShadow + " 3d" + Renderer.draws3D);
             hudMs = 0;
+            var elapsed:int = timer - ms_prev_last;
+            frame_.setText("frame " + per(elapsed) + " ms = game " + per(gameMs) + " + flash " + per(elapsed - gameMs));
+            gameMs = 0;
+            ms_prev_last = timer;
             Map.profTiles = Map.profCollect = Map.profObjects = 0;
 
             fps = 0;

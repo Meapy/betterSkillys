@@ -638,7 +638,8 @@ import flash.display.StageScaleMode;
             sv = 1;
             if(atlasing && !fill.repeat && u == 0 && v == 0)
             {
-               ct = GraphicsFillExtra.getColorTransform(bmp);
+               // only a look: a tinted image is drawn on its own, which applies (and uses up) it
+               ct = GraphicsFillExtra.peekColorTransform(bmp);
                if(ct.redMultiplier == 1 && ct.greenMultiplier == 1 && ct.blueMultiplier == 1 && ct.alphaMultiplier == 1 && ct.redOffset == 0 && ct.greenOffset == 0 && ct.blueOffset == 0 && ct.alphaOffset == 0)
                {
                   cell = this.atlas_.cellOf(bmp,w,h);

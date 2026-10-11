@@ -29,6 +29,10 @@ public class TextureRedrawer
    private static var cache_:Dictionary = new Dictionary();
    private static var faceCache_:Dictionary = new Dictionary();
    private static var redrawCaches:Dictionary = new Dictionary();
+   // The same caches, looked up without building a string key (redraw and redrawFace run for
+   // every object every frame): image -> glow colour -> fastKey; image -> FaceShades.
+   private static var redrawFast_:Dictionary = new Dictionary();
+   private static var faceFast_:Dictionary = new Dictionary();
    public static var sharedTexture_:BitmapData = null;
    private static var textureShaderEmbed_:Class = TextureRedrawer_textureShaderEmbed_;
    private static var textureShaderData_:ByteArray = (new textureShaderEmbed_() as ByteArray);
@@ -38,18 +42,65 @@ public class TextureRedrawer
 
    public static function redraw(_arg_1:BitmapData, _arg_2:int, _arg_3:Boolean, _arg_4:uint, _arg_5:Boolean=true, _arg_6:Number=5, _arg_7:int=0, _arg_8:Number=1.4):BitmapData
    {
+      var fast:int = (_arg_5 && _arg_4 <= 0xFFFFFF) ? fastKey(_arg_2, _arg_3, _arg_6, _arg_7) : -1;
+      var byColor:Dictionary = null;
+      if (fast >= 0)
+      {
+         byColor = redrawFast_[_arg_1];
+         if (byColor != null)
+         {
+            var byKey:Dictionary = byColor[_arg_4];
+            if (byKey != null)
+            {
+               var hit:BitmapData = byKey[fast];
+               if (hit != null)
+               {
+                  return (hit);
+               }
+            }
+         }
+      }
       var _local_9:String = getHash(_arg_2, _arg_3, _arg_4, _arg_6, _arg_7);
+      var _local_10:BitmapData;
       if (((_arg_5) && (isCached(_arg_1, _local_9))))
       {
-         return (redrawCaches[_arg_1][_local_9]);
+         _local_10 = redrawCaches[_arg_1][_local_9];
       }
-      var _local_10:BitmapData = resize(_arg_1, null, _arg_2, _arg_3, 0, 0, _arg_6);
-      _local_10 = GlowRedrawer.outlineGlow(_local_10, _arg_4, _arg_8, _arg_5, _arg_7);
-      if (_arg_5)
+      else
       {
-         cache(_arg_1, _local_9, _local_10);
+         _local_10 = resize(_arg_1, null, _arg_2, _arg_3, 0, 0, _arg_6);
+         _local_10 = GlowRedrawer.outlineGlow(_local_10, _arg_4, _arg_8, _arg_5, _arg_7);
+         if (_arg_5)
+         {
+            cache(_arg_1, _local_9, _local_10);
+         }
+      }
+      if (fast >= 0)
+      {
+         if (byColor == null)
+         {
+            byColor = new Dictionary();
+            redrawFast_[_arg_1] = byColor;
+         }
+         if (byColor[_arg_4] == null)
+         {
+            byColor[_arg_4] = new Dictionary();
+         }
+         byColor[_arg_4][fast] = _local_10;
       }
       return (_local_10);
+   }
+
+   // getHash's arguments packed into one small int (so it stays an integer dictionary key), or
+   // -1 when they don't fit and only the string key is used.
+   private static function fastKey(size:int, padBottom:Boolean, scale:Number, filter:int):int
+   {
+      var s8:Number = scale * 8;
+      if (size < 0 || size >= 4096 || filter < 0 || filter >= 32 || s8 < 0 || s8 >= 256 || s8 != int(s8))
+      {
+         return (-1);
+      }
+      return (size | (padBottom ? 4096 : 0) | (int(s8) << 13) | (filter << 21));
    }
 
    private static function getHash(_arg_1:int, _arg_2:Boolean, _arg_3:uint, _arg_4:Number, _arg_5:int):String
@@ -136,6 +187,7 @@ public class TextureRedrawer
          }
       }
       faceCache_ = new Dictionary();
+      faceFast_ = new Dictionary();
    }
 
    public static function redrawFace(_arg_1:BitmapData, _arg_2:Number):BitmapData
@@ -144,6 +196,29 @@ public class TextureRedrawer
       {
          return (_arg_1);
       }
+      // a Number dictionary key is turned into a string on every lookup: first look in this
+      // image's short list of shades
+      var shades:FaceShades = faceFast_[_arg_1];
+      if (shades != null)
+      {
+         var found:BitmapData = shades.find(_arg_2);
+         if (found != null)
+         {
+            return (found);
+         }
+      }
+      else
+      {
+         shades = new FaceShades();
+         faceFast_[_arg_1] = shades;
+      }
+      var face:BitmapData = redrawFaceSlow(_arg_1, _arg_2);
+      shades.add(_arg_2, face);
+      return (face);
+   }
+
+   private static function redrawFaceSlow(_arg_1:BitmapData, _arg_2:Number):BitmapData
+   {
       var _local_3:Dictionary = faceCache_[_arg_2];
       if (_local_3 == null)
       {

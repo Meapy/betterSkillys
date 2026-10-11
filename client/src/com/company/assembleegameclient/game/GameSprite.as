@@ -123,17 +123,11 @@ public class GameSprite extends Sprite
    public function updateBossBar() : void
    {
       var gameObject:GameObject = null;
-      var objectId:int = 0;
 
+      // clears the text when the bar follows nothing (it ignores calls for other objects)
+      bossHealthBar.setDamageInflicted(-1);
       for each(gameObject in map.goDict_)
       {
-         if((gameObject.props_.isQuest_ || gameObject.props_.isChest_) && Parameters.DamageCounter[gameObject.objectId_] > 0 && objectId == 0)
-         {
-            objectId = gameObject.objectId_;
-         }
-         if(objectId == 0){
-            bossHealthBar.setDamageInflicted(-1);
-         }
          if((gameObject.props_.isQuest_ || gameObject.props_.isChest_) && Parameters.DamageCounter[gameObject.objectId_] > 0)
          {
             if(gameObject != null)
@@ -572,6 +566,7 @@ public class GameSprite extends Sprite
          // even when the frame threw: a stale lastUpdate_ would make every later frame move the
          // player by the whole time since the error
          this.lastUpdate_ = time;
+         GameStatistics.gameMs += getTimer() - time;
       }
    }
 
