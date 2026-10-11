@@ -33,6 +33,31 @@ namespace WorldServer.core.worlds.impl.doomed
             }
         }
 
+        // Battle Arena portals under the Guild Hall and Vault portals beside the nexus spawn
+        // (Doomed Realms only opened them for 30 seconds with its /arena command)
+        private static readonly (string Portal, float X, float Y)[] NexusPortals =
+        {
+            ("Battle Arena Portal", 106.5f, 74.5f),
+            ("Free Battle Arena Portal", 116.5f, 74.5f),
+        };
+
+        public static void AddNexusPortals(World nexus)
+        {
+            foreach (var (portal, x, y) in NexusPortals)
+                if (nexus.IsPassable(x, y, true))
+                    nexus.CreateNewEntity(portal, x, y);
+        }
+
+        // A portal keeps the world it opened; once that minigame has started or closed, it opens a new one.
+        public static void RefreshPortal(Portal portal)
+        {
+            var world = portal.WorldInstance;
+            if (world == null)
+                return;
+            if (world.Deleted || portal.GameServer.WorldManager.GetWorld(world.Id) == null || (world is DoomedMinigame m && !m.Joinable))
+                portal.WorldInstance = null;
+        }
+
         public const string ArenaLeaderboardKey = "doomed.arenaLeaderboard";
 
         // a finished arena game: score = wave reached, member = "<unix ms>|<players>"
@@ -77,6 +102,9 @@ namespace WorldServer.core.worlds.impl.doomed
             : base(gameServer, id, resource, parent) { }
 
         public virtual void BehaviorEvent(string type) { }
+
+        // whether new players can still join (the countdown before the game hasn't ended)
+        public virtual bool Joinable => true;
 
         protected bool CountingDown => _countdown >= 0;
 
@@ -152,10 +180,10 @@ namespace WorldServer.core.worlds.impl.doomed
         public DoomedBattleArena(GameServer gameServer, int id, WorldResource resource, World parent, bool paid)
             : base(gameServer, id, resource, parent) => _paid = paid;
 
-        public bool Joinable => !_started;
+        public override bool Joinable => !_started;
         public IEnumerable<string> PlayerNames => Players.Values.Select(p => p.Name);
 
-        public override bool AllowedAccess(Client client) => base.AllowedAccess(client) && (!_started || client.Account.Admin);
+        public override bool AllowedAccess(Client client) => base.AllowedAccess(client) && (Joinable || client.Account.Admin);
 
         private static string[] Bosses(int wave) =>
             wave < 6 ? new[] { "Red Demon", "Phoenix Lord", "Henchman of Oryx" }
@@ -310,7 +338,8 @@ namespace WorldServer.core.worlds.impl.doomed
         public DoomedZombieGame(GameServer gameServer, int id, WorldResource resource, World parent)
             : base(gameServer, id, resource, parent) { }
 
-        public override bool AllowedAccess(Client client) => base.AllowedAccess(client) && (!_started || client.Account.Admin);
+        public override bool AllowedAccess(Client client) => base.AllowedAccess(client) && (Joinable || client.Account.Admin);
+        public override bool Joinable => !_started;
 
         public override void Init()
         {
@@ -403,7 +432,8 @@ namespace WorldServer.core.worlds.impl.doomed
         public DoomedHerding(GameServer gameServer, int id, WorldResource resource, World parent)
             : base(gameServer, id, resource, parent) { }
 
-        public override bool AllowedAccess(Client client) => base.AllowedAccess(client) && (!_started || client.Account.Admin);
+        public override bool AllowedAccess(Client client) => base.AllowedAccess(client) && (Joinable || client.Account.Admin);
+        public override bool Joinable => !_started;
 
         public override void Init()
         {

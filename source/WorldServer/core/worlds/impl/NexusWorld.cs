@@ -51,6 +51,7 @@ namespace WorldServer.core.worlds.impl
                     });
 
             base.Init();
+            doomed.DoomedWorlds.AddNexusPortals(this);
         }
 
         protected override void UpdateLogic(ref TickTime time)

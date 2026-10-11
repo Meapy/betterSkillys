@@ -72,6 +72,7 @@ namespace WorldServer.core.net.handlers
                 return;
             }
 
+            WorldServer.core.worlds.impl.doomed.DoomedWorlds.RefreshPortal(portal);
             world = portal.WorldInstance;
             if (world == null)
             {
