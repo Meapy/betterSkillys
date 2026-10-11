@@ -406,5 +406,17 @@ namespace WorldServer.logic
                     )
                 )
             );
+
+        private _ PuppetWizard2 = () => Behav()
+        .Init("Puppet Wizard 2",
+            new State(
+                new Prioritize(
+                    new Orbit(0.37, 4, 20, "The Puppet Master"),
+                    new Wander(0.4)
+                    ),
+                new Shoot(8.4, count: 10, projectileIndex: 0, coolDown: 2650)
+                ),
+            new ItemLoot("Health Potion", 0.1)
+            );
     }
 }

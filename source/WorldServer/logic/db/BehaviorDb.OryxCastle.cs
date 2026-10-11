@@ -352,5 +352,32 @@ namespace WorldServer.logic
                     )
                 )
             );
+
+        // the castle's pets swarm whoever comes close; its living floors silence and weaken
+        private _ OryxCastleMinions = () => Behav()
+            .Init("Oryx Pet",
+                new State(
+                    new State("Idle",
+                        new Wander(0.2),
+                        new PlayerWithinTransition(7, "Chase")
+                        ),
+                    new State("Chase",
+                        new Follow(1, 9, 0),
+                        new Shoot(1.5, count: 1, projectileIndex: 0, coolDown: 500),
+                        new NoPlayerWithinTransition(12, "Idle")
+                        )
+                    )
+                )
+            .Init("Oryx's Living Floor",
+                new State(
+                    new State("Idle",
+                        new PlayerWithinTransition(3, "Curse")
+                        ),
+                    new State("Curse",
+                        new Shoot(4, count: 4, shootAngle: 90, projectileIndex: 0, fixedAngle: 45, coolDown: 2500),
+                        new NoPlayerWithinTransition(5, "Idle")
+                        )
+                    )
+                );
     }
 }

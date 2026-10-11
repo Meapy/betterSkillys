@@ -2735,5 +2735,22 @@ namespace WorldServer.logic
             )
         #endregion MISC
         ;
+
+        // the map's "S" Glassier Archmages fight like the regular ones
+        private _ ShattersArchmageS = () => Behav()
+        .Init("shtrs S Glassier Archmage",
+            new State(
+                new StayBack(0.5, 5),
+                new State("1st",
+                    new Follow(1.8, range: 7),
+                    new Shoot(12, projectileIndex: 2, count: 1, coolDown: 350),
+                    new TimedTransition(5000, "next")
+                    ),
+                new State("next",
+                    new Shoot(12, projectileIndex: 0, count: 25, coolDown: 5000),
+                    new TimedTransition(25, "1st")
+                    )
+                )
+            );
     }
 }

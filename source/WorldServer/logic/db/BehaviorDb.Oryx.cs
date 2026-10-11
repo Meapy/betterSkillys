@@ -422,5 +422,13 @@ namespace WorldServer.logic
                     new Wander(.5))
                     )
                     );
+
+        // Wine Cellar puddles: anyone standing in one is sickened and slowed
+        private _ WineCellarGoo = () => Behav()
+            .Init("Purple Goo",
+                new State(
+                    new Shoot(1, count: 1, projectileIndex: 0, fixedAngle: 0, coolDown: 800)
+                    )
+                );
     }
 }

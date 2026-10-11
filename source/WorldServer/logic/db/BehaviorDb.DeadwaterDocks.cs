@@ -152,5 +152,16 @@ namespace WorldServer.logic
                     new ItemLoot("Potion of Speed", 0.25)
                     )
                 );
+
+        private _ DeadwaterDocksMacaw = () => Behav()
+        .Init("Deadwater Docks Macaw",
+            new State(
+                new Prioritize(
+                    new Orbit(1.5, 3, 15, "Jon Bilgewater the Pirate King"),
+                    new Wander(0.6)
+                    ),
+                new Shoot(3, count: 3, shootAngle: 30, projectileIndex: 0, coolDown: 1500)
+                )
+            );
     }
 }
