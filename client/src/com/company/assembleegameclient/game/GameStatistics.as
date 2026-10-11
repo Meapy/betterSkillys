@@ -7,12 +7,25 @@ import flash.events.Event;
 import flash.system.System;
 import flash.utils.getTimer;
 
+import kabam.rotmg.stage3D.Renderer;
+import com.company.assembleegameclient.map.Map;
+
 public class GameStatistics extends Sprite {
 
    public var container_:Sprite;
    private var fps_:SimpleText;
    private var ping_:SimpleText;
    private var mem_:SimpleText;
+   private var draw_:SimpleText;
+   private var parts_:SimpleText;
+
+   // Time GameSprite spent in Map.draw since the last update of the display.
+   public static var mapDrawMs:int = 0;
+   public static var hudMs:int = 0;
+   // Time in GameSprite's frame update (game logic, map and HUD updates). The rest of each frame
+   // is Flash itself: drawing the display list (HUD, text) and putting it over the 3D view.
+   public static var gameMs:int = 0;
+   private var frame_:SimpleText;
    private var lastPing_:int;
 
    public function GameStatistics() {
@@ -43,6 +56,34 @@ public class GameStatistics extends Sprite {
       this.mem_.filters = FilterUtil.getTextOutlineFilter();
       this.mem_.y = (this.ping_.y + this.ping_.height - 2);
       addChild(this.mem_);
+      // average map draw time per frame and the GPU draw calls of the last frame
+      this.draw_ = new SimpleText(17, 0xFFFFFF);
+      this.draw_.text = "MAP: 99.9 ms (GPU 99.9), 9999 draws";
+      this.draw_.autoSize = "right";
+      this.draw_.setBold(true);
+      this.draw_.setAlignment("right");
+      this.draw_.useTextDimensions();
+      this.draw_.filters = FilterUtil.getTextOutlineFilter();
+      this.draw_.y = (this.mem_.y + this.mem_.height - 2);
+      addChild(this.draw_);
+      this.parts_ = new SimpleText(17, 0xFFFFFF);
+      this.parts_.text = "tiles 99.9, objects 99.9 + 99.9";
+      this.parts_.autoSize = "right";
+      this.parts_.setBold(true);
+      this.parts_.setAlignment("right");
+      this.parts_.useTextDimensions();
+      this.parts_.filters = FilterUtil.getTextOutlineFilter();
+      this.parts_.y = (this.draw_.y + this.draw_.height - 2);
+      addChild(this.parts_);
+      this.frame_ = new SimpleText(17, 0xFFFFFF);
+      this.frame_.text = "frame 99.9 ms = game 99.9 + flash 99.9";
+      this.frame_.autoSize = "right";
+      this.frame_.setBold(true);
+      this.frame_.setAlignment("right");
+      this.frame_.useTextDimensions();
+      this.frame_.filters = FilterUtil.getTextOutlineFilter();
+      this.frame_.y = (this.parts_.y + this.parts_.height - 2);
+      addChild(this.frame_);
        this.container_ = new Sprite();
        this.container_.graphics.clear();
        this.container_.graphics.beginFill(0, 0);
@@ -70,6 +111,7 @@ public class GameStatistics extends Sprite {
     private var memTimer:uint = 0;
     private var fps:uint = 0;
     private var ms_prev:uint = 0;
+    private var ms_prev_last:int = 0;
     private var mem_prev:uint = 0;
 
     private function update(e:Event) : void
@@ -83,6 +125,16 @@ public class GameStatistics extends Sprite {
 
             fps_.setText("FPS: " + fps);
             ping_.setText("PING: " + lastPing_);
+            draw_.setText("MAP: " + (fps > 0 ? (mapDrawMs / fps).toFixed(1) : "0") + " ms (GPU " + (fps > 0 ? (Renderer.renderMs / fps).toFixed(1) : "0") + "), " + Renderer.drawCalls + " draws");
+            mapDrawMs = 0;
+            Renderer.renderMs = 0;
+            parts_.setText("tiles " + per(Map.profTiles) + ", objects " + per(Map.profCollect) + " + " + per(Map.profObjects) + ", hud " + per(hudMs) + " | draws q" + Renderer.drawsQuads + " c" + Renderer.drawsCustom + " s" + Renderer.drawsShadow + " 3d" + Renderer.draws3D);
+            hudMs = 0;
+            var elapsed:int = timer - ms_prev_last;
+            frame_.setText("frame " + per(elapsed) + " ms = game " + per(gameMs) + " + flash " + per(elapsed - gameMs));
+            gameMs = 0;
+            ms_prev_last = timer;
+            Map.profTiles = Map.profCollect = Map.profObjects = 0;
 
             fps = 0;
         }
@@ -94,6 +146,10 @@ public class GameStatistics extends Sprite {
         }
         fps++;
     }
+
+   private function per(ms:int):String {
+      return fps > 0 ? (ms / fps).toFixed(1) : "0";
+   }
 
    public function setPing(ping:int):void{
       this.lastPing_ = ping;

@@ -138,6 +138,11 @@ namespace WorldServer.networking
 
             using (TimedLock.Lock(DcLock))
             {
+                // send what the world thread queued for this client (e.g. a death or failure
+                // message) before the socket closes; a failed send disconnects in there already
+                _handler.Flush();
+                if (State == ProtocolState.Disconnected)
+                    return;
                 State = ProtocolState.Disconnected;
 
 #if DEBUG

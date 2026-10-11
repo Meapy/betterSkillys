@@ -44,7 +44,15 @@ package com.company.assembleegameclient.map
       public var baseTexMatrix_:TextureMatrix = null;
       
       public var lastVisible_:int;
-      
+
+      // For Map's ground chunks: true when this tile is a plain, not animated 8x8 texture whose
+      // offset is a whole number of texels, so it can be copied into a chunk image (groundTex_
+      // shifted by groundDx_/groundDy_ texels) instead of drawn on its own.
+      public var chunkable_:Boolean = false;
+      public var groundTex_:BitmapData = null;
+      public var groundDx_:int = 0;
+      public var groundDy_:int = 0;
+
       public function Square(map:Map, x:int, y:int)
       {
          this.props_ = GroundLibrary.defaultProps_;
@@ -94,6 +102,16 @@ package com.company.assembleegameclient.map
          this.texture_ = GroundLibrary.getBitmapData(this.tileType_,hash(this.x_,this.y_));
          this.baseTexMatrix_ = new TextureMatrix(this.texture_,UVT);
          this.faces_.length = 0;
+         this.chunkable_ = false;
+      }
+
+      // Builds the faces if they were reset (new tile here or next to it), as draw() does.
+      public function prepareFaces() : void
+      {
+         if(this.texture_ != null && this.faces_.length == 0)
+         {
+            this.rebuild3D();
+         }
       }
       
       public function isWalkable() : Boolean
@@ -125,6 +143,60 @@ package com.company.assembleegameclient.map
          }
       }
       
+      // draw() in two parts, so Map can draw every tile's base face first and then every tile's
+      // overlays (blended edges): neighbouring tiles' faces then come in long runs of the same
+      // image, which the GPU renderer draws together. Tiles don't overlap, so the order between
+      // them doesn't matter.
+      private var overlaysOff_:Boolean = true;
+
+      public function drawBase(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int) : void
+      {
+         this.overlaysOff_ = true;
+         if(this.texture_ == null)
+         {
+            return;
+         }
+         if(this.faces_.length == 0)
+         {
+            this.rebuild3D();
+         }
+         if(this.faces_.length == 0)
+         {
+            return;
+         }
+         var face:SquareFace = this.faces_[0];
+         if(!face.draw(graphicsData,camera,time))
+         {
+            if(face.face_.vout_[1] < camera.clipRect_.bottom)
+            {
+               this.lastVisible_ = 0;
+            }
+            return;
+         }
+         this.overlaysOff_ = false;
+      }
+
+      public function drawOverlays(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int) : void
+      {
+         if(this.overlaysOff_)
+         {
+            return;
+         }
+         var face:SquareFace = null;
+         for(var i:int = 1; i < this.faces_.length; i++)
+         {
+            face = this.faces_[i];
+            if(!face.draw(graphicsData,camera,time))
+            {
+               if(face.face_.vout_[1] < camera.clipRect_.bottom)
+               {
+                  this.lastVisible_ = 0;
+               }
+               return;
+            }
+         }
+      }
+
       public function drawTop(graphicsData:Vector.<IGraphicsData>, camera:Camera, time:int) : void
       {
          this.topFace_.draw(graphicsData,camera,time);
@@ -139,6 +211,8 @@ package com.company.assembleegameclient.map
          var i:uint = 0;
          this.faces_.length = 0;
          this.topFace_ = null;
+         this.chunkable_ = false;
+         this.groundTex_ = null;
          var redrawnTexture:BitmapData = null;
          if(this.props_.animate_.type_ != AnimateProperties.NO_ANIMATE)
          {
@@ -168,6 +242,10 @@ package com.company.assembleegameclient.map
                }
             }
             this.faces_.push(new SquareFace(redrawnTexture != null?redrawnTexture:this.texture_,this.vin_,xOffset,yOffset,AnimateProperties.NO_ANIMATE,0,0));
+            this.groundTex_ = redrawnTexture != null ? redrawnTexture : this.texture_;
+            this.groundDx_ = Math.round(xOffset * 8);
+            this.groundDy_ = Math.round(yOffset * 8);
+            this.chunkable_ = this.groundTex_.width == 8 && this.groundTex_.height == 8 && this.groundDx_ == xOffset * 8 && this.groundDy_ == yOffset * 8;
          }
          if(this.props_.sink_)
          {

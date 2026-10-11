@@ -19,7 +19,7 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<Capacity>300</Capacity>
-		<MapJM>Exalt/Nexus.jm</MapJM>
+		<MapJM>Exalt/Nexus New Auru.jm</MapJM>
 		<Instance enum="nexus"/>
 		<Music>
 			<Track>wanderlust</Track>
@@ -34,12 +34,10 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<Capacity>1</Capacity>
-		<MapJM>Exalt/Vault.jm</MapJM>
+		<MapJM>Exalt/Vault New Auru.jm</MapJM>
 		<Instance enum="vault"/>
 		<CreateInstance/>
 		<Persists/>
-		<DisableShooting/>
-		<DisableAbilities/>
 		<DisableTeleport/>
 	</World>
 	<World id="Arena">

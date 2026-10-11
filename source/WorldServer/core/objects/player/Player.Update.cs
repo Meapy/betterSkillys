@@ -14,9 +14,26 @@ namespace WorldServer.core.objects
 {
     partial class Player
     {
-        public const int VISIBILITY_CIRCUMFERENCE_SQR = (VISIBILITY_RADIUS - 2) * (VISIBILITY_RADIUS - 2);
+        // How far (in tiles) the player is sent tiles and objects. Clients whose view reaches
+        // further (a large window, a low map scale) ask for more with a VIEW_RADIUS message, up to
+        // MAX_VISIBILITY_RADIUS; everyone else keeps the default and its cost.
         public const int VISIBILITY_RADIUS = 15;
-        public const int VISIBILITY_RADIUS_SQR = VISIBILITY_RADIUS * VISIBILITY_RADIUS;
+        public const int MAX_VISIBILITY_RADIUS = 40;
+
+        public int SightRadius { get; private set; } = VISIBILITY_RADIUS;
+        private HashSet<IntPoint> _sightPoints = SightPoints(VISIBILITY_RADIUS);
+        private HashSet<IntPoint> _circleCircumferenceSightPoints = CircumferencePoints(VISIBILITY_RADIUS);
+
+        public void SetSightRadius(int radius)
+        {
+            radius = Math.Clamp(radius, VISIBILITY_RADIUS, MAX_VISIBILITY_RADIUS);
+            if (radius == SightRadius)
+                return;
+            SightRadius = radius;
+            _sightPoints = SightPoints(radius);
+            _circleCircumferenceSightPoints = CircumferencePoints(radius);
+            _needsUpdateTiles = true;
+        }
 
         public int TickId { get; private set; }
         public int TickTime { get; private set; }
@@ -44,7 +61,7 @@ namespace WorldServer.core.objects
             {
                 var x = staticTile.X;
                 var y = staticTile.Y;
-                if (x * x + y * y > VISIBILITY_RADIUS_SQR || staticTile.ObjType == 0)
+                if (x * x + y * y > SightRadius * SightRadius || staticTile.ObjType == 0)
                     if (staticTile.ObjId != 0)
                     {
                         update.Drops.Add(staticTile.ObjId);
@@ -250,12 +267,12 @@ namespace WorldServer.core.objects
                 }
             }
 
-            foreach (var entity in World.PlayersCollision.HitTest(x, y, VISIBILITY_RADIUS))
+            foreach (var entity in World.PlayersCollision.HitTest(x, y, SightRadius))
                 if ((entity is Decoy || entity is Pet) && _newObjects.Add(entity))
                     update.NewObjs.Add(entity.ToDefinition());
 
             var intPoint = new IntPoint(0, 0);
-            foreach (var entity in World.EnemiesCollision.HitTest(x, y, VISIBILITY_RADIUS))
+            foreach (var entity in World.EnemiesCollision.HitTest(x, y, SightRadius))
             {
                 if (entity.Dead || entity is Container)
                     continue;
@@ -340,18 +357,41 @@ namespace WorldServer.core.objects
             new IntPoint(0, -1)
         };
 
-        private static readonly HashSet<IntPoint> _circleCircumferenceSightPoints = _circleCircumferenceSightPoints ??= Cache(true);
-        private static readonly HashSet<IntPoint> _sightPoints = _sightPoints ??= Cache();
+        // Sight shapes per radius, shared by every player using that radius (read-only).
+        private static readonly Dictionary<int, HashSet<IntPoint>> _sightPointsByRadius = new Dictionary<int, HashSet<IntPoint>>();
+        private static readonly Dictionary<int, HashSet<IntPoint>> _circumferenceByRadius = new Dictionary<int, HashSet<IntPoint>>();
 
-        private static HashSet<IntPoint> Cache(bool circumferenceCheck = false)
+        private static HashSet<IntPoint> SightPoints(int radius)
+        {
+            lock (_sightPointsByRadius)
+            {
+                if (!_sightPointsByRadius.TryGetValue(radius, out var ret))
+                    _sightPointsByRadius[radius] = ret = Cache(radius, false);
+                return ret;
+            }
+        }
+
+        private static HashSet<IntPoint> CircumferencePoints(int radius)
+        {
+            lock (_circumferenceByRadius)
+            {
+                if (!_circumferenceByRadius.TryGetValue(radius, out var ret))
+                    _circumferenceByRadius[radius] = ret = Cache(radius, true);
+                return ret;
+            }
+        }
+
+        private static HashSet<IntPoint> Cache(int radius, bool circumferenceCheck)
         {
             var ret = new HashSet<IntPoint>();
-            for (var x = -VISIBILITY_RADIUS; x <= VISIBILITY_RADIUS; x++)
-                for (var y = -VISIBILITY_RADIUS; y <= VISIBILITY_RADIUS; y++)
+            var radiusSqr = radius * radius;
+            var innerSqr = (radius - 2) * (radius - 2);
+            for (var x = -radius; x <= radius; x++)
+                for (var y = -radius; y <= radius; y++)
                 {
-                    var flag = x * x + y * y <= VISIBILITY_RADIUS_SQR;
+                    var flag = x * x + y * y <= radiusSqr;
                     if (circumferenceCheck)
-                        flag &= x * x + y * y > VISIBILITY_CIRCUMFERENCE_SQR;
+                        flag &= x * x + y * y > innerSqr;
                     if (flag)
                         _ = ret.Add(new IntPoint(x, y));
                 }

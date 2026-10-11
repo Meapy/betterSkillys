@@ -110,7 +110,47 @@ namespace App
             Config.serverInfo.maxPlayers = maxPlayers;
         }
 
-        public List<ServerItem> GetServerList()
+        // The address of this PC on the local network, or null. Connecting a UDP socket sends nothing;
+        // it only picks the interface that reaches the internet.
+        private static readonly Lazy<string> LanAddress = new Lazy<string>(() =>
+        {
+            try
+            {
+                using var socket = new System.Net.Sockets.Socket(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Dgram, System.Net.Sockets.ProtocolType.Udp);
+                socket.Connect("8.8.8.8", 53);
+                return ((System.Net.IPEndPoint)socket.LocalEndPoint).Address.ToString();
+            }
+            catch
+            {
+                return null;
+            }
+        });
+
+        private static bool IsPrivate(System.Net.IPAddress ip)
+        {
+            var b = ip.GetAddressBytes();
+            return b.Length == 4 && (b[0] == 10 || b[0] == 172 && b[1] >= 16 && b[1] < 32 || b[0] == 192 && b[1] == 168 || b[0] == 169 && b[1] == 254);
+        }
+
+        // The world server address to give a client at clientIp. The public address only works from
+        // outside: a client on this PC gets 127.0.0.1, and one elsewhere on the local network, or
+        // reaching us through our own public address (NAT loopback), gets this PC's LAN address.
+        // Otherwise all its game traffic would go out through the router and back in, which loads
+        // the router and delays the traffic of players connecting from outside.
+        private static string WorldAddressFor(System.Net.IPAddress clientIp, string publicAddress)
+        {
+            if (clientIp == null)
+                return publicAddress;
+            if (clientIp.IsIPv4MappedToIPv6)
+                clientIp = clientIp.MapToIPv4();
+            if (System.Net.IPAddress.IsLoopback(clientIp))
+                return "127.0.0.1";
+            if (IsPrivate(clientIp) || clientIp.ToString() == publicAddress)
+                return LanAddress.Value ?? publicAddress;
+            return publicAddress;
+        }
+
+        public List<ServerItem> GetServerList(System.Net.IPAddress clientIp = null)
         {
             var ret = new List<ServerItem>();
             foreach (var server in ISManager.GetServerList().ToList())
@@ -124,7 +164,7 @@ namespace App
                     Lat = server.latitude,
                     Long = server.longitude,
                     Port = server.port,
-                    DNS = server.address,
+                    DNS = WorldAddressFor(clientIp, server.address),
                     Usage = server.players / (double)server.maxPlayers,
                     AdminOnly = server.adminOnly,
                     UsageText = server.IsJustStarted() ? "- NEW!" : $"{server.players}/{server.maxPlayers}"

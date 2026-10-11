@@ -124,9 +124,16 @@ public class BossHealthBar extends Sprite {
 
     private var damagePercentage_:Number;
 
+    private var shownDamage_:int = -2;
+
     public function setDamageInflicted(percentage:Number, go:GameObject = null):void{
         if (go != this.go_)
             return;
+        // runs every frame: only touch the text (measuring it makes garbage) when it changes
+        var shown:int = percentage == -1 ? -1 : int(Math.floor(percentage));
+        if (shown == this.shownDamage_)
+            return;
+        this.shownDamage_ = shown;
         if(percentage == -1){
             this.damagePercentage_ = 0;
             this.dmgText_.text = "";

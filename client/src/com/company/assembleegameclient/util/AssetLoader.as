@@ -12,6 +12,7 @@ import com.company.assembleegameclient.sound.SFX;
 import com.company.util.AssetLibrary;
 
 import kabam.rotmg.assets.EmbeddedAssets;
+import kabam.rotmg.assets.doomed.DoomedAssets;
 import com.company.assembleegameclient.sound.SoundEffectLibrary;
 import flash.utils.ByteArray;
 import com.company.assembleegameclient.engine3d.Model3D;
@@ -250,6 +251,7 @@ public class AssetLoader
       AnimatedChars.add("archbishopChars16x16", new EmbeddedAssets.archbishopChars16x16Embed_().bitmapData, null, 16, 16, 112, 16, AnimatedChar.RIGHT);
       AnimatedChars.add("ancientRuinsChars8x8", new EmbeddedAssets.ancientRuinsChars8x8Embed_().bitmapData, null, 8, 8, 56, 8, AnimatedChar.RIGHT);
       AnimatedChars.add("ancientRuinsChars16x16", new EmbeddedAssets.ancientRuinsChars16x16Embed_().bitmapData, null, 16, 16, 112, 16, AnimatedChar.RIGHT);
+      DoomedAssets.register(); // content ported from Doomed Realms
    }
 
    private function addSoundEffects():void

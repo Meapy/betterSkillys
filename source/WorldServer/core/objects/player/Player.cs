@@ -372,7 +372,16 @@ namespace WorldServer.core.objects
             FameCounter = new FameCounter(this);
             FameGoal = GetFameGoal(FameCounter.ClassStats[ObjectType].BestFame);
             ExperienceGoal = GetExpGoal(Client.Character.Level);
+
+            // Standardowe pobranie gwiazdek z postępów konta
             Stars = GetStars();
+
+            // Jeśli gracz jest adminem, nadpisujemy wartość na 100 dla fioletowej gwiazdki
+            if (Client.Account.Admin)
+            {
+                Stars = 100;
+            }
+
             TickCount = 0;
 
             if (owner.IdName.Equals("Ocean Trench"))
@@ -635,14 +644,17 @@ namespace WorldServer.core.objects
 
             // create new pet
             var petId = PetId;
-            if (petId != 0)
+            if (petId != 0 && GameServer.Resources.GameData.ObjectDescs.TryGetValue((ushort)petId, out var petDesc))
             {
-                //var pet = new Pet(GameServer, this, (ushort)petId);
-                //pet.Move(X, Y);
-                //owner.EnterWorld(pet);
-                //pet.SetDefaultSize(pet.ObjectDesc.Size);
-                //Pet = pet;
+                var pet = new Pet(GameServer, this, (ushort)petId);
+                pet.Move(X, Y);
+                owner.EnterWorld(pet);
+                if (petDesc.Size > 0)
+                    pet.Size = petDesc.Size;
+                Pet = pet;
             }
+            else if (petId != 0)
+                WorldServer.utils.StaticLogger.Instance.Warn($"Pet type {petId:x4} of {Name} not found");
         }
 
         private void TickCooldownTimers(TickTime time)

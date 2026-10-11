@@ -286,7 +286,8 @@ namespace WorldServer.core.objects
 
         public void Move(float x, float y)
         {
-            if (World != null && !(this is Pet) && (!(this is StaticObject) || (this as StaticObject).Hittestable))
+            // pets are in PlayersCollision too (World.EnterWorld); moving them keeps them visible to players near their owner
+            if (World != null && (!(this is StaticObject) || (this as StaticObject).Hittestable))
                 (this is Enemy || this is StaticObject && !(this is Decoy) ? World.EnemiesCollision : World.PlayersCollision).Move(this, x, y);
 
             var prevX = X;
@@ -301,6 +302,9 @@ namespace WorldServer.core.objects
 
         public void OnChatTextReceived(Player player, string text)
         {
+            // ChatEvent behaviours of monsters ported from Doomed Realms
+            WorldServer.logic.doomed.DoomedRuntime.OnChat(this, player, text, default);
+
             var state = CurrentState;
 
             while (state != null)

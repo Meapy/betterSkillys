@@ -74,6 +74,16 @@ namespace WorldServer.logic.loot
             return types;
         }
 
+        public static bool TryGetItemType(int slotType, out ItemType type)
+        {
+            type = ItemType.Weapon;
+            if (!WeaponT.Contains(slotType) && !AbilityT.Contains(slotType) && !ArmorT.Contains(slotType) &&
+                !RingT.Contains(slotType) && !PotionT.Contains(slotType))
+                return false;
+            type = SlotTypesToItemType(slotType);
+            return true;
+        }
+
         public static ItemType SlotTypesToItemType(int slotType)
         {
             if (WeaponT.Contains(slotType))

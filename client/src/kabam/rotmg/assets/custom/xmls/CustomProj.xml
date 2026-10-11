@@ -7,4 +7,50 @@
 		</Texture>
 		<AngleCorrection>1</AngleCorrection>
 	</Object>
+	<Object type="0x5702" id="Flying Cato">
+		<Class>Projectile</Class>
+		<RandomTexture>
+			<Texture>
+				<File>customAssets8x8</File>
+				<Index>0x07</Index>
+			</Texture>
+			<Texture>
+				<File>customAssets8x8</File>
+				<Index>0x08</Index>
+			</Texture>
+			<Texture>
+				<File>customAssets8x8</File>
+				<Index>0x09</Index>
+			</Texture>
+		</RandomTexture>
+		<AngleCorrection>1</AngleCorrection>
+	</Object>
+	<Object type="0x5705" id="Reforged Doom Bow Shot">
+		<Class>Projectile</Class>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x0c</Index>
+		</Texture>
+		<AngleCorrection>1</AngleCorrection>
+	</Object>
+	<Object type="0x5707" id="Reforged Cdirk Proj">
+		<Class>Projectile</Class>
+		<RandomTexture>
+			<Texture>
+				<File>customAssets8x8</File>
+				<Index>0x11</Index>
+			</Texture>
+			<Texture>
+				<File>customAssets8x8</File>
+				<Index>0x12</Index>
+			</Texture>
+		</RandomTexture>
+	</Object>
+	<Object type="0x5713" id="Reforged Crystal Wand Shot">
+		<Class>Projectile</Class>
+		<Texture>
+			<File>customAssets8x8</File>
+			<Index>0x0e</Index>
+		</Texture>
+	</Object>
 </Objects>

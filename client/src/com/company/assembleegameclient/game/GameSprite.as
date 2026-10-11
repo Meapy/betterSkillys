@@ -80,6 +80,8 @@ public class GameSprite extends Sprite
    public var creditDisplay_:CreditDisplay;
    public var isEditor:Boolean;
    public var lastUpdate_:int = 0;
+   private var sentViewRadius_:int = Map.MIN_VIEW_RADIUS; // the server's default
+   private var lastViewRadiusSend_:int = 0;
    public var moveRecords_:MoveRecords;
    public var mapModel:MapModel;
    public var model:PlayerModel;
@@ -121,17 +123,11 @@ public class GameSprite extends Sprite
    public function updateBossBar() : void
    {
       var gameObject:GameObject = null;
-      var objectId:int = 0;
 
+      // clears the text when the bar follows nothing (it ignores calls for other objects)
+      bossHealthBar.setDamageInflicted(-1);
       for each(gameObject in map.goDict_)
       {
-         if((gameObject.props_.isQuest_ || gameObject.props_.isChest_) && Parameters.DamageCounter[gameObject.objectId_] > 0 && objectId == 0)
-         {
-            objectId = gameObject.objectId_;
-         }
-         if(objectId == 0){
-            bossHealthBar.setDamageInflicted(-1);
-         }
          if((gameObject.props_.isQuest_ || gameObject.props_.isChest_) && Parameters.DamageCounter[gameObject.objectId_] > 0)
          {
             if(gameObject != null)
@@ -229,10 +225,17 @@ public class GameSprite extends Sprite
 
    private function showGuildText() : void
    {
-      this.guildText_ = new GuildText("",-1);
-      this.guildText_.x = 64;
-      this.guildText_.y = 6;
-      addChild(this.guildText_);
+       this.guildText_ = new GuildText("",-1);
+       // Place guild icon/text just to the right of the rankText's background
+       var margin:int = 2;
+       if (this.rankText_ != null) {
+          this.guildText_.x = this.rankText_.x + this.rankText_.width + margin;
+          this.guildText_.y = this.rankText_.y;
+       } else {
+          this.guildText_.x = 116;
+          this.guildText_.y = 6;
+       }
+       addChild(this.guildText_);
    }
 
    private function showRankText() : void
@@ -408,8 +411,13 @@ public class GameSprite extends Sprite
             this.guildText_.scaleX = sWidth;
             this.guildText_.scaleY = sHeight;
          }
-         this.guildText_.x = (64 * this.guildText_.scaleX);
-         this.guildText_.y = (2 * this.guildText_.scaleY);
+          var margin:Number = 6 * this.guildText_.scaleX;
+          if (this.rankText_ != null) {
+             this.guildText_.x = this.rankText_.x + this.rankText_.width * this.rankText_.scaleX + margin;
+          } else {
+             this.guildText_.x = (116 * this.guildText_.scaleX);
+          }
+          this.guildText_.y = (2 * this.guildText_.scaleY);
       }
       if (this.creditDisplay_ != null)
       {
@@ -549,6 +557,21 @@ public class GameSprite extends Sprite
          return;
       }
 
+      try
+      {
+         this.updateFrame(time,dt);
+      }
+      finally
+      {
+         // even when the frame threw: a stale lastUpdate_ would make every later frame move the
+         // player by the whole time since the error
+         this.lastUpdate_ = time;
+         GameStatistics.gameMs += getTimer() - time;
+      }
+   }
+
+   private function updateFrame(time:int, dt:int) : void
+   {
       this.updateNearestInteractive();
 
       this.map.update(time,dt);
@@ -557,16 +580,34 @@ public class GameSprite extends Sprite
       if(this.focus)
       {
          this.camera_.configureCamera(this.focus,Boolean(player)?Boolean(player.isHallucinating()):Boolean(false));
+         var drawStart:int = getTimer();
          this.map.draw(this.camera_,time);
+         GameStatistics.mapDrawMs += getTimer() - drawStart;
+         // tell the server how far the view reaches (a big window or a low map scale sees more)
+         if(this.map.viewRadius_ != this.sentViewRadius_ && time - this.lastViewRadiusSend_ >= 1000)
+         {
+            this.sentViewRadius_ = this.map.viewRadius_;
+            this.lastViewRadiusSend_ = time;
+            this.gsc_.viewRadius(this.sentViewRadius_);
+         }
       }
       if(player != null)
       {
          this.creditDisplay_.draw(player.credits_,player.fame_);
+         var hudStart:int = getTimer();
          this.drawCharacterWindow.dispatch(player); // might be causing leak
+         GameStatistics.hudMs += getTimer() - hudStart;
          if(this.map.showDisplays_)
          {
             this.rankText_.draw(player.numStars_);
             this.guildText_.draw(player.guildName_,player.guildRank_);
+               // Reposition guildText_ immediately after rankText_ so it hugs the star background
+               if (this.rankText_ != null && this.guildText_ != null) {
+                  var marginPos:Number = 2 * this.rankText_.scaleX;
+                  // Use measured width after draw and current scale to compute position
+                  this.guildText_.x = this.rankText_.x + this.rankText_.width * this.rankText_.scaleX + marginPos;
+                  this.guildText_.y = this.rankText_.y;
+               }
          }
          if(player.isPaused())
          {
@@ -588,7 +629,6 @@ public class GameSprite extends Sprite
          }
          this.moveRecords_.addRecord(time,player.x_,player.y_);
       }
-      this.lastUpdate_ = time;
 
       if(this.bossHealthBar != null && this.map.name_ != "Arena"){
          this.bossHealthBar.draw();

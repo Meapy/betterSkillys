@@ -50,21 +50,32 @@ public class GraphicsFillExtra
       colorTransforms[_arg_1] = _arg_2;
    }
 
+   // No colour change. Shared: callers only read the transforms they get.
+   private static const IDENTITY:ColorTransform = new ColorTransform();
+
+   // The image's colour transform for this draw; it is used up (a tint lasts one draw).
    public static function getColorTransform(_arg_1:BitmapData):ColorTransform
    {
       var _local_2:ColorTransform;
       if ((_arg_1 in colorTransforms))
       {
          _local_2 = colorTransforms[_arg_1];
-         colorTransforms[_arg_1] = new ColorTransform();
+         colorTransforms[_arg_1] = IDENTITY;
       }
       else
       {
-         _local_2 = new ColorTransform();
+         _local_2 = IDENTITY;
          colorTransforms[_arg_1] = _local_2;
          colorTransformsSize++;
       }
       return (_local_2);
+   }
+
+   // The image's colour transform without using it up.
+   public static function peekColorTransform(_arg_1:BitmapData):ColorTransform
+   {
+      var _local_2:ColorTransform = colorTransforms[_arg_1];
+      return (_local_2 != null ? _local_2 : IDENTITY);
    }
 
    public static function setOffsetUV(_arg_1:GraphicsBitmapFill, _arg_2:Number, _arg_3:Number):void
