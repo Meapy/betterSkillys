@@ -85,6 +85,15 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
   - Ticks slower than 200 ms are logged as "Slow tick" in `logs/wServer`.
   - The WorldServer and Shared projects are compiled with optimisation, in the Debug build that `Run Server.bat` uses too.
 - `wServer.json`: port 2051 instead of 2050, and the public address.
+- **Client rendering**, ported from the Doomed Realms client's optimisations and adapted to the GPU (Stage3D) renderer. In the nexus this took the test client from 110 to 191 fps.
+  - **Ground chunks** (`Map`, `Square`): static ground tiles are copied into one 128x128 image per 16x16 tiles, and each visible chunk is one textured quad (one GPU draw call) instead of up to 256 tiles. Animated tiles and blended edges are still drawn on their own, on top; their plain texture also goes into the chunk so coasts have no dark seam. A chunk is rebuilt (as a new image, since the GPU caches textures by image) when a tile in it or next to it changes, at most 2 builds per frame, and freed after 10 s unseen (`TextureFactory.disposeTexture`). Clicks and aiming find the tile by inverting the ground transform, and objects drawn flat on the ground get their tile's corners from it.
+  - **Tile culling** (`Map.draw`): of the 15-tile circle around the player, only tiles whose centre is on screen (with 2 tiles of margin, 4 below for tall sprites) are drawn.
+  - **Batching** (`Renderer`): consecutive quads with the same image (particles, projectiles, repeated sprites) go to the GPU in one draw call, from one shared vertex buffer. This is the GPU counterpart of Doomed Realms' particle batching.
+  - **Projection cache** (`Camera`, `Face3D`): while the camera only moves (no rotation or zoom), wall and tile faces reuse their projected shape and texture matrix, shifted by the camera translation. Tiles also no longer rebuild their texture matrix every frame when their offset hasn't changed (`SquareFace`).
+  - **Projectiles** check the distance to each target before anything else.
+  - **Errors:** `GameSprite` keeps its frame time up to date even when a frame throws, so the player can't run away at the speed of the time since the error.
+  - **Performance Stats** (Options) has a fourth line: the map draw time per frame and the GPU draw calls.
+  - Not ported, because betterSkillys already has them or they only mattered in Ruffle/Flash: the frame-rate option and render-quality toggle (both exist), projectile hit lists (exist), the fullscreen zoom (betterSkillys has map scale), and the Ruffle fixes (outline glow, chat text, 32-bit float drift).
 
 ## Content ported from Doomed Realms
 

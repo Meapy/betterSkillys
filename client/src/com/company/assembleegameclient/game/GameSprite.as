@@ -561,6 +561,20 @@ public class GameSprite extends Sprite
          return;
       }
 
+      try
+      {
+         this.updateFrame(time,dt);
+      }
+      finally
+      {
+         // even when the frame threw: a stale lastUpdate_ would make every later frame move the
+         // player by the whole time since the error
+         this.lastUpdate_ = time;
+      }
+   }
+
+   private function updateFrame(time:int, dt:int) : void
+   {
       this.updateNearestInteractive();
 
       this.map.update(time,dt);
@@ -569,7 +583,9 @@ public class GameSprite extends Sprite
       if(this.focus)
       {
          this.camera_.configureCamera(this.focus,Boolean(player)?Boolean(player.isHallucinating()):Boolean(false));
+         var drawStart:int = getTimer();
          this.map.draw(this.camera_,time);
+         GameStatistics.mapDrawMs += getTimer() - drawStart;
       }
       if(player != null)
       {
@@ -607,7 +623,6 @@ public class GameSprite extends Sprite
          }
          this.moveRecords_.addRecord(time,player.x_,player.y_);
       }
-      this.lastUpdate_ = time;
 
       if(this.bossHealthBar != null && this.map.name_ != "Arena"){
          this.bossHealthBar.draw();

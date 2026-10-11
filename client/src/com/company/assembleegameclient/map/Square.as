@@ -44,7 +44,15 @@ package com.company.assembleegameclient.map
       public var baseTexMatrix_:TextureMatrix = null;
       
       public var lastVisible_:int;
-      
+
+      // For Map's ground chunks: true when this tile is a plain, not animated 8x8 texture whose
+      // offset is a whole number of texels, so it can be copied into a chunk image (groundTex_
+      // shifted by groundDx_/groundDy_ texels) instead of drawn on its own.
+      public var chunkable_:Boolean = false;
+      public var groundTex_:BitmapData = null;
+      public var groundDx_:int = 0;
+      public var groundDy_:int = 0;
+
       public function Square(map:Map, x:int, y:int)
       {
          this.props_ = GroundLibrary.defaultProps_;
@@ -94,6 +102,16 @@ package com.company.assembleegameclient.map
          this.texture_ = GroundLibrary.getBitmapData(this.tileType_,hash(this.x_,this.y_));
          this.baseTexMatrix_ = new TextureMatrix(this.texture_,UVT);
          this.faces_.length = 0;
+         this.chunkable_ = false;
+      }
+
+      // Builds the faces if they were reset (new tile here or next to it), as draw() does.
+      public function prepareFaces() : void
+      {
+         if(this.texture_ != null && this.faces_.length == 0)
+         {
+            this.rebuild3D();
+         }
       }
       
       public function isWalkable() : Boolean
@@ -139,6 +157,8 @@ package com.company.assembleegameclient.map
          var i:uint = 0;
          this.faces_.length = 0;
          this.topFace_ = null;
+         this.chunkable_ = false;
+         this.groundTex_ = null;
          var redrawnTexture:BitmapData = null;
          if(this.props_.animate_.type_ != AnimateProperties.NO_ANIMATE)
          {
@@ -168,6 +188,10 @@ package com.company.assembleegameclient.map
                }
             }
             this.faces_.push(new SquareFace(redrawnTexture != null?redrawnTexture:this.texture_,this.vin_,xOffset,yOffset,AnimateProperties.NO_ANIMATE,0,0));
+            this.groundTex_ = redrawnTexture != null ? redrawnTexture : this.texture_;
+            this.groundDx_ = Math.round(xOffset * 8);
+            this.groundDy_ = Math.round(yOffset * 8);
+            this.chunkable_ = this.groundTex_.width == 8 && this.groundTex_.height == 8 && this.groundDx_ == xOffset * 8 && this.groundDy_ == yOffset * 8;
          }
          if(this.props_.sink_)
          {

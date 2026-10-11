@@ -10,7 +10,11 @@ import com.company.assembleegameclient.objects.Player;
 import com.company.assembleegameclient.parameters.Parameters;
 import com.company.assembleegameclient.util.ConditionEffect;
 
+import com.company.util.GraphicsUtil;
+
+import flash.display.BitmapData;
 import flash.display.GraphicsBitmapFill;
+import flash.display.GraphicsPath;
 import flash.display.GraphicsSolidFill;
 import flash.display.IGraphicsData;
 import flash.display.Sprite;
@@ -18,6 +22,7 @@ import flash.display3D.Context3D;
 import flash.filters.BlurFilter;
 import flash.filters.ColorMatrixFilter;
 import flash.geom.ColorTransform;
+import flash.geom.Matrix;
 import flash.geom.Point;
 import flash.geom.Rectangle;
 import flash.utils.Dictionary;
@@ -112,6 +117,255 @@ public class Map extends Sprite {
     public var disableShooting_:Boolean;
     public var disableAbilities_:Boolean;
 
+    // Ground chunks. Static ground tiles (Square.chunkable_) are copied into one 128x128 image
+    // per 16x16 tiles, and each visible chunk is drawn as a single textured quad (one GPU draw
+    // call) instead of up to 256 tile faces. A chunk is rebuilt when a tile in it or next to it
+    // changes (setGroundTile), and freed when it has not been drawn for CHUNK_KEEP_MS.
+    private static const CHUNK:int = 16;
+    private static const TEX:int = 8;
+    private static const CHUNK_KEEP_MS:int = 10000;
+    // Building a chunk also prepares its tiles (edge blending), so only a few are built per
+    // frame: rotating the camera brings many new chunks into view at once.
+    private static const CHUNK_BUILDS_PER_FRAME:int = 2;
+    private static const chunkPoint_:Point = new Point();
+    private static const chunkRect_:Rectangle = new Rectangle();
+    private var chunksW_:int = 0;
+    private var chunks_:Vector.<BitmapData> = null;
+    private var chunkDirty_:Vector.<Boolean> = null;
+    private var chunkUsed_:Vector.<int> = null;
+    // whether a chunk drawn this frame is built; if not, its tiles are drawn one by one
+    private var chunkReady_:Vector.<Boolean> = null;
+    private var chunkBuilds_:int = 0;
+    private var chunkFills_:Vector.<GraphicsBitmapFill> = null;
+    private var chunkPaths_:Vector.<GraphicsPath> = null;
+    private var chunksAllocated_:Vector.<int> = new Vector.<int>();
+    private var chunksVisible_:Vector.<int> = new Vector.<int>();
+    private var lastChunkSweep_:int = 0;
+    // World-to-map-pixel transform of the ground (z = 0) this frame: origin and the screen
+    // vectors of one tile along world x and y. groundAffine_ is false for the perspective
+    // camera, which draws every tile the original way.
+    private var groundAffine_:Boolean = false;
+    private var groundOx_:Number = 0;
+    private var groundOy_:Number = 0;
+    private var groundXx_:Number = 0;
+    private var groundXy_:Number = 0;
+    private var groundYx_:Number = 0;
+    private var groundYy_:Number = 0;
+    private var lastDrawTime_:int = -1;
+
+    private function setupGround(camera:Camera):void {
+        // Needs the orthographic camera, where a ground point (x, y, 0) lands at
+        // (x * r0 + y * r4 + r12, x * r1 + y * r5 + r13).
+        this.groundAffine_ = camera.affineVersion_ != 0 && this.width_ > 0;
+        if (!this.groundAffine_) {
+            return;
+        }
+        if (this.chunks_ == null) {
+            this.chunksW_ = Math.ceil(this.width_ / CHUNK);
+            var n:int = this.chunksW_ * Math.ceil(this.height_ / CHUNK);
+            this.chunks_ = new Vector.<BitmapData>(n);
+            this.chunkDirty_ = new Vector.<Boolean>(n);
+            this.chunkUsed_ = new Vector.<int>(n);
+            this.chunkReady_ = new Vector.<Boolean>(n);
+            this.chunkFills_ = new Vector.<GraphicsBitmapFill>(n);
+            this.chunkPaths_ = new Vector.<GraphicsPath>(n);
+        }
+        // read straight from the camera matrix, the same numbers walls and objects use
+        var r:Vector.<Number> = camera.wToSRaw_;
+        this.groundOx_ = r[12];
+        this.groundOy_ = r[13];
+        this.groundXx_ = r[0];
+        this.groundXy_ = r[1];
+        this.groundYx_ = r[4];
+        this.groundYy_ = r[5];
+    }
+
+    private function markChunksDirty(x:int, y:int):void {
+        if (this.chunks_ == null) {
+            return;
+        }
+        // the tile's neighbours blend with it, so their chunks change too
+        for (var xi:int = Math.max(0, x - 1); xi <= Math.min(this.width_ - 1, x + 1); xi++) {
+            for (var yi:int = Math.max(0, y - 1); yi <= Math.min(this.height_ - 1, y + 1); yi++) {
+                this.chunkDirty_[int(xi / CHUNK) + int(yi / CHUNK) * this.chunksW_] = true;
+            }
+        }
+    }
+
+    // Makes sure the chunk image is up to date, within this frame's build budget. Returns false
+    // when it still needs building; it is tried again next frame.
+    private function prepareChunk(c:int):Boolean {
+        var bmp:BitmapData = this.chunks_[c];
+        if (bmp != null && !this.chunkDirty_[c]) {
+            return true;
+        }
+        if (this.chunkBuilds_ >= CHUNK_BUILDS_PER_FRAME) {
+            return false;
+        }
+        this.chunkBuilds_++;
+        if (bmp != null) {
+            // a new image rather than redrawing this one: the GPU caches textures by image
+            this.freeChunkImage(c);
+        }
+        else {
+            this.chunksAllocated_.push(c);
+        }
+        bmp = new BitmapData(CHUNK * TEX, CHUNK * TEX, true, 0);
+        this.chunks_[c] = bmp;
+        this.buildChunk(c, bmp);
+        return true;
+    }
+
+    private function freeChunkImage(c:int):void {
+        var bmp:BitmapData = this.chunks_[c];
+        if (bmp == null) {
+            return;
+        }
+        TextureFactory.disposeTexture(bmp);
+        bmp.dispose();
+        this.chunks_[c] = null;
+        if (this.chunkFills_[c] != null) {
+            this.chunkFills_[c].bitmapData = null;
+        }
+    }
+
+    private function drawChunk(c:int):void {
+        var bmp:BitmapData = this.chunks_[c];
+        var x0:int = c % this.chunksW_ * CHUNK;
+        var y0:int = int(c / this.chunksW_) * CHUNK;
+        var fill:GraphicsBitmapFill = this.chunkFills_[c];
+        var path:GraphicsPath = this.chunkPaths_[c];
+        if (fill == null) {
+            fill = new GraphicsBitmapFill(bmp, new Matrix(), false, false);
+            path = new GraphicsPath(new <int>[1, 2, 2, 2], new Vector.<Number>(8));
+            this.chunkFills_[c] = fill;
+            this.chunkPaths_[c] = path;
+        }
+        fill.bitmapData = bmp;
+        var m:Matrix = fill.matrix;
+        m.a = this.groundXx_ / TEX;
+        m.b = this.groundXy_ / TEX;
+        m.c = this.groundYx_ / TEX;
+        m.d = this.groundYy_ / TEX;
+        m.tx = this.groundOx_ + x0 * this.groundXx_ + y0 * this.groundYx_;
+        m.ty = this.groundOy_ + x0 * this.groundXy_ + y0 * this.groundYy_;
+        fill.matrix = m;
+        var d:Vector.<Number> = path.data;
+        d[0] = m.tx;
+        d[1] = m.ty;
+        d[2] = m.tx + CHUNK * this.groundXx_;
+        d[3] = m.ty + CHUNK * this.groundXy_;
+        d[4] = m.tx + CHUNK * (this.groundXx_ + this.groundYx_);
+        d[5] = m.ty + CHUNK * (this.groundXy_ + this.groundYy_);
+        d[6] = m.tx + CHUNK * this.groundYx_;
+        d[7] = m.ty + CHUNK * this.groundYy_;
+        this.graphicsData_.push(fill);
+        this.graphicsData_.push(path);
+        this.graphicsData_.push(GraphicsUtil.END_FILL);
+    }
+
+    // Copies each chunkable tile's texture into the chunk image with copyPixels.
+    private function buildChunk(c:int, bmp:BitmapData):void {
+        var square:Square = null;
+        var x0:int = c % this.chunksW_ * CHUNK;
+        var y0:int = int(c / this.chunksW_) * CHUNK;
+        bmp.lock();
+        for (var yi:int = 0; yi < CHUNK && y0 + yi < this.height_; yi++) {
+            for (var xi:int = 0; xi < CHUNK && x0 + xi < this.width_; xi++) {
+                square = this.squares_[x0 + xi + (y0 + yi) * this.width_];
+                if (square == null) {
+                    continue;
+                }
+                square.prepareFaces();
+                if (square.chunkable_) {
+                    this.copyTile(bmp, square.groundTex_, xi * TEX, yi * TEX, (square.groundDx_ % TEX + TEX) % TEX, (square.groundDy_ % TEX + TEX) % TEX);
+                }
+                else if (square.texture_ != null && square.texture_.width == TEX && square.texture_.height == TEX) {
+                    // Drawn on its own on top (e.g. animated water), but its plain texture goes
+                    // underneath too, so the separate tile's edge blends into the same colour
+                    // instead of the background (a dark line along every coast).
+                    this.copyTile(bmp, square.texture_, xi * TEX, yi * TEX, 0, 0);
+                }
+            }
+        }
+        bmp.unlock();
+        this.chunkDirty_[c] = false;
+    }
+
+    // Copies an 8x8 texture to (x, y) starting at texel (sx, sy) and wrapping around, which is
+    // how a tile with a texture offset is drawn (its bitmap fill repeats).
+    private function copyTile(dst:BitmapData, src:BitmapData, x:int, y:int, sx:int, sy:int):void {
+        this.copyPart(dst, src, sx, sy, TEX - sx, TEX - sy, x, y);
+        this.copyPart(dst, src, 0, sy, sx, TEX - sy, x + TEX - sx, y);
+        this.copyPart(dst, src, sx, 0, TEX - sx, sy, x, y + TEX - sy);
+        this.copyPart(dst, src, 0, 0, sx, sy, x + TEX - sx, y + TEX - sy);
+    }
+
+    private function copyPart(dst:BitmapData, src:BitmapData, sx:int, sy:int, w:int, h:int, x:int, y:int):void {
+        if (w <= 0 || h <= 0) {
+            return;
+        }
+        chunkRect_.x = sx;
+        chunkRect_.y = sy;
+        chunkRect_.width = w;
+        chunkRect_.height = h;
+        chunkPoint_.x = x;
+        chunkPoint_.y = y;
+        dst.copyPixels(src, chunkRect_, chunkPoint_);
+    }
+
+    // Frees chunk images that haven't been drawn for CHUNK_KEEP_MS (checked every second).
+    private function sweepChunks(time:int):void {
+        if (time - this.lastChunkSweep_ < 1000) {
+            return;
+        }
+        this.lastChunkSweep_ = time;
+        var i:int = 0;
+        while (i < this.chunksAllocated_.length) {
+            var c:int = this.chunksAllocated_[i];
+            if (time - this.chunkUsed_[c] > CHUNK_KEEP_MS) {
+                this.freeChunkImage(c);
+                var last:int = this.chunksAllocated_.length - 1;
+                this.chunksAllocated_[i] = this.chunksAllocated_[last];
+                this.chunksAllocated_.length = last;
+            }
+            else {
+                i++;
+            }
+        }
+    }
+
+    private function disposeChunks():void {
+        if (this.chunks_ != null) {
+            for each(var c:int in this.chunksAllocated_) {
+                this.freeChunkImage(c);
+            }
+        }
+        this.chunksAllocated_.length = 0;
+        this.chunks_ = null;
+        this.chunkFills_ = null;
+        this.chunkPaths_ = null;
+    }
+
+    // Fills in a chunked tile's projected corners (Face3D.vout_), for objects drawn on it.
+    private function projectSquare(square:Square):void {
+        if (!this.groundAffine_ || square == null || !square.chunkable_ || square.faces_.length == 0) {
+            return;
+        }
+        var v:Vector.<Number> = square.faces_[0].face_.vout_;
+        var x:Number = this.groundOx_ + square.x_ * this.groundXx_ + square.y_ * this.groundYx_;
+        var y:Number = this.groundOy_ + square.x_ * this.groundXy_ + square.y_ * this.groundYy_;
+        v.length = 8;
+        v[0] = x;
+        v[1] = y;
+        v[2] = x + this.groundXx_;
+        v[3] = y + this.groundXy_;
+        v[4] = x + this.groundXx_ + this.groundYx_;
+        v[5] = y + this.groundXy_ + this.groundYy_;
+        v[6] = x + this.groundYx_;
+        v[7] = y + this.groundYy_;
+    }
+
     public function setProps(width:int, height:int, name:String, back:int, allowPlayerTeleport:Boolean, showDisplays:Boolean, disableShooting:Boolean, disableAbilities:Boolean):void {
         this.width_ = width;
         this.height_ = height;
@@ -152,6 +406,7 @@ public class Map extends Sprite {
         }
         this.squareList_.length = 0;
         this.squareList_ = null;
+        this.disposeChunks();
         this.squares_.length = 0;
         this.squares_ = null;
         for each(go in this.goDict_) {
@@ -221,7 +476,21 @@ public class Map extends Sprite {
 
     public function pSTopW(xS:Number, yS:Number):Point {
         var square:Square = null;
-        var p:Point = null;
+        if (this.groundAffine_) {
+            // chunked tiles have no projected faces: invert the ground transform instead
+            var det:Number = this.groundXx_ * this.groundYy_ - this.groundYx_ * this.groundXy_;
+            if (det != 0) {
+                var wx:Number = ((xS - this.groundOx_) * this.groundYy_ - (yS - this.groundOy_) * this.groundYx_) / det;
+                var wy:Number = ((yS - this.groundOy_) * this.groundXx_ - (xS - this.groundOx_) * this.groundXy_) / det;
+                if (wx >= 0 && wy >= 0 && wx < this.width_ && wy < this.height_) {
+                    square = this.squares_[int(wx) + int(wy) * this.width_];
+                    if (square != null && square.texture_ != null && square.lastVisible_ == this.lastDrawTime_) {
+                        return new Point(square.center_.x, square.center_.y);
+                    }
+                }
+            }
+            return null;
+        }
         for each(square in this.visibleSquares_) {
             if (square.faces_.length != 0 && square.faces_[0].face_.contains(xS, yS)) {
                 return new Point(square.center_.x, square.center_.y);
@@ -236,6 +505,7 @@ public class Map extends Sprite {
         var n:Square = null;
         var square:Square = this.getSquare(x, y);
         square.setTileType(tileType);
+        this.markChunksDirty(x, y);
         var xend:int = x < this.width_ - 1 ? int(x + 1) : int(x);
         var yend:int = y < this.height_ - 1 ? int(y + 1) : int(y);
         for (var xi:int = x > 0 ? int(x - 1) : int(x); xi <= xend; xi++) {
@@ -392,15 +662,44 @@ public class Map extends Sprite {
         this.graphicsDataStageSoftware_.length = 0;
         this.graphicsData3d_.length = 0;
 
-        // visible tiles
-
+        // visible tiles: the circle around the player, minus what is off screen (tile centres
+        // more than 2 tiles beside or above the view, or 4 below it, where a tall sprite
+        // standing on the tile could still reach into view)
+        this.lastDrawTime_ = time;
+        this.chunkBuilds_ = 0;
+        this.setupGround(camera);
+        this.chunksVisible_.length = 0;
+        var cullL:Number = screenRect.x - 100;
+        var cullR:Number = screenRect.x + screenRect.width + 100;
+        var cullT:Number = screenRect.y - 100;
+        var cullB:Number = screenRect.y + screenRect.height + 200;
+        var sx:Number = 0;
+        var sy:Number = 0;
+        var c:int = 0;
         for (var xi:int = -15; xi <= 15; xi++) {
             for (yi = -15; yi <= 15; yi++) {
                 if (xi * xi + yi * yi <= 225) {
                     square = lookupSquare(xi + player_.x_, yi + player_.y_);
                     if (square != null) {
+                        if (this.groundAffine_) {
+                            sx = this.groundOx_ + square.center_.x * this.groundXx_ + square.center_.y * this.groundYx_;
+                            sy = this.groundOy_ + square.center_.x * this.groundXy_ + square.center_.y * this.groundYy_;
+                            if (sx < cullL || sx > cullR || sy < cullT || sy > cullB) {
+                                continue;
+                            }
+                            square.prepareFaces();
+                        }
                         square.lastVisible_ = time;
-                        square.draw(this.graphicsData_, camera, time);
+                        if (this.groundAffine_ && square.chunkable_) {
+                            c = int(square.x_ / CHUNK) + int(square.y_ / CHUNK) * this.chunksW_;
+                            if (this.chunkUsed_[c] != time) {
+                                this.chunkUsed_[c] = time;
+                                this.chunkReady_[c] = this.prepareChunk(c);
+                                if (this.chunkReady_[c]) {
+                                    this.chunksVisible_.push(c);
+                                }
+                            }
+                        }
                         this.visibleSquares_.push(square);
                         if (square.topFace_ != null) {
                             this.topSquares_.push(square);
@@ -408,6 +707,18 @@ public class Map extends Sprite {
                     }
                 }
             }
+        }
+        // chunks first, under the tiles drawn on their own (animated water, edges...)
+        for each(c in this.chunksVisible_) {
+            this.drawChunk(c);
+        }
+        for each(square in this.visibleSquares_) {
+            if (!(this.groundAffine_ && square.chunkable_ && this.chunkReady_[int(square.x_ / CHUNK) + int(square.y_ / CHUNK) * this.chunksW_])) {
+                square.draw(this.graphicsData_, camera, time);
+            }
+        }
+        if (this.chunks_ != null) {
+            this.sweepChunks(time);
         }
 
 //      for(var xi:int = xStart; xi <= xEnd; xi++)
@@ -441,6 +752,10 @@ public class Map extends Sprite {
                 square = go.square_;
                 if (!(square == null || square.lastVisible_ != time)) {
                     go.drawn_ = true;
+                    if (go.props_.drawOnGround_ || go.obj3D_ != null) {
+                        // drawn using its tile's projected corners, which a chunked tile doesn't compute
+                        this.projectSquare(square);
+                    }
                     go.computeSortVal(camera);
                     if (go.props_.drawUnder_) {
                         if (go.props_.drawOnGround_) {

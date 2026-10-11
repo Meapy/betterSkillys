@@ -7,12 +7,18 @@ import flash.events.Event;
 import flash.system.System;
 import flash.utils.getTimer;
 
+import kabam.rotmg.stage3D.Renderer;
+
 public class GameStatistics extends Sprite {
 
    public var container_:Sprite;
    private var fps_:SimpleText;
    private var ping_:SimpleText;
    private var mem_:SimpleText;
+   private var draw_:SimpleText;
+
+   // Time GameSprite spent in Map.draw since the last update of the display.
+   public static var mapDrawMs:int = 0;
    private var lastPing_:int;
 
    public function GameStatistics() {
@@ -43,6 +49,16 @@ public class GameStatistics extends Sprite {
       this.mem_.filters = FilterUtil.getTextOutlineFilter();
       this.mem_.y = (this.ping_.y + this.ping_.height - 2);
       addChild(this.mem_);
+      // average map draw time per frame and the GPU draw calls of the last frame
+      this.draw_ = new SimpleText(17, 0xFFFFFF);
+      this.draw_.text = "MAP: 99.9 ms, 9999 draws";
+      this.draw_.autoSize = "right";
+      this.draw_.setBold(true);
+      this.draw_.setAlignment("right");
+      this.draw_.useTextDimensions();
+      this.draw_.filters = FilterUtil.getTextOutlineFilter();
+      this.draw_.y = (this.mem_.y + this.mem_.height - 2);
+      addChild(this.draw_);
        this.container_ = new Sprite();
        this.container_.graphics.clear();
        this.container_.graphics.beginFill(0, 0);
@@ -83,6 +99,8 @@ public class GameStatistics extends Sprite {
 
             fps_.setText("FPS: " + fps);
             ping_.setText("PING: " + lastPing_);
+            draw_.setText("MAP: " + (fps > 0 ? (mapDrawMs / fps).toFixed(1) : "0") + " ms, " + Renderer.drawCalls + " draws");
+            mapDrawMs = 0;
 
             fps = 0;
         }

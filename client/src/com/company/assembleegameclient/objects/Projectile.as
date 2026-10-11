@@ -369,6 +369,14 @@ public class Projectile extends BasicObject
       var hittables:Vector.<GameObject> = damagesEnemies_ ? map_.hitTEnemies_ : map_.hitTPlayers_;
       for each(go in hittables)
       {
+         // the distance first: it rules out almost every object, and the checks below are
+         // side-effect free, so the result is the same
+         xDiff = go.x_ > pX?Number(go.x_ - pX):Number(pX - go.x_);
+         yDiff = go.y_ > pY?Number(go.y_ - pY):Number(pY - go.y_);
+         if(xDiff > go.radius_ || yDiff > go.radius_) {
+            continue;
+         }
+
          if (this.projProps_.multiHit_ && this.multiHitDict_[go] != null) {
             continue;
          }
@@ -378,9 +386,6 @@ public class Projectile extends BasicObject
          }
 
          if ((this.damagesEnemies_ && go.props_.isEnemy_) || (this.damagesPlayers_ && go.props_.isPlayer_)) {
-            xDiff = go.x_ > pX?Number(go.x_ - pX):Number(pX - go.x_);
-            yDiff = go.y_ > pY?Number(go.y_ - pY):Number(pY - go.y_);
-            if(!(xDiff > go.radius_ || yDiff > go.radius_))
             {
                if(go == map_.player_) {
                   return go;

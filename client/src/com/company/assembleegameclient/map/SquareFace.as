@@ -74,10 +74,21 @@ public class SquareFace
          GraphicsFillExtra.setOffsetUV(this.face_.bitmapFill_,xOffset,yOffset);
          xOffset = yOffset = 0;
       }
-      this.face_.uvt_.length = 0;
-      this.face_.uvt_.push(xOffset,yOffset,0,1 + xOffset,yOffset,0,1 + xOffset,1 + yOffset,0,xOffset,1 + yOffset,0);
-      this.face_.setUVT(this.face_.uvt_);
+      // only when the texture offset changed: setUVT makes the face rebuild its texture matrix
+      if(!this.uvSet_ || xOffset != this.lastUOffset_ || yOffset != this.lastVOffset_)
+      {
+         this.face_.uvt_.length = 0;
+         this.face_.uvt_.push(xOffset,yOffset,0,1 + xOffset,yOffset,0,1 + xOffset,1 + yOffset,0,xOffset,1 + yOffset,0);
+         this.face_.setUVT(this.face_.uvt_);
+         this.uvSet_ = true;
+         this.lastUOffset_ = xOffset;
+         this.lastVOffset_ = yOffset;
+      }
       return this.face_.draw(graphicsData,camera);
    }
+
+   private var uvSet_:Boolean = false;
+   private var lastUOffset_:Number = 0;
+   private var lastVOffset_:Number = 0;
 }
 }

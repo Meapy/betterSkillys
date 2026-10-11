@@ -4,6 +4,8 @@ package kabam.rotmg.stage3D
    import com.company.assembleegameclient.map.Camera;
    import com.company.assembleegameclient.parameters.Parameters;
    import flash.display.GraphicsBitmapFill;
+   import flash.display.GraphicsEndFill;
+   import flash.display.GraphicsPath;
    import flash.display.GraphicsGradientFill;
    import flash.display.IGraphicsData;
    import flash.display.Stage3D;
@@ -18,12 +20,14 @@ import flash.display.StageScaleMode;
    import flash.display3D.Program3D;
    import flash.display3D.VertexBuffer3D;
    import flash.display3D.textures.Texture;
+   import flash.geom.Matrix;
    import flash.geom.Matrix3D;
    import flash.geom.Vector3D;
    import flash.utils.ByteArray;
    import kabam.rotmg.stage3D.Object3D.Object3DStage3D;
    import kabam.rotmg.stage3D.Object3D.Util;
    import kabam.rotmg.stage3D.graphic3D.Graphic3D;
+   import kabam.rotmg.stage3D.graphic3D.Program3DFactory;
    import kabam.rotmg.stage3D.graphic3D.TextureFactory;
    import kabam.rotmg.stage3D.proxies.Context3DProxy;
    import org.swiftsuspenders.Injector;
@@ -40,6 +44,21 @@ import flash.display.StageScaleMode;
       private static const POST_FILTER_TRIS:Vector.<uint> = new <uint>[0, 2, 3, 0, 1, 2];
 
       public static var inGame:Boolean;
+
+      // Draw calls in the last frame, for GameStatistics.
+      public static var drawCalls:int = 0;
+
+      // Batching: consecutive quads with the same image (particles, projectiles, repeated
+      // sprites...) are drawn with one draw call instead of one each. Their corners are
+      // computed here the way Graphic3D places a quad, into a region of one big vertex buffer
+      // (a new region for every batch in a frame, so no upload waits for a pending draw).
+      private static const BATCH_QUADS:int = 8192;
+      private static const ZERO_OFFSET:Vector.<Number> = new <Number>[0, 0, 0, 0];
+      private var batchCtx_:Context3D;
+      private var batchVB_:VertexBuffer3D;
+      private var batchIB_:IndexBuffer3D;
+      private var batchData_:Vector.<Number> = new Vector.<Number>();
+      private var batchCursor_:int = 0;
 
       [Inject]
       public var context3D:Context3DProxy;
@@ -290,11 +309,24 @@ import flash.display.StageScaleMode;
          this.widthOffset_ = -mapWidth / 2;
          this.heightOffset_ = mapHeight / 2;
          this.UpdateCameraMatrix(camera);
-         for each(graphicsData in graphicsDatas)
+         this.batchCursor_ = 0;
+         drawCalls = 0;
+         var count:int = graphicsDatas.length;
+         var run:int = 0;
+         for(var gi:int = 0; gi < count; gi++)
          {
+            graphicsData = graphicsDatas[gi];
             this.context3D.GetContext3D().setCulling(Context3DTriangleFace.NONE);
+            run = this.runLength(graphicsDatas, gi);
+            if(run > 1)
+            {
+               this.drawBatch(graphicsDatas, gi, run, finalTransform);
+               gi = gi + run * 3 - 1;
+               continue;
+            }
             if(graphicsData is GraphicsBitmapFill && !GraphicsFillExtra.isSoftwareDraw(GraphicsBitmapFill(graphicsData)))
             {
+               drawCalls++;
                try
                {
                   test = GraphicsBitmapFill(graphicsData).bitmapData.width;
@@ -347,6 +379,124 @@ import flash.display.StageScaleMode;
                }
             }
          }
+      }
+
+      // The fill as a plain quad Graphic3D would draw (no custom vertices, sink or texture
+      // offset), or null.
+      private static function plainQuad(graphicsData:IGraphicsData) : GraphicsBitmapFill
+      {
+         var fill:GraphicsBitmapFill = graphicsData as GraphicsBitmapFill;
+         if(fill == null || fill.bitmapData == null || GraphicsFillExtra.isSoftwareDraw(fill) || GraphicsFillExtra.getVertexBuffer(fill) != null || GraphicsFillExtra.getSinkLevel(fill) != 0)
+         {
+            return null;
+         }
+         var offset:Vector.<Number> = GraphicsFillExtra.getOffsetUV(fill);
+         if(offset[0] != 0 || offset[1] != 0)
+         {
+            return null;
+         }
+         try
+         {
+            if(fill.bitmapData.width <= 0)
+            {
+               return null;
+            }
+         }
+         catch(e:Error)
+         {
+            return null; // disposed image
+         }
+         return fill;
+      }
+
+      // How many plain quads with the same image follow each other from i (each is a fill,
+      // its path and an end fill).
+      private function runLength(datas:Vector.<IGraphicsData>, i:int) : int
+      {
+         var first:GraphicsBitmapFill = plainQuad(datas[i]);
+         if(first == null)
+         {
+            return 0;
+         }
+         var n:int = 1;
+         var j:int = i + 3;
+         var fill:GraphicsBitmapFill = null;
+         while(n < BATCH_QUADS && j < datas.length)
+         {
+            fill = datas[j] as GraphicsBitmapFill;
+            if(fill == null || fill.bitmapData != first.bitmapData || fill.repeat != first.repeat || !(datas[j - 2] is GraphicsPath) || !(datas[j - 1] is GraphicsEndFill) || plainQuad(fill) == null)
+            {
+               break;
+            }
+            n++;
+            j = j + 3;
+         }
+         return n;
+      }
+
+      private function drawBatch(datas:Vector.<IGraphicsData>, i:int, n:int, finalTransform:Matrix3D) : void
+      {
+         var ctx:Context3D = this.context3D.GetContext3D();
+         var q:int = 0;
+         if(this.batchCtx_ != ctx || this.batchVB_ == null)
+         {
+            // (again after the GPU context is lost and recreated)
+            this.batchCtx_ = ctx;
+            this.batchVB_ = ctx.createVertexBuffer(BATCH_QUADS * 4, 5);
+            this.batchIB_ = ctx.createIndexBuffer(BATCH_QUADS * 6);
+            var indices:Vector.<uint> = new Vector.<uint>(BATCH_QUADS * 6, true);
+            for(q = 0; q < BATCH_QUADS; q++)
+            {
+               indices[q * 6] = q * 4;
+               indices[q * 6 + 1] = q * 4 + 1;
+               indices[q * 6 + 2] = q * 4 + 2;
+               indices[q * 6 + 3] = q * 4 + 2;
+               indices[q * 6 + 4] = q * 4 + 1;
+               indices[q * 6 + 5] = q * 4 + 3;
+            }
+            this.batchIB_.uploadFromVector(indices,0,BATCH_QUADS * 6);
+         }
+         if(this.batchCursor_ + n > BATCH_QUADS)
+         {
+            this.batchCursor_ = 0;
+         }
+         var first:GraphicsBitmapFill = GraphicsBitmapFill(datas[i]);
+         this.graphic3D_.setGraphic(first,this.context3D); // texture and colour transform
+         var w:Number = Math.ceil(this.graphic3D_.texture.getWidth());
+         var h:Number = Math.ceil(this.graphic3D_.texture.getHeight());
+         var d:Vector.<Number> = this.batchData_;
+         d.length = n * 20;
+         var p:int = 0;
+         var m:Matrix = null;
+         var ax:Number, ay:Number, cx:Number, cy:Number;
+         for(q = 0; q < n; q++)
+         {
+            // the corners Graphic3D gives its unit quad: texture pixels (0,0), (w,0), (0,h) and
+            // (w,h) through the fill's matrix, with y flipped
+            m = GraphicsBitmapFill(datas[i + q * 3]).matrix;
+            ax = m.a * w;
+            ay = m.b * w;
+            cx = m.c * h;
+            cy = m.d * h;
+            d[p++] = m.tx; d[p++] = -m.ty; d[p++] = 0; d[p++] = 0; d[p++] = 0;
+            d[p++] = m.tx + ax; d[p++] = -(m.ty + ay); d[p++] = 0; d[p++] = 1; d[p++] = 0;
+            d[p++] = m.tx + cx; d[p++] = -(m.ty + cy); d[p++] = 0; d[p++] = 0; d[p++] = 1;
+            d[p++] = m.tx + ax + cx; d[p++] = -(m.ty + ay + cy); d[p++] = 0; d[p++] = 1; d[p++] = 1;
+         }
+         this.batchVB_.uploadFromVector(d,this.batchCursor_ * 4,n * 4);
+         finalTransform.identity();
+         finalTransform.appendScale(1 / Stage3DConfig.HALF_WIDTH,1 / Stage3DConfig.HALF_HEIGHT,1);
+         finalTransform.appendTranslation(this.tX / Stage3DConfig.WIDTH,this.tY / Stage3DConfig.HEIGHT,0);
+         this.context3D.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX,0,finalTransform,true);
+         this.context3D.setProgram(Program3DFactory.getInstance().getProgram(this.context3D,first.repeat));
+         this.context3D.setTextureAt(0,this.graphic3D_.texture);
+         ctx.setVertexBufferAt(0,this.batchVB_,0,Context3DVertexBufferFormat.FLOAT_3);
+         ctx.setVertexBufferAt(1,this.batchVB_,3,Context3DVertexBufferFormat.FLOAT_2);
+         ctx.setVertexBufferAt(2,null);
+         ctx.setProgramConstantsFromVector(Context3DProgramType.VERTEX,4,ZERO_OFFSET);
+         ctx.drawTriangles(this.batchIB_,this.batchCursor_ * 6,n * 2);
+         this.batchCursor_ = this.batchCursor_ + n;
+         drawCalls++;
       }
 
       private function setTranslationToGame() : void
