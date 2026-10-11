@@ -100,6 +100,15 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
   - **No garbage per frame:** the game used to create about 4,000 objects every frame at 4K, now about 40. `TextureRedrawer` finds cached images without building string keys, the boss damage text is only set when it changes (it was set and measured once per object in the world, every frame), and `GraphicsFillExtra` no longer makes a new ColorTransform per lookup. A normal-sized window went from 139 to 201 fps.
   - **Performance Stats** (Options) also shows the map draw time per frame (and how much of it is the GPU), the time in tiles, objects and the HUD, the draw calls by kind, and `frame = game + flash`: the game's own time per frame against the AIR runtime's. The runtime needs about 4 ms per frame at 4K to composite the screen, whatever the game does, so about 240 fps is the ceiling there.
   - Not ported, because betterSkillys already has them or they only mattered in Ruffle/Flash: the frame-rate option and render-quality toggle (both exist), projectile hit lists (exist), the fullscreen zoom (betterSkillys has map scale), and the Ruffle fixes (outline glow, chat text, 32-bit float drift).
+- **Dungeons** (world server):
+  - Map files are looked up without regard to case (`XmlData.WorldDataCache`). Cave of a Thousand Treasures and the Avatar, Skull Shrine and Grand Sphinx setpieces didn't load before.
+  - At start-up the server logs worlds whose map is missing and portal destinations with no world (`XmlData.ValidateWorlds`).
+  - New world entry for Wine Cellar (map and Oryx 2 already existed). The Ivory Wyvern world is now `The Ivory Wyvern`, the name its portal uses.
+  - Maps that placed the nonexistent "Portal to Nexus" (Ocean Trench, Oryx's Chamber, guild halls) use "Nexus Portal", which `UsePortalHandler` treats as an exit. A portal without a destination shows an error instead of throwing.
+  - Loot entries that named missing items were fixed (display names replaced by ids, such as `PriestST1` for Book of Geb) or removed (items not in these XMLs).
+  - **Endgame:** when a realm closes, its players are sent to a new Oryx's Castle (`RealmManager.SendPlayersToCastle`) instead of being teleported inside the realm. In the castle, killing both Stone Guardians opens the wall to Janus the Doorwarden (`md dwGenerator`); Janus (new fight) drops the Oryx's Chamber portal, Oryx 1 the Wine Cellar portal.
+  - **Portal sources:** Ghost Ship drops Davy Jones' Locker, the Killer Bee Nest The Hive, Oryx 2 Lost Halls (10%), Lord of the Lost Lands Ice Tomb (25%), Hermit God Cnidarian Reef (25%), the Statues altar Magic Woods (25%). Rock Dragon drops Lair of Shaitan, because Lair of Draconis has no map or world yet.
+  - Ice Tomb's chest spawner runs on the map's Ice Tomb Boss Anchor. The Magic Woods fountain gate waits for the Fountain Spirit (it waited for a nonexistent "Grim Reaper" and opened at once).
 
 ## Content ported from Doomed Realms
 
