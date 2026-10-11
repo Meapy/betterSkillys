@@ -12,6 +12,7 @@ namespace WorldServer.logic
                 new State(
                     new PlaceMap("Setpieces/Grand Sphinx.jm", true),
                     new DropPortalOnDeath("Tomb of the Ancients Portal", 1.0),
+                    new DropPortalOnDeath("Ancient Ruins Portal", 0.25, xAdjustment: 2),
                     new State("Spawned",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new Reproduce("Horrid Reaper", 30, 4, coolDown: 100),
