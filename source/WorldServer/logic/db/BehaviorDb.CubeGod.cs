@@ -11,6 +11,7 @@ namespace WorldServer.logic
         .Init("Cube God",
             new State(
                 new ScaleHP2(20),
+                new DropPortalOnDeath("Parasite Chambers Portal", 0.25),
                 new State("Start",
                     new Wander(0.3),
                     new TossObject2("Cube Overseer", 3, coolDown: 99999, randomToss: true),
