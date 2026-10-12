@@ -99,7 +99,7 @@ namespace WorldServer.logic
                     new Shoot(50, 5, 15, 1, coolDown: 3000),
                     new Shoot(50, 2, 80, 1, coolDown: 3000),
                     new Shoot(50, 2, 90, 1, coolDown: 3000),
-                    new Spawn("Pyramid Artifact 1", 2, 0),
+                    new Spawn("Pyramid Artifact 3", 1, 0),
                     new State("blue shield 4",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new TimedTransition(3000, "unset blue shield 4")
@@ -214,6 +214,7 @@ namespace WorldServer.logic
                     new Shoot(12, 5, 72, 3, 0, 0, coolDown: 2500, coolDownOffset: 2000),
                     new Shoot(12, 6, 60, 4, 0, 0, coolDown: 2500, coolDownOffset: 2500),
                     new Spawn("Sphinx Artifact 1", 1, 0),
+                    new Spawn("Sphinx Artifact 2", 1, 0),
                     new State("blue shield 3",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new TimedTransition(3000, "unset blue shield 3")
@@ -230,7 +231,7 @@ namespace WorldServer.logic
                     new Shoot(12, 4, 90, 2, 0, 0, coolDown: 2500, coolDownOffset: 1500),
                     new Shoot(12, 5, 72, 3, 0, 0, coolDown: 2500, coolDownOffset: 2000),
                     new Shoot(12, 6, 60, 4, 0, 0, coolDown: 2500, coolDownOffset: 2500),
-                    new Spawn("Sphinx Artifact 1", 2, 0),
+                    new Spawn("Sphinx Artifact 3", 1, 0),
                     new State("blue shield 4",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new TimedTransition(3000, "unset blue shield 4")
@@ -370,6 +371,7 @@ namespace WorldServer.logic
                     new Shoot(99, 1, projectileIndex: 4, coolDown: 500),
                     new Shoot(99, 1, projectileIndex: 4, angleOffset: 90, coolDown: 500),
                     new Spawn("Nile Artifact 1", 1, 0),
+                    new Spawn("Nile Artifact 2", 1, 0),
                     new State("blue shield 3",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new TimedTransition(3000, "unset blue shield 3")
@@ -405,7 +407,7 @@ namespace WorldServer.logic
                     new Shoot(12, 2, 45, 0, coolDown: 2000),
                     new Shoot(99, 1, projectileIndex: 4, coolDown: 500),
                     new Shoot(99, 1, projectileIndex: 4, angleOffset: 90, coolDown: 500),
-                    new Spawn("Nile Artifact 1", 2, 0),
+                    new Spawn("Nile Artifact 3", 1, 0),
                     new State("blue shield 4",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new TimedTransition(3000, "unset blue shield 4")
@@ -476,43 +478,68 @@ namespace WorldServer.logic
                     new Orbit(3, 2, target: "Tomb Defender", radiusVariance: 0.5)
                     ),
                 new Follow(0.85, range: 1, duration: 5000, coolDown: 0),
-                new Shoot(3, 3, 120, coolDown: 2500)
+                new Shoot(3, 3, 120, coolDown: 2500),
+                new EntityNotExistsTransition("Tomb Defender", 50, "die"),
+                new State("alive"),
+                new State("die",
+                    new Suicide()
+                    )
                 )
             )
         .Init("Pyramid Artifact 2",
             new State(
                 new Prioritize(
-                    new Orbit(3, 2, target: "Tomb Attacker", radiusVariance: 0.5)
+                    new Orbit(3, 2, target: "Tomb Defender", radiusVariance: 0.5)
                     ),
                 new Follow(2, range: 1, duration: 5000, coolDown: 0),
-                new Shoot(3, 3, 120, coolDown: 2500)
+                new Shoot(3, 3, 120, coolDown: 2500),
+                new EntityNotExistsTransition("Tomb Defender", 50, "die"),
+                new State("alive"),
+                new State("die",
+                    new Suicide()
+                    )
                 )
             )
         .Init("Pyramid Artifact 3",
             new State(
                 new Prioritize(
-                    new Orbit(1, 2, target: "Tomb Support", radiusVariance: 0.5)
+                    new Orbit(3, 2, target: "Tomb Defender", radiusVariance: 0.5)
                     ),
                 new Follow(0.85, range: 1, duration: 5000, coolDown: 0),
-                new Shoot(3, 3, 120, coolDown: 2500)
+                new Shoot(3, 3, 120, coolDown: 2500),
+                new EntityNotExistsTransition("Tomb Defender", 50, "die"),
+                new State("alive"),
+                new State("die",
+                    new Suicide()
+                    )
                 )
             )
         .Init("Sphinx Artifact 1",
             new State(
                 new Prioritize(
-                    new Orbit(3, 2, target: "Tomb Defender", radiusVariance: 0.5)
+                    new Orbit(3, 2, target: "Tomb Support", radiusVariance: 0.5)
                     ),
                 new Follow(2, range: 1, duration: 5000, coolDown: 0),
-                new Shoot(12, 3, 120, coolDown: 2500)
+                new Shoot(12, 3, 120, coolDown: 2500),
+                new EntityNotExistsTransition("Tomb Support", 50, "die"),
+                new State("alive"),
+                new State("die",
+                    new Suicide()
+                    )
                 )
             )
         .Init("Sphinx Artifact 2",
             new State(
                 new Prioritize(
-                    new Orbit(3, 2, target: "Tomb Attacker", radiusVariance: 0.5)
+                    new Orbit(3, 2, target: "Tomb Support", radiusVariance: 0.5)
                     ),
                 new Follow(2, range: 1, duration: 5000, coolDown: 0),
-                new Shoot(12, 3, 120, coolDown: 2500)
+                new Shoot(12, 3, 120, coolDown: 2500),
+                new EntityNotExistsTransition("Tomb Support", 50, "die"),
+                new State("alive"),
+                new State("die",
+                    new Suicide()
+                    )
                 )
             )
         .Init("Sphinx Artifact 3",
@@ -521,16 +548,26 @@ namespace WorldServer.logic
                     new Orbit(3, 2, target: "Tomb Support", radiusVariance: 0.5)
                     ),
                 new Follow(2, range: 1, duration: 5000, coolDown: 0),
-                new Shoot(12, 3, 120, coolDown: 2500)
+                new Shoot(12, 3, 120, coolDown: 2500),
+                new EntityNotExistsTransition("Tomb Support", 50, "die"),
+                new State("alive"),
+                new State("die",
+                    new Suicide()
+                    )
                 )
             )
         .Init("Nile Artifact 1",
             new State(
                 new Prioritize(
-                    new Orbit(3, 2, target: "Tomb Defender", radiusVariance: 0.5)
+                    new Orbit(3, 2, target: "Tomb Attacker", radiusVariance: 0.5)
                     ),
                 new Follow(2, range: 1, duration: 5000, coolDown: 0),
-                new Shoot(12, 3, 120, coolDown: 2500)
+                new Shoot(12, 3, 120, coolDown: 2500),
+                new EntityNotExistsTransition("Tomb Attacker", 50, "die"),
+                new State("alive"),
+                new State("die",
+                    new Suicide()
+                    )
                 )
             )
         .Init("Nile Artifact 2",
@@ -539,89 +576,80 @@ namespace WorldServer.logic
                     new Orbit(3, 2, target: "Tomb Attacker", radiusVariance: 0.5)
                     ),
                 new Follow(2, range: 1, duration: 5000, coolDown: 0),
-                new Shoot(12, 3, 120, coolDown: 2500)
+                new Shoot(12, 3, 120, coolDown: 2500),
+                new EntityNotExistsTransition("Tomb Attacker", 50, "die"),
+                new State("alive"),
+                new State("die",
+                    new Suicide()
+                    )
                 )
             )
         .Init("Nile Artifact 3",
             new State(
                 new Prioritize(
-                    new Orbit(3, 2, target: "Tomb Support", radiusVariance: 0.5)
+                    new Orbit(3, 2, target: "Tomb Attacker", radiusVariance: 0.5)
                     ),
                 new Follow(2, range: 1, duration: 5000, coolDown: 0),
-                new Shoot(12, 3, 120, coolDown: 2500)
+                new Shoot(12, 3, 120, coolDown: 2500),
+                new EntityNotExistsTransition("Tomb Attacker", 50, "die"),
+                new State("alive"),
+                new State("die",
+                    new Suicide()
+                    )
                 )
             )
+        // the statues wake once every sarcophagus in the tomb has been destroyed
         .Init("Tomb Defender Statue",
             new State(
-                new State(
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Inactive Sarcophagus", 1000, "checkActive"),
-                    new EntityNotExistsTransition("Active Sarcophagus", 1000, "checkInactive")
+                new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable, true),
+                new State("Init",
+                    new TimedTransition(2000, "Dormant")
                     ),
-                new State("checkActive",
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Active Sarcophagus", 1000, "ItsGoTime")
-                    ),
-                new State("checkInactive",
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Inactive Sarcophagus", 1000, "ItsGoTime")
+                new State("Dormant",
+                    new EntitiesNotExistsTransition(1000, "ItsGoTime", "Inactive Sarcophagus", "Active Sarcophagus")
                     ),
                 new State("ItsGoTime",
                     new Transform("Tomb Defender")
                     )
                 ))
+        // the statues wake once every sarcophagus in the tomb has been destroyed
         .Init("Tomb Support Statue",
             new State(
-                new State(
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Inactive Sarcophagus", 1000, "checkActive"),
-                    new EntityNotExistsTransition("Active Sarcophagus", 1000, "checkInactive")
+                new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable, true),
+                new State("Init",
+                    new TimedTransition(2000, "Dormant")
                     ),
-                new State("checkActive",
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Active Sarcophagus", 1000, "ItsGoTime")
-                    ),
-                new State("checkInactive",
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Inactive Sarcophagus", 1000, "ItsGoTime")
+                new State("Dormant",
+                    new EntitiesNotExistsTransition(1000, "ItsGoTime", "Inactive Sarcophagus", "Active Sarcophagus")
                     ),
                 new State("ItsGoTime",
                     new Transform("Tomb Support")
                     )
                 ))
+        // the statues wake once every sarcophagus in the tomb has been destroyed
         .Init("Tomb Attacker Statue",
             new State(
-                new State(
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Inactive Sarcophagus", 1000, "checkActive"),
-                    new EntityNotExistsTransition("Active Sarcophagus", 1000, "checkInactive")
+                new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable, true),
+                new State("Init",
+                    new TimedTransition(2000, "Dormant")
                     ),
-                new State("checkActive",
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Active Sarcophagus", 1000, "ItsGoTime")
-                    ),
-                new State("checkInactive",
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Inactive Sarcophagus", 1000, "ItsGoTime")
+                new State("Dormant",
+                    new EntitiesNotExistsTransition(1000, "ItsGoTime", "Inactive Sarcophagus", "Active Sarcophagus")
                     ),
                 new State("ItsGoTime",
                     new Transform("Tomb Attacker")
                     )
                 ))
+        // each sarcophagus opens once its own priests (within 15 tiles; the nearest other
+        // sarcophagus is over 28 tiles away) are dead
         .Init("Inactive Sarcophagus",
             new State(
-                new State(
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Beam Priestess", 14, "checkPriest"),
-                    new EntityNotExistsTransition("Beam Priest", 1000, "checkPriestess")
+                new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable, true),
+                new State("Init",
+                    new TimedTransition(2000, "Guarded")
                     ),
-                new State("checkPriest",
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Beam Priest", 1000, "activate")
-                    ),
-                new State("checkPriestess",
-                    new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                    new EntityNotExistsTransition("Beam Priestess", 1000, "activate")
+                new State("Guarded",
+                    new EntitiesNotExistsTransition(15, "activate", "Beam Priest", "Beam Priestess")
                     ),
                 new State("activate",
                     new Transform("Active Sarcophagus")
@@ -642,18 +670,21 @@ namespace WorldServer.logic
             )
         .Init("Active Sarcophagus",
             new State(
-                new State(
-                    new HpLessTransition(60, "stun")
+                // three bursts as it opens, then it waits to be broken
+                new State("burst 1",
+                    new Flash(0xFFD700, 0.25, 4),
+                    new Shoot(50, 8, 10, 0, coolDown: 9999999),
+                    new TimedTransition(500, "burst 2")
                     ),
-                new State("stun",
-                    new Shoot(50, 8, 10, 0, coolDown: 9999999, coolDownOffset: 500),
-                    new Shoot(50, 8, 10, 0, coolDown: 9999999, coolDownOffset: 1000),
-                    new Shoot(50, 8, 10, 0, coolDown: 9999999, coolDownOffset: 1500),
-                    new TimedTransition(1500, "idle")
+                new State("burst 2",
+                    new Shoot(50, 8, 10, 0, coolDown: 9999999),
+                    new TimedTransition(500, "burst 3")
                     ),
-                new State("idle",
-                    new ChangeSize(100, 100)
-                    )
+                new State("burst 3",
+                    new Shoot(50, 8, 10, 0, coolDown: 9999999),
+                    new TimedTransition(500, "idle")
+                    ),
+                new State("idle")
                 ),
             new ItemLoot("Magic Potion", 0.002),
             new ItemLoot("Health Potion", 0.15),
@@ -775,7 +806,7 @@ namespace WorldServer.logic
         .Init("Beam Priest",
             new State(
                 new State("weakning",
-                    new Orbit(.4, 6, target: "Active Sarcophagus", radiusVariance: 0.5),
+                    new Orbit(.4, 6, target: "Inactive Sarcophagus", radiusVariance: 0.5),
                     new Shoot(50, 3, projectileIndex: 1, coolDown: 3500),
                     new Shoot(50, 6, projectileIndex: 0, coolDown: 7210)
 
@@ -957,7 +988,7 @@ namespace WorldServer.logic
             new State(
                 new State("weakning",
                     new Prioritize(
-                        new Orbit(.6, 9, target: "Active Sarcophagus", radiusVariance: 0.5)
+                        new Orbit(.6, 9, target: "Inactive Sarcophagus", radiusVariance: 0.5)
                         ),
                     new Shoot(50, 6, projectileIndex: 1, coolDown: 3500),
                     new Shoot(50, 2, projectileIndex: 0, coolDown: 7210)
@@ -965,10 +996,14 @@ namespace WorldServer.logic
                     )
                 )
             )
+        // the bosses orbit this anchor; it drops the exit portal once they are all dead
         .Init("Tomb Boss Anchor",
             new State(
                 new ConditionEffectBehavior(ConditionEffectIndex.Invincible, true),
                 new DropPortalOnDeath("Realm Portal", 100),
+                new State("Init",
+                    new TimedTransition(2000, "Idle")
+                    ),
                 new State("Idle",
                     new EntitiesNotExistsTransition(300, "Death", "Tomb Support", "Tomb Attacker", "Tomb Defender",
                         "Active Sarcophagus", "Tomb Defender Statue", "Tomb Support Statue", "Tomb Attacker Statue")
