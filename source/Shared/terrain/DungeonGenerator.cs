@@ -111,7 +111,6 @@ namespace Shared.terrain
             public TerrainTile Void, Floor;
             public TerrainTile? Wall;
             public Func<TerrainTile, bool> Walkable;
-            public Func<string, bool> IsWall;
         }
 
         private static Source Analyse(XmlData data, TerrainTile[,] map, RandomLayoutDesc desc, string mapName)
@@ -234,7 +233,7 @@ namespace Shared.terrain
                         }
                 }
 
-            var source = new Source() { Goals = new List<Room>(), Fillers = new List<Room>(), Walkable = Walkable, IsWall = IsWallObject };
+            var source = new Source() { Goals = new List<Room>(), Fillers = new List<Room>(), Walkable = Walkable };
 
             // the background: what fills the map outside the dungeon
             var outside = new List<TerrainTile>();
@@ -748,12 +747,15 @@ namespace Shared.terrain
                         canvas[x, y] = wall;
                 }
 
-                // the client draws walls standing on empty ground as loose spikes instead of a solid
-                // wall, so every wall gets the floor under it
+                // connected walls (Tomb, cave walls) can store the shape they had in the original map;
+                // drop it so the world server works out each wall's shape from its new neighbours
                 for (var x = 0; x < CanvasSize; x++)
                     for (var y = 0; y < CanvasSize; y++)
-                        if (canvas[x, y].TileId == 0xFF && Source.IsWall(canvas[x, y].TileObj))
-                            canvas[x, y].TileId = Source.Floor.TileId;
+                    {
+                        var name = canvas[x, y].Name;
+                        if (!string.IsNullOrEmpty(name) && name.Contains("conn:"))
+                            canvas[x, y].Name = string.Join(";", name.Split(';').Where(p => p.Length > 0 && !p.StartsWith("conn:")));
+                    }
 
                 // everything still has to be reachable from the spawn
                 var spawn = new List<(int, int)>();
