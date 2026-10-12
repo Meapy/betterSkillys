@@ -241,6 +241,7 @@ namespace WorldServer.core.objects
 
         public bool HasConditionEffect(ConditionEffectIndex effect) => _conditionEffectManager.HasCondition((byte)effect);
         public void RemoveCondition(ConditionEffectIndex effect) => _conditionEffectManager.RemoveCondition((byte)effect);
+        public void ResendConditions() => _conditionEffectManager.Resend();
 
         protected virtual bool CanApplyCondition(ConditionEffectIndex effect)
         {

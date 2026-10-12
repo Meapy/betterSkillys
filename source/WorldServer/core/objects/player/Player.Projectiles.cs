@@ -104,21 +104,27 @@ namespace WorldServer.core.objects
 
         public void PlayerHit(int bulletId, int objectId)
         {
+            // The client applies a hit's condition effects as soon as it is hit and only clears them
+            // when the server's condition flags change. When the server ignores the hit, the flags
+            // never change, so they are sent again; otherwise a stun or paralyze stays on forever.
             if (!ActiveProjectiles.TryGetValue(objectId, out var dict))
             {
                 //Console.WriteLine($"[PlayerHit] {Name} -> {Id} not present in VisibleProjectiles List");
+                ResendConditions();
                 return;
             }
 
             if (!dict.TryGetValue(bulletId, out var projectile))
             {
                 //Console.WriteLine($"[PlayerHit] {Name} -> {bulletId} not present in VisibleProjectiles List");
+                ResendConditions();
                 return;
             }
 
             if (projectile.Disabled)
             {
                 //Console.WriteLine($"[OtherHit] {Name} -> {bulletId} Projectile Already Disabled: Multihit: {projectileDesc.MultiHit}");
+                ResendConditions();
                 return;
             }
 
@@ -129,6 +135,7 @@ namespace WorldServer.core.objects
             {
                 projectile.Disabled = true;
                 //Console.WriteLine("[PlayerHit] -> A expired shot tried to hit entity");
+                ResendConditions();
                 return;
             }
 
