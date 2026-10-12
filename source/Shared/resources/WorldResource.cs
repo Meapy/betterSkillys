@@ -27,6 +27,7 @@ namespace Shared.resources
         public readonly byte Background;
         public readonly byte VisibilityType;
         public readonly List<string> MapJM;
+        public readonly RandomLayoutDesc RandomLayout;
         public readonly List<string> Music;
         public readonly bool AllowTeleport;
         public readonly bool ShowDisplays;
@@ -55,6 +56,9 @@ namespace Shared.resources
             MapJM = new List<string>();
             foreach (var map in elem.Elements("MapJM"))
                 MapJM.Add(map.Value);
+
+            if (elem.HasElement("RandomLayout"))
+                RandomLayout = new RandomLayoutDesc(elem.Element("RandomLayout"));
 
             Music = new List<string>();
             var musicElem = elem.Element("Music");

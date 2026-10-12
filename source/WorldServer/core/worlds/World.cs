@@ -452,9 +452,12 @@ namespace WorldServer.core.worlds
 
         public bool LoadMapFromData(WorldResource worldResource)
         {
-            var data = GameServer.Resources.GameData.GetWorldData(worldResource.MapJM[Random.Shared.Next(0, worldResource.MapJM.Count)]);
+            var map = worldResource.MapJM[Random.Shared.Next(0, worldResource.MapJM.Count)];
+            var data = GameServer.Resources.GameData.GetWorldData(map);
             if (data == null)
                 return false;
+            if (worldResource.RandomLayout != null)
+                data = Shared.terrain.DungeonGenerator.Generate(GameServer.Resources.GameData, map, data, worldResource.RandomLayout, Random.Shared) ?? data;
             FromWorldMap(new MemoryStream(data));
             return true;
         }
