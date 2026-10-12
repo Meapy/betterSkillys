@@ -50,11 +50,8 @@ namespace App.Controllers
         }
 
         [HttpPost("purchaseCharSlot")]
-        public async void PurchaseCharSlot([FromForm] string guid, [FromForm] string password)
+        public async Task PurchaseCharSlot([FromForm] string guid, [FromForm] string password)
         {
-            // works but currently keeps you with account in use
-            // need to fix
-
             var db = _core.Database;
 
             var status = db.Verify(guid, password, out var acc);
@@ -87,17 +84,16 @@ namespace App.Controllers
 
                 trans.AddCondition(Condition.HashEqual(acc.Key, "maxCharSlot", acc.MaxCharSlot));
 
-                await trans.HashIncrementAsync(acc.Key, "maxCharSlot");
-                var t2 = trans.ExecuteAsync();
+                // queued commands only complete once the transaction runs, so they can't be awaited before it
+                _ = trans.HashIncrementAsync(acc.Key, "maxCharSlot");
 
-                await Task.WhenAll(t1, t2);
-                    
-                if (t2.IsCanceled || !t2.Result)
+                if (!await trans.ExecuteAsync())
                 {
-                    Response.CreateError("<Error>Internal Server Error</Error>");
+                    Response.CreateError("Purchase failed, please try again");
                     return;
                 }
 
+                await t1;
                 Response.CreateSuccess();
             }
         }
