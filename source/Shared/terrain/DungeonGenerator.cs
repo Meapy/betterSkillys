@@ -426,15 +426,26 @@ namespace Shared.terrain
             }
 
             var best = Enumerable.Range(0, span).Where(p => outer[p] >= 0).Select(p => dist[p]).DefaultIfEmpty(int.MaxValue).Min();
-            var doors = new List<Door>();
-            for (var p = 1; p + width < span; p++)
+
+            // lanes of floor reaching the side, within `slack` of its outermost floor; `flush` also wants
+            // the floor on either side of the doorway that far out, so the corridor meets a straight wall
+            List<Door> Find(int slack, bool flush)
             {
-                var ok = true;
-                for (var i = 0; i < width && ok; i++)
-                    ok = outer[p + i] >= 0 && dist[p + i] <= best + DoorDepth;
-                if (ok)
-                    doors.Add(new Door() { Perp = p, Outer = Enumerable.Range(0, width).Select(i => outer[p + i]).ToArray() });
+                var found = new List<Door>();
+                for (var p = 1; p + width < span; p++)
+                {
+                    var ok = true;
+                    for (var i = flush ? -1 : 0; i < (flush ? width + 1 : width) && ok; i++)
+                        ok = outer[p + i] >= 0 && dist[p + i] <= best + slack;
+                    if (ok)
+                        found.Add(new Door() { Perp = p, Outer = Enumerable.Range(0, width).Select(i => outer[p + i]).ToArray() });
+                }
+                return found;
             }
+
+            var doors = Find(0, true);
+            if (doors.Count == 0)
+                doors = Find(DoorDepth, false);
             return doors;
         }
 
@@ -713,14 +724,16 @@ namespace Shared.terrain
                             if (!Source.Walkable(canvas[x, y]))
                                 canvas[x, y] = Source.Floor;
 
-                // walls along the corridors
+                // walls along the corridors and wherever floor meets the background
                 if (Source.Wall is TerrainTile wall)
                 {
                     var add = new List<(int, int)>();
                     for (var x = 1; x < CanvasSize - 1; x++)
                         for (var y = 1; y < CanvasSize - 1; y++)
                         {
-                            if (inRoom[x, y] || Source.Walkable(canvas[x, y]))
+                            // background, including the empty corners rooms bring along
+                            var t = canvas[x, y];
+                            if (Source.Walkable(t) || !string.IsNullOrEmpty(t.TileObj) || (inRoom[x, y] && !t.Equals(Source.Void)))
                                 continue;
                             for (var i = -1; i <= 1; i++)
                                 for (var j = -1; j <= 1; j++)
