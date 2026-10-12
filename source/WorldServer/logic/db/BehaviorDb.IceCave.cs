@@ -20,6 +20,7 @@ namespace WorldServer.logic
                        new Taunt(0.50, "MRRRRRRTTTTTT!"),
                         new Taunt(0.25, "Mwruuuu!"),
                        new Flash(0xFF0000, 2, 18),
+                       new Shoot(10, count: 1, projectileIndex: 0, predictive: 0.5, coolDown: 2500),
                        new Spawn("Mini Yeti", 1, 4, coolDown: 10000)
                         )
 
@@ -54,23 +55,25 @@ namespace WorldServer.logic
                      new Shoot(8.4, count: 6, projectileIndex: 0, coolDown: 25)
                     )
             )
+        // a game object, not an enemy, so it can't die: it opens the Inner Sanctum portal itself
+        // once every Big Yeti and Snow Bat Mama is dead
         .Init("ic boss spawner live",
             new State(
-                new TransformOnDeath("Inner Sanctum Portal"),
-                new ConditionEffectBehavior(ConditionEffectIndex.Invincible),
+                new ConditionEffectBehavior(ConditionEffectIndex.Invincible, true),
                 new State("waiting",
                     new PlayerWithinTransition(1000, ":)")
                     ),
                 new State(":)",
                     new Taunt("..kill the large ones....open the way....the are meaningless...."),
-                    new EntitiesNotExistsTransition(1000, "suicide", "Big Yeti", "Snow Bat Mama")
+                    new EntitiesNotExistsTransition(1000, "open", "Big Yeti", "Snow Bat Mama")
                     ),
-                new State("suicide",
+                new State("open",
                     new Taunt("Innocent souls. So delicious. You have sated me. Now come, I shall give you your reward."),
-                    new TimedTransition(0, "suicide2")
+                    new Spawn("Inner Sanctum Portal", 1, 1),
+                    new TimedTransition(1000, "gone")
                     ),
-                new State("suicide2",
-                    new Suicide()
+                new State("gone",
+                    new Decay(0)
                     )
                 )
             )
@@ -90,7 +93,8 @@ namespace WorldServer.logic
                 new State("idle",
                     new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                     new OrderOnce(100, "ic boss purifier generator", "spawn crosses"),
-                    new TimedTransition(0, "My cross never dead <3")
+                    // give the crosses time to appear before checking whether any are left
+                    new TimedTransition(2000, "My cross never dead <3")
                     ),
                 new State("My cross never dead <3",
                     new Taunt("Ah fresh meat.I must thank you for the souls..."),
@@ -231,7 +235,7 @@ namespace WorldServer.logic
                    new ConditionEffectBehavior(ConditionEffectIndex.Invincible),
                    new Order(30, "ic boss purifier generator", "spawn minion plox <3"),
                    new SetAltTexture(1),
-                   new TimedTransition(0, "spawn minions2")
+                   new TimedTransition(2000, "spawn minions2")
                    ),
                new State("spawn minions2",
                    new ConditionEffectBehavior(ConditionEffectIndex.Invincible),
@@ -269,7 +273,7 @@ namespace WorldServer.logic
               new State("EE",
                   new SetAltTexture(2),
                   new Order(30, "ic boss purifier generator", "spawn crosses"),
-                  new TimedTransition(250, "FF")
+                  new TimedTransition(2000, "FF")
                   ),
               new State("FF",
                     new SetAltTexture(0),
