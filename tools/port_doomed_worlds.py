@@ -94,9 +94,9 @@ BS_ELDER_WORLDS = {
 }
 # braziers stand by the rooms' walls, corners first, at least this many tiles apart
 BRAZIER_SPACING = 9
-# the floor a brazier lights becomes the "<ground> Lit <level>" ground (tools/make_elder_assets.py):
-# level 4 within 2 tiles of it, 3 within 4, 2 within 6 and 1 within 8, where it can see the tile
-LIGHT_REACH = [8, 6, 4, 2]
+# the floor a brazier lights becomes the "<ground> Lit <level>" ground (tools/make_elder_assets.py),
+# where it can see the tile: level 6 within 2.5 tiles of it, down to level 1 within 10
+LIGHT_REACH = [10, 8.5, 7, 5.5, 4, 2.5]
 LIT_GROUNDS = {"Elder Sandstone Tile", "Elder Cracked Sandstone Tile", "Elder Missing Tile", "Elder Gold Tile"}
 # Doomed Realms' shop map places merchants as objects; betterSkillys places them on store regions
 SHOP_WORLD = "ShopMap"

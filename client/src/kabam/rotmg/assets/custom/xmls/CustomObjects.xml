@@ -178,8 +178,8 @@
 		<XpMult>0.0</XpMult>
 		<NoMiniMap/>
 	</Object>
-	<!-- a brazier for the Elder dungeons' rooms: a small warm glow at its base; the light on the
-	     floor around it is lit ground tiles (tools/port_doomed_worlds.py) -->
+	<!-- a brazier for the Elder dungeons' rooms; the light on the floor around it is lit ground
+	     tiles (tools/port_doomed_worlds.py) -->
 	<Object type="0xe902" id="Elder Brazier">
 		<Class>GameObject</Class>
 		<Texture>
@@ -208,7 +208,6 @@
 		</Animation>
 		<Size>100</Size>
 		<Static/>
-		<ShadowSize>160</ShadowSize>
-		<ShadowColor>0xff9a3c</ShadowColor>
+		<ShadowSize>70</ShadowSize>
 	</Object>
 </Objects>

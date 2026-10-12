@@ -26,7 +26,7 @@
 			<Index>0x03</Index>
 		</Texture>
 	</Ground>
-	<!-- the same grounds lit by an Elder Brazier, from the edge of its light (1) to beside it (4);
+	<!-- the same grounds lit by an Elder Brazier, from the edge of its light (1) to beside it (6);
 	     tools/port_doomed_worlds.py lights them -->
 	<Ground type="0xe804" id="Elder Sandstone Tile Lit 1">
 		<Texture>
@@ -130,6 +130,58 @@
 		<Texture>
 			<File>elderAssets8x8</File>
 			<Index>0x13</Index>
+		</Texture>
+	</Ground>
+	<Ground type="0xe814" id="Elder Sandstone Tile Lit 5">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x14</Index>
+		</Texture>
+		<BlendPriority>1</BlendPriority>
+	</Ground>
+	<Ground type="0xe815" id="Elder Cracked Sandstone Tile Lit 5">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x15</Index>
+		</Texture>
+	</Ground>
+	<Ground type="0xe816" id="Elder Missing Tile Lit 5">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x16</Index>
+		</Texture>
+		<Speed>0.9</Speed>
+	</Ground>
+	<Ground type="0xe817" id="Elder Gold Tile Lit 5">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x17</Index>
+		</Texture>
+	</Ground>
+	<Ground type="0xe818" id="Elder Sandstone Tile Lit 6">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x18</Index>
+		</Texture>
+		<BlendPriority>1</BlendPriority>
+	</Ground>
+	<Ground type="0xe819" id="Elder Cracked Sandstone Tile Lit 6">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x19</Index>
+		</Texture>
+	</Ground>
+	<Ground type="0xe81a" id="Elder Missing Tile Lit 6">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x1a</Index>
+		</Texture>
+		<Speed>0.9</Speed>
+	</Ground>
+	<Ground type="0xe81b" id="Elder Gold Tile Lit 6">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x1b</Index>
 		</Texture>
 	</Ground>
 </GroundTypes>
