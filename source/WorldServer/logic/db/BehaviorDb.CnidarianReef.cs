@@ -166,8 +166,8 @@ namespace WorldServer.logic
                     ),
                     new State("Second Phase",
                         new RemoveConditionalEffect(ConditionEffectIndex.Invincible),
-                        new Shoot(0, count: 4, projectileIndex: 0, fixedAngle: 135),
-                        new Shoot(0, count: 4, projectileIndex: 0, fixedAngle: 90),
+                        new Shoot(0, count: 4, projectileIndex: 2, fixedAngle: 135),
+                        new Shoot(0, count: 4, projectileIndex: 2, fixedAngle: 90),
                         new Shoot(12, projectileIndex: 3, count: 3, shootAngle: 10),
                         new TimedTransition(4100, "First Phase"),
                         new HpLessTransition(0.85, "Third Phase")
@@ -183,24 +183,24 @@ namespace WorldServer.logic
                         new Order(20, "CR Blue Cnidarian", "Return Home"),
                         new Order(20, "CR Green Cnidarian", "Return Home"),
                         new Order(20, "CR Pink Cnidarian", "Return Home"),
-                        new Shoot(0, count: 4, projectileIndex: 0, fixedAngle: 135),
-                        new Shoot(0, count: 4, projectileIndex: 0, fixedAngle: 90),
-                        new Shoot(0, projectileIndex: 0, count: 3),
+                        new Shoot(0, count: 4, projectileIndex: 2, fixedAngle: 135),
+                        new Shoot(0, count: 4, projectileIndex: 2, fixedAngle: 90),
+                        new Shoot(0, projectileIndex: 2, count: 3),
                         new TimedTransition(2000, "Third Phase2")
                     ),
                     new State("Third Phase2",
                         new Order(50, "CR Blue Cnidarian", "Orbit Closer"),
                         new Order(50, "CR Green Cnidarian", "Orbit Closer"),
                         new Order(50, "CR Pink Cnidarian", "Orbit Closer"),
-                        new Shoot(0, count: 4, projectileIndex: 0, fixedAngle: 135),
-                        new Shoot(0, count: 4, projectileIndex: 0, fixedAngle: 90),
-                        new Shoot(12, projectileIndex: 0, count: 3),
+                        new Shoot(0, count: 4, projectileIndex: 2, fixedAngle: 135),
+                        new Shoot(0, count: 4, projectileIndex: 2, fixedAngle: 90),
+                        new Shoot(12, projectileIndex: 2, count: 3),
                         new TimedTransition(2000, "Third Phase3")
                     ),
                     new State("Third Phase3",
-                        new Shoot(0, count: 4, projectileIndex: 0, fixedAngle: 135),
-                        new Shoot(0, count: 4, projectileIndex: 0, fixedAngle: 90),
-                        new Shoot(0, projectileIndex: 0, count: 3)
+                        new Shoot(0, count: 4, projectileIndex: 2, fixedAngle: 135),
+                        new Shoot(0, count: 4, projectileIndex: 2, fixedAngle: 90),
+                        new Shoot(0, projectileIndex: 2, count: 3)
                     ),
                     new State("Die",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
@@ -228,7 +228,7 @@ namespace WorldServer.logic
                     new State("Orbit",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable, true),
                         new Orbit(1, 10, 15, "CR Royal Cnidarian"),
-                        new Shoot(radius: 5, count: 1, projectileIndex: 0, coolDown: 1000)
+                        new Shoot(radius: 5, count: 1, projectileIndex: 1, coolDown: 1000)
                     ),
                     new State("Return Home",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable, false),
@@ -245,7 +245,7 @@ namespace WorldServer.logic
                     new State("Orbit",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable, true),
                         new Orbit(1, 10, 15, "CR Royal Cnidarian"),
-                        new Shoot(radius: 5, count: 1, projectileIndex: 0, coolDown: 1000)
+                        new Shoot(radius: 5, count: 1, projectileIndex: 1, coolDown: 1000)
                     ),
                     new State("Return Home",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable, false),
@@ -262,7 +262,7 @@ namespace WorldServer.logic
                     new State("Orbit",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable, true),
                         new Orbit(1, 10, 15, "CR Royal Cnidarian"),
-                        new Shoot(radius: 5, count: 1, projectileIndex: 0, coolDown: 1000)
+                        new Shoot(radius: 5, count: 1, projectileIndex: 1, coolDown: 1000)
                     ),
                     new State("Return Home",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable, false),
@@ -278,7 +278,7 @@ namespace WorldServer.logic
                 new State(
                     new State("Orbit",
                         new Orbit(1, 10, 15, "CR Royal Cnidarian"),
-                        new Shoot(radius: 5, count: 1, projectileIndex: 0, coolDown: 1000)
+                        new Shoot(radius: 5, count: 1, projectileIndex: 1, coolDown: 1000)
                     ),
                     new State("Return Home",
                         new ReturnToSpawn(speed: 0.5)
