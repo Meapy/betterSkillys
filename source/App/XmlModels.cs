@@ -476,6 +476,11 @@ namespace App
                 .Select(key => core._classes[(ushort)(int)key]))
                 classes[c] = "unrestricted";
 
+            // admin-only classes are hidden from everyone else
+            if (!acc.Admin)
+                foreach (var desc in core.Resources.GameData.Classes.Values.Where(d => d.AdminOnly))
+                    classes[desc.IdName] = "unavailable";
+
             return new ClassAvailability()
             {
                 Classes = classes

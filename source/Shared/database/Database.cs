@@ -352,6 +352,11 @@ namespace Shared.database
 
             var objDesc = _resources.GameData.ObjectDescs[type];
             var playerDesc = _resources.GameData.Classes[type];
+            if (playerDesc.AdminOnly && !acc.Admin)
+            {
+                character = null;
+                return DbCreateStatus.Locked;
+            }
             var classStats = ReadClassStats(acc);
             var unlockClass = playerDesc.Unlock?.Type;
 

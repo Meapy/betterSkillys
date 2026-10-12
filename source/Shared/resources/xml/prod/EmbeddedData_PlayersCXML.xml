@@ -524,6 +524,7 @@
 	</Object>
 	<Object type="0x5719" id="Vaelith">
 		<Class>Player</Class>
+		<AdminOnly/>
 		<Description>For Realm Creators.</Description>
 		<AnimatedTexture>
 			<File>players</File>

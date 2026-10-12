@@ -34,6 +34,8 @@ namespace WorldServer.core.net.handlers
                 client.SendFailure("Failed to load character", FailureMessage.MessageWithDisconnect);
             else if (client.Character.Dead)
                 client.SendFailure("Character is dead", FailureMessage.MessageWithDisconnect);
+            else if (client.GameServer.Resources.GameData.Classes.TryGetValue(client.Character.ObjectType, out var playerDesc) && playerDesc.AdminOnly && !client.Account.Admin)
+                client.SendFailure("Class locked", FailureMessage.MessageWithDisconnect);
             else
             {
                 var x = 0;
