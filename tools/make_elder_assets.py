@@ -1,7 +1,8 @@
 """Builds the client's Elder dungeon sprite sheet (custom/images/ElderAssets8x8.png).
 
-The Elder dungeons reuse the look of their regular dungeon in a darker, blood-red shade: each
-sprite here is a copy of a betterSkillys sprite with SHADE applied. The ground and object
+The Elder dungeons reuse the look of their regular dungeon in a darker shade: each sprite here
+is a copy of a betterSkillys sprite with a shade applied (the floor dark stone, the walls aged
+gold, so the walls still stand out against the floor). The ground and object
 definitions that use the sheet ("elderAssets8x8") are in source/Shared/resources/xml/custom/
 CustomGrounds.xml and CustomObjects.xml, and their client copies.
 
@@ -16,18 +17,19 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMAGES = os.path.join(ROOT, "client", "src", "kabam", "rotmg", "assets", "prod", "images")
 OUT = os.path.join(ROOT, "client", "src", "kabam", "rotmg", "assets", "custom", "images", "ElderAssets8x8.png")
 
-SHADE = (0.6, 0.36, 0.34)   # red, green and blue multipliers
+FLOOR = (0.4, 0.36, 0.42)   # red, green and blue multipliers
+WALL = (0.75, 0.6, 0.42)
 SIZE = 8
 PER_ROW = 16
 
-# sheet index -> (source sheet, source index)
+# sheet index -> (source sheet, source index, shade)
 SPRITES = {}
 # Elder Tomb grounds: Sandstone Tile, Cracked Sandstone Tile (also Sand Covered Tile), Missing Tile, Gold Tile
-SPRITES.update({0x00: ("lofiEnvironment2", 0x03), 0x01: ("lofiEnvironment2", 0x06),
-                0x02: ("lofiEnvironment2", 0x04), 0x03: ("lofiEnvironment2", 0x05)})
+SPRITES.update({0x00: ("lofiEnvironment2", 0x03, FLOOR), 0x01: ("lofiEnvironment2", 0x06, FLOOR),
+                0x02: ("lofiEnvironment2", 0x04, FLOOR), 0x03: ("lofiEnvironment2", 0x05, FLOOR)})
 # Elder Tomb Wall: the Tomb Wall's 29 random faces, then its dot, short line, L, line, T and cross tops
-SPRITES.update({0x20 + i: ("lofiEnvironment3", i) for i in range(0x1d)})
-SPRITES.update({0x40 + i: ("lofiEnvironment3", 0x30 + i) for i in range(6)})
+SPRITES.update({0x20 + i: ("lofiEnvironment3", i, WALL) for i in range(0x1d)})
+SPRITES.update({0x40 + i: ("lofiEnvironment3", 0x30 + i, WALL) for i in range(6)})
 
 
 def read_png(path):
@@ -97,7 +99,7 @@ def main():
     rows = (max(SPRITES) // PER_ROW + 1)
     w, h = PER_ROW * SIZE, max(rows * SIZE, 128)
     pix = [[(0, 0, 0, 0)] * w for _ in range(h)]
-    for idx, (sheet, src) in SPRITES.items():
+    for idx, (sheet, src, shade) in SPRITES.items():
         if sheet not in sheets:
             sheets[sheet] = read_png(os.path.join(IMAGES, sheet + ".png"))
         sw, _, px = sheets[sheet]
@@ -106,7 +108,7 @@ def main():
         for y in range(SIZE):
             for x in range(SIZE):
                 r, g, b, a = px(sx + x, sy + y)
-                pix[dy + y][dx + x] = (int(r * SHADE[0]), int(g * SHADE[1]), int(b * SHADE[2]), a)
+                pix[dy + y][dx + x] = (int(r * shade[0]), int(g * shade[1]), int(b * shade[2]), a)
     write_png(OUT, w, h, pix)
     print("Wrote %s: %d sprites." % (OUT, len(SPRITES)))
 

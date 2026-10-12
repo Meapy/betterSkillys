@@ -745,6 +745,21 @@ namespace Shared.terrain
                         }
                     foreach (var (x, y) in add)
                         canvas[x, y] = wall;
+
+                    // background walled in on every side (the hollow middle of a block of wall) shows
+                    // as a black hole: fill it with wall
+                    bool Outside(int x, int y) => canvas[x, y].Equals(Source.Void);
+                    var edge = new List<(int, int)>();
+                    for (var i = 0; i < CanvasSize; i++)
+                    {
+                        edge.Add((i, 0)); edge.Add((i, CanvasSize - 1));
+                        edge.Add((0, i)); edge.Add((CanvasSize - 1, i));
+                    }
+                    var open = Flood(CanvasSize, CanvasSize, edge.Where(c => Outside(c.Item1, c.Item2)).ToList(), Outside);
+                    for (var x = 0; x < CanvasSize; x++)
+                        for (var y = 0; y < CanvasSize; y++)
+                            if (!open[x, y] && Outside(x, y))
+                                canvas[x, y] = wall;
                 }
 
                 // connected walls (Tomb, cave walls) can store the shape they had in the original map;

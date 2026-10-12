@@ -76,8 +76,9 @@ ELDER_WORLDS = {
 }
 # Elder dungeons built from betterSkillys' own map of the regular dungeon instead of Doomed Realms'
 # one: each monster swapped for its Elder version, the tiles and walls for the darker Elder ones
-# (tools/make_elder_assets.py), and a new layout for every visit. world -> (betterSkillys map,
-# {ground or object id: Elder replacement}, extra world XML lines)
+# (tools/make_elder_assets.py), braziers lighting its rooms, and a new layout for every visit.
+# world -> (betterSkillys map, {ground or object id: Elder replacement}, extra world XML lines,
+# brazier)
 BS_MAPS = os.path.join(ROOT, "source", "Shared", "resources", "worlds")
 BS_ELDER_WORLDS = {
     "ElderTombMap": ("Dungeons/Tomb of the Ancients.jm", {
@@ -88,8 +89,10 @@ BS_ELDER_WORLDS = {
         "Gold Tile": "Elder Gold Tile",
         "Tomb Wall": "Elder Tomb Wall",
         "Tomb Boss Anchor": "Elder Tomb Boss Anchor",
-    }, ["<RandomLayout>", "\t<Goal>Elder Inactive Sarcophagus</Goal>", "</RandomLayout>"]),
+    }, ["<RandomLayout>", "\t<Goal>Elder Inactive Sarcophagus</Goal>", "</RandomLayout>"], "Elder Brazier"),
 }
+# braziers stand by the rooms' walls, corners first, at least this many tiles apart
+BRAZIER_SPACING = 9
 # Doomed Realms' shop map places merchants as objects; betterSkillys places them on store regions
 SHOP_WORLD = "ShopMap"
 
@@ -214,7 +217,48 @@ def elder_swap(wmap, dr_ids):
     return dict(wmap, dict=entries)
 
 
-def bs_elder_map(path, swaps, dr_ids):
+def place_braziers(j, brazier, walls):
+    """Puts a brazier by the walls of every room: in its corners first, then along its walls."""
+    w, h, d = j["width"], j["height"], j["dict"]
+    grid = list(struct.unpack(">%dh" % (w * h), zlib.decompress(base64.b64decode(j["data"]))[:2 * w * h]))
+    tile = lambda x, y: d[grid[y * w + x]] if 0 <= x < w and 0 <= y < h else {}
+    is_wall = lambda x, y: any(o["id"] in walls for o in tile(x, y).get("objs") or [])
+    # part of a wall, not a lone pillar
+    wall = lambda x, y: is_wall(x, y) and any(is_wall(x + i, y + k) for i, k in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+
+    def floor(x, y):
+        t = tile(x, y)
+        return t.get("ground") not in (None, "Empty") and not t.get("objs") and not t.get("regions")
+
+    cands = []
+    for y in range(h):
+        for x in range(w):
+            if not floor(x, y):
+                continue
+            n, s_, e, wst = wall(x, y - 1), wall(x, y + 1), wall(x + 1, y), wall(x - 1, y)
+            sides = n + s_ + e + wst
+            # by one wall or in a corner, not in a passage between two walls, and with room around it
+            if sides == 0 or (n and s_) or (e and wst):
+                continue
+            if sum(floor(x + i, y + k) for i in (-1, 0, 1) for k in (-1, 0, 1)) < 4:
+                continue
+            cands.append((0 if sides == 2 else 1, y, x))
+    placed = []
+    for _, y, x in sorted(cands):
+        if all(max(abs(x - px), abs(y - py)) >= BRAZIER_SPACING for px, py in placed):
+            placed.append((x, y))
+    entries = {}
+    for x, y in placed:
+        i = grid[y * w + x]
+        if i not in entries:
+            entries[i] = len(d)
+            d.append(dict(d[i], objs=[{"id": brazier}]))
+        grid[y * w + x] = entries[i]
+    j["data"] = base64.b64encode(zlib.compress(b"".join(struct.pack(">h", i) for i in grid), 9)).decode("ascii")
+    return len(placed)
+
+
+def bs_elder_map(path, swaps, dr_ids, brazier=None):
     """A betterSkillys .jm map with its grounds and objects swapped for their Elder versions."""
     j = json.load(open(os.path.join(BS_MAPS, path), encoding="utf-8-sig"))
     for e in j["dict"]:
@@ -222,6 +266,8 @@ def bs_elder_map(path, swaps, dr_ids):
             e["ground"] = swaps[e["ground"]]
         for o in e.get("objs") or []:
             o["id"] = swaps.get(o["id"]) or ("Elder " + o["id"] if "Elder " + o["id"] in dr_ids else o["id"])
+    if brazier:
+        place_braziers(j, brazier, {v for v in swaps.values() if "Wall" in v})
     objs = [(None, o["id"], o.get("name", ""), 0) for e in j["dict"] for o in e.get("objs") or []]
     return {"width": j["width"], "height": j["height"], "dict": objs, "jm": json.dumps(j)}
 
@@ -243,8 +289,8 @@ def world_maps(dr_root, dr_ids=frozenset()):
         if cls == SHOP_WORLD:
             maps = [shop_regions(m) for m in maps]
         if cls in BS_ELDER_WORLDS:
-            path, swaps, _ = BS_ELDER_WORLDS[cls]
-            maps = [bs_elder_map(path, swaps, dr_ids)]
+            path, swaps, _, brazier = BS_ELDER_WORLDS[cls]
+            maps = [bs_elder_map(path, swaps, dr_ids, brazier)]
         out[cls] = (name, bg, tp, maps)
     for cls, (base, name, _) in ELDER_WORLDS.items():
         _, bg, tp, maps = classes[base]

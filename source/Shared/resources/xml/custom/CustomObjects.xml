@@ -178,4 +178,37 @@
 		<XpMult>0.0</XpMult>
 		<NoMiniMap/>
 	</Object>
+	<!-- a brazier for the Elder dungeons' rooms: its large orange "shadow" is the pool of light
+	     around it (the client draws shadows as a soft gradient in ShadowColor) -->
+	<Object type="0xe902" id="Elder Brazier">
+		<Class>GameObject</Class>
+		<Texture>
+			<File>lofiObjBig</File>
+			<Index>0x07</Index>
+		</Texture>
+		<Animation prob="1.0" period="0.0">
+			<Frame time="0.2">
+				<Texture>
+					<File>lofiObjBig</File>
+					<Index>0x07</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>lofiObjBig</File>
+					<Index>0x08</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>lofiObjBig</File>
+					<Index>0x09</Index>
+				</Texture>
+			</Frame>
+		</Animation>
+		<Size>100</Size>
+		<Static/>
+		<ShadowSize>1100</ShadowSize>
+		<ShadowColor>0xff9a3c</ShadowColor>
+	</Object>
 </Objects>
