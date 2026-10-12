@@ -60,6 +60,9 @@ namespace WorldServer.logic
                 var upperLimit = player.ExperienceGoal * 0.1f;
                 if (player.Quest == enemy)
                     upperLimit = player.ExperienceGoal * 0.5f;
+                // monsters worth more (Elder ones) raise the cap with the experience
+                xp *= enemy.ObjectDesc.XpBonus;
+                upperLimit *= enemy.ObjectDesc.XpBonus;
 
                 float playerXp;
                 if (upperLimit < xp)

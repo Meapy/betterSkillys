@@ -64,7 +64,8 @@ import flash.display.StageScaleMode;
       public static var batching:Boolean = true; // debug switch
       private static const BATCH_QUADS:int = 8192;
       private static const ZERO_OFFSET:Vector.<Number> = new <Number>[0, 0, 0, 0];
-      private static const SHADOW_CONSTANTS:Vector.<Number> = new <Number>[0.5, 0.25, 0, 0];
+      // the shadow fragment program's centre, falloff and 1 (see shadowFS)
+      private static const SHADOW_CONSTANTS:Vector.<Number> = new <Number>[0.5, 2, 1, 0];
       private var batchCtx_:Context3D;
       private var batchVB_:VertexBuffer3D;
       private var batchIB_:IndexBuffer3D;
@@ -78,10 +79,9 @@ import flash.display.StageScaleMode;
       // Shadows (GraphicsGradientFill) are batched the same way: their corners are placed on the
       // CPU as Graphic3D.shadowTransform places them, into one vertex buffer.
       private static const BATCH_SHADOWS:int = 2048;
-      // Graphic3D's shadow quad: position, colour (only alpha varies) and texture coordinates
+      // Graphic3D's shadow quad: position, colour (the gradient's) and texture coordinates
       private static const SHADOW_X:Vector.<Number> = new <Number>[-0.5, 0.5, -0.5, 0.5];
       private static const SHADOW_Y:Vector.<Number> = new <Number>[0.5, 0.5, -0.5, -0.5];
-      private static const SHADOW_ALPHA:Vector.<Number> = new <Number>[0.01, 0.3, 0.1, 0.2];
       private static const SHADOW_U:Vector.<Number> = new <Number>[0, 1, 0, 1];
       private static const SHADOW_V:Vector.<Number> = new <Number>[1, 1, 0, 0];
       private var shadowVB_:VertexBuffer3D;
@@ -195,7 +195,11 @@ import flash.display.StageScaleMode;
          var shadowVS:String = "m44 op, va0, vc0\n" + "mov v0, va1\n" + "mov v1, va2\n";
          assembler.assemble(Context3DProgramType.VERTEX,shadowVS);
          var shadowVSAGAL:ByteArray = assembler.agalcode;
-         var shadowFS:String = "sub ft0.xy, v1.xy, fc4.xx\n" + "mul ft0.xy, ft0.xy, ft0.xy\n" + "add ft0.x, ft0.x, ft0.y\n" + "slt ft0.y, ft0.x, fc4.y\n" + "mul oc, v0, ft0.yyyy\n";
+         // a radial gradient like Flash's (GameObject.drawShadow): the shadow's colour, its alpha
+         // falling off evenly from the centre to nothing at the edge of the ellipse
+         var shadowFS:String = "sub ft0.xy, v1.xy, fc4.xx\n" + "mul ft0.xy, ft0.xy, ft0.xy\n" + "add ft0.x, ft0.x, ft0.y\n"
+            + "sqt ft0.x, ft0.x\n" + "mul ft0.x, ft0.x, fc4.y\n" + "sub ft0.x, fc4.z, ft0.x\n" + "sat ft0.x, ft0.x\n"
+            + "mov ft1, v0\n" + "mul ft1.w, v0.w, ft0.x\n" + "mov oc, ft1\n";
          assembler.assemble(Context3DProgramType.FRAGMENT,shadowFS);
          var shadowFSAGAL:ByteArray = assembler.agalcode;
          this.shadowProgram_ = context3D.createProgram();
@@ -541,6 +545,11 @@ import flash.display.StageScaleMode;
          var shadows:int = 0;
          var sp:int = 0;
          var gradient:GraphicsGradientFill = null;
+         var shadowColor:uint = 0;
+         var shadowR:Number = 0;
+         var shadowG:Number = 0;
+         var shadowB:Number = 0;
+         var shadowA:Number = 0;
          var gm:Matrix = null;
          var k:int = 0;
          var ctx:Context3D = this.context3D.GetContext3D();
@@ -578,6 +587,11 @@ import flash.display.StageScaleMode;
                if(shadows < BATCH_SHADOWS)
                {
                   gm = gradient.matrix;
+                  shadowColor = uint(gradient.colors[0]);
+                  shadowR = (shadowColor >> 16 & 0xFF) / 255;
+                  shadowG = (shadowColor >> 8 & 0xFF) / 255;
+                  shadowB = (shadowColor & 0xFF) / 255;
+                  shadowA = Number(gradient.alphas[0]);
                   if(sd.length < sp + 36)
                   {
                      sd.length = sp + 36 * 64;
@@ -587,10 +601,10 @@ import flash.display.StageScaleMode;
                      sd[sp++] = gm.a * 1.5 * SHADOW_X[k] - gm.c * SHADOW_Y[k] + gm.tx / Stage3DConfig.HALF_WIDTH;
                      sd[sp++] = -gm.b * SHADOW_X[k] + gm.d * 1.5 * SHADOW_Y[k] - gm.ty / Stage3DConfig.HALF_HEIGHT;
                      sd[sp++] = 0;
-                     sd[sp++] = 0;
-                     sd[sp++] = 0;
-                     sd[sp++] = 0;
-                     sd[sp++] = SHADOW_ALPHA[k];
+                     sd[sp++] = shadowR;
+                     sd[sp++] = shadowG;
+                     sd[sp++] = shadowB;
+                     sd[sp++] = shadowA;
                      sd[sp++] = SHADOW_U[k];
                      sd[sp++] = SHADOW_V[k];
                   }

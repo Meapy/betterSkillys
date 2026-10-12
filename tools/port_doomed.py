@@ -414,10 +414,12 @@ def fix_doomed_data(dr):
 ELDER_HP = 2.0
 ELDER_DEFENSE = 10      # added
 ELDER_DAMAGE = 1.3
+ELDER_XP = 2            # <XpBonus>: the experience (and so fame) of a kill, and its per-kill cap
 
 
 def rebalance_elders(dr, bs):
-    """Elder monsters' health, defense and projectile damage, from their regular version's."""
+    """Elder monsters' health, defense, projectile damage and quest flags, from their regular version's,
+    and their experience bonus."""
     def number(o, tag):
         e = o.find(tag)
         try:
@@ -444,6 +446,12 @@ def rebalance_elders(dr, bs):
         defense = number(regular, "Defense")
         if o.find("Defense") is not None:
             o.find("Defense").text = str(int(round((defense or 0) + ELDER_DEFENSE)))
+        # a quest where the regular one is (the quest arrow leads to it)
+        for tag in ("Quest", "Level"):
+            if regular.find(tag) is not None and o.find(tag) is None:
+                ET.SubElement(o, tag).text = regular.find(tag).text
+        bonus = o.find("XpBonus") if o.find("XpBonus") is not None else ET.SubElement(o, "XpBonus")
+        bonus.text = str(ELDER_XP)
         base = projectile_damage(regular)
         for p in o.findall("Projectile"):
             reg = base.get(p.get("id"))

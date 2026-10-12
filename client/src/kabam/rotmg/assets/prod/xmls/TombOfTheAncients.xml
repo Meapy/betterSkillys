@@ -1131,6 +1131,8 @@
 	<Object type="0x0d2c" id="Inactive Sarcophagus">
 		<Group>Tomb Treasure</Group>
 		<Enemy/>
+		<Quest/>
+		<Level>20</Level>
 		<Class>Character</Class>
 		<DisplayId>Treasure Sarcophagus</DisplayId>
 		

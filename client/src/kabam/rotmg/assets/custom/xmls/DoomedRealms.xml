@@ -13007,6 +13007,7 @@
 			<Damage>32</Damage>
 			<LifetimeMS>2000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2D4" id="Elder Spider Egg Sac">
 		<Enemy />
@@ -13019,6 +13020,7 @@
 		<DeathSound>monster/eggs_death</DeathSound>
 		<Size>100</Size>
 		<MaxHitPoints>2</MaxHitPoints>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2D5" id="Elder Green Den Spider Hatchling">
 		<Class>Character</Class>
@@ -13039,6 +13041,7 @@
 			<LifetimeMS>3000</LifetimeMS>
 			<ConditionEffect duration="3">Quiet</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2D6" id="Elder Red Spotted Den Spider">
 		<Class>Character</Class>
@@ -13057,6 +13060,7 @@
 			<Damage>46</Damage>
 			<LifetimeMS>1250</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2D7" id="Elder Brown Den Spider">
 		<Class>Character</Class>
@@ -13075,6 +13079,7 @@
 			<Damage>26</Damage>
 			<LifetimeMS>1250</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2D8" id="Elder Fire Python">
 		<Group>Pythons</Group>
@@ -13095,6 +13100,7 @@
 			<Damage>32</Damage>
 			<LifetimeMS>2000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2D9" id="Elder Brown Python">
 		<Group>Pythons</Group>
@@ -13115,6 +13121,7 @@
 			<Damage>32</Damage>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2DA" id="Elder Greater Pit Snake">
 		<Group>Greater Pit Snakes</Group>
@@ -13135,6 +13142,7 @@
 			<Damage>65</Damage>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2DB" id="Elder Greater Pit Viper">
 		<Group>Greater Pit Snakes</Group>
@@ -13155,6 +13163,7 @@
 			<Damage>65</Damage>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2DC" id="Christmas Oryx">
 		<DisplayId>Oryx the Christmas God</DisplayId>
@@ -13311,6 +13320,7 @@
 			<Speed>70</Speed>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2E2" id="Elder Demon of the Abyss">
 		<Group>Abyss Demons</Group>
@@ -13332,6 +13342,7 @@
 			<LifetimeMS>3000</LifetimeMS>
 			<Size>140</Size>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2E3" id="Elder Demon Warrior of the Abyss">
 		<Group>Abyss Demons</Group>
@@ -13352,6 +13363,7 @@
 			<Speed>60</Speed>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2E4" id="Elder Demon Mage of the Abyss">
 		<Group>Abyss Demons</Group>
@@ -13372,6 +13384,7 @@
 			<Speed>80</Speed>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2E5" id="Elder Brute of the Abyss">
 		<Group>Abyss Brutes</Group>
@@ -13392,6 +13405,7 @@
 			<Speed>120</Speed>
 			<LifetimeMS>400</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2E6" id="Elder Brute Warrior of the Abyss">
 		<Group>Abyss Brutes</Group>
@@ -13412,6 +13426,7 @@
 			<Speed>120</Speed>
 			<LifetimeMS>400</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2E7" id="Elder Malphas Protector">
 		<Group>Demons</Group>
@@ -13433,6 +13448,7 @@
 			<Speed>80</Speed>
 			<LifetimeMS>600</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2E8" id="Elder Malphas Missile">
 		<Group>Missiles</Group>
@@ -13454,6 +13470,7 @@
 		<Size>140</Size>
 		<Defense>40</Defense>
 		<XpMult>0.0</XpMult>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2E9" id="Elder Archdemon Malphas">
 		<Group>Demons</Group>
@@ -13509,6 +13526,7 @@
 			<MultiHit />
 			<ConditionEffect Duration="4">Weak</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2EA" id="Elder Malphas Flamer">
 		<Group>Flamers</Group>
@@ -13534,6 +13552,7 @@
 		<Size>100</Size>
 		<Defense>16</Defense>
 		<XpMult>0.0</XpMult>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2EB" id="Elder Stheno the Snake Queen">
 		<Class>Character</Class>
@@ -13570,6 +13589,7 @@
 			<ConditionEffect duration="1.4">Blind</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2EC" id="Elder Stheno Pet">
 		<Class>Character</Class>
@@ -13594,6 +13614,7 @@
 			<ConditionEffect duration="2">Slowed</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2ED" id="Elder Stheno Swarm">
 		<Class>Character</Class>
@@ -13617,6 +13638,7 @@
 			<LifetimeMS>1000</LifetimeMS>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2EE" id="Elder Arachna the Spider Queen">
 		<Class>Character</Class>
@@ -13652,6 +13674,7 @@
 			<MultiHit />
 			<ConditionEffect duration="5">Weak</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2EF" id="Elder Arachna Web Spoke 1">
 		<DisplayId>Arachna Element</DisplayId>
@@ -13676,6 +13699,7 @@
 			<ConditionEffect duration="3">Slowed</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2F0" id="Elder Arachna Web Spoke 2">
 		<DisplayId>Arachna Element</DisplayId>
@@ -13700,6 +13724,7 @@
 			<ConditionEffect duration="3">Slowed</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2F1" id="Elder Arachna Web Spoke 3">
 		<DisplayId>Arachna Element</DisplayId>
@@ -13724,6 +13749,7 @@
 			<ConditionEffect duration="3">Slowed</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2F2" id="Elder Arachna Web Spoke 4">
 		<DisplayId>Arachna Element</DisplayId>
@@ -13748,6 +13774,7 @@
 			<ConditionEffect duration="3">Slowed</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2F3" id="Elder Arachna Web Spoke 5">
 		<DisplayId>Arachna Element</DisplayId>
@@ -13772,6 +13799,7 @@
 			<ConditionEffect duration="3">Slowed</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2F4" id="Elder Arachna Web Spoke 6">
 		<DisplayId>Arachna Element</DisplayId>
@@ -13796,6 +13824,7 @@
 			<ConditionEffect duration="3">Slowed</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2F5" id="Elder Arachna Web Spoke 7">
 		<DisplayId>Arachna Element</DisplayId>
@@ -13820,6 +13849,7 @@
 			<ConditionEffect duration="3">Slowed</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2F6" id="Elder Arachna Web Spoke 8">
 		<DisplayId>Arachna Element</DisplayId>
@@ -13844,6 +13874,7 @@
 			<ConditionEffect duration="3">Slowed</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2F7" id="Elder Arachna Web Spoke 9">
 		<DisplayId>Arachna Element</DisplayId>
@@ -13868,6 +13899,7 @@
 			<ConditionEffect duration="3">Slowed</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2F8" id="Elder Native Fire Sprite">
 		<Group>Native Sprites</Group>
@@ -13888,6 +13920,7 @@
 			<Speed>50</Speed>
 			<LifetimeMS>4000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2F9" id="Elder Native Ice Sprite">
 		<Group>Native Sprites</Group>
@@ -13910,6 +13943,7 @@
 			<Size>70</Size>
 			<ConditionEffect duration="1.6">Slowed</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2FA" id="Elder Native Magic Sprite">
 		<Group>Native Sprites</Group>
@@ -13931,6 +13965,7 @@
 			<LifetimeMS>4000</LifetimeMS>
 			<Size>120</Size>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2FB" id="Elder Native Nature Sprite">
 		<Group>Native Sprites</Group>
@@ -13951,6 +13986,7 @@
 			<Speed>100</Speed>
 			<LifetimeMS>2000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2FC" id="Elder Native Darkness Sprite">
 		<Group>Native Sprites</Group>
@@ -13971,6 +14007,7 @@
 			<Speed>50</Speed>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2FD" id="Elder Native Sprite God">
 		<Enemy />
@@ -14000,6 +14037,7 @@
 			<MultiHit />
 			<ParticleTrail />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2FE" id="Elder Limon the Sprite God">
 		<Class>Character</Class>
@@ -14027,6 +14065,7 @@
 			<LifetimeMS>2300</LifetimeMS>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD2FF" id="Elder Limon Element 1">
 		<DisplayId>Limon Element</DisplayId>
@@ -14050,6 +14089,7 @@
 			<MultiHit />
 			<PassesCover />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD300" id="Elder Limon Element 2">
 		<DisplayId>Limon Element</DisplayId>
@@ -14073,6 +14113,7 @@
 			<MultiHit />
 			<PassesCover />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD301" id="Elder Limon Element 3">
 		<DisplayId>Limon Element</DisplayId>
@@ -14096,6 +14137,7 @@
 			<MultiHit />
 			<PassesCover />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD302" id="Elder Limon Element 4">
 		<DisplayId>Limon Element</DisplayId>
@@ -14119,6 +14161,7 @@
 			<MultiHit />
 			<PassesCover />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD303" id="Elder Septavius the Ghost God">
 		<Enemy />
@@ -14205,6 +14248,7 @@
 				<Speed>120</Speed>
 				<LifetimeMS>400</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d92" id="Elder Lair Skeleton Swordsman">
 			<Group>Lair Skeletons</Group>
@@ -14225,6 +14269,7 @@
 				<Speed>120</Speed>
 				<LifetimeMS>400</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d93" id="Elder Lair Skeleton Veteran">
 			<Group>Lair Skeletons</Group>
@@ -14245,6 +14290,7 @@
 				<Speed>120</Speed>
 				<LifetimeMS>400</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d94" id="Elder Lair Skeleton Mage">
 			<Group>Lair Skeletons</Group>
@@ -14265,6 +14311,7 @@
 				<Speed>60</Speed>
 				<LifetimeMS>3000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d95" id="Elder Lair Skeleton King">
 			<Group>Lair Skeletons</Group>
@@ -14285,6 +14332,7 @@
 				<Speed>70</Speed>
 				<LifetimeMS>3000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d96" id="Elder Lair Mummy">
 			<Group>Lair Mummies</Group>
@@ -14305,6 +14353,7 @@
 				<Speed>80</Speed>
 				<LifetimeMS>2000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d97" id="Elder Lair Mummy King">
 			<Group>Lair Mummies</Group>
@@ -14325,6 +14374,7 @@
 				<Speed>50</Speed>
 				<LifetimeMS>3000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d98" id="Elder Lair Mummy Pharaoh">
 			<Group>Lair Mummies</Group>
@@ -14345,6 +14395,7 @@
 				<Speed>70</Speed>
 				<LifetimeMS>3000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d99" id="Elder Lair Construct Giant">
 			<Group>Lair Constructs</Group>
@@ -14373,6 +14424,7 @@
 				<LifetimeMS>3000</LifetimeMS>
 				<ConditionEffect duration="3">Confused</ConditionEffect>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d9a" id="Elder Lair Construct Titan">
 			<Group>Lair Constructs</Group>
@@ -14400,6 +14452,7 @@
 				<LifetimeMS>3000</LifetimeMS>
 				<ConditionEffect duration="3">Confused</ConditionEffect>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d9b" id="Elder Lair Big Black Slime">
 			<Group>Lair Slimes</Group>
@@ -14420,6 +14473,7 @@
 				<Speed>80</Speed>
 				<LifetimeMS>1000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d9c" id="Elder Lair Medium Black Slime">
 			<Enemy />
@@ -14439,6 +14493,7 @@
 				<Speed>80</Speed>
 				<LifetimeMS>1000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d9d" id="Elder Lair Little Black Slime">
 			<Enemy />
@@ -14458,6 +14513,7 @@
 				<Speed>80</Speed>
 				<LifetimeMS>1000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d9e" id="Elder Lair Big Brown Slime">
 			<Group>Lair Slimes</Group>
@@ -14478,6 +14534,7 @@
 				<Speed>80</Speed>
 				<LifetimeMS>1000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5d9f" id="Elder Lair Little Brown Slime">
 			<Enemy />
@@ -14497,6 +14554,7 @@
 				<Speed>80</Speed>
 				<LifetimeMS>1000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5da0" id="Elder Lair Brown Bat">
 			<Group>Lair Bats</Group>
@@ -14518,6 +14576,7 @@
 				<Speed>100</Speed>
 				<LifetimeMS>200</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5da1" id="Elder Lair Ghost Bat">
 			<Group>Lair Bats</Group>
@@ -14539,6 +14598,7 @@
 				<Speed>100</Speed>
 				<LifetimeMS>200</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5da2" id="Elder Lair Burst Trap">
 			<Group>Lair Traps</Group>
@@ -14561,6 +14621,7 @@
 				<Speed>80</Speed>
 				<LifetimeMS>1000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5da3" id="Elder Lair Blast Trap">
 			<Group>Lair Traps</Group>
@@ -14583,6 +14644,7 @@
 				<Speed>80</Speed>
 				<LifetimeMS>1000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5da4" id="Elder Lair Reaper">
 			<Group>Lair Reapers</Group>
@@ -14603,6 +14665,7 @@
 				<Speed>120</Speed>
 				<LifetimeMS>200</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5da5" id="Elder Lair Vampire">
 			<Group>Lair Vampires</Group>
@@ -14630,6 +14693,7 @@
 				<Speed>100</Speed>
 				<LifetimeMS>200</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5da6" id="Elder Lair Vampire King">
 			<Group>Lair Vampires</Group>
@@ -14657,6 +14721,7 @@
 				<Speed>100</Speed>
 				<LifetimeMS>200</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5da7" id="Elder Lair Grey Spectre">
 			<Group>Lair Spectres</Group>
@@ -14678,6 +14743,7 @@
 				<Speed>70</Speed>
 				<LifetimeMS>2000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5da8" id="Elder Lair Blue Spectre">
 			<Group>Lair Spectres</Group>
@@ -14699,6 +14765,7 @@
 				<Speed>70</Speed>
 				<LifetimeMS>2000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5da9" id="Elder Lair White Spectre">
 			<Group>Lair Spectres</Group>
@@ -14720,6 +14787,7 @@
 				<Speed>70</Speed>
 				<LifetimeMS>2000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5daa" id="Elder Lair Ghost Archer">
 			<Group>Lair Ghosts</Group>
@@ -14741,6 +14809,7 @@
 				<LifetimeMS>2500</LifetimeMS>
 				<Size>110</Size>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5dab" id="Elder Lair Ghost Warrior">
 			<Group>Lair Ghosts</Group>
@@ -14761,6 +14830,7 @@
 				<Speed>120</Speed>
 				<LifetimeMS>400</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5dac" id="Elder Lair Ghost Mage">
 			<Group>Lair Ghosts</Group>
@@ -14781,6 +14851,7 @@
 				<Speed>50</Speed>
 				<LifetimeMS>3000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5dad" id="Elder Lair Ghost Rogue">
 			<Group>Lair Ghosts</Group>
@@ -14801,6 +14872,7 @@
 				<Speed>120</Speed>
 				<LifetimeMS>400</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5dae" id="Elder Lair Ghost Paladin">
 			<Group>Lair Ghosts</Group>
@@ -14821,6 +14893,7 @@
 				<Speed>120</Speed>
 				<LifetimeMS>400</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5daf" id="Elder Lair Ghost Knight">
 			<Group>Lair Ghosts</Group>
@@ -14841,6 +14914,7 @@
 				<Speed>120</Speed>
 				<LifetimeMS>400</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5db0" id="Elder Ghost Warrior of Septavius">
 			<Group>Lair Ghosts</Group>
@@ -14862,6 +14936,7 @@
 				<Speed>120</Speed>
 				<LifetimeMS>400</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5db1" id="Elder Ghost Mage of Septavius">
 			<Group>Lair Ghosts</Group>
@@ -14883,6 +14958,7 @@
 				<Speed>50</Speed>
 				<LifetimeMS>3000</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
 		<Object type="0x5db2" id="Elder Ghost Rogue of Septavius">
 			<Group>Lair Ghosts</Group>
@@ -14904,7 +14980,9 @@
 				<Speed>120</Speed>
 				<LifetimeMS>400</LifetimeMS>
 			</Projectile>
+			<XpBonus>2</XpBonus>
 		</Object>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD304" id="Elder Snakepit Guard">
 		<Class>Character</Class>
@@ -14943,6 +15021,7 @@
 			<Size>150</Size>
 			<ConditionEffect duration="4">Dazed</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD305" id="Elder Snakepit Button">
 		<Class>Character</Class>
@@ -14964,6 +15043,7 @@
 		<XpMult>0.0</XpMult>
 		<Size>100</Size>
 		<ShadowSize>0</ShadowSize>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD306" id="Oryx's Christmas Portal">
 		<Class>Portal</Class>
@@ -15009,6 +15089,7 @@
 			<Speed>40</Speed>
 			<LifetimeMS>600</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD309" id="Elder Piratess">
 		<Group>Pirates</Group>
@@ -15031,6 +15112,7 @@
 			<Speed>40</Speed>
 			<LifetimeMS>600</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD30A" id="Elder Pirate Lieutenant">
 		<Group>Cave Pirate Bosses</Group>
@@ -15051,6 +15133,7 @@
 			<Speed>180</Speed>
 			<LifetimeMS>500</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD30B" id="Elder Pirate Commander">
 		<Group>Cave Pirate Bosses</Group>
@@ -15071,6 +15154,7 @@
 			<Speed>180</Speed>
 			<LifetimeMS>500</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD30C" id="Elder Pirate Captain">
 		<Group>Cave Pirate Bosses</Group>
@@ -15091,6 +15175,7 @@
 			<Speed>180</Speed>
 			<LifetimeMS>500</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD30D" id="Elder Pirate Admiral">
 		<Group>Cave Pirate Bosses</Group>
@@ -15111,6 +15196,7 @@
 			<Speed>180</Speed>
 			<LifetimeMS>500</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD30E" id="Elder Cave Pirate Brawler">
 		<Group>Cave Pirates</Group>
@@ -15131,6 +15217,7 @@
 			<Speed>60</Speed>
 			<LifetimeMS>600</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD30F" id="Elder Cave Pirate Sailor">
 		<Group>Cave Pirates</Group>
@@ -15151,6 +15238,7 @@
 			<Speed>60</Speed>
 			<LifetimeMS>600</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD310" id="Elder Cave Pirate Veteran">
 		<Group>Cave Pirates</Group>
@@ -15171,6 +15259,7 @@
 			<Speed>60</Speed>
 			<LifetimeMS>600</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD311" id="Elder Cave Pirate Moll">
 		<Group>Cave Pirate Pets</Group>
@@ -15185,6 +15274,7 @@
 		<Size>200</Size>
 		<MaxHitPoints>10</MaxHitPoints>
 		<Defense>10</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD312" id="Elder Cave Pirate Parrot">
 		<Group>Cave Pirate Pets</Group>
@@ -15199,6 +15289,7 @@
 		<Size>170</Size>
 		<MaxHitPoints>10</MaxHitPoints>
 		<Defense>10</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD313" id="Elder Cave Pirate Macaw">
 		<Group>Cave Pirate Pets</Group>
@@ -15213,6 +15304,7 @@
 		<Size>170</Size>
 		<MaxHitPoints>10</MaxHitPoints>
 		<Defense>10</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD314" id="Elder Cave Pirate Monkey">
 		<Group>Cave Pirate Pets</Group>
@@ -15227,6 +15319,7 @@
 		<Size>170</Size>
 		<MaxHitPoints>10</MaxHitPoints>
 		<Defense>10</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD315" id="Elder Cave Pirate Hunchback">
 		<Group>Cave Pirate Pets</Group>
@@ -15241,6 +15334,7 @@
 		<Size>170</Size>
 		<MaxHitPoints>10</MaxHitPoints>
 		<Defense>10</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD316" id="Elder Cave Pirate Cabin Boy">
 		<Group>Cave Pirate Pets</Group>
@@ -15255,6 +15349,7 @@
 		<Size>170</Size>
 		<MaxHitPoints>10</MaxHitPoints>
 		<Defense>10</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD317" id="Elder Pirate Cave Key">
 		<Class>Equipment</Class>
@@ -15474,6 +15569,7 @@
 			<Speed>130</Speed>
 			<LifetimeMS>1100</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD326" id="Elder Draconis Key">
 		<Class>Equipment</Class>
@@ -16213,6 +16309,7 @@
 			<Size>200</Size>
 			<LifetimeMS>1200</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD33A" id="Elder Black Dragon God">
 		<DisplayId>Thanatos the Obsidian Dragon</DisplayId>
@@ -16330,6 +16427,7 @@
 			<Size>200</Size>
 			<LifetimeMS>1200</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD33B" id="Elder Green Dragon God">
 		<DisplayId>Limoz the Veridian Dragon</DisplayId>
@@ -16441,6 +16539,7 @@
 			<Size>200</Size>
 			<LifetimeMS>1200</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD33C" id="Elder Red Dragon God">
 		<DisplayId>Pyyr the Crimson Dragon</DisplayId>
@@ -16553,6 +16652,7 @@
 			<Size>200</Size>
 			<LifetimeMS>1200</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD33D" id="Elder NM Green Dragon Shield">
 		<DisplayId>Abundant Shield</DisplayId>
@@ -16574,6 +16674,7 @@
 			<Size>100</Size>
 			<LifetimeMS>1200</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD340" id="Elder Jackal Warrior">
 		<Group>Tomb Jackals</Group>
@@ -16595,6 +16696,7 @@
 			<Speed>60</Speed>
 			<LifetimeMS>800</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD341" id="Elder Jackal Veteran">
 		<Group>Tomb Jackals</Group>
@@ -16616,6 +16718,7 @@
 			<Speed>80</Speed>
 			<LifetimeMS>800</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD342" id="Elder Jackal Assassin">
 		<Group>Tomb Jackals</Group>
@@ -16638,6 +16741,7 @@
 			<LifetimeMS>800</LifetimeMS>
 			<Wavy />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD343" id="Elder Jackal Lord">
 		<Enemy />
@@ -16658,6 +16762,7 @@
 			<Speed>80</Speed>
 			<LifetimeMS>1200</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD344" id="Elder Sphinx Artifact 1">
 		<DisplayId>Sphinx Artifact</DisplayId>
@@ -16687,6 +16792,7 @@
 			<LifetimeMS>1000</LifetimeMS>
 			<ConditionEffect duration="5">Slowed</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD345" id="Elder Sphinx Artifact 2">
 		<DisplayId>Sphinx Artifact</DisplayId>
@@ -16716,6 +16822,7 @@
 			<LifetimeMS>1000</LifetimeMS>
 			<ConditionEffect duration="5">Slowed</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD346" id="Elder Sphinx Artifact 3">
 		<DisplayId>Sphinx Artifact</DisplayId>
@@ -16745,6 +16852,7 @@
 			<LifetimeMS>1000</LifetimeMS>
 			<ConditionEffect duration="5">Slowed</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD347" id="Elder Nile Artifact 1">
 		<DisplayId>Nile Artifact</DisplayId>
@@ -16765,6 +16873,7 @@
 			<Size>120</Size>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD348" id="Elder Nile Artifact 2">
 		<DisplayId>Nile Artifact</DisplayId>
@@ -16785,6 +16894,7 @@
 			<Size>120</Size>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD349" id="Elder Nile Artifact 3">
 		<DisplayId>Nile Artifact</DisplayId>
@@ -16805,6 +16915,7 @@
 			<Size>120</Size>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD34A" id="Elder Pyramid Artifact 1">
 		<DisplayId>Pyramid Artifact</DisplayId>
@@ -16826,6 +16937,7 @@
 			<LifetimeMS>200</LifetimeMS>
 			<ConditionEffect duration="2">Weak</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD34B" id="Elder Pyramid Artifact 2">
 		<DisplayId>Pyramid Artifact</DisplayId>
@@ -16847,6 +16959,7 @@
 			<LifetimeMS>200</LifetimeMS>
 			<ConditionEffect duration="2">Weak</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD34C" id="Elder Pyramid Artifact 3">
 		<DisplayId>Pyramid Artifact</DisplayId>
@@ -16868,6 +16981,7 @@
 			<LifetimeMS>200</LifetimeMS>
 			<ConditionEffect duration="2">Weak</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD34D" id="Elder Tomb Support">
 		<Group>Tomb Bosses</Group>
@@ -16967,6 +17081,7 @@
 			<ConditionEffect duration="1.0">Paralyzed</ConditionEffect>
 			<Size>120</Size>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD34E" id="Elder Tomb Attacker">
 		<Group>Tomb Bosses</Group>
@@ -17038,6 +17153,7 @@
 			<Size>140</Size>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD34F" id="Elder Tomb Defender">
 		<Group>Tomb Bosses</Group>
@@ -17102,6 +17218,7 @@
 			<ConditionEffect duration="1.2">Stunned</ConditionEffect>
 			<Size>200</Size>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD350" id="Elder Active Sarcophagus">
 		<Group>Support Beam</Group>
@@ -17131,6 +17248,7 @@
 			<ConditionEffect duration="3">Stunned</ConditionEffect>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD351" id="Elder Beam Priest">
 		<Group>Beam Priests</Group>
@@ -17164,6 +17282,7 @@
 			<LifetimeMS>2000</LifetimeMS>
 			<Size>120</Size>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD352" id="Elder Beam Priestess">
 		<Group>Beam Priests</Group>
@@ -17197,6 +17316,7 @@
 			<LifetimeMS>2000</LifetimeMS>
 			<Size>120</Size>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD353" id="Elder Inactive Sarcophagus">
 		<Group>Tomb Treasure</Group>
@@ -17214,6 +17334,9 @@
 		<Defense>110</Defense>
 		<XpMult>0.0</XpMult>
 		<God />
+		<Quest />
+		<Level>20</Level>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD354" id="Elder Eagle Sentry">
 		<Group>Tomb Gang</Group>
@@ -17251,6 +17374,7 @@
 			<LifetimeMS>700</LifetimeMS>
 			<Size>100</Size>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD356" id="Elder Lion Archer">
 		<Group>Tomb Gang</Group>
@@ -17301,6 +17425,7 @@
 			<MultiHit />
 			<ConditionEffect duration="1.2">Paralyzed</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD357" id="Elder Tomb Support Statue">
 		<Group>Tomb Boss Statues</Group>
@@ -17313,6 +17438,7 @@
 			<File>drRemote_draw_1004202760</File>
 			<Index>0</Index>
 		</AnimatedTexture>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD358" id="Elder Tomb Attacker Statue">
 		<Group>Tomb Boss Statues</Group>
@@ -17325,6 +17451,7 @@
 			<File>drRemote_draw_1099199083</File>
 			<Index>0</Index>
 		</AnimatedTexture>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD359" id="Elder Tomb Defender Statue">
 		<Group>Tomb Boss Statues</Group>
@@ -17337,6 +17464,7 @@
 			<File>drRemote_draw_1004113964</File>
 			<Index>0</Index>
 		</AnimatedTexture>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD35A" id="Elder Jungle Fire">
 		<Enemy />
@@ -17400,6 +17528,7 @@
 			<Size>80</Size>
 			<LifetimeMS>1200</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD35B" id="Oryx the Mad God 5">
 		<DisplayId>Oryx the Mad God</DisplayId>
@@ -17691,6 +17820,7 @@
 			<LifetimeMS>3000</LifetimeMS>
 			<ConditionEffect duration="3">Confused</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD365" id="Elder Lair Construct Titan">
 		<Group>Lair Constructs</Group>
@@ -17718,6 +17848,7 @@
 			<LifetimeMS>3000</LifetimeMS>
 			<ConditionEffect duration="3">Confused</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD366" id="Elder Lair Grey Spectre">
 		<Group>Lair Spectres</Group>
@@ -17739,6 +17870,7 @@
 			<Speed>70</Speed>
 			<LifetimeMS>2000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD367" id="Elder Lair Blue Spectre">
 		<Group>Lair Spectres</Group>
@@ -17760,6 +17892,7 @@
 			<Speed>70</Speed>
 			<LifetimeMS>2000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD368" id="Elder Ocean Trench Key">
 		<Class>Equipment</Class>
@@ -17993,6 +18126,7 @@
 		</Projectile>
 		<Size>150</Size>
 		<Defense>62</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD378" id="Elder Coral Bomb Big">
 		<Group>Ocean Trench</Group>
@@ -18015,6 +18149,7 @@
 			<Size>100</Size>
 			<LifetimeMS>800</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD379" id="Elder Coral Bomb Small">
 		<Group>Ocean Trench</Group>
@@ -18037,6 +18172,7 @@
 			<Size>80</Size>
 			<LifetimeMS>800</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD37A" id="Elder Thessal the Mermaid Goddess Wounded">
 		<DisplayId>Thessal the Mermaid Goddess</DisplayId>
@@ -18096,6 +18232,7 @@
 			<Size>160</Size>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD37B" id="Elder Coral Gift">
 		<Group>Ocean Trench</Group>
@@ -18125,6 +18262,7 @@
 		</AltTexture>
 		<HitSound>monster/djinn_hit</HitSound>
 		<DeathSound>monster/flaming_skulls_death</DeathSound>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD37C" id="Elder Thessal the Mermaid Goddess">
 		<Group>Ocean Trench</Group>
@@ -18177,6 +18315,7 @@
 			<Size>160</Size>
 			<LifetimeMS>3000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD37D" id="Elder Deep Sea Beast">
 		<Group>Ocean Trench</Group>
@@ -18227,6 +18366,7 @@
 			<LifetimeMS>600</LifetimeMS>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD37E" id="Elder Fishman">
 		<Group>Ocean Trench</Group>
@@ -18256,6 +18396,7 @@
 		</Projectile>
 		<Size>160</Size>
 		<Defense>50</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD37F" id="Elder Sea Horse">
 		<Group>Ocean Trench</Group>
@@ -18280,6 +18421,7 @@
 		</Projectile>
 		<Size>80</Size>
 		<Defense>30</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD380" id="Elder Sea Mare">
 		<Group>Ocean Trench</Group>
@@ -18309,6 +18451,7 @@
 		</Projectile>
 		<Size>140</Size>
 		<Defense>70</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD381" id="Elder Giant Squid">
 		<Group>Ocean Trench</Group>
@@ -18338,6 +18481,7 @@
 		</Projectile>
 		<Size>190</Size>
 		<Defense>50</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD382" id="Elder Sea Slurp Home">
 		<Group>Ocean Trench</Group>
@@ -18372,6 +18516,7 @@
 		</Projectile>
 		<Size>190</Size>
 		<Defense>50</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD383" id="Elder Grey Sea Slurp">
 		<Group>Ocean Trench</Group>
@@ -18401,6 +18546,7 @@
 		<Size>140</Size>
 		<Defense>30</Defense>
 		<XpMult>0.05</XpMult>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD384" id="Elder Lord Ruthven">
 		<Enemy />
@@ -18451,6 +18597,7 @@
 			<LifetimeMS>3400</LifetimeMS>
 			<MultiHit />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD385" id="Elder Vampire Bat">
 		<Enemy />
@@ -18476,6 +18623,7 @@
 			<LifetimeMS>100</LifetimeMS>
 			<ConditionEffect duration="3.6">Confused</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD386" id="Elder Coffin Creature">
 		<Enemy />
@@ -18548,6 +18696,7 @@
 			<Size>80</Size>
 			<LifetimeMS>1600</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD387" id="Elder Vampire Bat Swarmer 1">
 		<DisplayId>Vampire Bat Swarmer</DisplayId>
@@ -18574,6 +18723,7 @@
 			<LifetimeMS>100</LifetimeMS>
 			<ConditionEffect duration="3.6">Confused</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD388" id="Elder Mixcoatl the Masked God">
 		<Enemy />
@@ -18653,6 +18803,7 @@
 			<Size>80</Size>
 			<LifetimeMS>1200</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD389" id="Elder Boss Totem">
 		<Enemy />
@@ -18674,6 +18825,7 @@
 			<LifetimeMS>1600</LifetimeMS>
 			<PassesCover />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD38A" id="Elder Jungle Spear">
 		<Class>GameObject</Class>
@@ -18834,6 +18986,7 @@
 			<Size>90</Size>
 			<LifetimeMS>1000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD390" id="Elder Jungle Totem">
 		<Enemy />
@@ -18855,6 +19008,7 @@
 			<Size>100</Size>
 			<LifetimeMS>1000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD391" id="Elder Basilisk Baby">
 		<Enemy />
@@ -18879,6 +19033,7 @@
 			<Amplitude>0.05</Amplitude>
 			<Frequency>5</Frequency>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD392" id="Elder Basilisk">
 		<Enemy />
@@ -18930,6 +19085,7 @@
 			<LifetimeMS>800</LifetimeMS>
 			<PassesCover />
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD393" id="Elder Mask Shaman">
 		<Enemy />
@@ -18954,6 +19110,7 @@
 			<ConditionEffect duration="4">Hallucinating</ConditionEffect>
 			<ConditionEffect duration="1">Quiet</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD394" id="Elder Mask Warrior">
 		<Enemy />
@@ -18976,6 +19133,7 @@
 			<Size>80</Size>
 			<LifetimeMS>800</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD395" id="Elder Mask Hunter">
 		<Enemy />
@@ -18998,6 +19156,7 @@
 			<Size>80</Size>
 			<LifetimeMS>1000</LifetimeMS>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD396" id="Elder Jungle Ground Flowers">
 		<Class>GameObject</Class>
@@ -19198,6 +19357,7 @@
 			<Boomerang />
 			<ConditionEffect duration="4">Bleeding</ConditionEffect>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD39D" id="Elder Masked Party God">
 		<Enemy />
@@ -19230,6 +19390,7 @@
 		<ShadowSize>70</ShadowSize>
 		<MaxHitPoints>60000</MaxHitPoints>
 		<Defense>20</Defense>
+		<XpBonus>2</XpBonus>
 	</Object>
 	<Object type="0xD39E" id="Elder Beach Key">
 		<Class>Equipment</Class>
@@ -19283,5 +19444,6 @@
 			<LifetimeMS>3500</LifetimeMS>
 			<Size>140</Size>
 		</Projectile>
+		<XpBonus>2</XpBonus>
 	</Object>
 </Objects>
