@@ -1,2 +1,29 @@
 ﻿<GroundTypes>
+	<!-- the Elder Tomb's darker floor; the sprites are made by tools/make_elder_assets.py -->
+	<Ground type="0xe800" id="Elder Sandstone Tile">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x00</Index>
+		</Texture>
+		<BlendPriority>1</BlendPriority>
+	</Ground>
+	<Ground type="0xe801" id="Elder Cracked Sandstone Tile">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x01</Index>
+		</Texture>
+	</Ground>
+	<Ground type="0xe802" id="Elder Missing Tile">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x02</Index>
+		</Texture>
+		<Speed>0.9</Speed>
+	</Ground>
+	<Ground type="0xe803" id="Elder Gold Tile">
+		<Texture>
+			<File>elderAssets8x8</File>
+			<Index>0x03</Index>
+		</Texture>
+	</Ground>
 </GroundTypes>

@@ -408,6 +408,56 @@ def fix_doomed_data(dr):
         key.find("Description").text = "A key which opens an entrance to Elder Davy Jones' Locker."
 
 
+# Doomed Realms balanced its Elder monsters for its own, much stronger characters: 10 to 700 times
+# the health and 10 or more times the damage of the regular monster. Here an Elder monster gets
+# these multiples of its regular version's stats instead.
+ELDER_HP = 2.0
+ELDER_DEFENSE = 10      # added
+ELDER_DAMAGE = 1.3
+
+
+def rebalance_elders(dr, bs):
+    """Elder monsters' health, defense and projectile damage, from their regular version's."""
+    def number(o, tag):
+        e = o.find(tag)
+        try:
+            return float(e.text) if e is not None and e.text else None
+        except ValueError:
+            return None
+
+    def projectile_damage(o):
+        out = {}
+        for p in o.findall("Projectile"):
+            out[p.get("id")] = {t: number(p, t) for t in ("Damage", "MinDamage", "MaxDamage") if number(p, t) is not None}
+        return out
+
+    changed = 0
+    for oid, o in dr.items():
+        regular = bs.get(oid[len("Elder "):]) if oid.startswith("Elder ") else None
+        if regular is None and oid.startswith("Elder "):
+            regular = dr.get(oid[len("Elder "):])
+        if regular is None or o.find("Enemy") is None:
+            continue
+        hp = number(regular, "MaxHitPoints")
+        if hp and o.find("MaxHitPoints") is not None:
+            o.find("MaxHitPoints").text = str(int(round(hp * ELDER_HP)))
+        defense = number(regular, "Defense")
+        if o.find("Defense") is not None:
+            o.find("Defense").text = str(int(round((defense or 0) + ELDER_DEFENSE)))
+        base = projectile_damage(regular)
+        for p in o.findall("Projectile"):
+            reg = base.get(p.get("id"))
+            if not reg:
+                continue
+            # one damage for tags the regular projectile doesn't have (Damage vs MinDamage/MaxDamage)
+            avg = reg.get("Damage") or (reg.get("MinDamage", 0) + reg.get("MaxDamage", reg.get("MinDamage", 0))) / 2
+            for tag in ("Damage", "MinDamage", "MaxDamage"):
+                if p.find(tag) is not None:
+                    p.find(tag).text = str(int(round(reg.get(tag, avg) * ELDER_DAMAGE)))
+        changed += 1
+    return changed
+
+
 def fix_portals_and_keys(converted, portal_world):
     """Portals point at their ported dungeon; keys create them (Doomed Realms "Create" is "CreatePortal")."""
     portal_ids = {o.get("id") for o in converted if o.findtext("Class") == "Portal"}
@@ -614,6 +664,7 @@ def main():
     bs = load_objects([f for f in glob.glob(os.path.join(ROOT, "source", "Shared", "resources", "xml", "**", "*.xml"), recursive=True)
                        if os.path.abspath(f) != os.path.abspath(SERVER_XML)])
     fix_doomed_data(dr)
+    print("Elder monsters rebalanced from their regular version: %d" % rebalance_elders(dr, bs))
     # dungeons: what their maps place, their portals, what the minigames spawn and what the
     # monsters' behaviours spawn
     import port_doomed_worlds as pw

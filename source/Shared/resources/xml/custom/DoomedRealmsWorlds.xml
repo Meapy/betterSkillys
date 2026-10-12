@@ -140,10 +140,13 @@
 		<Dungeon/>
 	</World>
 	<World id="Elder Tomb of the Ancients">
-		<Width>167</Width>
-		<Height>123</Height>
+		<Width>185</Width>
+		<Height>147</Height>
 		<MapJM>Doomed/Elder Tomb of the Ancients.jm</MapJM>
 		<VisibilityType>1</VisibilityType>
+		<RandomLayout>
+			<Goal>Elder Inactive Sarcophagus</Goal>
+		</RandomLayout>
 		<DisableTeleport/>
 		<Dungeon/>
 	</World>

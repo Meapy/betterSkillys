@@ -74,6 +74,22 @@ ELDER_WORLDS = {
     "ElderBeachZone": ("BeachZone", "Elder Beach Zone", ["Elder Beach Portal"]),
     "ElderDavy": ("Davy", "Elder Davy Jones' Locker", ["Elder Davy Portal"]),
 }
+# Elder dungeons built from betterSkillys' own map of the regular dungeon instead of Doomed Realms'
+# one: each monster swapped for its Elder version, the tiles and walls for the darker Elder ones
+# (tools/make_elder_assets.py), and a new layout for every visit. world -> (betterSkillys map,
+# {ground or object id: Elder replacement}, extra world XML lines)
+BS_MAPS = os.path.join(ROOT, "source", "Shared", "resources", "worlds")
+BS_ELDER_WORLDS = {
+    "ElderTombMap": ("Dungeons/Tomb of the Ancients.jm", {
+        "Sandstone Tile": "Elder Sandstone Tile",
+        "Cracked Sandstone Tile": "Elder Cracked Sandstone Tile",
+        "Sand Covered Tile": "Elder Cracked Sandstone Tile",
+        "Missing Tile": "Elder Missing Tile",
+        "Gold Tile": "Elder Gold Tile",
+        "Tomb Wall": "Elder Tomb Wall",
+        "Tomb Boss Anchor": "Elder Tomb Boss Anchor",
+    }, ["<RandomLayout>", "\t<Goal>Elder Inactive Sarcophagus</Goal>", "</RandomLayout>"]),
+}
 # Doomed Realms' shop map places merchants as objects; betterSkillys places them on store regions
 SHOP_WORLD = "ShopMap"
 
@@ -198,6 +214,18 @@ def elder_swap(wmap, dr_ids):
     return dict(wmap, dict=entries)
 
 
+def bs_elder_map(path, swaps, dr_ids):
+    """A betterSkillys .jm map with its grounds and objects swapped for their Elder versions."""
+    j = json.load(open(os.path.join(BS_MAPS, path), encoding="utf-8-sig"))
+    for e in j["dict"]:
+        if e.get("ground") in swaps:
+            e["ground"] = swaps[e["ground"]]
+        for o in e.get("objs") or []:
+            o["id"] = swaps.get(o["id"]) or ("Elder " + o["id"] if "Elder " + o["id"] in dr_ids else o["id"])
+    objs = [(None, o["id"], o.get("name", ""), 0) for e in j["dict"] for o in e.get("objs") or []]
+    return {"width": j["width"], "height": j["height"], "dict": objs, "jm": json.dumps(j)}
+
+
 def shop_regions(wmap):
     """Merchant objects become Store_1 region tiles (where the shop world puts its merchants)."""
     store = REGIONS.index("Store_1")
@@ -214,6 +242,9 @@ def world_maps(dr_root, dr_ids=frozenset()):
         maps = [read_wmap(find_map(dr_root, m)) for m in maps]
         if cls == SHOP_WORLD:
             maps = [shop_regions(m) for m in maps]
+        if cls in BS_ELDER_WORLDS:
+            path, swaps, _ = BS_ELDER_WORLDS[cls]
+            maps = [bs_elder_map(path, swaps, dr_ids)]
         out[cls] = (name, bg, tp, maps)
     for cls, (base, name, _) in ELDER_WORLDS.items():
         _, bg, tp, maps = classes[base]
@@ -241,7 +272,7 @@ def write_worlds(worlds, dr_grounds, object_id):
         for i, wm in enumerate(maps):
             fname = safe + (" %d" % (i + 1) if len(maps) > 1 else "") + ".jm"
             with open(os.path.join(WORLDS_DIR, fname), "w", encoding="utf-8") as f:
-                f.write(to_jm(wm, dr_grounds, object_id))
+                f.write(wm["jm"] if "jm" in wm else to_jm(wm, dr_grounds, object_id))
             files.append("Doomed/" + fname)
         ids[cls] = name
         w = max(m["width"] for m in maps)
@@ -251,6 +282,8 @@ def write_worlds(worlds, dr_grounds, object_id):
         lines.append("\t\t<Height>%d</Height>" % h)
         lines += ["\t\t<MapJM>%s</MapJM>" % f.replace("&", "&amp;") for f in files]
         lines.append("\t\t<VisibilityType>1</VisibilityType>")
+        if cls in BS_ELDER_WORLDS:
+            lines += ["\t\t" + x for x in BS_ELDER_WORLDS[cls][2]]
         if not tp:
             lines.append("\t\t<DisableTeleport/>")
         lines.append("\t\t<Dungeon/>")

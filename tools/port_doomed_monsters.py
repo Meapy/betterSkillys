@@ -156,7 +156,7 @@ def write_monsters(dr_root, monsters, aliases=None):
         members.append("        // %s\n        public static readonly Definition %s = new Definition(\n"
                        "            new Behavior[] {\n                %s\n            },\n            %s,\n            %s);\n"
                        % (oid, field, body, cond, loot))
-        inits.append("            .Init(%s, DoomedSetup.State(DoomedMonsterDefs.%s), DoomedSetup.Drops(%s, DoomedMonsterDefs.%s))"
+        inits.append("            .InitDoomed(%s, DoomedSetup.State(DoomedMonsterDefs.%s), DoomedSetup.Drops(%s, DoomedMonsterDefs.%s))"
                      % (cs_string(oid), field, cs_string(oid), field))
 
     with open(DEFS_CS, "w", encoding="utf-8", newline="\r\n") as f:

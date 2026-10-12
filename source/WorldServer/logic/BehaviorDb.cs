@@ -70,8 +70,17 @@ namespace WorldServer.logic
 
         private struct Ctor
         {
-            public Ctor Init(string id, State rootState, params MobDrops[] defs)
+            public Ctor Init(string id, State rootState, params MobDrops[] defs) => Add(id, rootState, defs, false);
+
+            // behaviours generated from Doomed Realms (BehaviorDb.DoomedMonsters.cs): a behaviour
+            // written by hand for the same monster replaces them, whichever is added first
+            public Ctor InitDoomed(string id, State rootState, params MobDrops[] defs) => Add(id, rootState, defs, true);
+
+            private Ctor Add(string id, State rootState, MobDrops[] defs, bool doomed)
             {
+                if (id == null)
+                    return this;    // a shared builder's monster that this version doesn't have
+
                 try
                 {
                     var d = new Dictionary<string, State>();
@@ -85,13 +94,19 @@ namespace WorldServer.logic
                         return this;
                     }
 
-                    if (defs.Length > 0)
+                    var type = dat.IdToObjectType[id];
+                    if (InitDb.Definitions.ContainsKey(type))
                     {
-                        var loot = new Loot(defs);
-                        InitDb.Definitions.Add(dat.IdToObjectType[id], new Tuple<State, Loot>(rootState, loot));
+                        if (doomed)
+                            return this;
+                        if (InitDb.DoomedDefinitions.Remove(type))
+                            InitDb.Definitions.Remove(type);
                     }
-                    else
-                        InitDb.Definitions.Add(dat.IdToObjectType[id], new Tuple<State, Loot>(rootState, null));
+                    if (doomed)
+                        InitDb.DoomedDefinitions.Add(type);
+
+                    var def = new Tuple<State, Loot>(rootState, defs.Length > 0 ? new Loot(defs) : null);
+                    InitDb.Definitions.Add(type, def);
 
                 }
                 catch (Exception e)
@@ -122,5 +137,6 @@ namespace WorldServer.logic
         }
 
         public Dictionary<ushort, Tuple<State, Loot>> Definitions { get; private set; } = new Dictionary<ushort, Tuple<State, Loot>>();
+        private readonly HashSet<ushort> DoomedDefinitions = new HashSet<ushort>();
     }
 }

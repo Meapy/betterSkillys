@@ -166,6 +166,8 @@ public class AssetLoader
       AssetLibrary.addImageSet("animEmotes", new EmbeddedAssets.animEmotes().bitmapData, 32, 32);
       AssetLibrary.addImageSet("customAssets8x8", new EmbeddedAssets.customAssets8x8().bitmapData, 8, 8);
       AssetLibrary.addImageSet("customUV128x128", new EmbeddedAssets.customUV128x128().bitmapData, 128, 128);
+      // the Elder dungeons' darker tiles and walls (tools/make_elder_assets.py)
+      AssetLibrary.addImageSet("elderAssets8x8", new EmbeddedAssets.elderAssets8x8().bitmapData, 8, 8);
    }
 
    private function addAnimatedCharacters():void

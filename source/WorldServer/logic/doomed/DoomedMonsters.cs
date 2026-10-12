@@ -1029,6 +1029,22 @@ namespace WorldServer.logic.doomed
                             Tuple.Create(0.06, (ILoot)new ItemLoot("Potion of Max Dexterity"))
                         ))));
 
+        // Elder Bloated Mummy
+        public static readonly Definition M_Elder_Bloated_Mummy = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    SmoothWandering.Instance(2f, 2f),
+                    Chasing.Instance(8, 11, 1, null),
+                    Cooldown.Instance(1860, MultiAttack.Instance(500, 30 * (float)Math.PI / 360, 25, 0, projectileIndex: 0)),
+                    Cooldown.Instance(1100, MultiAttack.Instance(600, 60 * (float)Math.PI / 360, 4, 0, 1))
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
+                        Tuple.Create(0.01, (ILoot)new ItemLoot("Health Potion"))
+                        ))));
+
         // Elder Blue Dragon God
         public static readonly Definition M_Elder_Blue_Dragon_God = new Definition(
             new Behavior[] {
@@ -1059,40 +1075,6 @@ namespace WorldServer.logic.doomed
                     Tuple.Create(100, new LootDef(0, 2, 0, 2,
                         Tuple.Create(0.05, (ILoot)new ItemLoot("Robe of Silk Water")),
                             Tuple.Create(0.06, (ILoot)new ItemLoot("Potion of Max Wisdom"))
-                        ))));
-
-        // Elder Blue Swarm Masters
-        public static readonly Definition M_Elder_Blue_Swarm_Masters = new Definition(
-            new Behavior[] {
-                new RunBehaviors(
-                    Once.Instance(SpawnMinionImmediate.Instance( T("Elder Blue Swarm Minions"), 5, 2, 3)),
-                    SmoothWandering.Instance(2f, 2f),
-                    Chasing.Instance(8, 11, 1, null),
-                    Cooldown.Instance(1260, MultiAttack.Instance(600, 20 * (float)Math.PI / 360, 8, 0, projectileIndex: 0)),
-                    Cooldown.Instance(1600, MultiAttack.Instance(600, 60 * (float)Math.PI / 360, 2, 0, 1)),
-                    Cooldown.Instance(1880, MultiAttack.Instance(600, 20 * (float)Math.PI / 360, 2, 0, 2)),
-                    Cooldown.Instance(1990, MultiAttack.Instance(600, 20 * (float)Math.PI / 360, 2, 0, 3))
-                    )
-            },
-            null,
-            new LootBehavior(LootDef.Empty,
-                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
-                        Tuple.Create(0.01, (ILoot)new ItemLoot("Health Potion"))
-                        ))));
-
-        // Elder Blue Swarm Minions
-        public static readonly Definition M_Elder_Blue_Swarm_Minions = new Definition(
-            new Behavior[] {
-                new RunBehaviors(
-                    SmoothWandering.Instance(2f, 2f),
-                    Chasing.Instance(8, 11, 1, null),
-                    Cooldown.Instance(1860, MultiAttack.Instance(600, 30 * (float)Math.PI / 360, 8, 0, projectileIndex: 0))
-                    )
-            },
-            null,
-            new LootBehavior(LootDef.Empty,
-                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
-                        Tuple.Create(0.01, (ILoot)new ItemLoot("Health Potion"))
                         ))));
 
         // Elder Brown Den Spider
@@ -1749,23 +1731,6 @@ namespace WorldServer.logic.doomed
                     Tuple.Create(100, new LootDef(0, 3, 0, 8,
                         Tuple.Create(0.01, (ILoot)new ItemLoot("Health Potion"))
                         ))));
-
-        // Elder Jackal Priest
-        public static readonly Definition M_Elder_Jackal_Priest = new Definition(
-            new Behavior[] {
-                IfNot.Instance(
-                    Chasing.Instance(12, 9, 6, T("Elder Jackal Priest")),
-                    Chasing.Instance(6.5f, 8, 1, null)
-                    ),
-                Cooldown.Instance(600, SimpleAttack.Instance(10, projectileIndex: 0)),
-                Cooldown.Instance(1000, RingAttack.Instance(5, 10, 0, 1)
-                    )
-            },
-            null,
-            new LootBehavior(
-                        new LootDef(0, 2, 0, 8,
-                            Tuple.Create(0.0001, (ILoot)HpPotionLoot.Instance)
-                            )));
 
         // Elder Jackal Veteran
         public static readonly Definition M_Elder_Jackal_Veteran = new Definition(
