@@ -312,7 +312,7 @@ namespace WorldServer.logic
                 new State("aggro",
                     new Follow(1, 12, 2),
                     new Shoot(10, 4, 90, 3, 45, coolDown: 400),
-                    new Shoot(10, 4, 90, 4, 45, coolDown: 400, coolDownOffset: 200),
+                    new Shoot(10, 4, 90, 3, 45, coolDown: 400, coolDownOffset: 200),
 
                     new Shoot(10, 4, 90, 0, coolDown: 1000),
                     new Shoot(10, 3, 15, 1, coolDown: 1500),

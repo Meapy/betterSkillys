@@ -19,17 +19,17 @@ namespace WorldServer.logic
                         new Follow(0.4, range: 7),
                         new Wander(0.4)
                         ),
-                    new Shoot(10, projectileIndex: 4, count: 1, shootAngle: 15, predictive: 0.5, coolDown: 100000),
-                    new Shoot(10, projectileIndex: 4, count: 2, shootAngle: 10, predictive: 0.5, coolDown: 100000,
+                    new Shoot(10, projectileIndex: 10, count: 1, shootAngle: 15, predictive: 0.5, coolDown: 100000),
+                    new Shoot(10, projectileIndex: 10, count: 2, shootAngle: 10, predictive: 0.5, coolDown: 100000,
                         coolDownOffset: 700),
-                    new Shoot(10, projectileIndex: 4, count: 3, shootAngle: 8.5, predictive: 0.5, coolDown: 100000,
+                    new Shoot(10, projectileIndex: 10, count: 3, shootAngle: 8.5, predictive: 0.5, coolDown: 100000,
                         coolDownOffset: 1400),
-                    new Shoot(10, projectileIndex: 4, count: 4, shootAngle: 7, predictive: 0.5, coolDown: 100000,
+                    new Shoot(10, projectileIndex: 10, count: 4, shootAngle: 7, predictive: 0.5, coolDown: 100000,
                         coolDownOffset: 2100),
                     new TimedTransition(4000, "if_cloaked1")
                     ),
                 new State("if_cloaked1",
-                    new Shoot(10, projectileIndex: 4, count: 15, shootAngle: 24, fixedAngle: 8, coolDown: 1500,
+                    new Shoot(10, projectileIndex: 10, count: 15, shootAngle: 24, fixedAngle: 8, coolDown: 1500,
                         coolDownOffset: 400),
                     new TimedTransition(10000, "wave_attack"),
                     new PlayerWithinTransition(10.5, "wave_attack")
@@ -46,7 +46,7 @@ namespace WorldServer.logic
                     new TimedTransition(3800, "if_cloaked2")
                     ),
                 new State("if_cloaked2",
-                    new Shoot(10, projectileIndex: 4, count: 15, shootAngle: 24, fixedAngle: 8, coolDown: 1500,
+                    new Shoot(10, projectileIndex: 10, count: 15, shootAngle: 24, fixedAngle: 8, coolDown: 1500,
                         coolDownOffset: 400),
                     new TimedTransition(10000, "idle"),
                     new PlayerWithinTransition(10.5, "idle")

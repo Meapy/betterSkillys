@@ -34,7 +34,7 @@ namespace WorldServer.logic
                     ),
                 new State("Second Phase",
                     new Grenade(3.5, 150, 11, null, 1000, ConditionEffectIndex.Confused, 1000),
-                    new Shoot(25, 4, null, 2, 0, 15, coolDown: 250),
+                    new Shoot(25, 4, null, 1, 0, 15, coolDown: 250),
                     new HpLessTransition(0.33, "Third Phase Start")
                     ),
                 new State("Third Phase Start",
@@ -44,7 +44,7 @@ namespace WorldServer.logic
                     ),
                 new State("Third Phase",
                     new Shoot(30, 3, shootAngle: 15, projectileIndex: 0, coolDown: 1500),
-                    new Shoot(25, 4, null, 2, 0, 15, coolDown: 500),
+                    new Shoot(25, 4, null, 1, 0, 15, coolDown: 500),
 
                     /* 0-90-180-360 */
                     new Grenade(1.5, 75, 6, _upAngle, 1500, ConditionEffectIndex.Petrify, 1000),
