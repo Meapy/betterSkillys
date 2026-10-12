@@ -1020,13 +1020,13 @@ namespace WorldServer.core.objects
                     switch (inc)
                     {
                         case 1:
-                            SendInfo($"Added a{accForVowel} {statname} potion to your storage! [{storedAmount}/50]");
+                            SendInfo($"Added a{accForVowel} {statname} potion to your storage! [{storedAmount}/{Client.Account.PotionStorageCapacity}]");
                             break;
                         case 2:
-                            SendInfo($"Added two {statname} potions to your storage! [{storedAmount}/50]");
+                            SendInfo($"Added two {statname} potions to your storage! [{storedAmount}/{Client.Account.PotionStorageCapacity}]");
                             break;
                         default:
-                            SendInfo($"Added multiple {statname} potions to your storage! [{storedAmount}/50]");
+                            SendInfo($"Added multiple {statname} potions to your storage! [{storedAmount}/{Client.Account.PotionStorageCapacity}]");
                             break;
                     }
                 }
@@ -1054,7 +1054,7 @@ namespace WorldServer.core.objects
         {
             var potions = Client.Account.StoredPotions;
             var acc = Client.Account;
-            if (potions[idx] < 50)
+            if (potions[idx] < acc.PotionStorageCapacity)
                 potions[idx] += amount;
             else
                 return -1;

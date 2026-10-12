@@ -83,7 +83,7 @@ public class PotionsContainer extends Sprite{
     public function draw():void{
         if (bar_ == null)
             return;
-        this.bar_.draw(this.amount,50,0);
+        this.bar_.draw(this.amount,this.model_.capacity,0);
     }
 
     private function addIcons():void
@@ -144,15 +144,17 @@ public class PotionsContainer extends Sprite{
             case 0: // deposit via. inventory
                 var len:int = this.plr.equipment_.length;
                 for (var i:uint = 4; i < len; i++) {
+                    if (this.amount >= this.model_.capacity)
+                        break;
                     if (this.plr.equipment_[i] == potionsToIndex[statType_]) {
                         this.amount += 1;
-                        this.bar_.draw(this.amount,50,0);
+                        this.bar_.draw(this.amount,this.model_.capacity,0);
                         break;
                     }
                     if (this.plr.equipment_[i] == greaterPotionsToIndex[statType_])
                     {
                         this.amount += 2;
-                        this.bar_.draw(this.amount,50,0);
+                        this.bar_.draw(this.amount,this.model_.capacity,0);
                         break;
                     }
                 }
@@ -161,27 +163,27 @@ public class PotionsContainer extends Sprite{
                 if (this.amount > 0)
                 {
                     this.amount -= 1;
-                    this.bar_.draw(this.amount,50,0);
+                    this.bar_.draw(this.amount,this.model_.capacity,0);
                 }
                 break;
             case 2: // consume potion.
                 if (this.amount > 0 && (this.stats[statType_] < this.statsMax[statType_]))
                 {
                     this.amount -= 1;
-                    this.bar_.draw(this.amount,50,0);
+                    this.bar_.draw(this.amount,this.model_.capacity,0);
                 }
                 break;
             case 3: // max potions.
                 if (this.amount >= (this.statsMax[statType_] - this.stats[statType_]))
                 {
                     this.amount -= this.statsMax[statType_] - this.stats[statType_];
-                    this.bar_.draw(this.amount, 50, 0);
+                    this.bar_.draw(this.amount,this.model_.capacity,0);
                 } else
                 {
                     if (this.amount > 0)
                     {
                         this.amount = 0;
-                        this.bar_.draw(this.amount, 50, 0);
+                        this.bar_.draw(this.amount,this.model_.capacity,0);
                     }
                 }
                 break;

@@ -25,6 +25,9 @@ import flash.display.Sprite;
 
 import flash.events.Event;
 import flash.events.MouseEvent;
+import flash.events.TimerEvent;
+import flash.utils.Timer;
+import com.company.assembleegameclient.ui.TextButton;
 import flash.filters.DropShadowFilter;
 import flash.filters.GlowFilter;
 import flash.text.TextFieldAutoSize;
@@ -53,7 +56,13 @@ public class PotionsView extends Sprite {
     public var storageContainer:Sprite;
     public var potionContainers:Vector.<PotionsContainer>;
     private var titleText_:SimpleText;
-    private var closeButton_:DeleteXGraphic;
+    private var closeButton_:Sprite;
+    private var capacityText_:SimpleText;
+    private var upgradeButton_:TextButton;
+    // how many of each potion the storage holds (the server sends it after the eight counts)
+    public var capacity:int = 50;
+    public static const UPGRADE_COST:int = 500;
+    public static const UPGRADE_AMOUNT:int = 50;
     private var lineBreak_:LineBreakDesign;
 
     private var outlineFill_:GraphicsSolidFill = new GraphicsSolidFill(0x484848,1);
@@ -77,11 +86,29 @@ public class PotionsView extends Sprite {
         this.titleText_.y = 10;
         this.storageContainer.addChild(this.titleText_);
 
-        this.closeButton_ = new DeleteXGraphic();
-        this.closeButton_.x = 480 - this.closeButton_.width;
+        // the X sits in a sprite with a solid (invisible) hit area, so a click anywhere on it counts
+        var xIcon:DeleteXGraphic = new DeleteXGraphic();
+        this.closeButton_ = new Sprite();
+        this.closeButton_.graphics.beginFill(0, 0);
+        this.closeButton_.graphics.drawRect(-4, -4, xIcon.width + 8, xIcon.height + 8);
+        this.closeButton_.graphics.endFill();
+        this.closeButton_.addChild(xIcon);
+        this.closeButton_.buttonMode = true;
+        this.closeButton_.x = 480 - xIcon.width;
         this.closeButton_.y = 10;
         this.closeButton_.addEventListener(MouseEvent.CLICK, onClose);
         this.storageContainer.addChild(this.closeButton_);
+
+        this.capacityText_ = new SimpleText(16, 0xB3B3B3, false, 300, 0);
+        this.capacityText_.x = 20;
+        this.capacityText_.y = 378;
+        this.storageContainer.addChild(this.capacityText_);
+
+        this.upgradeButton_ = new TextButton(16, "Upgrade +" + UPGRADE_AMOUNT + " (" + UPGRADE_COST + " fame)", 210);
+        this.upgradeButton_.x = 490 - 210 - 20;
+        this.upgradeButton_.y = 372;
+        this.upgradeButton_.addEventListener(MouseEvent.CLICK, onUpgrade);
+        this.storageContainer.addChild(this.upgradeButton_);
 
         this.lineBreak_ = new LineBreakDesign(225, 0x242424);
         this.lineBreak_.scaleX = this.lineBreak_.scaleY = 2;
@@ -90,13 +117,18 @@ public class PotionsView extends Sprite {
         this.storageContainer.addChild(this.lineBreak_);
 
         this.gs_ = gs;
-        var _local5:Account = StaticInjectorContext.getInjector().getInstance(Account);
-        var _local6:Object = {"num": this.gs_, "offset": 15};
-        MoreObjectUtil.addToObject(_local6, _local5.getCredentials());
         this.listClient_ = StaticInjectorContext.getInjector().getInstance(AppEngineClient);
         this.listClient_.setMaxRetries(2);
+        this.requestPotions();
+    }
+
+    private function requestPotions():void
+    {
+        var account:Account = StaticInjectorContext.getInjector().getInstance(Account);
+        var params:Object = {"num": this.gs_, "offset": 15};
+        MoreObjectUtil.addToObject(params, account.getCredentials());
         this.listClient_.complete.addOnce(this.onComplete);
-        this.listClient_.sendRequest("/account/grabPotions", _local6);
+        this.listClient_.sendRequest("/account/grabPotions", params);
     }
 
     private function onComplete(_arg1:Boolean, _arg2:*):void
@@ -113,6 +145,14 @@ public class PotionsView extends Sprite {
     {
         var potions:String = _arg1;
         var parsed:Array = potions.split(",");
+        this.capacity = parsed.length > 8 ? int(parsed[8]) : 50;
+        this.capacityText_.setText("Holds " + this.capacity + " of each potion");
+        for each(var old:PotionsContainer in this.potionContainers)
+        {
+            if (old.parent != null)
+                old.parent.removeChild(old);
+        }
+        this.potionContainers.length = 0;
         for(var i:int = 0; i < 8; i++)
         {
             var container:PotionsContainer = new PotionsContainer(this, this.gs_.map.player_, i, parsed[i]);
@@ -127,7 +167,7 @@ public class PotionsView extends Sprite {
     {
         var b:Sprite = new Sprite;
         GraphicsUtil.clearPath(this.path_);
-        GraphicsUtil.drawCutEdgeRect(0,0, 490, 390,8,[1,1,1,1],this.path_);
+        GraphicsUtil.drawCutEdgeRect(0,0, 490, 420,8,[1,1,1,1],this.path_);
         b.graphics.drawGraphicsData(this.graphicsData_);
         addChild(b);
         return b;
@@ -143,8 +183,22 @@ public class PotionsView extends Sprite {
         this.gs_.gsc_.PotionInteraction(type, action);
     }
 
+    // the server takes the fame and raises the capacity; then the counts and capacity are read again
+    private function onUpgrade(e:Event):void {
+        this.useStorage(0, 4);
+        var t:Timer = new Timer(800, 1);
+        t.addEventListener(TimerEvent.TIMER_COMPLETE, function(ev:TimerEvent):void {
+            if (parent != null)
+                requestPotions();
+        });
+        t.start();
+    }
+
     public function onClose(arg1:Event):void {
-        parent.removeChild(this);
+        this.closeButton_.removeEventListener(MouseEvent.CLICK, onClose);
+        this.upgradeButton_.removeEventListener(MouseEvent.CLICK, onUpgrade);
+        if (parent != null)
+            parent.removeChild(this);
     }
 }
 }
