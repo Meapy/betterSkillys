@@ -10,6 +10,7 @@ namespace WorldServer.logic
         private _ Belladonna = () => Behav()
         .Init("vlntns Botany Bella",
             new State(
+                new DropPortalOnDeath("Realm Portal", 1.0),
                 new ScaleHP2(20),
                 new State("Idle",
                     new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),

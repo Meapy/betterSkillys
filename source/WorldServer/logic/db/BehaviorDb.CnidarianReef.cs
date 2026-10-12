@@ -11,6 +11,7 @@ namespace WorldServer.logic
 
             .Init("CR Royal Cnidarian",
                 new State(
+                    new DropPortalOnDeath("Realm Portal", 1.0),
                     new RealmPortalDrop(),
                     new State("Invunerable",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invincible, true),

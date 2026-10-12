@@ -739,6 +739,7 @@ namespace WorldServer.logic
             )
             .Init("Ice Tomb Chest",
                 new State(
+                    new DropPortalOnDeath("Realm Portal", 1.0),
                     new State("Wait",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new TimedTransition(5000, "Open")

@@ -75,6 +75,7 @@ namespace WorldServer.logic
                 new ScaleHP2(20),
                 new TransformOnDeath("Thessal the Mermaid Goddess Wounded", probability: 0.1),
                 new TransformOnDeath("Thessal Dropper"),
+                new DropPortalOnDeath("Realm Portal", 1.0),
                 new State("Start",
                     new Prioritize(
                         new Wander(0.3),

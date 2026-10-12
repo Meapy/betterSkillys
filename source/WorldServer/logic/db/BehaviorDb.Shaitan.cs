@@ -14,6 +14,7 @@ namespace WorldServer.logic
         private _ LairofShaitan = () => Behav()
             .Init("md1 Head of Shaitan",
                 new State(
+                    new DropPortalOnDeath("Realm Portal", 1.0),
                     new ScaleHP2(40, 3, 15),
                     new State("1",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invincible),

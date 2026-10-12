@@ -10,6 +10,7 @@ namespace WorldServer.logic
         private _ Beachzone = () => Behav()
         .Init("Masked Party God",
             new State(
+                new DropPortalOnDeath("Realm Portal", 1.0),
                 new ScaleHP2(20),
                 new State("Party",
                     new StayCloseToSpawn(0.4, 6),
