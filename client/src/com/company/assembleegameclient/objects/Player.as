@@ -45,7 +45,6 @@ import kabam.rotmg.game.model.AddTextLineVO;
 import kabam.rotmg.game.model.PotionInventoryModel;
 import kabam.rotmg.game.signals.AddTextLineSignal;
 import kabam.rotmg.stage3D.GraphicsFillExtra;
-import kabam.rotmg.storage.PotionStorageModal;
 import kabam.rotmg.storage.PotionsView;
 import kabam.rotmg.ui.model.TabStripModel;
 

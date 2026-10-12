@@ -6,7 +6,6 @@
 package kabam.rotmg.assets
 {
 import kabam.rotmg.assets.custom.xmls.*;
-import kabam.rotmg.assets.prod.xmls.*;
 
 public class EmbeddedData
     {

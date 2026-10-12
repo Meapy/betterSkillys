@@ -89,7 +89,7 @@ public class Dialog extends Sprite
             WebMain.STAGE.addEventListener(Event.RESIZE, positionAssets);
       }
 
-      public function positionAssets(e:Event = null)
+      public function positionAssets(e:Event = null) : void
       {
          var width:int = WebMain.STAGE.stageWidth;
          var height:int = WebMain.STAGE.stageHeight;

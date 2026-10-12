@@ -234,7 +234,7 @@ public class TextBox extends Sprite
       blockSprite = new Sprite();
       var textLine:TextLine = null;
       var yPos:Number = 0;
-      while(textLine = textBlock.createTextLine(textLine,yPos == 0?Number(this.w_ - 4):Number(this.w_ - 4 - INDENT)))
+      while((textLine = textBlock.createTextLine(textLine,yPos == 0?Number(this.w_ - 4):Number(this.w_ - 4 - INDENT))) != null)
       {
          textLine.x = yPos == 0?Number(0):Number(INDENT);
          textLine.y = textLine.ascent + yPos;

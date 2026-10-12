@@ -75,8 +75,6 @@ import kabam.lib.net.impl.Message;
 import kabam.lib.net.impl.SocketServer;
 import kabam.rotmg.account.core.Account;
 import kabam.rotmg.application.api.ApplicationSetup;
-import kabam.rotmg.arena.control.ImminentArenaWaveSignal;
-import kabam.rotmg.arena.model.CurrentArenaRunModel;
 import kabam.rotmg.classes.model.CharacterClass;
 import kabam.rotmg.classes.model.ClassesModel;
 import kabam.rotmg.constants.GeneralConstants;

@@ -81,7 +81,7 @@ import kabam.rotmg.legends.model.Legend;
          addChild(new ScreenBase());
       }
 
-      private function positionAssets(e:Event = null)
+      private function positionAssets(e:Event = null) : void
       {
          if (e != null)
          {

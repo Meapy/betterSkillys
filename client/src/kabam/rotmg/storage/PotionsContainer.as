@@ -137,7 +137,7 @@ public class PotionsContainer extends Sprite{
         addChild(this.bar_);
     }
 
-    private function handlePotions(type:int)
+    private function handlePotions(type:int) : void
     {
         switch (type)
         {

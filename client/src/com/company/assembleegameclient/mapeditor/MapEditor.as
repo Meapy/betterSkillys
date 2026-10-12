@@ -34,7 +34,7 @@ public class MapEditor extends Sprite
             WebMain.STAGE.addEventListener(Event.RESIZE, rePosition);
       }
 
-      private function rePosition(e:Event = null)
+      private function rePosition(e:Event = null) : void
       {
          //if (e != null)
             //ScreenBase.reSize(e);
