@@ -381,6 +381,18 @@ namespace WorldServer.logic
             )
         #endregion 1stboss
         #region blobomb
+        // invisible spawners placed around the Shatters' first boss and the Avatar's arena; the
+        // bosses order them to "Spawn" for their Blobomb phase
+        .Init("shtrs blobomb maker",
+            new State(
+                new ConditionEffectBehavior(ConditionEffectIndex.Invincible, true),
+                new State("Idle"),
+                new State("Spawn",
+                    new Spawn("shtrs Blobomb", 2, 0.5, coolDown: 4000),
+                    new TimedTransition(9000, "Idle")
+                    )
+                )
+            )
         .Init("shtrs Blobomb",
             new State(
                 new State("active",
