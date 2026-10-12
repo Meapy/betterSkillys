@@ -36,14 +36,14 @@ namespace WorldServer.logic
                         new Follow(.1, 15, 3),
                         new Taunt("Can't... keep... henchmen... alive... anymore! ARGHHH!!!"),
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                        new Shoot(25, 30, fixedAngle: 0, projectileIndex: 7, coolDown: 4000, coolDownOffset: 4000),
-                        new Shoot(25, 30, fixedAngle: 30, projectileIndex: 8, coolDown: 4000, coolDownOffset: 4000),
+                        new Shoot(25, 30, fixedAngle: 0, projectileIndex: 13, coolDown: 4000, coolDownOffset: 4000),
+                        new Shoot(25, 30, fixedAngle: 30, projectileIndex: 14, coolDown: 4000, coolDownOffset: 4000),
                         new TimedTransition(10000, "rage")
                     ),
                     new State("rage",
                         new Follow(.1, 15, 3),
-                        new Shoot(25, 30, projectileIndex: 7, coolDown: 90000001, coolDownOffset: 8000),
-                        new Shoot(25, 30, projectileIndex: 8, coolDown: 90000001, coolDownOffset: 8500),
+                        new Shoot(25, 30, projectileIndex: 13, coolDown: 90000001, coolDownOffset: 8000),
+                        new Shoot(25, 30, projectileIndex: 14, coolDown: 90000001, coolDownOffset: 8500),
                         new Shoot(25, projectileIndex: 0, count: 8, shootAngle: 45, coolDown: 1500, coolDownOffset: 1500),
                         new Shoot(25, projectileIndex: 1, count: 3, shootAngle: 10, coolDown: 1000, coolDownOffset: 1000),
                         new Shoot(25, projectileIndex: 2, count: 3, shootAngle: 10, predictive: 0.2, coolDown: 1000,
@@ -253,7 +253,7 @@ namespace WorldServer.logic
                             new Wander(1.2)
                             ),
                         new Shoot(10, predictive: 1, coolDown: 900),
-                        new Shoot(10, 6, projectileIndex: 1, predictive: 1, coolDown: 1200),
+                        new Shoot(10, 6, projectileIndex: 0, predictive: 1, coolDown: 1200),
                         new TimedTransition(11000, "grow")
                         ),
                     new State("grow",

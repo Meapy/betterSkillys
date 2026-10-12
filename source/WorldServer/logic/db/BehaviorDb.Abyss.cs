@@ -201,7 +201,7 @@ namespace WorldServer.logic
                                  new Shoot(12, projectileIndex: 2, count: 2, shootAngle: 72, predictive: 0.5, coolDown: 550)
 
                                 ),
-                            new Shoot(radius: 0, count: 3, shootAngle: 60, projectileIndex: 1, fixedAngle: 0, coolDown: 1200),
+                            new Shoot(radius: 0, count: 3, shootAngle: 60, projectileIndex: 0, fixedAngle: 0, coolDown: 1200),
                             new Shoot(radius: 8, count: 1, angleOffset: 0.6, predictive: 0.15, coolDown: 900),
                             new TimedTransition(time: 12000, targetState: "Size_matters")
                             ),

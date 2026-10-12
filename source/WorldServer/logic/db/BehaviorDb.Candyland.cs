@@ -197,7 +197,7 @@ namespace WorldServer.logic
                     new State("BaseAttack",
                         new Shoot(radius: 10, count: 3, shootAngle: 15, projectileIndex: 0, predictive: 1, coolDown: 1400),
                         new Grenade(radius: 5, damage: 200, range: 8, coolDown: 3000),
-                        new Shoot(radius: 10, count: 1, projectileIndex: 1, predictive: 1, coolDown: 2000),
+                        new Shoot(radius: 10, count: 1, projectileIndex: 0, predictive: 1, coolDown: 2000),
                         new State("Choose",
                             new TimedRandomTransition(3800, false, "Run", "Attack")
                             ),
@@ -212,8 +212,8 @@ namespace WorldServer.logic
                         new HpLessTransition(threshold: 0.6, targetState: "NextAttack")
                         ),
                     new State("NextAttack",
-                        new Shoot(radius: 10, count: 5, shootAngle: 10, projectileIndex: 1, predictive: 0.5, angleOffset: 0.4, coolDown: 2000),
-                        new Shoot(radius: 10, count: 1, projectileIndex: 1, predictive: 1, coolDown: 2000),
+                        new Shoot(radius: 10, count: 5, shootAngle: 10, projectileIndex: 0, predictive: 0.5, angleOffset: 0.4, coolDown: 2000),
+                        new Shoot(radius: 10, count: 1, projectileIndex: 0, predictive: 1, coolDown: 2000),
                         new Shoot(radius: 10, count: 3, shootAngle: 15, projectileIndex: 0, predictive: 1, angleOffset: 1, coolDown: 4000),
                         new Grenade(radius: 5, damage: 200, range: 8, coolDown: 3000),
                         new State("Choose2",
@@ -230,7 +230,7 @@ namespace WorldServer.logic
                             new PlayerWithinTransition(dist: 3.5, targetState: "Boom", seeInvis: false)
                             ),
                         new State("Boom",
-                            new Shoot(radius: 0, count: 20, shootAngle: 18, projectileIndex: 1, coolDown: 2000),
+                            new Shoot(radius: 0, count: 20, shootAngle: 18, projectileIndex: 0, coolDown: 2000),
                             new TimedTransition(time: 200, targetState: "Choose2")
                             )
                         ),

@@ -128,7 +128,7 @@ namespace WorldServer.logic
                    ),
                new State("11",
                    new Follow(0.8, range: 1),
-                   new Shoot(50, 25, projectileIndex: 0, coolDown: 50),
+                   new Shoot(50, 25, projectileIndex: 2, coolDown: 50),
                    new TimedTransition(5000, "12")
                    ),
                new State("12",
