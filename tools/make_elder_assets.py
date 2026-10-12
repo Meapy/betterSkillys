@@ -19,6 +19,10 @@ OUT = os.path.join(ROOT, "client", "src", "kabam", "rotmg", "assets", "custom", 
 
 FLOOR = (0.4, 0.36, 0.42)   # red, green and blue multipliers
 WALL = (0.75, 0.6, 0.42)
+# the floor lit by a brazier, from dimmest (level 1, at the edge of its light) to brightest
+LIGHT_TOP = (0.56, 0.46, 0.42)
+LIGHT_LEVELS = 4
+LIGHT = [tuple(f + (t - f) * n / LIGHT_LEVELS for f, t in zip(FLOOR, LIGHT_TOP)) for n in range(1, LIGHT_LEVELS + 1)]
 SIZE = 8
 PER_ROW = 16
 
@@ -27,6 +31,9 @@ SPRITES = {}
 # Elder Tomb grounds: Sandstone Tile, Cracked Sandstone Tile (also Sand Covered Tile), Missing Tile, Gold Tile
 SPRITES.update({0x00: ("lofiEnvironment2", 0x03, FLOOR), 0x01: ("lofiEnvironment2", 0x06, FLOOR),
                 0x02: ("lofiEnvironment2", 0x04, FLOOR), 0x03: ("lofiEnvironment2", 0x05, FLOOR)})
+# the same grounds lit by a brazier (the "Lit 1" to "Lit 4" grounds): 0x04 + 4 * (level - 1) + ground
+FLOOR_SOURCES = [("lofiEnvironment2", 0x03), ("lofiEnvironment2", 0x06), ("lofiEnvironment2", 0x04), ("lofiEnvironment2", 0x05)]
+SPRITES.update({0x04 + 4 * n + i: (sheet, src, LIGHT[n]) for n in range(LIGHT_LEVELS) for i, (sheet, src) in enumerate(FLOOR_SOURCES)})
 # Elder Tomb Wall: the Tomb Wall's 29 random faces, then its dot, short line, L, line, T and cross tops
 SPRITES.update({0x20 + i: ("lofiEnvironment3", i, WALL) for i in range(0x1d)})
 SPRITES.update({0x40 + i: ("lofiEnvironment3", 0x30 + i, WALL) for i in range(6)})

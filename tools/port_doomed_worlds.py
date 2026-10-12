@@ -18,6 +18,7 @@ through <DungeonName>.
 import base64
 import glob
 import json
+import math
 import os
 import re
 import struct
@@ -93,6 +94,10 @@ BS_ELDER_WORLDS = {
 }
 # braziers stand by the rooms' walls, corners first, at least this many tiles apart
 BRAZIER_SPACING = 9
+# the floor a brazier lights becomes the "<ground> Lit <level>" ground (tools/make_elder_assets.py):
+# level 4 within 2 tiles of it, 3 within 4, 2 within 6 and 1 within 8, where it can see the tile
+LIGHT_REACH = [8, 6, 4, 2]
+LIT_GROUNDS = {"Elder Sandstone Tile", "Elder Cracked Sandstone Tile", "Elder Missing Tile", "Elder Gold Tile"}
 # Doomed Realms' shop map places merchants as objects; betterSkillys places them on store regions
 SHOP_WORLD = "ShopMap"
 
@@ -218,7 +223,8 @@ def elder_swap(wmap, dr_ids):
 
 
 def place_braziers(j, brazier, walls):
-    """Puts a brazier by the walls of every room: in its corners first, then along its walls."""
+    """Puts a brazier by the walls of every room (in its corners first, then along its walls) and
+    lights the floor around it."""
     w, h, d = j["width"], j["height"], j["dict"]
     grid = list(struct.unpack(">%dh" % (w * h), zlib.decompress(base64.b64decode(j["data"]))[:2 * w * h]))
     tile = lambda x, y: d[grid[y * w + x]] if 0 <= x < w and 0 <= y < h else {}
@@ -254,6 +260,31 @@ def place_braziers(j, brazier, walls):
             entries[i] = len(d)
             d.append(dict(d[i], objs=[{"id": brazier}]))
         grid[y * w + x] = entries[i]
+
+    # light passes over floor, not through walls or the empty space outside the rooms
+    def clear(x, y):
+        return tile(x, y).get("ground") not in (None, "Empty") and not is_wall(x, y)
+
+    def sees(x0, y0, x1, y1):
+        n = max(abs(x1 - x0), abs(y1 - y0))
+        return all(clear(int(round(x0 + (x1 - x0) * k / n)), int(round(y0 + (y1 - y0) * k / n))) for k in range(1, n))
+
+    light = {}
+    reach = max(LIGHT_REACH)
+    for bx, by in placed:
+        for y in range(by - reach, by + reach + 1):
+            for x in range(bx - reach, bx + reach + 1):
+                level = sum(math.hypot(x - bx, y - by) <= r for r in LIGHT_REACH)
+                if level and light.get((x, y), 0) < level and tile(x, y).get("ground") in LIT_GROUNDS \
+                        and not is_wall(x, y) and sees(bx, by, x, y):
+                    light[(x, y)] = level
+    lit = {}
+    for (x, y), level in light.items():
+        i = grid[y * w + x]
+        if (i, level) not in lit:
+            lit[(i, level)] = len(d)
+            d.append(dict(d[i], ground="%s Lit %d" % (d[i]["ground"], level)))
+        grid[y * w + x] = lit[(i, level)]
     j["data"] = base64.b64encode(zlib.compress(b"".join(struct.pack(">h", i) for i in grid), 9)).decode("ascii")
     return len(placed)
 
