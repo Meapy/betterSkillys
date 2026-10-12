@@ -41,6 +41,12 @@ package kabam.rotmg.classes.model
       
       public function addSkin(skin:CharacterSkin, isDefault:Boolean = false) : void
       {
+         // the skins XML is parsed once per class list (the regular and the Doomed Realms
+         // classes), so the same skin can arrive twice
+         if(this.map.hasOwnProperty(skin.id))
+         {
+            return;
+         }
          skin.changed.add(this.onSkinChanged);
          this.skins.push(skin);
          this.map[skin.id] = skin;
