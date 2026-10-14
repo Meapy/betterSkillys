@@ -157,6 +157,9 @@ fn run(args: Args) -> Result<(), String> {
                 match &*msg {
                     ServerMessage::Update(u) => {
                         objects.extend(u.new_objs.iter().map(|o| o.status.object_id));
+                        for o in u.new_objs.iter() {
+                            log::trace!("object {} type 0x{:04x} at ({}, {})", o.status.object_id, o.object_type, o.status.pos.x, o.status.pos.y);
+                        }
                         if let Some(me) = u.new_objs.iter().find(|o| Some(o.status.object_id) == session.object_id) {
                             let stats: Vec<String> =
                                 me.status.stats.iter().map(|s| format!("{}={:?}", s.id, s.value)).collect();

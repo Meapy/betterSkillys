@@ -1,7 +1,8 @@
 //! The GPU renderer: textured quads from atlas pages, batched into as few draws as possible.
 //!
 //! It runs on wgpu, so the same code draws through DirectX 12, Vulkan, Metal, WebGPU or WebGL2.
-//! A frame is `begin`, any number of `sprite` calls in back-to-front order, then `present`.
+//! A frame is `begin`, any number of `sprite` (quads) and `triangle` calls in back-to-front
+//! order, then `present`. Draw order is kept across the two kinds.
 
 mod atlas;
 
@@ -29,9 +30,25 @@ struct Globals {
     _pad: [f32; 2],
 }
 
-/// A run of consecutive instances drawn from the same page.
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct TriVertex {
+    pos: [f32; 2],
+    uv: [f32; 2],
+    mul: [f32; 4],
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Kind {
+    Quads,
+    Triangles,
+}
+
+/// A run of consecutive quads (instances) or triangle vertices drawn from the same page.
 struct Run {
+    kind: Kind,
     page: u16,
+    start: u32,
     end: u32,
 }
 
@@ -87,6 +104,10 @@ pub struct Renderer {
     surface: wgpu::Surface<'static>,
     config: wgpu::SurfaceConfiguration,
     pipeline: wgpu::RenderPipeline,
+    tri_pipeline: wgpu::RenderPipeline,
+    tri_buffer: wgpu::Buffer,
+    tri_capacity: usize,
+    tri_vertices: Vec<TriVertex>,
     page_layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
     globals: wgpu::Buffer,
@@ -233,6 +254,39 @@ impl Renderer {
             cache: None,
         });
 
+        let tri_shader = device.create_shader_module(wgpu::include_wgsl!("triangle.wgsl"));
+        let tri_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("triangles"),
+            layout: Some(&layout),
+            vertex: wgpu::VertexState {
+                module: &tri_shader,
+                entry_point: Some("vs_main"),
+                compilation_options: Default::default(),
+                buffers: &[wgpu::VertexBufferLayout {
+                    array_stride: std::mem::size_of::<TriVertex>() as u64,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: &wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2, 2 => Float32x4],
+                }],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &tri_shader,
+                entry_point: Some("fs_main"),
+                compilation_options: Default::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
+        let tri_capacity = 3 * 1024;
+        let tri_buffer = Self::make_buffer(&device, "triangles", tri_capacity * std::mem::size_of::<TriVertex>());
+
         let globals = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("globals"),
             size: std::mem::size_of::<Globals>() as u64,
@@ -261,6 +315,10 @@ impl Renderer {
             surface,
             config,
             pipeline,
+            tri_pipeline,
+            tri_buffer,
+            tri_capacity,
+            tri_vertices: Vec::new(),
             page_layout,
             sampler,
             globals,
@@ -282,9 +340,13 @@ impl Renderer {
     }
 
     fn make_instance_buffer(device: &wgpu::Device, capacity: usize) -> wgpu::Buffer {
+        Self::make_buffer(device, "instances", capacity * std::mem::size_of::<Instance>())
+    }
+
+    fn make_buffer(device: &wgpu::Device, label: &str, bytes: usize) -> wgpu::Buffer {
         device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("instances"),
-            size: (capacity * std::mem::size_of::<Instance>()) as u64,
+            label: Some(label),
+            size: bytes as u64,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         })
@@ -348,7 +410,26 @@ impl Renderer {
     /// Start a frame.
     pub fn begin(&mut self) {
         self.instances.clear();
+        self.tri_vertices.clear();
         self.runs.clear();
+    }
+
+    fn extend_run(&mut self, kind: Kind, page: u16, start: u32, end: u32) {
+        match self.runs.last_mut() {
+            Some(run) if run.kind == kind && run.page == page && run.end == start => run.end = end,
+            _ => self.runs.push(Run { kind, page, start, end }),
+        }
+    }
+
+    /// A textured triangle: screen points, and texture coordinates within `src` (0..1).
+    pub fn triangle(&mut self, src: AtlasRect, pts: [[f32; 2]; 3], uvs: [[f32; 2]; 3], tint: Tint) {
+        let inv = 1.0 / self.atlas.size as f32;
+        let start = self.tri_vertices.len() as u32;
+        for (p, uv) in pts.iter().zip(uvs) {
+            let uv = [(src.x as f32 + uv[0] * src.w as f32) * inv, (src.y as f32 + uv[1] * src.h as f32) * inv];
+            self.tri_vertices.push(TriVertex { pos: *p, uv, mul: tint.mul });
+        }
+        self.extend_run(Kind::Triangles, src.page, start, start + 3);
     }
 
     /// Draw `src` (an atlas rectangle) onto `dst`.
@@ -374,10 +455,7 @@ impl Renderer {
             add: [tint.add[0], tint.add[1], tint.add[2], 0.0],
         });
         let end = self.instances.len() as u32;
-        match self.runs.last_mut() {
-            Some(run) if run.page == src.page => run.end = end,
-            _ => self.runs.push(Run { page: src.page, end }),
-        }
+        self.extend_run(Kind::Quads, src.page, end - 1, end);
     }
 
     /// A solid rectangle.
@@ -406,6 +484,14 @@ impl Renderer {
         if !self.instances.is_empty() {
             self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instances));
         }
+        if self.tri_vertices.len() > self.tri_capacity {
+            self.tri_capacity = self.tri_vertices.len().next_power_of_two();
+            self.tri_buffer =
+                Self::make_buffer(&self.device, "triangles", self.tri_capacity * std::mem::size_of::<TriVertex>());
+        }
+        if !self.tri_vertices.is_empty() {
+            self.queue.write_buffer(&self.tri_buffer, 0, bytemuck::cast_slice(&self.tri_vertices));
+        }
 
         let mut encoder = self.device.create_command_encoder(&Default::default());
         {
@@ -424,14 +510,27 @@ impl Renderer {
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
-            pass.set_pipeline(&self.pipeline);
             pass.set_bind_group(0, &self.globals_group, &[]);
-            pass.set_vertex_buffer(0, self.instance_buffer.slice(..));
-            let mut start = 0;
+            let mut bound: Option<Kind> = None;
             for run in &self.runs {
+                if bound != Some(run.kind) {
+                    match run.kind {
+                        Kind::Quads => {
+                            pass.set_pipeline(&self.pipeline);
+                            pass.set_vertex_buffer(0, self.instance_buffer.slice(..));
+                        }
+                        Kind::Triangles => {
+                            pass.set_pipeline(&self.tri_pipeline);
+                            pass.set_vertex_buffer(0, self.tri_buffer.slice(..));
+                        }
+                    }
+                    bound = Some(run.kind);
+                }
                 pass.set_bind_group(1, &self.atlas.pages[run.page as usize].bind_group, &[]);
-                pass.draw(0..6, start..run.end);
-                start = run.end;
+                match run.kind {
+                    Kind::Quads => pass.draw(0..6, run.start..run.end),
+                    Kind::Triangles => pass.draw(run.start..run.end, 0..1),
+                }
             }
         }
         let readback = (self.capture_next && self.can_capture).then(|| self.copy_out(&mut encoder, &frame.texture));

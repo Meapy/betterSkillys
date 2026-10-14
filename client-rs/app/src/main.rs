@@ -13,7 +13,7 @@ use bsk_assets::AssetSource;
 use bsk_data::GameData;
 use bsk_net::Pending;
 use bsk_render::Renderer;
-use bsk_session::{HelloParams, Join, NEXUS_GAME_ID};
+use bsk_session::{HelloParams, NEXUS_GAME_ID};
 use game::Game;
 use login::LoginConfig;
 use sprites::Sprites;
@@ -69,6 +69,10 @@ struct App {
     /// Scripted key holds (`--hold`), and when the first one started.
     holds: Vec<(KeyCode, i32)>,
     holds_from: Option<i32>,
+    last_scripted: Option<KeyCode>,
+    walk_to: Option<(f64, f64)>,
+    /// Keys pressed since the last frame (for one-shot actions).
+    pressed: Vec<KeyCode>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -80,6 +84,19 @@ fn shot_args() -> Option<(String, f32)> {
 
 #[cfg(target_arch = "wasm32")]
 fn shot_args() -> Option<(String, f32)> {
+    None
+}
+
+/// `--walk-to <x>,<y>`: walk straight to a world point once in the game (desktop tests).
+fn walk_to_arg() -> Option<(f64, f64)> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let args: Vec<String> = std::env::args().collect();
+        let v = args.iter().position(|a| a == "--walk-to").and_then(|i| args.get(i + 1))?;
+        let (x, y) = v.split_once(',')?;
+        Some((x.trim().parse().ok()?, y.trim().parse().ok()?))
+    }
+    #[cfg(target_arch = "wasm32")]
     None
 }
 
@@ -100,6 +117,9 @@ fn hold_args() -> Vec<(KeyCode, i32)> {
                     "d" => KeyCode::KeyD,
                     "q" => KeyCode::KeyQ,
                     "e" => KeyCode::KeyE,
+                    "r" => KeyCode::KeyR,
+                    "0" => KeyCode::Digit0,
+                    "-" => KeyCode::F24, // a pause: holds nothing
                     _ => return None,
                 };
                 Some((code, ms.parse().ok()?))
@@ -165,7 +185,7 @@ impl App {
                         key_time: -1,
                         key: vec![],
                     };
-                    Phase::Playing(Game::start(cfg.target(&server.host, server.port), hello, Join::Load { char_id: ch.id }))
+                    Phase::Playing(Game::start(cfg.target(&server.host, server.port), hello, ch.id))
                 }
                 (None, _) => Phase::Idle("this account has no living character".into()),
                 (_, None) => Phase::Idle("the account server lists no world servers".into()),
@@ -211,16 +231,48 @@ impl App {
         let rotate = self.held(&[KeyCode::KeyE]) as i32 as f64 - self.held(&[KeyCode::KeyQ]) as i32 as f64;
         let reset_angle = self.held(&[KeyCode::KeyZ]);
 
-        if self.holds_from.is_none() && !self.holds.is_empty() {
+        // Scripted walking (--walk-to), then the --hold script.
+        if let (Some((tx, ty)), Phase::Playing(game)) = (self.walk_to, &self.phase) {
+            if let Some(me) = game.world.as_ref().and_then(|w| w.player()) {
+                let (dx, dy) = (tx - me.x, ty - me.y);
+                if dx.hypot(dy) < 0.15 {
+                    self.walk_to = None;
+                } else {
+                    let rel = dy.atan2(dx) - game.camera_angle;
+                    keys = (rel.cos(), rel.sin());
+                }
+            }
+        }
+        if self.holds_from.is_none() && !self.holds.is_empty() && self.walk_to.is_none() {
             if let Phase::Playing(game) = &self.phase {
                 if game.world.as_ref().is_some_and(|w| w.player().is_some()) {
                     self.holds_from = Some(now);
                 }
             }
         }
+        // A scripted key starting counts as a press.
+        let scripted = self.scripted_key(now);
+        if scripted != self.last_scripted {
+            if let Some(k) = scripted {
+                self.pressed.push(k);
+            }
+            self.last_scripted = scripted;
+        }
+        let pressed = std::mem::take(&mut self.pressed);
         let Some(loaded) = self.loaded.as_mut() else { return };
         let Loaded { renderer, sprites, data, redrawer, fonts, text, ground } = &mut **loaded;
         if let Phase::Playing(game) = &mut self.phase {
+            for key in pressed {
+                match key {
+                    KeyCode::Digit0 | KeyCode::Numpad0 => {
+                        if let Some((id, _)) = game.nearest_portal(data) {
+                            game.use_portal(id);
+                        }
+                    }
+                    KeyCode::KeyR => game.escape(),
+                    _ => {}
+                }
+            }
             game.poll(now, data);
             if reset_angle {
                 game.camera_angle = game::DEFAULT_CAMERA_ANGLE;
@@ -261,6 +313,13 @@ impl App {
         if !status.is_empty() {
             let style = text::Style { size: 18.0, bold: true, color: 0xFFFFFF };
             text.draw_centered(fonts, renderer, &status, w as f32 / 2.0, h as f32 / 2.0 + 40.0, style);
+        }
+        if let Phase::Playing(game) = &self.phase {
+            if let Some((_, name)) = game.nearest_portal(data) {
+                let style = text::Style { size: 18.0, bold: true, color: 0xFFFFFF };
+                let hint = format!("{name}  (0 to enter)");
+                text.draw_centered(fonts, renderer, &hint, w as f32 / 2.0, h as f32 - 60.0, style);
+            }
         }
         if let Some((_, after)) = &self.shot {
             if now as f32 >= after * 1000.0 && !renderer.capture_next_frame() {
@@ -367,9 +426,16 @@ impl ApplicationHandler<UserEvent> for App {
             WindowEvent::KeyboardInput { event, .. } => {
                 if let PhysicalKey::Code(code) = event.physical_key {
                     match event.state {
-                        ElementState::Pressed => self.keys.insert(code),
-                        ElementState::Released => self.keys.remove(&code),
-                    };
+                        ElementState::Pressed => {
+                            if !event.repeat {
+                                self.pressed.push(code);
+                            }
+                            self.keys.insert(code);
+                        }
+                        ElementState::Released => {
+                            self.keys.remove(&code);
+                        }
+                    }
                 }
             }
             WindowEvent::Focused(false) => self.keys.clear(),
@@ -420,6 +486,9 @@ fn main() {
         quit: false,
         holds: hold_args(),
         holds_from: None,
+        last_scripted: None,
+        pressed: Vec::new(),
+        walk_to: walk_to_arg(),
     };
     #[cfg(not(target_arch = "wasm32"))]
     {

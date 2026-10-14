@@ -2,11 +2,13 @@
 //! the AIR client reads them. Later files replace earlier entries of the same type, as there.
 
 pub mod ground;
+pub mod model;
 pub mod object;
 pub mod texture;
 pub mod xml;
 
 pub use ground::{Animate, AnimateKind, Ground};
+pub use model::{Model, ModelFace};
 pub use object::{ObjectClass, ObjectDesc};
 pub use texture::{TextureData, TextureRef};
 
@@ -19,6 +21,8 @@ pub struct GameData {
     pub objects: HashMap<u16, ObjectDesc>,
     pub object_ids: HashMap<String, u16>,
     pub ground_ids: HashMap<String, u16>,
+    /// 3D models by name (`<Model>` in object XML).
+    pub models: HashMap<String, Model>,
 }
 
 impl GameData {
@@ -32,6 +36,16 @@ impl GameData {
         }
         for (file, bytes) in manifest.object_xml.iter().zip(objects) {
             data.add_objects(&text(file, bytes)?).map_err(|e| format!("{file}: {e}"))?;
+        }
+        let models = futures::future::join_all(manifest.models.iter().map(|m| source.load(&m.file))).await;
+        for (def, bytes) in manifest.models.iter().zip(models) {
+            match Model::parse(&text(&def.file, bytes)?) {
+                Ok(m) => {
+                    data.models.insert(def.name.clone(), m);
+                }
+                // Model3D.parseFromOBJ skips a broken model with a trace; so do we.
+                Err(e) => log::warn!("{}: {e}", def.file),
+            }
         }
         Ok(data)
     }
@@ -101,5 +115,7 @@ mod tests {
         let wizard = &data.objects[&data.object_ids["Wizard"]];
         assert_eq!(wizard.class, ObjectClass::Player);
         assert!(matches!(&wizard.texture.main, TextureRef::Animated { set, .. } if set == "players"));
+        assert!(data.models.len() > 40, "{} models", data.models.len());
+        assert!(!data.models["Four High Wall"].faces.is_empty());
     }
 }

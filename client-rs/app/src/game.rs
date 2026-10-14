@@ -1,9 +1,10 @@
 //! A game in progress: the world server connection, the session that keeps it alive, and the
-//! world it describes.
+//! world it describes. Changing worlds (portals, escaping to the nexus) is a Reconnect: a new
+//! connection with the key the server handed out.
 
-use bsk_data::GameData;
+use bsk_data::{GameData, ObjectClass};
 use bsk_net::{GameSocket, SocketEvent, Target};
-use bsk_proto::{ClientMessage, ServerMessage, WorldPos};
+use bsk_proto::{ClientMessage, Escape, Reconnect, ServerMessage, UsePortal, WorldPos};
 use bsk_session::{Event, HelloParams, Join, Session};
 use bsk_world::{MoveInput, World};
 
@@ -15,6 +16,10 @@ const ROTATE_SPEED: f64 = 0.003;
 pub struct Game {
     socket: GameSocket,
     session: Session,
+    target: Target,
+    /// What Hello needs again on a reconnect.
+    hello: HelloParams,
+    char_id: i32,
     pub world: Option<World>,
     /// What to show while there's no world yet, or why the game ended.
     pub status: String,
@@ -24,19 +29,42 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn start(target: Target, hello: HelloParams, join: Join) -> Self {
-        let mut socket = GameSocket::connect(&target);
-        let (session, first) = Session::start(hello, join);
-        socket.send(&first);
-        Self {
+    pub fn start(target: Target, hello: HelloParams, char_id: i32) -> Self {
+        let socket = GameSocket::connect(&target);
+        let (session, first) = Session::start(clone_hello(&hello), Join::Load { char_id });
+        let mut game = Self {
             socket,
             session,
-            world: None,
             status: format!("Connecting to {}:{}…", target.host, target.port),
+            target,
+            hello,
+            char_id,
+            world: None,
             ended: false,
             camera_angle: DEFAULT_CAMERA_ANGLE,
             out: Vec::new(),
+        };
+        game.socket.send(&first);
+        game
+    }
+
+    /// `GameServerConnection.onReconnect`: connect again, to another server if the message
+    /// names one, with its game id and key.
+    fn reconnect(&mut self, r: &Reconnect) {
+        self.socket.close();
+        if !r.host.is_empty() {
+            self.target.host = r.host.clone();
+            self.target.port = r.port as u16;
         }
+        self.hello.game_id = r.game_id;
+        self.hello.key_time = r.key_time;
+        self.hello.key = r.key.0.clone();
+        self.socket = GameSocket::connect(&self.target);
+        let (session, first) = Session::start(clone_hello(&self.hello), Join::Load { char_id: self.char_id });
+        self.session = session;
+        self.socket.send(&first);
+        self.world = None;
+        self.status = format!("Entering {}…", r.name);
     }
 
     /// Handle everything the server sent since the last frame.
@@ -49,6 +77,9 @@ impl Game {
                     self.ended = true;
                 }
                 SocketEvent::Message(msg) => self.handle(&msg, now, data),
+            }
+            if self.ended {
+                break;
             }
         }
     }
@@ -79,9 +110,8 @@ impl Game {
             }
             Some(Event::Failure { description, .. }) => self.status = description,
             Some(Event::Reconnect(r)) => {
-                // Changing worlds comes later; for now say where the server wanted us to go.
-                self.status = format!("The server sent us to {} ({}:{}), which isn't supported yet", r.name, r.host, r.port);
-                self.ended = true;
+                self.reconnect(&r);
+                return;
             }
             None => {}
         }
@@ -104,7 +134,46 @@ impl Game {
         }
     }
 
+    /// The portal within a tile of us, if any, with what to call it.
+    pub fn nearest_portal<'a>(&'a self, data: &'a GameData) -> Option<(i32, &'a str)> {
+        let world = self.world.as_ref()?;
+        let me = world.player()?;
+        world
+            .objects
+            .values()
+            .filter_map(|o| {
+                let desc = data.objects.get(&o.object_type)?;
+                matches!(desc.class, ObjectClass::Portal | ObjectClass::GuildHallPortal).then_some((o, desc))
+            })
+            .map(|(o, desc)| ((o.x - me.x).hypot(o.y - me.y), o, desc))
+            .filter(|(d, _, _)| *d < 1.0)
+            .min_by(|a, b| a.0.total_cmp(&b.0))
+            .map(|(_, o, desc)| (o.id, o.name().unwrap_or(&desc.display_id)))
+    }
+
+    pub fn use_portal(&mut self, object_id: i32) {
+        self.socket.send(&UsePortal { object_id }.into());
+    }
+
+    /// Back to the nexus (the R key). Not from the nexus itself: the server disconnects for that.
+    pub fn escape(&mut self) {
+        if self.session.map.as_ref().is_some_and(|m| m.name != "Nexus") {
+            self.socket.send(&Escape {}.into());
+        }
+    }
+
     pub fn close(&mut self) {
         self.socket.close();
+    }
+}
+
+fn clone_hello(h: &HelloParams) -> HelloParams {
+    HelloParams {
+        build_version: h.build_version.clone(),
+        game_id: h.game_id,
+        guid: h.guid.clone(),
+        password: h.password.clone(),
+        key_time: h.key_time,
+        key: h.key.clone(),
     }
 }

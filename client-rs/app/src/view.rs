@@ -10,7 +10,7 @@ use crate::redraw::{Dye, Redrawer, PAD};
 use crate::sprites::{SrcRect, Sprites};
 use crate::text::{Fonts, Style, Text};
 use bsk_assets::Facing;
-use bsk_data::{GameData, ObjectDesc, TextureData, TextureRef};
+use bsk_data::{GameData, Model, ObjectDesc, TextureData, TextureRef};
 use bsk_render::{Quad, Renderer, Tint};
 use bsk_world::{GameObj, World};
 
@@ -175,6 +175,7 @@ fn bound_to_pi(a: f64) -> f64 {
 enum Item<'a> {
     Sprite { obj: &'a GameObj, desc: &'a ObjectDesc },
     Wall { obj: &'a GameObj, desc: &'a ObjectDesc },
+    Model { obj: &'a GameObj, desc: &'a ObjectDesc, model: &'a Model },
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -214,7 +215,10 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         }
         let Some(desc) = scene.data.objects.get(&obj.object_type) else { continue };
         let depth = cam.to_screen(obj.x, obj.y, 0.0)[1];
-        if desc.class.is_wall() {
+        let model = desc.model.as_ref().and_then(|m| scene.data.models.get(m));
+        if let Some(model) = model {
+            items.push((depth, Item::Model { obj, desc, model }));
+        } else if desc.class.is_wall() {
             items.push((depth, Item::Wall { obj, desc }));
         } else {
             items.push((depth, Item::Sprite { obj, desc }));
@@ -247,6 +251,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
     for (_, item) in items.iter().filter(|(_, i)| !under(i)) {
         match item {
             Item::Wall { obj, desc } => draw_wall(scene, renderer, obj, desc),
+            Item::Model { obj, desc, model } => draw_model(scene, renderer, obj, desc, model),
             Item::Sprite { obj, desc } => draw_sprite(scene, renderer, redrawer, ground, obj, desc),
         }
     }
@@ -294,6 +299,49 @@ fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, 
     let cut = 1.0 - sink / sprite.h as f32;
     let quad = Quad::rect(px - sw / 2.0, py - sh + sink * k, sw, sh * cut);
     renderer.sprite_part(sprite.rect, [0.0, 0.0, 1.0, cut], quad, Tint::NONE);
+}
+
+/// `Object3D.draw`: the model turned by the object's Rotation (degrees) and placed at it; faces
+/// in model order, those facing away skipped, each lit like a wall face. Textured faces show
+/// the object's texture; "Solid" ones its colour.
+fn draw_model(scene: &Scene, renderer: &mut Renderer, obj: &GameObj, desc: &ObjectDesc, model: &Model) {
+    let cam = scene.camera;
+    let texture = scene.texture_src(&desc.texture, obj.id).and_then(|s| scene.sprites.atlas(s));
+    let (s, c) = desc.rotation.to_radians().sin_cos();
+    let world: Vec<[f64; 3]> = model
+        .vertices
+        .iter()
+        .map(|(p, _)| [p[0] * c - p[1] * s + obj.x, p[0] * s + p[1] * c + obj.y, p[2]])
+        .collect();
+    let screen: Vec<[f32; 2]> = world.iter().map(|p| cam.to_screen(p[0], p[1], p[2])).collect();
+    for face in &model.faces {
+        let ix = &face.indices;
+        let (i0, i1, il) = (ix[0], ix[1], ix[ix.len() - 1]);
+        let (u, v) = (sub(screen[i1], screen[i0]), sub(screen[il], screen[i0]));
+        if u[0] * v[1] - u[1] * v[0] < 0.0 {
+            continue;
+        }
+        let shade = shade(normal(world[i0], world[i1], world[il]));
+        let (src, tint) = match (face.textured, texture) {
+            (true, Some(t)) => (t, Tint { mul: [shade, shade, shade, 1.0], add: [0.0; 3] }),
+            _ => {
+                let [r, g, b] = bsk_render::rgb_f32(desc.color.unwrap_or(0));
+                (renderer.white(), Tint { mul: [r * shade, g * shade, b * shade, 1.0], add: [0.0; 3] })
+            }
+        };
+        let uv = |i: usize| {
+            let t = model.vertices[i].1;
+            [t[0] as f32, t[1] as f32]
+        };
+        for k in 1..ix.len() - 1 {
+            let (a, b) = (ix[k], ix[k + 1]);
+            renderer.triangle(src, [screen[i0], screen[a], screen[b]], [uv(i0), uv(a), uv(b)], tint);
+        }
+    }
+}
+
+fn sub(a: [f32; 2], b: [f32; 2]) -> [f32; 2] {
+    [a[0] - b[0], a[1] - b[1]]
 }
 
 /// `Wall.draw`: a textured cube. Sides that face away aren't drawn; sides against another wall
