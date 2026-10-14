@@ -4,7 +4,7 @@
 
 use bsk_data::{GameData, ObjectClass};
 use bsk_net::{GameSocket, SocketEvent, Target};
-use bsk_proto::{ClientMessage, Escape, Reconnect, ServerMessage, UsePortal, WorldPos};
+use bsk_proto::{ClientMessage, Escape, Reconnect, ServerMessage, UsePortal, ViewRadius, WorldPos};
 use bsk_session::{Event, HelloParams, Join, Session};
 use bsk_world::{MoveInput, World};
 
@@ -12,6 +12,9 @@ use bsk_world::{MoveInput, World};
 pub const DEFAULT_CAMERA_ANGLE: f64 = 7.0 * std::f64::consts::PI / 4.0;
 /// `Parameters.PLAYER_ROTATE_SPEED`, radians per millisecond.
 const ROTATE_SPEED: f64 = 0.003;
+/// `Map.MIN_VIEW_RADIUS` (the server's default sight) and `MAX_VIEW_RADIUS`, in tiles.
+const MIN_VIEW_RADIUS: i32 = 15;
+const MAX_VIEW_RADIUS: i32 = 40;
 
 pub struct Game {
     socket: GameSocket,
@@ -26,6 +29,9 @@ pub struct Game {
     pub ended: bool,
     pub camera_angle: f64,
     out: Vec<ClientMessage>,
+    /// The sight radius the server uses for us, and when we last changed it.
+    sent_view_radius: i32,
+    view_radius_sent_at: i32,
 }
 
 impl Game {
@@ -43,6 +49,8 @@ impl Game {
             ended: false,
             camera_angle: DEFAULT_CAMERA_ANGLE,
             out: Vec::new(),
+            sent_view_radius: MIN_VIEW_RADIUS,
+            view_radius_sent_at: i32::MIN / 2,
         };
         game.socket.send(&first);
         game
@@ -64,6 +72,7 @@ impl Game {
         self.session = session;
         self.socket.send(&first);
         self.world = None;
+        self.sent_view_radius = MIN_VIEW_RADIUS;
         self.status = format!("Entering {}…", r.name);
     }
 
@@ -131,6 +140,18 @@ impl Game {
         let input = MoveInput { x: keys.0, y: keys.1, camera_angle: self.camera_angle };
         if let Some((x, y)) = world.update(now, dt, &input, data) {
             self.session.set_position(WorldPos { x: x as f32, y: y as f32 }, now);
+        }
+    }
+
+    /// `GameSprite`'s VIEW_RADIUS: ask the server to send as far as the screen reaches
+    /// (`far` tiles from us), 15 to 40, at most once a second when it changes.
+    pub fn want_view_radius(&mut self, far: f64, now: i32) {
+        let radius = (far.ceil() as i32).clamp(MIN_VIEW_RADIUS, MAX_VIEW_RADIUS);
+        let in_game = self.world.as_ref().is_some_and(|w| w.player().is_some());
+        if in_game && radius != self.sent_view_radius && now - self.view_radius_sent_at >= 1000 {
+            self.socket.send(&ViewRadius { radius }.into());
+            self.sent_view_radius = radius;
+            self.view_radius_sent_at = now;
         }
     }
 

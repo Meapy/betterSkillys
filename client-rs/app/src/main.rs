@@ -287,6 +287,7 @@ impl App {
             Phase::SigningIn(..) => "Signing in…".into(),
             Phase::Playing(game) => game.status.clone(),
         };
+        let mut view_radius = None;
         match &self.phase {
             Phase::Idle(_) | Phase::SigningIn(..) => {}
             Phase::Playing(game) => {
@@ -304,11 +305,20 @@ impl App {
                             cx: w as f64 / 2.0,
                             cy: h as f64 * 13.0 / 24.0,
                         };
+                        // The farthest screen corner from us, in tiles.
+                        let far = [(0.0, 0.0), (w as f64, 0.0), (0.0, h as f64), (w as f64, h as f64)]
+                            .iter()
+                            .map(|(x, y)| (x - camera.cx).hypot(y - camera.cy) / scale)
+                            .fold(0.0, f64::max);
+                        view_radius = Some(far);
                         let scene = view::Scene { sprites, data, world, camera, time: now };
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
                     }
                 }
             }
+        }
+        if let (Some(far), Phase::Playing(game)) = (view_radius, &mut self.phase) {
+            game.want_view_radius(far, now);
         }
         if !status.is_empty() {
             let style = text::Style { size: 18.0, bold: true, color: 0xFFFFFF };
