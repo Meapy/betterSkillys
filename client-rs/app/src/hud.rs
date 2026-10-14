@@ -99,31 +99,10 @@ impl Ui<'_> {
         self.renderer.sprite(white, Quad::rect(x, y, w, h), Tint::color(rgb, alpha));
     }
 
-    /// `GraphicsUtil.drawCutEdgeRect`: a rectangle with the chosen corners (top left, top right,
-    /// bottom right, bottom left) cut off at 45°.
     fn cut_rect(&mut self, r: [f32; 4], cut: f32, cuts: [bool; 4], rgb: u32, alpha: f32) {
-        let [x, y, w, h] = r;
-        let mut pts: Vec<[f32; 2]> = Vec::with_capacity(8);
-        let corners = [
-            ([x, y + cut], [x + cut, y], [x, y]),
-            ([x + w - cut, y], [x + w, y + cut], [x + w, y]),
-            ([x + w, y + h - cut], [x + w - cut, y + h], [x + w, y + h]),
-            ([x + cut, y + h], [x, y + h - cut], [x, y + h]),
-        ];
-        for (i, (a, b, c)) in corners.into_iter().enumerate() {
-            if cuts[i] {
-                pts.push(a);
-                pts.push(b);
-            } else {
-                pts.push(c);
-            }
-        }
-        let white = self.renderer.white();
-        let tint = Tint::color(rgb, alpha);
-        for k in 1..pts.len() - 1 {
-            self.renderer.triangle(white, [pts[0], pts[k], pts[k + 1]], [[0.5, 0.5]; 3], tint);
-        }
+        cut_rect(self.renderer, r, cut, cuts, rgb, alpha);
     }
+
 
     fn label(&mut self, s: &str, x: f32, y: f32, size: f32, bold: bool, color: u32) {
         self.text.draw(self.fonts, self.renderer, s, x, y, Style { size, bold, color });
@@ -158,6 +137,32 @@ impl Ui<'_> {
             // Colour multiplied to zero, then the flat colour added: the shape in one colour.
             self.renderer.sprite(rect, Quad::rect(x, y, side, side), Tint { mul: [0.0, 0.0, 0.0, 1.0], add: [r, g, b] });
         }
+    }
+}
+
+/// `GraphicsUtil.drawCutEdgeRect`: a rectangle with the chosen corners (top left, top right,
+/// bottom right, bottom left) cut off at 45°.
+pub fn cut_rect(renderer: &mut Renderer, r: [f32; 4], cut: f32, cuts: [bool; 4], rgb: u32, alpha: f32) {
+    let [x, y, w, h] = r;
+    let mut pts: Vec<[f32; 2]> = Vec::with_capacity(8);
+    let corners = [
+        ([x, y + cut], [x + cut, y], [x, y]),
+        ([x + w - cut, y], [x + w, y + cut], [x + w, y]),
+        ([x + w, y + h - cut], [x + w - cut, y + h], [x + w, y + h]),
+        ([x + cut, y + h], [x, y + h - cut], [x, y + h]),
+    ];
+    for (i, (a, b, c)) in corners.into_iter().enumerate() {
+        if cuts[i] {
+            pts.push(a);
+            pts.push(b);
+        } else {
+            pts.push(c);
+        }
+    }
+    let white = renderer.white();
+    let tint = Tint::color(rgb, alpha);
+    for k in 1..pts.len() - 1 {
+        renderer.triangle(white, [pts[0], pts[k], pts[k + 1]], [[0.5, 0.5]; 3], tint);
     }
 }
 

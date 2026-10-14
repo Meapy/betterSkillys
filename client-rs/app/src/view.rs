@@ -96,6 +96,17 @@ impl Floater {
     }
 }
 
+/// `SpeechBalloon`: what someone said, over their head for a few seconds.
+#[derive(Debug, Clone)]
+pub struct Bubble {
+    pub object_id: i32,
+    pub text: String,
+    /// Background, outline, text.
+    pub colors: [u32; 3],
+    pub at: i32,
+    pub life: i32,
+}
+
 pub struct Scene<'a> {
     pub sprites: &'a Sprites,
     pub data: &'a GameData,
@@ -104,6 +115,7 @@ pub struct Scene<'a> {
     pub time: i32,
     /// (object id, amount, colour, when) of the damage numbers to show.
     pub floaters: &'a [Floater],
+    pub bubbles: &'a [Bubble],
 }
 
 /// The image an object shows now, before redrawing.
@@ -378,6 +390,44 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
         let y = py - (55.0 + 40.0 * age) * k;
         text.draw_centered(fonts, renderer, &f.text, px, y, Style { color: f.color, ..style });
+    }
+
+    // Speech balloons: the text wrapped to 150 px, in a cut-corner box with a tail, above the
+    // speaker.
+    for b in scene.bubbles {
+        let Some(obj) = world.objects.get(&b.object_id) else { continue };
+        let size = (14.0 * k).round().max(9.0);
+        let style = Style { size, bold: false, color: b.colors[2] };
+        let max_w = 150.0 * k;
+        let mut lines: Vec<String> = vec![String::new()];
+        for word in b.text.split(' ') {
+            let line = lines.last_mut().unwrap();
+            let candidate = if line.is_empty() { word.to_owned() } else { format!("{line} {word}") };
+            if !line.is_empty() && text.measure(fonts, renderer, &candidate, style) > max_w {
+                lines.push(word.to_owned());
+            } else {
+                *line = candidate;
+            }
+        }
+        let line_h = size * 1.2;
+        let w = lines.iter().map(|l| text.measure(fonts, renderer, l, style)).fold(0.0, f32::max);
+        let h = line_h * lines.len() as f32;
+        let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
+        let size_pct = obj.stat_int(2).unwrap_or(100) as f32 / 100.0;
+        let bottom = py - 40.0 * size_pct * k - 2.0 * k - 18.0 * k;
+        let (bx, by) = (px - w / 2.0 - 6.0 * k, bottom - h - 12.0 * k);
+        let rect = [bx, by, w + 12.0 * k, h + 12.0 * k];
+        crate::hud::cut_rect(renderer, [rect[0] - 2.0 * k, rect[1] - 2.0 * k, rect[2] + 4.0 * k, rect[3] + 4.0 * k], 5.0 * k, [true; 4], 0x000000, 0.35);
+        crate::hud::cut_rect(renderer, rect, 4.0 * k, [true; 4], b.colors[1], 1.0);
+        crate::hud::cut_rect(renderer, [rect[0] + k, rect[1] + k, rect[2] - 2.0 * k, rect[3] - 2.0 * k], 3.0 * k, [true; 4], b.colors[0], 1.0);
+        // The tail, pointing down at the speaker.
+        let white = renderer.white();
+        let tail_top = by + h + 12.0 * k - k;
+        renderer.triangle(white, [[px - 8.0 * k, tail_top], [px + 8.0 * k, tail_top], [px, tail_top + 12.0 * k]], [[0.5, 0.5]; 3], Tint::color(b.colors[1], 1.0));
+        renderer.triangle(white, [[px - 6.0 * k, tail_top - k], [px + 6.0 * k, tail_top - k], [px, tail_top + 9.0 * k]], [[0.5, 0.5]; 3], Tint::color(b.colors[0], 1.0));
+        for (i, line) in lines.iter().enumerate() {
+            text.draw(fonts, renderer, line, bx + 6.0 * k, by + 6.0 * k + line_h * i as f32, style);
+        }
     }
 
     // Names (`GameObject.drawName`): bold 16 px white, centred under the object.

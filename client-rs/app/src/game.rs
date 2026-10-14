@@ -37,6 +37,8 @@ pub struct Game {
     view_radius_sent_at: i32,
     /// Text rising over objects: damage numbers and the server's notifications.
     pub floaters: Vec<crate::view::Floater>,
+    /// Speech balloons, one per speaker.
+    pub bubbles: Vec<crate::view::Bubble>,
     /// When the ability (Space) can be used again (`Player.nextAltAttack_`).
     next_ability: i32,
     /// What we sent, by message name (logged when the game closes).
@@ -66,6 +68,7 @@ impl Game {
             sent_view_radius: MIN_VIEW_RADIUS,
             view_radius_sent_at: i32::MIN / 2,
             floaters: Vec::new(),
+            bubbles: Vec::new(),
             next_ability: 0,
             counts: Default::default(),
             chat: Vec::new(),
@@ -159,6 +162,30 @@ impl Game {
         }
         if let ServerMessage::Text(t) = msg {
             self.add_chat(&t.name, &t.recipient, &t.text, t.name_color, t.text_color, now);
+            // GameServerConnection.onText: a balloon over the speaker, coloured by who it is.
+            let speaker = self.world.as_ref().and_then(|w| w.objects.get(&t.object_id));
+            if let (Some(o), true) = (speaker, t.object_id >= 0 && t.bubble_time > 0) {
+                let enemy = data.objects.get(&o.object_type).is_some_and(|d| d.enemy);
+                let colors = if enemy {
+                    [0x561F1C, 0xFC8642, 0xCDC0BF]
+                } else if t.recipient == "*Guild*" {
+                    [0x3E8A00, 0xA6FF5D, 0xD3F8CC]
+                } else if t.recipient == "*Party*" {
+                    [0x78A0FF, 0x5A7DD1, 0xD9E4FF]
+                } else if !t.recipient.is_empty() {
+                    [0x260AB6, 0x00F0FF, 0xD3CCF7]
+                } else {
+                    [0xE1DEDC, 0xFFFFFF, 0x545454]
+                };
+                self.bubbles.retain(|b| b.object_id != t.object_id);
+                self.bubbles.push(crate::view::Bubble {
+                    object_id: t.object_id,
+                    text: t.text.clone(),
+                    colors,
+                    at: now,
+                    life: t.bubble_time as i32 * 1000,
+                });
+            }
         }
         let Some(world) = &mut self.world else { return };
         match msg {
@@ -287,6 +314,7 @@ impl Game {
             self.socket.send(&msg);
         }
         self.floaters.retain(|f| now - f.at < f.life);
+        self.bubbles.retain(|b| now - b.at < b.life);
     }
 
     /// Advance the world by `dt` ms with the keys held; `rotate` is -1, 0 or 1.
@@ -383,8 +411,9 @@ impl Game {
         self.predict(owner, slot, -1);
     }
 
-    /// `Player.useAltWeapon` (Space): the ability in slot 1, aimed at a world point.
-    pub fn use_ability(&mut self, now: i32, x: f64, y: f64, data: &GameData) {
+    /// `Player.useAltWeapon` (Space): the ability in slot 1, aimed at a world point; `angle`
+    /// is the world direction of the mouse, for abilities that shoot.
+    pub fn use_ability(&mut self, now: i32, x: f64, y: f64, angle: f64, data: &GameData) {
         if self.session.map.as_ref().is_some_and(|m| m.disable_abilities) {
             return;
         }
@@ -397,6 +426,7 @@ impl Game {
             return;
         }
         self.next_ability = now + (xml.number("Cooldown", 0.5) * 1000.0) as i32;
+        let shoots = xml.children_named("Activate").any(|a| a.text.trim() == "Shoot");
         let msg = UseItem {
             time: now,
             slot_object: SlotObject { object_id: id, slot_id: 1, object_type: item },
@@ -404,6 +434,20 @@ impl Game {
             use_type: 1,
         };
         self.send(msg.into());
+        if shoots {
+            let last_move = self.session.last_move_time().unwrap_or(now);
+            let Some(world) = &mut self.world else { return };
+            for p in world.shoot_ability(now, item, angle, last_move, data) {
+                let msg = PlayerShoot {
+                    time: now,
+                    bullet_id: p.bullet_id,
+                    container_type: p.container_type as i32,
+                    starting_pos: WorldPos { x: p.start_x as f32, y: p.start_y as f32 },
+                    angle: p.angle as f32,
+                };
+                self.send(msg.into());
+            }
+        }
     }
 
     /// F and V: a health or magic potion from the stacks (`UseBuyPotionCommand`).

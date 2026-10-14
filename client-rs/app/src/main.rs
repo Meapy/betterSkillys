@@ -583,9 +583,11 @@ impl App {
                             };
                         }
                         if ability {
-                            ability_at = Some(camera.to_world(mouse.0, mouse.1));
+                            let (x, y) = camera.to_world(mouse.0, mouse.1);
+                            let angle = game.camera_angle + (mouse.1 - camera.cy).atan2(mouse.0 - camera.cx);
+                            ability_at = Some((x, y, angle));
                         }
-                        let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters };
+                        let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters, bubbles: &game.bubbles };
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
                     }
                     if let Some(p) = &panel {
@@ -603,8 +605,8 @@ impl App {
             if let Some(angle) = fire {
                 game.shoot(now, angle, data);
             }
-            if let Some((x, y)) = ability_at {
-                game.use_ability(now, x, y, data);
+            if let Some((x, y, angle)) = ability_at {
+                game.use_ability(now, x, y, angle, data);
             }
         }
         if !status.is_empty() {

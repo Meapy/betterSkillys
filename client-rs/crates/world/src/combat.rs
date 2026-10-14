@@ -205,14 +205,32 @@ impl World {
         if (time as f64) < player.attack_start as f64 + attack_period {
             return vec![];
         }
-        let (px, py) = (player.x, player.y);
         let att_mult = self.attack_multiplier(player.stat_int(STAT_ATTACK).unwrap_or(0), conditions);
-        let speed_mult = if has(conditions, condition::INSPIRED) { 1.25 } else { 1.0 };
-        let Some(desc) = weapon.projectiles.get(&0) else { return vec![] };
-        let (min, max) = (desc.min_damage, desc.max_damage);
+        let shots = self.do_shoot(time, weapon_type, angle, att_mult, last_move, data);
+        if let Some(player) = self.objects.get_mut(&me) {
+            player.attack_start = time;
+            player.attack_angle = angle;
+        }
+        shots
+    }
 
-        let num = weapon.num_projectiles();
-        let arc_gap = weapon.arc_gap_degrees() * PI / 180.0;
+    /// The shots of an ability that has `<Activate>Shoot</Activate>` (`Player.useAltWeapon`):
+    /// the item's projectiles, without the attack multiplier.
+    pub fn shoot_ability(&mut self, time: i32, item_type: i32, angle: f64, last_move: i32, data: &GameData) -> Vec<Projectile> {
+        self.do_shoot(time, item_type, angle, 1.0, last_move, data)
+    }
+
+    /// `Player.doShoot`: the item's projectiles fanned around `angle`, each rolling its damage.
+    fn do_shoot(&mut self, time: i32, item_type: i32, angle: f64, att_mult: f64, last_move: i32, data: &GameData) -> Vec<Projectile> {
+        let Some(me) = self.me else { return vec![] };
+        let Some(player) = self.objects.get(&me) else { return vec![] };
+        let Some(item) = data.objects.get(&(item_type as u16)) else { return vec![] };
+        let Some(desc) = item.projectiles.get(&0) else { return vec![] };
+        let (px, py) = (player.x, player.y);
+        let speed_mult = if has(player.conditions(), condition::INSPIRED) { 1.25 } else { 1.0 };
+        let (min, max) = (desc.min_damage, desc.max_damage);
+        let num = item.num_projectiles();
+        let arc_gap = item.arc_gap_degrees() * PI / 180.0;
         let mut a = angle - arc_gap * (num - 1) as f64 / 2.0;
         let mut shots = Vec::new();
         for _ in 0..num {
@@ -225,14 +243,10 @@ impl World {
                 damage = 0;
             }
             let (sx, sy) = (px + angle.cos() * 0.3, py + angle.sin() * 0.3);
-            let p = Projectile::new(me, bullet_id, weapon_type as u16, 0, a, time, sx, sy, speed_mult, damage, false);
+            let p = Projectile::new(me, bullet_id, item_type as u16, 0, a, time, sx, sy, speed_mult, damage, false);
             shots.push(p.clone());
             self.projectiles.push(p);
             a += arc_gap;
-        }
-        if let Some(player) = self.objects.get_mut(&me) {
-            player.attack_start = time;
-            player.attack_angle = angle;
         }
         shots
     }
