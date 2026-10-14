@@ -19,6 +19,7 @@ import base64
 import glob
 import json
 import math
+import make_elder
 import os
 import re
 import struct
@@ -76,28 +77,17 @@ ELDER_WORLDS = {
     "ElderDavy": ("Davy", "Elder Davy Jones' Locker", ["Elder Davy Portal"]),
 }
 # Elder dungeons built from betterSkillys' own map of the regular dungeon instead of Doomed Realms'
-# one: each monster swapped for its Elder version, the tiles and walls for the darker Elder ones
-# (tools/make_elder_assets.py), braziers lighting its rooms, and a new layout for every visit.
-# world -> (betterSkillys map, {ground or object id: Elder replacement}, extra world XML lines,
-# brazier)
+# one (tools/make_elder.py lists them and makes their Elder tiles and monsters): each ground,
+# wall and monster swapped for its Elder version, braziers lighting the rooms, and a new layout
+# for every visit where the regular dungeon has one.
 BS_MAPS = os.path.join(ROOT, "source", "Shared", "resources", "worlds")
-BS_ELDER_WORLDS = {
-    "ElderTombMap": ("Dungeons/Tomb of the Ancients.jm", {
-        "Sandstone Tile": "Elder Sandstone Tile",
-        "Cracked Sandstone Tile": "Elder Cracked Sandstone Tile",
-        "Sand Covered Tile": "Elder Cracked Sandstone Tile",
-        "Missing Tile": "Elder Missing Tile",
-        "Gold Tile": "Elder Gold Tile",
-        "Tomb Wall": "Elder Tomb Wall",
-        "Tomb Boss Anchor": "Elder Tomb Boss Anchor",
-    }, ["<RandomLayout>", "\t<Goal>Elder Inactive Sarcophagus</Goal>", "</RandomLayout>"], "Elder Brazier"),
-}
+BS_ELDER_WORLDS = make_elder.DUNGEONS
+ELDER_BRAZIER = "Elder Brazier"
 # braziers stand by the rooms' walls, corners first, at least this many tiles apart
 BRAZIER_SPACING = 9
-# the floor a brazier lights becomes the "<ground> Lit <level>" ground (tools/make_elder_assets.py),
-# where it can see the tile: level 6 within 2.5 tiles of it, down to level 1 within 10
+# the floor a brazier lights becomes the "<ground> Lit <level>" ground (tools/make_elder.py), where
+# it can see the tile: level 6 within 2.5 tiles of it, down to level 1 within 10
 LIGHT_REACH = [10, 8.5, 7, 5.5, 4, 2.5]
-LIT_GROUNDS = {"Elder Sandstone Tile", "Elder Cracked Sandstone Tile", "Elder Missing Tile", "Elder Gold Tile"}
 # Doomed Realms' shop map places merchants as objects; betterSkillys places them on store regions
 SHOP_WORLD = "ShopMap"
 
@@ -222,7 +212,7 @@ def elder_swap(wmap, dr_ids):
     return dict(wmap, dict=entries)
 
 
-def place_braziers(j, brazier, walls):
+def place_braziers(j, brazier, walls, lit_grounds):
     """Puts a brazier by the walls of every room (in its corners first, then along its walls) and
     lights the floor around it."""
     w, h, d = j["width"], j["height"], j["dict"]
@@ -275,7 +265,7 @@ def place_braziers(j, brazier, walls):
         for y in range(by - reach, by + reach + 1):
             for x in range(bx - reach, bx + reach + 1):
                 level = sum(math.hypot(x - bx, y - by) <= r for r in LIGHT_REACH)
-                if level and light.get((x, y), 0) < level and tile(x, y).get("ground") in LIT_GROUNDS \
+                if level and light.get((x, y), 0) < level and tile(x, y).get("ground") in lit_grounds \
                         and not is_wall(x, y) and sees(bx, by, x, y):
                     light[(x, y)] = level
     lit = {}
@@ -289,16 +279,22 @@ def place_braziers(j, brazier, walls):
     return len(placed)
 
 
-def bs_elder_map(path, swaps, dr_ids, brazier=None):
-    """A betterSkillys .jm map with its grounds and objects swapped for their Elder versions."""
+def bs_elder_map(path, dr_ids):
+    """A betterSkillys .jm map with its grounds, walls and monsters swapped for their Elder versions,
+    and braziers lighting its rooms."""
+    objects, grounds = make_elder.load(make_elder.xml_files(include_elder=True))
+    known = set(objects) | set(dr_ids)
     j = json.load(open(os.path.join(BS_MAPS, path), encoding="utf-8-sig"))
+    walls = set()
     for e in j["dict"]:
-        if e.get("ground") in swaps:
-            e["ground"] = swaps[e["ground"]]
+        if e.get("ground") and "Elder " + e["ground"] in grounds:
+            e["ground"] = "Elder " + e["ground"]
         for o in e.get("objs") or []:
-            o["id"] = swaps.get(o["id"]) or ("Elder " + o["id"] if "Elder " + o["id"] in dr_ids else o["id"])
-    if brazier:
-        place_braziers(j, brazier, {v for v in swaps.values() if "Wall" in v})
+            if "Elder " + o["id"] in known:
+                if o["id"] in objects and objects[o["id"]].findtext("Class") in make_elder.WALL_CLASSES:
+                    walls.add("Elder " + o["id"])
+                o["id"] = "Elder " + o["id"]
+    place_braziers(j, ELDER_BRAZIER, walls, make_elder.lit_grounds())
     objs = [(None, o["id"], o.get("name", ""), 0) for e in j["dict"] for o in e.get("objs") or []]
     return {"width": j["width"], "height": j["height"], "dict": objs, "jm": json.dumps(j)}
 
@@ -320,8 +316,7 @@ def world_maps(dr_root, dr_ids=frozenset()):
         if cls == SHOP_WORLD:
             maps = [shop_regions(m) for m in maps]
         if cls in BS_ELDER_WORLDS:
-            path, swaps, _, brazier = BS_ELDER_WORLDS[cls]
-            maps = [bs_elder_map(path, swaps, dr_ids, brazier)]
+            maps = [bs_elder_map(BS_ELDER_WORLDS[cls][0], dr_ids)]
         out[cls] = (name, bg, tp, maps)
     for cls, (base, name, _) in ELDER_WORLDS.items():
         _, bg, tp, maps = classes[base]
@@ -359,8 +354,11 @@ def write_worlds(worlds, dr_grounds, object_id):
         lines.append("\t\t<Height>%d</Height>" % h)
         lines += ["\t\t<MapJM>%s</MapJM>" % f.replace("&", "&amp;") for f in files]
         lines.append("\t\t<VisibilityType>1</VisibilityType>")
-        if cls in BS_ELDER_WORLDS:
-            lines += ["\t\t" + x for x in BS_ELDER_WORLDS[cls][2]]
+        goals = BS_ELDER_WORLDS[cls][2] if cls in BS_ELDER_WORLDS else None
+        if goals:
+            lines.append("\t\t<RandomLayout>")
+            lines += ["\t\t\t<Goal>%s</Goal>" % g for g in goals]
+            lines.append("\t\t</RandomLayout>")
         if not tp:
             lines.append("\t\t<DisableTeleport/>")
         lines.append("\t\t<Dungeon/>")

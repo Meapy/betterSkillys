@@ -669,6 +669,10 @@ def main():
     args = ap.parse_args()
 
     dr = load_objects(glob.glob(os.path.join(args.dr, "db", "data", "*.xml")))
+    # the Elder dungeons' tiles and the Elder monsters Doomed Realms didn't make, first, so the
+    # rest of the port sees them
+    import make_elder
+    print("Elder dungeons: %d grounds, %d objects, %d sprites." % make_elder.build(set(dr)))
     bs = load_objects([f for f in glob.glob(os.path.join(ROOT, "source", "Shared", "resources", "xml", "**", "*.xml"), recursive=True)
                        if os.path.abspath(f) != os.path.abspath(SERVER_XML)])
     fix_doomed_data(dr)
