@@ -406,6 +406,13 @@ namespace WorldServer.core.objects
                 }, this);
             }
 
+            // the XP Boosters and the Loot Drop Potion are marked with <XpBoost/> or <LDBoosted/> and a
+            // <Timer> in seconds (-1: until level 20) instead of an Activate effect
+            if (item.XpBoost && !item.ActivateEffects.Any(e => e.Effect == ActivateEffects.XPBoost))
+                StartXPBoost(item, slot, objId, item.Timer < 0 ? -1 : (int)(item.Timer * 1000));
+            if (item.LDBoosted && item.Timer > 0 && !item.ActivateEffects.Any(e => e.Effect == ActivateEffects.LDBoost))
+                StartLDBoost((int)(item.Timer * 1000));
+
             foreach (var eff in item.ActivateEffects)
             {
                 switch (eff.Effect)
@@ -1064,7 +1071,10 @@ namespace WorldServer.core.objects
             return acc.StoredPotions[idx];
         }
 
-        private void AELDBoost(TickTime time, Item item, Position target, ActivateEffect eff)
+        private void AELDBoost(TickTime time, Item item, Position target, ActivateEffect eff) =>
+            StartLDBoost(eff.DurationMS);
+
+        private void StartLDBoost(int durationMS)
         {
             if (LDBoostTime < 0)
                 return;
@@ -1073,7 +1083,7 @@ namespace WorldServer.core.objects
                 SendInfo("Your Loot Drop Potion has been activated!");
             if (LDBoostTime > 0)
                 SendInfo("Your Loot Drop Potion has been stacked up!");
-            LDBoostTime = eff.DurationMS + LDBoostTime;
+            LDBoostTime = durationMS + LDBoostTime;
             InvokeStatChange(StatDataType.LDBoostTime, LDBoostTime / 1000, true);
         }
 
@@ -1438,15 +1448,15 @@ namespace WorldServer.core.objects
             }
         }
 
-        private void AEXPBoost(TickTime time, Item item, Position target, int slot, int objId, ActivateEffect eff)
+        private void AEXPBoost(TickTime time, Item item, Position target, int slot, int objId, ActivateEffect eff) =>
+            StartXPBoost(item, slot, objId, eff.DurationMS);
+
+        // durationMS -1 lasts until level 20 or death. A booster used while one runs is given back.
+        private void StartXPBoost(Item item, int slot, int objId, int durationMS)
         {
-            if (XPBoostTime < 0 || (XPBoostTime > eff.DurationMS && eff.DurationMS >= 0))
-                return;
+            var containerItem = World.GetEntity(objId) as Container;
 
-            var entity = World.GetEntity(objId);
-            var containerItem = entity as Container;
-
-            if (XPBoostTime > 0 && XPBoosted)
+            if (XPBoosted && XPBoostTime != 0)
             {
                 SendInfo("You already have an XP Booster activated!");
                 if (containerItem != null)
@@ -1464,9 +1474,12 @@ namespace WorldServer.core.objects
                     Inventory[slot] = item;
                 return;
             }
-            XPBoostTime = eff.DurationMS;
+            XPBoostTime = durationMS;
             XPBoosted = true;
             InvokeStatChange(StatDataType.XPBoostTime, XPBoostTime / 1000, true);
+            SendInfo(durationMS < 0
+                ? "Your XP Booster has been activated until level 20!"
+                : $"Your XP Booster has been activated for {durationMS / 60000} minutes!");
         }
 
         private void AEHealingPoison(World world, Player player, ActivateEffect eff)

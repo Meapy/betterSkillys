@@ -63,12 +63,17 @@ namespace WorldServer.core.worlds.impl
 
         public void SendOutMerchant(MerchantData merchantData)
         {
-            _inactiveStorePoints.Remove(merchantData);
             if (MerchantLists.Shops.TryGetValue(merchantData.TileRegion, out var data))
             {
+                // every item of this shop is out on another stall: try again when one comes back
                 var items = data.Item1;
                 if (items.Count == 0)
+                {
+                    merchantData.TimeToSpawn = 10.0f;
                     return;
+                }
+
+                _inactiveStorePoints.Remove(merchantData);
 
                 var x = merchantData.Position.X;
                 var y = merchantData.Position.Y;

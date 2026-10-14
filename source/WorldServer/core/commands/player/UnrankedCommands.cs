@@ -591,28 +591,31 @@ namespace WorldServer.core.commands.player
             if (totalLootBoost > 0)
             {
                 if (player.LDBoostTime > 0)
-                    player.SendSubtext($"   Your loot drop potion gives: 50%");
+                    player.SendSubtext($"   Your loot drop potion gives: 50% ({TimeLeft(player.LDBoostTime)})");
                 if (player.World.isWeekend)
                     player.SendSubtext($"   It being a weekend gives: {Math.Round(settings.wkndBoost * 100.0, 0)}%");
                 if (settings.lootEvent > 0)
                     player.SendSubtext($"   A server-wide event gives: {Math.Round(settings.lootEvent * 100.0, 0)}%");
             }
 
-            // exp boost
-            var expBoost = player.XPBoostTime > 0 ? 0.5 : 0;
+            // exp boost: a booster's time is -1 when it lasts until level 20 (DamageCounter applies it while it isn't 0)
+            var boosterActive = player.XPBoostTime != 0 && player.Level < 20;
+            var expBoost = boosterActive ? 0.5 : 0;
             var expEvent = settings.expEvent;
             var totalExpBoost = expEvent + expBoost;
 
             if (totalExpBoost > 0)
             {
                 player.SendInfo($"You have a {totalExpBoost * 100}% XP boost.");
-                if (player.XPBoostTime > 0)
-                    player.SendSubtext("   Your XP booster gives: 50%");
+                if (boosterActive)
+                    player.SendSubtext($"   Your XP booster gives: 50% ({(player.XPBoostTime < 0 ? "until level 20" : TimeLeft(player.XPBoostTime))})");
                 if (settings.expEvent > 0)
                     player.SendSubtext($"   A server-wide event gives: {expEvent * 100}%");
             }
             return true;
         }
+
+        private static string TimeLeft(int ms) => ms >= 60000 ? $"{ms / 60000} min left" : $"{Math.Max(1, ms / 1000)} s left";
     }
 
     internal class GCommand : Command
