@@ -34,8 +34,12 @@ struct Globals {
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 struct TriVertex {
     pos: [f32; 2],
+    /// Within `rect`: 0..1 across it, repeating if `wrap` is 1.
     uv: [f32; 2],
+    /// The source rectangle on the atlas page (x, y, w, h), in page coordinates.
+    rect: [f32; 4],
     mul: [f32; 4],
+    wrap: f32,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -265,7 +269,7 @@ impl Renderer {
                 buffers: &[wgpu::VertexBufferLayout {
                     array_stride: std::mem::size_of::<TriVertex>() as u64,
                     step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: &wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2, 2 => Float32x4],
+                    attributes: &wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2, 2 => Float32x4, 3 => Float32x4, 4 => Float32],
                 }],
             },
             fragment: Some(wgpu::FragmentState {
@@ -423,11 +427,20 @@ impl Renderer {
 
     /// A textured triangle: screen points, and texture coordinates within `src` (0..1).
     pub fn triangle(&mut self, src: AtlasRect, pts: [[f32; 2]; 3], uvs: [[f32; 2]; 3], tint: Tint) {
+        self.push_triangle(src, pts, uvs, tint, false);
+    }
+
+    /// Like `triangle`, with the texture repeating outside 0..1 (Flash's `repeat` fills).
+    pub fn triangle_wrapped(&mut self, src: AtlasRect, pts: [[f32; 2]; 3], uvs: [[f32; 2]; 3], tint: Tint) {
+        self.push_triangle(src, pts, uvs, tint, true);
+    }
+
+    fn push_triangle(&mut self, src: AtlasRect, pts: [[f32; 2]; 3], uvs: [[f32; 2]; 3], tint: Tint, wrap: bool) {
         let inv = 1.0 / self.atlas.size as f32;
+        let rect = [src.x as f32 * inv, src.y as f32 * inv, src.w as f32 * inv, src.h as f32 * inv];
         let start = self.tri_vertices.len() as u32;
         for (p, uv) in pts.iter().zip(uvs) {
-            let uv = [(src.x as f32 + uv[0] * src.w as f32) * inv, (src.y as f32 + uv[1] * src.h as f32) * inv];
-            self.tri_vertices.push(TriVertex { pos: *p, uv, mul: tint.mul });
+            self.tri_vertices.push(TriVertex { pos: *p, uv, rect, mul: tint.mul, wrap: if wrap { 1.0 } else { 0.0 } });
         }
         self.extend_run(Kind::Triangles, src.page, start, start + 3);
     }

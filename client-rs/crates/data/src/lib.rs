@@ -1,12 +1,14 @@
 //! The game data: ground tiles and objects from the XML files the manifest lists, read the way
 //! the AIR client reads them. Later files replace earlier entries of the same type, as there.
 
+pub mod animation;
 pub mod ground;
 pub mod model;
 pub mod object;
 pub mod texture;
 pub mod xml;
 
+pub use animation::{AnimationData, Animations};
 pub use ground::{Animate, AnimateKind, Ground};
 pub use model::{Model, ModelFace};
 pub use object::{ObjectClass, ObjectDesc, ProjectileDesc};

@@ -5,12 +5,13 @@
 //! screen as `scale × (r·d, u·d − z)`, d being the offset from the camera, r = (cos a, sin a) and
 //! u = (−sin a, cos a). That's affine, so every tile, wall face and sprite is one quad.
 
+use crate::connected;
 use crate::ground::Ground;
 use crate::redraw::{Dye, Redrawer, PAD};
 use crate::sprites::{SrcRect, Sprites};
 use crate::text::{Fonts, Style, Text};
 use bsk_assets::Facing;
-use bsk_data::{GameData, Model, ObjectDesc, TextureData, TextureRef};
+use bsk_data::{GameData, Model, ObjectClass, ObjectDesc, TextureData, TextureRef};
 use bsk_render::{Quad, Renderer, Tint};
 use bsk_world::{GameObj, Projectile, World};
 
@@ -118,8 +119,18 @@ impl Scene<'_> {
     fn look(&self, obj: &GameObj, desc: &ObjectDesc) -> Option<Look> {
         // A skin (TEXTURE_STAT) is the object type whose texture replaces the class's.
         let skin = obj.stat_int(76).filter(|&t| t != 0).and_then(|t| self.data.objects.get(&(t as u16)));
-        let tex = skin.map_or(&desc.texture, |s| &s.texture).pick(obj.id);
+        let mut tex = skin.map_or(&desc.texture, |s| &s.texture);
+        // ALT_TEXTURE (setAltTexture): one of the type's <AltTexture>s instead, 0 for the normal.
+        if let Some(alt) = obj.stat_int(61).filter(|&a| a != 0).and_then(|a| tex.alt.get(&a)) {
+            tex = alt;
+        }
+        let tex = tex.pick(obj.id);
         let TextureRef::Animated { set, index } = &tex.main else {
+            // An <Animation> frame, while one plays.
+            let tex = obj
+                .anim_frame
+                .and_then(|(a, f)| desc.animations.get(a)?.frames.get(f))
+                .map_or(tex, |frame| frame.texture.pick(obj.id));
             return self.texture_src(tex, obj.id).map(|src| Look { src, mirror: false, mask: None, wide: false });
         };
         let sheet = self.sprites.char_sheet(set)?;
@@ -216,6 +227,7 @@ fn bound_to_pi(a: f64) -> f64 {
 enum Item<'a> {
     Sprite { obj: &'a GameObj, desc: &'a ObjectDesc },
     Wall { obj: &'a GameObj, desc: &'a ObjectDesc },
+    Connected { obj: &'a GameObj, desc: &'a ObjectDesc },
     Model { obj: &'a GameObj, desc: &'a ObjectDesc, model: &'a Model },
     Projectile(&'a Projectile),
 }
@@ -260,6 +272,8 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         let model = desc.model.as_ref().and_then(|m| scene.data.models.get(m));
         if let Some(model) = model {
             items.push((depth, Item::Model { obj, desc, model }));
+        } else if matches!(desc.class, ObjectClass::ConnectedWall | ObjectClass::CaveWall) {
+            items.push((depth, Item::Connected { obj, desc }));
         } else if desc.class.is_wall() {
             items.push((depth, Item::Wall { obj, desc }));
         } else {
@@ -298,6 +312,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
     for (_, item) in items.iter().filter(|(_, i)| !under(i)) {
         match item {
             Item::Wall { obj, desc } => draw_wall(scene, renderer, obj, desc),
+            Item::Connected { obj, desc } => draw_connected(scene, renderer, obj, desc),
             Item::Model { obj, desc, model } => draw_model(scene, renderer, obj, desc, model),
             Item::Projectile(p) => draw_projectile(scene, renderer, redrawer, p),
             Item::Sprite { obj, desc } => draw_sprite(scene, renderer, redrawer, ground, obj, desc),
@@ -454,6 +469,87 @@ fn draw_model(scene: &Scene, renderer: &mut Renderer, obj: &GameObj, desc: &Obje
         for k in 1..ix.len() - 1 {
             let (a, b) = (ix[k], ix[k + 1]);
             renderer.triangle(src, [screen[i0], screen[a], screen[b]], [uv(i0), uv(a), uv(b)], tint);
+        }
+    }
+}
+
+/// `ConnectedObject.draw`: the faces for the shape the CONNECT stat gives, turned to fit. Faces
+/// that look at unknown ground are black.
+fn draw_connected(scene: &Scene, renderer: &mut Renderer, obj: &GameObj, desc: &ObjectDesc) {
+    let Some((shape, rotation)) = obj.stat_int(41).and_then(connected::shape) else { return };
+    let cam = scene.camera;
+    let side = scene.texture_src(&desc.texture, obj.id).and_then(|s| scene.sprites.atlas(s));
+    let faces = if desc.class == ObjectClass::CaveWall {
+        // Math.random in the AIR client; seeded by the object here so it holds still.
+        let mut seed = (obj.id as u32).wrapping_mul(0x9E37_79B9) | 1;
+        let mut random = || {
+            seed ^= seed << 13;
+            seed ^= seed >> 17;
+            seed ^= seed << 5;
+            (seed >> 8) as f64 / (1u32 << 24) as f64
+        };
+        connected::cave_wall(shape, rotation, obj.x as i32, obj.y as i32, &mut random)
+    } else {
+        connected::connected_wall(shape, connected::Indents::from_xml(&desc.xml))
+    };
+    let top = desc
+        .xml
+        .child(shape.top_texture_tag())
+        .and_then(|t| {
+            let index = t.child("Index").map_or(0, |i| bsk_data::xml::as3_int(&i.text));
+            scene.sprites.tile_src(t.text_of("File")?, index as u32)
+        })
+        .and_then(|s| scene.sprites.atlas(s))
+        .or(side);
+    let (s, c) = (rotation as f64 * 90.0).to_radians().sin_cos();
+    let turn = |p: connected::V3| [p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2]];
+    let to_world = |p: connected::V3| {
+        let t = turn(p);
+        [t[0] + obj.x, t[1] + obj.y, t[2]]
+    };
+    for face in &faces {
+        let basis = face.basis.map(to_world);
+        let bs = basis.map(|p| cam.to_screen(p[0], p[1], p[2]));
+        let (u, v) = (sub(bs[1], bs[0]), sub(bs[2], bs[0]));
+        let det = u[0] * v[1] - u[1] * v[0];
+        if det <= 0.0 {
+            continue;
+        }
+        let n = normal(basis[0], basis[1], basis[2]);
+        let look = face.normal.map(turn).unwrap_or(n);
+        let len = look[0].hypot(look[1]).hypot(look[2]);
+        let step = |d: f64| if d > 0.4 * len { 1.0 } else if d < -0.4 * len { -1.0 } else { 0.0 };
+        let (nx, ny) = (step(look[0]), step(look[1]));
+        let unknown = (nx != 0.0 || ny != 0.0)
+            && scene.world.tile((obj.x + nx).floor() as i32, (obj.y + ny).floor() as i32).is_none();
+        let shade = shade(n);
+        let (src, tint) = match (unknown, if face.top { top } else { side }) {
+            (false, Some(t)) => (t, Tint { mul: [shade, shade, shade, 1.0], add: [0.0; 3] }),
+            _ => (renderer.white(), Tint::color(0x000000, 1.0)),
+        };
+        let screen: Vec<[f32; 2]> = face
+            .verts
+            .iter()
+            .map(|&p| {
+                let w = to_world(p);
+                cam.to_screen(w[0], w[1], w[2])
+            })
+            .collect();
+        let uv_at = |i: usize| -> [f32; 2] {
+            match face.basis_uv {
+                None => [face.uvs[i][0] as f32, face.uvs[i][1] as f32],
+                // Software drawing: the texture follows the basis corners on the screen.
+                Some(b) => {
+                    let d = sub(screen[i], bs[0]);
+                    let (p, q) = ((d[0] * v[1] - d[1] * v[0]) / det, (u[0] * d[1] - u[1] * d[0]) / det);
+                    let (p, q) = (p as f64, q as f64);
+                    let at = |k: usize| b[0][k] + p * (b[1][k] - b[0][k]) + q * (b[2][k] - b[0][k]);
+                    [at(0) as f32, at(1) as f32]
+                }
+            }
+        };
+        for t in &face.tris {
+            renderer.triangle_wrapped(src, t.map(|i| screen[i]), t.map(uv_at), tint);
         }
     }
 }

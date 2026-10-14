@@ -146,6 +146,8 @@ pub struct ObjectDesc {
     pub rotation: f64,
     pub shadow_color: u32,
     pub projectiles: std::collections::HashMap<i32, ProjectileDesc>,
+    /// `<Animation>`s, played now and then over the texture.
+    pub animations: Vec<crate::animation::AnimationData>,
     pub xml: Element,
 }
 
@@ -219,6 +221,7 @@ impl ObjectDesc {
                     (d.bullet_type, d)
                 })
                 .collect(),
+            animations: xml.children_named("Animation").map(crate::animation::AnimationData::from_xml).collect(),
             xml: xml.clone(),
         }
     }

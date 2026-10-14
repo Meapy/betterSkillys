@@ -89,8 +89,9 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
 0. Scaffolding: manifest, renderer, window on desktop and web. **Done.**
 1. Protocol crate (88 messages, golden tests), headless bot on the isolated stack, WebSocket
    bridge for the browser. **Done.**
-2. World: tiles, objects, walls, 3D objects, shadows, camera; walk around the Nexus. **Done**,
-   except connected and cave walls, object animations, AltTexture and particles.
+2. World: tiles, objects, walls, 3D objects, shadows, camera; walk around the Nexus. **Done**
+   (connected and cave walls, composite and edge tiles, object animations, AltTexture), except
+   particles.
 3. Combat: projectiles (exact port of the paths and `Random`), hits, conditions. **Done**
    (shooting, enemy and player hits, ground damage, damage numbers); particles still to do.
 4. In-game UI, 5. front-end screens, 6. market/guild/party/emotes/sound, 7. packaging.

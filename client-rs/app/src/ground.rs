@@ -1,6 +1,7 @@
 //! Ground tiles as the AIR client draws them (`Square.rebuild3D`, `SquareFace`, `TileRedrawer`):
 //! a tile whose neighbours have a higher blend priority gets their texture blended into its
-//! corners through the edge masks; animated tiles (water, lava) scroll their texture.
+//! corners through the edge masks; animated tiles (water, lava) scroll their texture. Composite
+//! tiles take a quarter from each neighbour; tiles with `<Edge>` draw it toward empty squares.
 
 use crate::sprites::Sprites;
 use bsk_data::{AnimateKind, GameData, TextureData, TextureRef};
@@ -31,7 +32,15 @@ pub struct Ground {
     /// Per quadrant (0..4): the six mask sets, each a list of 4×4 alpha images.
     masks: Option<Vec<[Vec<RgbaImage>; 6]>>,
     cache: HashMap<([u16; 9], bool), Option<AtlasRect>>,
+    composites: HashMap<[u16; 4], Option<AtlasRect>>,
+    /// Edged tiles by (type, which of the eight neighbours need no edge).
+    edges: HashMap<(u16, u8), Option<AtlasRect>>,
 }
+
+/// The tile type of a composite square (`TileRedrawer`'s 253).
+const COMPOSITE: u16 = 253;
+/// `getCompositeSig`'s "nothing here".
+const NONE: u16 = 255;
 
 /// `BitmapUtil.rotateBitmapData` for square images: `turns` quarter turns clockwise.
 fn rotate(img: &RgbaImage, turns: i32) -> RgbaImage {
@@ -53,6 +62,24 @@ fn texture0(data: &GameData, sprites: &Sprites, tile: u16) -> Option<RgbaImage> 
     match &ground.texture.pick(0).main {
         TextureRef::Image { set, index } => sprites.tile_src(set, *index).map(|r| sprites.pixels(r)),
         _ => None,
+    }
+}
+
+/// `TextureData.getTexture(0)` of a ground's Edge, Corner or InnerCorner.
+fn image0(sprites: &Sprites, tex: &TextureData) -> Option<RgbaImage> {
+    match &tex.pick(0).main {
+        TextureRef::Image { set, index } => sprites.tile_src(set, *index).map(|r| sprites.pixels(r)),
+        _ => None,
+    }
+}
+
+/// `copyPixels(src, src.rect, origin, null, null, mergeAlpha = true)`: `src` laid over `out`.
+fn draw_over(out: &mut RgbaImage, src: &RgbaImage) {
+    let opaque = RgbaImage::from_pixel(4, 4, image::Rgba([0, 0, 0, 255]));
+    for py in (0..src.height().min(out.height())).step_by(4) {
+        for px in (0..src.width().min(out.width())).step_by(4) {
+            copy_masked(out, src, &opaque, px, py);
+        }
     }
 }
 
@@ -86,7 +113,14 @@ impl Ground {
         let ground = data.grounds.get(&tile)?;
         let animated = ground.animate.kind != AnimateKind::None;
         let base_rect = texture_rect(sprites, &ground.texture, bsk_data::ground::tile_hash(x, y));
-        let overlay = self.blended(world, data, sprites, renderer, x, y, !animated);
+        // TileRedrawer.redraw: composite, else edges, else blending.
+        let overlay = if tile == COMPOSITE {
+            self.composite(world, data, sprites, renderer, x, y)
+        } else if ground.edge.is_some() {
+            self.edged(world, data, sprites, renderer, x, y)
+        } else {
+            self.blended(world, data, sprites, renderer, x, y, !animated)
+        };
         let sink = if ground.sink { if overlay.is_some() { 6 } else { 12 } } else { 0 };
         let base = if animated {
             base_rect.map(|r| (r, ground.animate.kind, ground.animate.dx, ground.animate.dy))
@@ -97,6 +131,136 @@ impl Ground {
             base_rect.map(|r| (r, AnimateKind::None, 0.0, 0.0))
         };
         Some(TileLayers { base, overlay, sink })
+    }
+
+    /// `getCompositeSig` and `buildComposite`: each quarter shows the neighbour beside it with
+    /// the higher composite priority, or the diagonal one if neither side takes part.
+    fn composite(&mut self, world: &World, data: &GameData, sprites: &Sprites, renderer: &mut Renderer, x: i32, y: i32) -> Option<AtlasRect> {
+        let priority = |t: Option<u16>| t.and_then(|t| data.grounds.get(&t)).map_or(-1, |g| g.composite_priority);
+        let at = |dx: i32, dy: i32| world.tile(x + dx, y + dy);
+        let (n1, n3, n5, n7) = (at(0, -1), at(-1, 0), at(1, 0), at(0, 1));
+        let (p1, p3, p5, p7) = (priority(n1), priority(n3), priority(n5), priority(n7));
+        let pick = |pa: i32, a: Option<u16>, pb: i32, b: Option<u16>, diagonal: (i32, i32)| -> u16 {
+            if pa < 0 && pb < 0 {
+                let d = at(diagonal.0, diagonal.1);
+                if priority(d) < 0 { NONE } else { d.unwrap_or(NONE) }
+            } else if pa < pb {
+                b.unwrap_or(NONE)
+            } else {
+                a.unwrap_or(NONE)
+            }
+        };
+        let sig = [
+            pick(p1, n1, p3, n3, (-1, -1)),
+            pick(p1, n1, p5, n5, (1, -1)),
+            pick(p3, n3, p7, n7, (-1, 1)),
+            pick(p5, n5, p7, n7, (1, 1)),
+        ];
+        if let Some(cached) = self.composites.get(&sig) {
+            return *cached;
+        }
+        // An opaque black 8×8 with each neighbour's quarter copied in.
+        let mut out = RgbaImage::from_pixel(8, 8, image::Rgba([0, 0, 0, 255]));
+        for (q, &t) in sig.iter().enumerate() {
+            let Some(tex) = (t != NONE).then(|| texture0(data, sprites, t)).flatten() else { continue };
+            let (px, py) = ((q as u32 % 2) * 4, (q as u32 / 2) * 4);
+            for yy in py..(py + 4).min(tex.height()) {
+                for xx in px..(px + 4).min(tex.width()) {
+                    let p = tex.get_pixel(xx, yy);
+                    out.put_pixel(xx, yy, image::Rgba([p[0], p[1], p[2], 255]));
+                }
+            }
+        }
+        let result = renderer.add_image(&out);
+        self.composites.insert(sig, result);
+        result
+    }
+
+    /// `getEdgeSig` and `drawEdges`: the tile with its edge drawn on each side that borders an
+    /// empty square (or, in SameTypeEdgeMode, any other type), and corners to match.
+    fn edged(&mut self, world: &World, data: &GameData, sprites: &Sprites, renderer: &mut Renderer, x: i32, y: i32) -> Option<AtlasRect> {
+        let tile = world.tile(x, y)?;
+        let ground = data.grounds.get(&tile)?;
+        // Bit i set: neighbour i (row by row, 4 = the tile) needs no edge.
+        let mut bits = 0u16;
+        let mut i = 0;
+        for ny in y - 1..=y + 1 {
+            for nx in x - 1..=x + 1 {
+                if i != 4 {
+                    let ok = match world.tile(nx, ny) {
+                        None => true,
+                        Some(t) if ground.same_type_edge_mode => t == tile,
+                        Some(t) => t != NONE,
+                    };
+                    if ok {
+                        bits |= 1 << i;
+                    }
+                }
+                i += 1;
+            }
+        }
+        if bits == 0b1_1110_1111 {
+            return None;
+        }
+        // Pack the eight neighbours into a byte for the cache.
+        let key = ((bits & 0b1111) | ((bits >> 1) & 0b1111_0000)) as u8;
+        if let Some(cached) = self.edges.get(&(tile, key)) {
+            return *cached;
+        }
+        let result = self.draw_edges(data, sprites, tile, bits).and_then(|img| renderer.add_image(&img));
+        self.edges.insert((tile, key), result);
+        result
+    }
+
+    fn draw_edges(&mut self, data: &GameData, sprites: &Sprites, tile: u16, bits: u16) -> Option<RgbaImage> {
+        let ground = data.grounds.get(&tile)?;
+        let sig = |i: usize| bits & (1 << i) != 0;
+        let mut out = texture0(data, sprites, tile)?;
+        // getEdges: the edge faces west (3), turned for north, east and south.
+        let edge = image0(sprites, ground.edge.as_ref()?)?;
+        let mut edges: [Option<RgbaImage>; 9] = Default::default();
+        edges[3] = Some(edge.clone());
+        edges[1] = Some(rotate(&edge, 1));
+        edges[5] = Some(rotate(&edge, 2));
+        edges[7] = Some(rotate(&edge, 3));
+        if let Some(corner) = ground.corner.as_ref().and_then(|c| image0(sprites, c)) {
+            edges[2] = Some(rotate(&corner, 1));
+            edges[8] = Some(rotate(&corner, 2));
+            edges[6] = Some(rotate(&corner, 3));
+            edges[0] = Some(corner);
+        }
+        for i in [1, 3, 5, 7] {
+            if !sig(i) {
+                if let Some(e) = &edges[i] {
+                    draw_over(&mut out, e);
+                }
+            }
+        }
+        if edges[0].is_some() {
+            for (i, a, b) in [(0, 3, 1), (2, 1, 5), (8, 5, 7), (6, 3, 7)] {
+                if sig(a) && sig(b) && !sig(i) {
+                    if let Some(e) = &edges[i] {
+                        draw_over(&mut out, e);
+                    }
+                }
+            }
+        }
+        // getInnerCorners: the edges, with the inner corner (turned) in the corner slots.
+        if let Some(inner) = ground.inner_corner.as_ref().and_then(|c| image0(sprites, c)) {
+            let corners = [(0, rotate(&inner, 0)), (2, rotate(&inner, 1)), (8, rotate(&inner, 2)), (6, rotate(&inner, 3))];
+            for (i, img) in corners {
+                let (a, b) = match i {
+                    0 => (3, 1),
+                    2 => (1, 5),
+                    8 => (5, 7),
+                    _ => (3, 7),
+                };
+                if !sig(a) && !sig(b) {
+                    draw_over(&mut out, &img);
+                }
+            }
+        }
+        Some(out)
     }
 
     /// `TileRedrawer.redraw` for plain tiles (`getSig` and `redrawRect`).
@@ -221,6 +385,22 @@ fn copy_masked(out: &mut RgbaImage, src: &RgbaImage, mask: &RgbaImage, px: u32, 
     }
 }
 
+/// `q` grown by `px` screen pixels on every side. Neighbouring tiles share edges that don't
+/// always land the same after rounding; along a line of pixel centres that leaves a hairline
+/// gap, so ground pieces overlap a little.
+fn grown(q: Quad, px: f32) -> Quad {
+    let len = |a: [f32; 2]| a[0].hypot(a[1]).max(1e-3);
+    let (ex, ey) = (px / len(q.x_axis), px / len(q.y_axis));
+    Quad {
+        origin: [
+            q.origin[0] - q.x_axis[0] * ex - q.y_axis[0] * ey,
+            q.origin[1] - q.x_axis[1] * ex - q.y_axis[1] * ey,
+        ],
+        x_axis: [q.x_axis[0] * (1.0 + 2.0 * ex), q.x_axis[1] * (1.0 + 2.0 * ex)],
+        y_axis: [q.y_axis[0] * (1.0 + 2.0 * ey), q.y_axis[1] * (1.0 + 2.0 * ey)],
+    }
+}
+
 /// Draw a tile texture over `quad`, its texture shifted by (ox, oy) tiles and wrapping, as
 /// `SquareFace` does for animated ground. Up to four pieces.
 pub fn draw_scrolled(renderer: &mut Renderer, rect: AtlasRect, quad: Quad, ox: f64, oy: f64, tint: Tint) {
@@ -241,7 +421,7 @@ pub fn draw_scrolled(renderer: &mut Renderer, rect: AtlasRect, quad: Quad, ox: f
                 x_axis: [quad.x_axis[0] * (x1 - x0), quad.x_axis[1] * (x1 - x0)],
                 y_axis: [quad.y_axis[0] * (y1 - y0), quad.y_axis[1] * (y1 - y0)],
             };
-            renderer.sprite_part(rect, [u0, v0, u0 + (x1 - x0), v0 + (y1 - y0)], piece, tint);
+            renderer.sprite_part(rect, [u0, v0, u0 + (x1 - x0), v0 + (y1 - y0)], grown(piece, 0.3), tint);
         }
     }
 }
@@ -268,6 +448,13 @@ mod tests {
         assert_eq!(rotate(&img, 1).get_pixel(3, 3)[3], 255);
         assert_eq!(rotate(&img, -1).get_pixel(0, 0)[3], 255);
         assert_eq!(rotate(&img, 2).get_pixel(0, 3)[3], 255);
+    }
+
+    #[test]
+    fn edge_key_packs_the_neighbours() {
+        // All eight neighbours fine (bit 4, the tile, unused) packs to 0xFF.
+        let bits: u16 = 0b1_1110_1111;
+        assert_eq!(((bits & 0b1111) | ((bits >> 1) & 0b1111_0000)) as u8, 0xFF);
     }
 
     #[test]

@@ -1,5 +1,6 @@
 //! betterSkillys client: the desktop executable and, built for wasm32, the browser version.
 
+mod connected;
 mod game;
 mod ground;
 mod login;

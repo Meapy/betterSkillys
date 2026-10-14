@@ -44,6 +44,9 @@ pub struct GameObj {
     pub attack_angle: f64,
     /// Killed by one of our shots, before the server says so.
     pub dead: bool,
+    /// Its `<Animation>` state, and the (animation, frame) showing now.
+    animations: bsk_data::Animations,
+    pub anim_frame: Option<(usize, usize)>,
 }
 
 impl GameObj {
@@ -98,6 +101,7 @@ pub struct World {
     pub random: Random,
     /// Our next shot's bullet id (`GameObject.getBulletId`, from 1).
     pub next_bullet_id: i32,
+    anim_seed: u32,
     last_ground_damage: HashMap<(i32, i32), i32>,
 }
 
@@ -119,6 +123,7 @@ impl World {
             projectiles: Vec::new(),
             random: Random::new(seed),
             next_bullet_id: 1,
+            anim_seed: 0x9E37_79B9,
             last_ground_damage: HashMap::new(),
         }
     }
@@ -183,6 +188,8 @@ impl World {
             attack_start: i32::MIN / 2,
             attack_angle: 0.0,
             dead: false,
+            animations: Default::default(),
+            anim_frame: None,
         };
         obj.apply_stats(&o.status.stats);
         self.objects.insert(id, obj);
@@ -257,6 +264,7 @@ impl World {
     /// Advance to `time`: other objects glide toward their tick positions; our player walks.
     /// Returns our new position if it changed.
     pub fn update(&mut self, time: i32, dt: i32, input: &MoveInput, data: &GameData) -> Option<(f64, f64)> {
+        self.animate(time, data);
         let ids: Vec<i32> = self.objects.keys().copied().filter(|&id| Some(id) != self.me).collect();
         for id in ids {
             let last_tick_id = self.last_tick_id;
@@ -277,6 +285,26 @@ impl World {
             self.place(id, nx, ny, data);
         }
         self.walk(dt, input, data)
+    }
+}
+
+impl World {
+    /// Steps `<Animation>`s (`Animations.getTexture`); characters with walk frames have none.
+    fn animate(&mut self, time: i32, data: &GameData) {
+        let seed = &mut self.anim_seed;
+        let mut random = || {
+            // xorshift32: the AIR client uses Math.random here, so any source will do.
+            *seed ^= *seed << 13;
+            *seed ^= *seed >> 17;
+            *seed ^= *seed << 5;
+            (*seed >> 8) as f64 / (1u32 << 24) as f64
+        };
+        for o in self.objects.values_mut() {
+            let Some(desc) = data.objects.get(&o.object_type) else { continue };
+            if !desc.animations.is_empty() {
+                o.anim_frame = o.animations.frame(&desc.animations, time, &mut random);
+            }
+        }
     }
 }
 
