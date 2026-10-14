@@ -1,6 +1,7 @@
 @ECHO OFF
 REM Starts Redis (the database, port 6379, this PC only), the account server (port 8080)
 REM and the world server (port 2051), each in its own window. Close those windows to stop.
+python tools/build_client.py 188.141.12.3 --package
 CD /D "%~dp0source"
 REM Rebuild first (quick when nothing changed) unless a server is already running.
 TASKLIST /FI "IMAGENAME eq App.exe" /NH | FINDSTR /B /I "App.exe" >NUL && GOTO START
@@ -20,3 +21,4 @@ TASKLIST /FI "IMAGENAME eq WorldServer.exe" /NH | FINDSTR /B /I "WorldServer.exe
     ECHO Starting the world server...
     START "World Server" /D "WorldServer\bin\Debug\net8.0" WorldServer.exe
 )
+CD ..
