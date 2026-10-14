@@ -22,6 +22,7 @@ namespace Shared.resources
         public readonly bool EnemyOccupySquare;
         public readonly bool Event;
         public readonly float ExpMultiplier;
+        public readonly float XpBonus;      // <XpBonus>: multiplies the experience a kill gives and its per-kill cap (Elder monsters)
         public readonly bool FullOccupy;
         public readonly bool God;
         public readonly bool Hero;
@@ -98,6 +99,7 @@ namespace Shared.resources
             MaxHP = e.GetValue<int>("MaxHitPoints");
             Defense = e.GetValue<int>("Defense");
             ExpMultiplier = e.GetValue("XpMult", 1.0f);
+            XpBonus = e.GetValue("XpBonus", 1.0f);
 
             if (e.HasElement("MinSize") && e.HasElement("MaxSize"))
             {

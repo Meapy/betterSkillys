@@ -908,6 +908,7 @@ namespace WorldServer.logic
                             new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                             new State("BOOM BOOM BOOM",
                                 new Taunt("You shall be food for the ether. Blobs, attack!"),
+                        new OrderOnce(20, "shtrs blobomb maker", "Spawn"),
                                 new TimedTransition(12000, "stars after blo")
                                 )
                             ),

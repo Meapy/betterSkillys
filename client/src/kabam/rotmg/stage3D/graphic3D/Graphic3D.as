@@ -19,9 +19,10 @@ import flash.display3D.Context3DProgramType;
    
    public class Graphic3D
    {
-      private static const gradientVertex:Vector.<Number> = Vector.<Number>(
-              [-0.5, 0.5, 0, 0, 0, 0, 0.01, 0, 1, 0.5, 0.5, 0, 0, 0, 0, 0.3, 1, 1,
-                 -0.5, -0.5, 0, 0, 0, 0, 0.1, 0, 0, 0.5, -0.5, 0, 0, 0, 0, 0.2, 1, 0]);
+      // position, colour (set from the gradient) and texture coordinates
+      private const gradientVertex:Vector.<Number> = Vector.<Number>(
+              [-0.5, 0.5, 0, 0, 0, 0, 0, 0, 1, 0.5, 0.5, 0, 0, 0, 0, 0, 1, 1,
+                 -0.5, -0.5, 0, 0, 0, 0, 0, 0, 0, 0.5, -0.5, 0, 0, 0, 0, 0, 1, 0]);
       private static const indices:Vector.<uint> = Vector.<uint>([0,1,2,2,1,3]);
 
       public var texture:TextureProxy;
@@ -129,10 +130,18 @@ import flash.display3D.Context3DProgramType;
          if(this.gradientVB == null || this.gradientIB == null)
          {
             this.gradientVB = context3D.GetContext3D().createVertexBuffer(4,9);
-            this.gradientVB.uploadFromVector(gradientVertex,0,4);
             this.gradientIB = context3D.GetContext3D().createIndexBuffer(6);
             this.gradientIB.uploadFromVector(indices,0,6);
          }
+         var color:uint = uint(gradientFill.colors[0]);
+         for(var i:int = 0; i < 4; i++)
+         {
+            gradientVertex[i * 9 + 3] = (color >> 16 & 0xFF) / 255;
+            gradientVertex[i * 9 + 4] = (color >> 8 & 0xFF) / 255;
+            gradientVertex[i * 9 + 5] = (color & 0xFF) / 255;
+            gradientVertex[i * 9 + 6] = Number(gradientFill.alphas[0]);
+         }
+         this.gradientVB.uploadFromVector(gradientVertex,0,4);
          this.shadowTransform(width,height);
       }
       

@@ -82,6 +82,7 @@ namespace WorldServer.logic
             )
             .Init("Ghost of Skuld",
                 new State(
+                    new DropPortalOnDeath("Realm Portal", 1.0),
                     new ScaleHP2(20),
                     new State("wait1",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),

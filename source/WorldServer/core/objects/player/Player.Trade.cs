@@ -92,12 +92,6 @@ namespace WorldServer.core.objects
                 return;
             }
 
-            if (Client.Account.Admin && !target.Client.Account.Admin)
-            {
-                SendError("You cannot trade.");
-                return;
-            }
-
             if (target == this)
             {
                 SendError("You can't trade with yourself!");

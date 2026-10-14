@@ -513,6 +513,38 @@ namespace WorldServer.logic.doomed
             null,
             null);
 
+        // Elder Abyss Idol
+        public static readonly Definition M_Elder_Abyss_Idol = new Definition(
+            new Behavior[] {
+                HpLesserPercent.Instance(0.999f,
+                new RunBehaviors(
+                    Cooldown.Instance(500, RingAttack.Instance(8, 0, 0, 0)),
+                    Cooldown.Instance(1000, RingAttack.Instance(4, 0, 45*(float) Math.PI/180, 1)),
+                    Cooldown.Instance(1000, MultiAttack.Instance(12, 10*(float) Math.PI/180, 3, 0, 2)),
+                    Cooldown.Instance(2500,
+                        If.Instance(EntityLesserThan.Instance(20, 4, T("AbyssTreasureLavaBomb")), TossEnemyAtPlayer.Instance(8, T("AbyssTreasureLavaBomb"))))
+                    ))
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                Tuple.Create(100, new LootDef(0, 5, 0, 10,
+                    Tuple.Create(0.5, (ILoot) new ItemLoot("Potion of Defense")),
+                    Tuple.Create(0.5, (ILoot) new ItemLoot("Potion of Vitality")),
+                    Tuple.Create(0.005, (ILoot) new ItemLoot("Demon Blade")),
+                    Tuple.Create(0.005, (ILoot) new ItemLoot("Wine Cellar Incantation")),
+                 Tuple.Create(0.03, (ILoot)new ItemLoot("Prism of Inception")),
+                        Tuple.Create(0.03, (ILoot)new ItemLoot("Cloak of the Joker")),
+                        Tuple.Create(0.05, (ILoot)new ItemLoot("Cloak of Dimensions")),
+                        Tuple.Create(0.05, (ILoot)new ItemLoot("Cloak of the Phantom")),
+                        Tuple.Create(0.05, (ILoot)new ItemLoot("Cloak of Forgotten Souls")),
+                        Tuple.Create(0.03, (ILoot)new ItemLoot("Wand of Evil Power")),
+                        Tuple.Create(0.03, (ILoot)new ItemLoot("Malphas Generator")),
+                        Tuple.Create(0.03, (ILoot)new ItemLoot("Raw Power")),
+                        Tuple.Create(0.03, (ILoot)new ItemLoot("Fire Gem")),
+                        Tuple.Create(0.03, (ILoot)new ItemLoot("Shattered Skull")),
+                        Tuple.Create(0.03, (ILoot)new ItemLoot("Demon Blood"))
+                    ))));
+
         // Elder Active Sarcophagus
         public static readonly Definition M_Elder_Active_Sarcophagus = new Definition(
             new Behavior[] {
@@ -880,40 +912,6 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(0.6, (ILoot) new TierLoot(3, ItemType.Ring))
                         ))));
 
-        // Elder Basilisk
-        public static readonly Definition M_Elder_Basilisk = new Definition(
-            new Behavior[] {
-                new RunBehaviors(
-                        Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 4, 0, projectileIndex: 0)),
-                        SimpleWandering.Instance(2, 2)
-                    ),
-                Cooldown.Instance(1000,
-                        Rand.Instance(
-                            new RandomTaunt(0.001, "Die"),
-                            new RandomTaunt(0.001, "Die")
-                        )
-                    )
-            },
-            null,
-            null);
-
-        // Elder Basilisk Baby
-        public static readonly Definition M_Elder_Basilisk_Baby = new Definition(
-            new Behavior[] {
-                new RunBehaviors(
-                        Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 4, 0, projectileIndex: 0)),
-                        SimpleWandering.Instance(2, 2)
-                    ),
-                Cooldown.Instance(1000,
-                        Rand.Instance(
-                            new RandomTaunt(0.001, "Die"),
-                            new RandomTaunt(0.001, "Die")
-                        )
-                    )
-            },
-            null,
-            null);
-
         // Elder Beam Priest
         public static readonly Definition M_Elder_Beam_Priest = new Definition(
             new Behavior[] {
@@ -947,6 +945,17 @@ namespace WorldServer.logic.doomed
                     Tuple.Create(100, new LootDef(0, 3, 0, 8,
                         Tuple.Create(0.01, (ILoot)new ItemLoot("Health Potion"))
                         ))));
+
+        // Elder Black Den Spider
+        public static readonly Definition M_Elder_Black_Den_Spider = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                SimpleWandering.Instance(4, 3f),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0))
+                )
+            },
+            null,
+            null);
 
         // Elder Black Dragon God
         public static readonly Definition M_Elder_Black_Dragon_God = new Definition(
@@ -1029,6 +1038,36 @@ namespace WorldServer.logic.doomed
                             Tuple.Create(0.06, (ILoot)new ItemLoot("Potion of Max Dexterity"))
                         ))));
 
+        // Elder Black Spotted Den Spider
+        public static readonly Definition M_Elder_Black_Spotted_Den_Spider = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                 SimpleWandering.Instance(4, 2f),
+                 Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0))
+                 )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                     Tuple.Create(100, new LootDef(0, 5, 0, 10,
+                         Tuple.Create(0.2, (ILoot)new ItemLoot("Healing Ichor"))
+                         ))));
+
+        // Elder Bloated Mummy
+        public static readonly Definition M_Elder_Bloated_Mummy = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    SmoothWandering.Instance(2f, 2f),
+                    Chasing.Instance(8, 11, 1, null),
+                    Cooldown.Instance(1860, MultiAttack.Instance(500, 30 * (float)Math.PI / 360, 25, 0, projectileIndex: 0)),
+                    Cooldown.Instance(1100, MultiAttack.Instance(600, 60 * (float)Math.PI / 360, 4, 0, 1))
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
+                        Tuple.Create(0.01, (ILoot)new ItemLoot("Health Potion"))
+                        ))));
+
         // Elder Blue Dragon God
         public static readonly Definition M_Elder_Blue_Dragon_God = new Definition(
             new Behavior[] {
@@ -1059,40 +1098,6 @@ namespace WorldServer.logic.doomed
                     Tuple.Create(100, new LootDef(0, 2, 0, 2,
                         Tuple.Create(0.05, (ILoot)new ItemLoot("Robe of Silk Water")),
                             Tuple.Create(0.06, (ILoot)new ItemLoot("Potion of Max Wisdom"))
-                        ))));
-
-        // Elder Blue Swarm Masters
-        public static readonly Definition M_Elder_Blue_Swarm_Masters = new Definition(
-            new Behavior[] {
-                new RunBehaviors(
-                    Once.Instance(SpawnMinionImmediate.Instance( T("Elder Blue Swarm Minions"), 5, 2, 3)),
-                    SmoothWandering.Instance(2f, 2f),
-                    Chasing.Instance(8, 11, 1, null),
-                    Cooldown.Instance(1260, MultiAttack.Instance(600, 20 * (float)Math.PI / 360, 8, 0, projectileIndex: 0)),
-                    Cooldown.Instance(1600, MultiAttack.Instance(600, 60 * (float)Math.PI / 360, 2, 0, 1)),
-                    Cooldown.Instance(1880, MultiAttack.Instance(600, 20 * (float)Math.PI / 360, 2, 0, 2)),
-                    Cooldown.Instance(1990, MultiAttack.Instance(600, 20 * (float)Math.PI / 360, 2, 0, 3))
-                    )
-            },
-            null,
-            new LootBehavior(LootDef.Empty,
-                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
-                        Tuple.Create(0.01, (ILoot)new ItemLoot("Health Potion"))
-                        ))));
-
-        // Elder Blue Swarm Minions
-        public static readonly Definition M_Elder_Blue_Swarm_Minions = new Definition(
-            new Behavior[] {
-                new RunBehaviors(
-                    SmoothWandering.Instance(2f, 2f),
-                    Chasing.Instance(8, 11, 1, null),
-                    Cooldown.Instance(1860, MultiAttack.Instance(600, 30 * (float)Math.PI / 360, 8, 0, projectileIndex: 0))
-                    )
-            },
-            null,
-            new LootBehavior(LootDef.Empty,
-                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
-                        Tuple.Create(0.01, (ILoot)new ItemLoot("Health Potion"))
                         ))));
 
         // Elder Brown Den Spider
@@ -1287,6 +1292,33 @@ namespace WorldServer.logic.doomed
                             new LootDef(0, 1, 0, 8,
                             Tuple.Create(0.01, (ILoot)HpPotionLoot.Instance)
                             )));
+
+        // Elder Coffin
+        public static readonly Definition M_Elder_Coffin = new Definition(
+            new Behavior[] {
+                
+            },
+            new ConditionalBehavior[]
+                {
+                    new DeathTransmute( T("Elder Vampire Bat Swarmer"))
+                },
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(800, new LootDef(0, 5, 0, 2,
+                        Tuple.Create(0.009, (ILoot) new ItemLoot("St. Abraham's Wand")),
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Bone Dagger")),
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Chasuble of Holy Light")),
+                        Tuple.Create(0.05, (ILoot) new ItemLoot("Ring of Divine Faith")),
+                        Tuple.Create(0.005, (ILoot) new ItemLoot("Tome of Purification")),
+                        Tuple.Create(0.1, (ILoot) new ItemLoot("Wine Cellar Incantation")),
+                        Tuple.Create(0.25, (ILoot) new ItemLoot("Holy Water")),
+                        Tuple.Create(0.03, (ILoot) new TierLoot(9, ItemType.Weapon)),
+                        Tuple.Create(0.03, (ILoot) new TierLoot(8, ItemType.Weapon)),
+                        Tuple.Create(0.03, (ILoot) new TierLoot(7, ItemType.Weapon)),
+                        Tuple.Create(0.03, (ILoot) new TierLoot(6, ItemType.Armor)),
+                        Tuple.Create(0.03, (ILoot) new TierLoot(5, ItemType.Ability)),
+                        Tuple.Create(0.03, (ILoot) new TierLoot(4, ItemType.Ability)),
+                        Tuple.Create(0.03, (ILoot) new TierLoot(4, ItemType.Ring))
+                        ))));
 
         // Elder Coral Bomb Big
         public static readonly Definition M_Elder_Coral_Bomb_Big = new Definition(
@@ -1564,6 +1596,63 @@ namespace WorldServer.logic.doomed
             null,
             null);
 
+        // Elder Ghost Mage of Septavius
+        public static readonly Definition M_Elder_Ghost_Mage_of_Septavius = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(12, 7, 1, null),
+                    IfNot.Instance(
+                        Chasing.Instance(10, 7, 1, T("Elder Septavius the Ghost God")),
+                        SimpleWandering.Instance(4f)
+                        )
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.6, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Ghost Rogue of Septavius
+        public static readonly Definition M_Elder_Ghost_Rogue_of_Septavius = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(12, 7, 1, null),
+                    IfNot.Instance(
+                        Chasing.Instance(10, 7, 1, T("Elder Septavius the Ghost God")),
+                        SimpleWandering.Instance(4f)
+                        )
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.6, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Ghost Warrior of Septavius
+        public static readonly Definition M_Elder_Ghost_Warrior_of_Septavius = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(12, 7, 1, null),
+                    IfNot.Instance(
+                        Chasing.Instance(10, 7, 1, T("Elder Septavius the Ghost God")),
+                        SimpleWandering.Instance(4f)
+                        )
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.6, (ILoot) PotionLoot.Instance)
+                        )));
+
         // Elder Giant Squid
         public static readonly Definition M_Elder_Giant_Squid = new Definition(
             new Behavior[] {
@@ -1573,6 +1662,57 @@ namespace WorldServer.logic.doomed
                     ),
                 Cooldown.Instance(100, SimpleAttack.Instance(10, projectileIndex: 0)),
                 Cooldown.Instance(500, MultiAttack.Instance(25, 10*(float) Math.PI/180, 5, 0, 1))
+            },
+            null,
+            null);
+
+        // Elder Great Coil Snake
+        public static readonly Definition M_Elder_Great_Coil_Snake = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                        Timed.Instance(5000, False.Instance(SimpleWandering.Instance(2))),
+                        Timed.Instance(1500, Not.Instance(ReturnSpawn.Instance(2)))
+                    ),
+                new QueuedBehavior(
+                        Cooldown.Instance(1000, PredictiveAttack.Instance(10, 1, projectileIndex: 0)),
+                        Cooldown.Instance(1000, RingAttack.Instance(10, 10, projectileIndex: 1)),
+                        Cooldown.Instance(1000, Rand.Instance(
+                            TossEnemy.Instance(0 * (float)Math.PI / 180, 4, T("Elder Great Snake Egg")),
+                            TossEnemy.Instance(90 * (float)Math.PI / 180, 4, T("Elder Great Snake Egg")),
+                            TossEnemy.Instance(180 * (float)Math.PI / 180, 4, T("Elder Great Snake Egg")),
+                            TossEnemy.Instance(270 * (float)Math.PI / 180, 4, T("Elder Great Snake Egg"))
+                        )),
+                        Cooldown.Instance(1000, Rand.Instance(
+                            TossEnemy.Instance(0 * (float)Math.PI / 180, 4, T("Elder Great Snake Egg")),
+                            TossEnemy.Instance(90 * (float)Math.PI / 180, 4, T("Elder Great Snake Egg")),
+                            TossEnemy.Instance(180 * (float)Math.PI / 180, 4, T("Elder Great Snake Egg")),
+                            TossEnemy.Instance(270 * (float)Math.PI / 180, 4, T("Elder Great Snake Egg"))
+                        )))
+            },
+            new ConditionalBehavior[] {
+                        new DeathPortal( T("Forbidden Jungle Portal"), 80, 80)
+                    },
+            null);
+
+        // Elder Great Snake Egg
+        public static readonly Definition M_Elder_Great_Snake_Egg = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                        Cooldown.Instance(5000),
+                        new Transmute( T("Elder Great Temple Snake"), 1, 2)
+                    )
+            },
+            null,
+            null);
+
+        // Elder Great Temple Snake
+        public static readonly Definition M_Elder_Great_Temple_Snake = new Definition(
+            new Behavior[] {
+                False.Instance(SimpleWandering.Instance(3)),
+                new QueuedBehavior(
+                        Cooldown.Instance(1000, MultiAttack.Instance(4, 7 * (float)Math.PI / 180, 2, projectileIndex: 0)),
+                        Cooldown.Instance(1000, RingAttack.Instance(6, 4, projectileIndex: 1))
+                )
             },
             null,
             null);
@@ -1717,6 +1857,14 @@ namespace WorldServer.logic.doomed
             null,
             null);
 
+        // Elder Ink Bubble
+        public static readonly Definition M_Elder_Ink_Bubble = new Definition(
+            new Behavior[] {
+                Cooldown.Instance(100, RingAttack.Instance(1, 1, 0, projectileIndex: 0))
+            },
+            null,
+            null);
+
         // Elder Jackal Assassin
         public static readonly Definition M_Elder_Jackal_Assassin = new Definition(
             new Behavior[] {
@@ -1750,23 +1898,6 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(0.01, (ILoot)new ItemLoot("Health Potion"))
                         ))));
 
-        // Elder Jackal Priest
-        public static readonly Definition M_Elder_Jackal_Priest = new Definition(
-            new Behavior[] {
-                IfNot.Instance(
-                    Chasing.Instance(12, 9, 6, T("Elder Jackal Priest")),
-                    Chasing.Instance(6.5f, 8, 1, null)
-                    ),
-                Cooldown.Instance(600, SimpleAttack.Instance(10, projectileIndex: 0)),
-                Cooldown.Instance(1000, RingAttack.Instance(5, 10, 0, 1)
-                    )
-            },
-            null,
-            new LootBehavior(
-                        new LootDef(0, 2, 0, 8,
-                            Tuple.Create(0.0001, (ILoot)HpPotionLoot.Instance)
-                            )));
-
         // Elder Jackal Veteran
         public static readonly Definition M_Elder_Jackal_Veteran = new Definition(
             new Behavior[] {
@@ -1797,21 +1928,49 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(0.01, (ILoot)new ItemLoot("Health Potion"))
                         ))));
 
-        // Elder Jungle Fire
-        public static readonly Definition M_Elder_Jungle_Fire = new Definition(
+        // Elder Lair Big Black Slime
+        public static readonly Definition M_Elder_Lair_Big_Black_Slime = new Definition(
             new Behavior[] {
                 new RunBehaviors(
-                    new QueuedBehavior(
-                        Cooldown.Instance(250, SimpleAttack.Instance(5)),
-                        Cooldown.Instance(250, PredictiveAttack.Instance(5, 0.2f))
+                    SimpleWandering.Instance(2f),
+                    Cooldown.Instance(500, SimpleAttack.Instance(10, projectileIndex: 0))
                     )
-                )
+            },
+            new ConditionalBehavior[]
+                {
+                    new DeathTransmute( T("Elder Lair Medium Black Slime"), 4, 4)
+                },
+            null);
+
+        // Elder Lair Big Brown Slime
+        public static readonly Definition M_Elder_Lair_Big_Brown_Slime = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    SimpleWandering.Instance(2f),
+                    Cooldown.Instance(500, MultiAttack.Instance(10, 1*(float) Math.PI/30, 3, 0, projectileIndex: 0))
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new DeathTransmute( T("Elder Lair Little Brown Slime"), 6, 6)
+                },
+            null);
+
+        // Elder Lair Blast Trap
+        public static readonly Definition M_Elder_Lair_Blast_Trap = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    If.Instance(
+                        IsEntityPresent.Instance(5, null),
+                        new QueuedBehavior(
+                            MultiAttack.Instance(8, 10*(float) Math.PI/180, 6),
+                            Die.Instance
+                            )
+                        )
+                    )
             },
             null,
-            new LootBehavior(LootDef.Empty,
-                        Tuple.Create(100, new LootDef(0, 1, 0, 8,
-                            Tuple.Create(0.0001, (ILoot)new ItemLoot("Raw Power"))
-                ))));
+            null);
 
         // Elder Lair Blue Spectre
         public static readonly Definition M_Elder_Lair_Blue_Spectre = new Definition(
@@ -1827,6 +1986,39 @@ namespace WorldServer.logic.doomed
                     Tuple.Create(100, new LootDef(0, 1, 0, 2,
                         Tuple.Create(0.2, (ILoot) new TierLoot(4, ItemType.Ability))
                         ))));
+
+        // Elder Lair Brown Bat
+        public static readonly Definition M_Elder_Lair_Brown_Bat = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    IfNot.Instance(
+                        Cooldown.Instance(2000, Charge.Instance(40, 10, null)),
+                        SimpleWandering.Instance(2f)
+                        ),
+                    Cooldown.Instance(1000, SimpleAttack.Instance(2, projectileIndex: 0))
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Lair Burst Trap
+        public static readonly Definition M_Elder_Lair_Burst_Trap = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    If.Instance(
+                        IsEntityPresent.Instance(5, null),
+                        new QueuedBehavior(
+                            MultiAttack.Instance(8, 10*(float) Math.PI/180, 6),
+                            Die.Instance
+                            )
+                        )
+                    )
+            },
+            null,
+            null);
 
         // Elder Lair Construct Giant
         public static readonly Definition M_Elder_Lair_Construct_Giant = new Definition(
@@ -1886,6 +2078,34 @@ namespace WorldServer.logic.doomed
                         )
                         )));
 
+        // Elder Lair Ghost Bat
+        public static readonly Definition M_Elder_Lair_Ghost_Bat = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    IfNot.Instance(
+                        Cooldown.Instance(2000, Charge.Instance(40, 10, null)),
+                        SimpleWandering.Instance(2f)
+                        ),
+                    Cooldown.Instance(1000, SimpleAttack.Instance(2, projectileIndex: 0))
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Lair Ghost Warrior
+        public static readonly Definition M_Elder_Lair_Ghost_Warrior = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    Chasing.Instance(8, 10, 1, null),
+                    Cooldown.Instance(500, SimpleAttack.Instance(12))
+                    )
+            },
+            null,
+            null);
+
         // Elder Lair Grey Spectre
         public static readonly Definition M_Elder_Lair_Grey_Spectre = new Definition(
             new Behavior[] {
@@ -1900,6 +2120,301 @@ namespace WorldServer.logic.doomed
                     Tuple.Create(100, new LootDef(0, 1, 0, 2,
                         Tuple.Create(0.2, (ILoot) new TierLoot(4, ItemType.Ability))
                         ))));
+
+        // Elder Lair Little Black Slime
+        public static readonly Definition M_Elder_Lair_Little_Black_Slime = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(12, 10, 1, T("Elder Lair Big Black Slime")),
+                    IfNot.Instance(
+                        Chasing.Instance(12, 10, 1, T("Elder Lair Medium Black Slime")),
+                        SimpleWandering.Instance(2f)
+                        )
+                    ),
+                Cooldown.Instance(500, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Lair Little Brown Slime
+        public static readonly Definition M_Elder_Lair_Little_Brown_Slime = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(12, 10, 1, T("Elder Lair Big Brown Slime")),
+                    SimpleWandering.Instance(2f)
+                    ),
+                Cooldown.Instance(500, MultiAttack.Instance(10, 1*(float) Math.PI/30, 3, 0, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Lair Medium Black Slime
+        public static readonly Definition M_Elder_Lair_Medium_Black_Slime = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(12, 10, 1, T("Elder Lair Big Black Slime")),
+                    SimpleWandering.Instance(2f)
+                    ),
+                Cooldown.Instance(500, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new DeathTransmute( T("Elder Lair Little Black Slime"), 4, 4)
+                },
+            null);
+
+        // Elder Lair Mummy
+        public static readonly Definition M_Elder_Lair_Mummy = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(12, 10, 7, null),
+                    SimpleWandering.Instance(4f)
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Lair Mummy King
+        public static readonly Definition M_Elder_Lair_Mummy_King = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(12, 10, 7, null),
+                    SimpleWandering.Instance(4f)
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Lair Mummy Pharaoh
+        public static readonly Definition M_Elder_Lair_Mummy_Pharaoh = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(13, 10, 1, null),
+                    SimpleWandering.Instance(4f)
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.3, (ILoot) new TierLoot(5, ItemType.Armor))
+                        ),
+                    Tuple.Create(100, new LootDef(0, 1, 0, 2,
+                        Tuple.Create(0.2, (ILoot) new TierLoot(6, ItemType.Weapon)),
+                        Tuple.Create(0.1, (ILoot) new TierLoot(7, ItemType.Weapon)),
+                        Tuple.Create(0.09, (ILoot) new TierLoot(8, ItemType.Weapon)),
+                        Tuple.Create(0.3, (ILoot) new TierLoot(6, ItemType.Armor)),
+                        Tuple.Create(0.2, (ILoot) new TierLoot(7, ItemType.Armor)),
+                        Tuple.Create(0.3, (ILoot) new TierLoot(3, ItemType.Ring)),
+                        Tuple.Create(0.2, (ILoot) new TierLoot(3, ItemType.Ability))
+                        )
+                        )));
+
+        // Elder Lair Reaper
+        public static readonly Definition M_Elder_Lair_Reaper = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(15, 10, 1, null),
+                    SimpleWandering.Instance(2f)
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(3, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.3, (ILoot) new TierLoot(5, ItemType.Armor))
+                        ),
+                    Tuple.Create(100, new LootDef(0, 1, 0, 2,
+                        Tuple.Create(0.2, (ILoot) new TierLoot(6, ItemType.Weapon)),
+                        Tuple.Create(0.1, (ILoot) new TierLoot(7, ItemType.Weapon)),
+                        Tuple.Create(0.09, (ILoot) new TierLoot(8, ItemType.Weapon)),
+                        Tuple.Create(0.3, (ILoot) new TierLoot(6, ItemType.Armor)),
+                        Tuple.Create(0.2, (ILoot) new TierLoot(7, ItemType.Armor)),
+                        Tuple.Create(0.3, (ILoot) new TierLoot(3, ItemType.Ring)),
+                        Tuple.Create(0.2, (ILoot) new TierLoot(3, ItemType.Ability))
+                        )
+                        )));
+
+        // Elder Lair Skeleton
+        public static readonly Definition M_Elder_Lair_Skeleton = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(13, 7, 1, null),
+                    SimpleWandering.Instance(4f)
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Lair Skeleton King
+        public static readonly Definition M_Elder_Lair_Skeleton_King = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(13, 10, 7, null),
+                    SimpleWandering.Instance(4f)
+                    ),
+                Cooldown.Instance(1000, MultiAttack.Instance(10, 1*(float) Math.PI/30, 3, 0, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.3, (ILoot) new TierLoot(5, ItemType.Armor))
+                        ),
+                    Tuple.Create(100, new LootDef(0, 1, 0, 2,
+                        Tuple.Create(0.2, (ILoot) new TierLoot(6, ItemType.Weapon)),
+                        Tuple.Create(0.1, (ILoot) new TierLoot(7, ItemType.Weapon)),
+                        Tuple.Create(0.09, (ILoot) new TierLoot(8, ItemType.Weapon)),
+                        Tuple.Create(0.3, (ILoot) new TierLoot(6, ItemType.Armor)),
+                        Tuple.Create(0.2, (ILoot) new TierLoot(7, ItemType.Armor)),
+                        Tuple.Create(0.3, (ILoot) new TierLoot(3, ItemType.Ring)),
+                        Tuple.Create(0.2, (ILoot) new TierLoot(3, ItemType.Ability))
+                        )
+                        )));
+
+        // Elder Lair Skeleton Mage
+        public static readonly Definition M_Elder_Lair_Skeleton_Mage = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(13, 10, 7, null),
+                    SimpleWandering.Instance(4f)
+                    ),
+                Cooldown.Instance(1000, MultiAttack.Instance(10, 1*(float) Math.PI/30, 3, 0, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Lair Skeleton Swordsman
+        public static readonly Definition M_Elder_Lair_Skeleton_Swordsman = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(13, 10, 1, null),
+                    SimpleWandering.Instance(4f)
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Lair Skeleton Veteran
+        public static readonly Definition M_Elder_Lair_Skeleton_Veteran = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(13, 10, 7, null),
+                    SimpleWandering.Instance(4f)
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                        )));
+
+        // Elder Lair Vampire
+        public static readonly Definition M_Elder_Lair_Vampire = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(13, 10, 1, null),
+                    SimpleWandering.Instance(2f)
+                    ),
+                Cooldown.Instance(500, SimpleAttack.Instance(20, projectileIndex: 0)),
+                Cooldown.Instance(1000, SimpleAttack.Instance(2, 1)
+                    )
+            },
+            null,
+            new LootBehavior(
+                        new LootDef(0, 1, 0, 8,
+                            Tuple.Create(0.1, (ILoot) PotionLoot.Instance)
+                            )));
+
+        // Elder Lair Vampire King
+        public static readonly Definition M_Elder_Lair_Vampire_King = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(13, 10, 1, null),
+                    SimpleWandering.Instance(2f)
+                    ),
+                Cooldown.Instance(500, SimpleAttack.Instance(20, projectileIndex: 0)),
+                Cooldown.Instance(1000, SimpleAttack.Instance(2, 1)
+                    )
+            },
+            null,
+            new LootBehavior(
+                        new LootDef(0, 1, 0, 8,
+                            Tuple.Create(0.3, (ILoot) new TierLoot(5, ItemType.Armor))
+                            ),
+                        Tuple.Create(100, new LootDef(0, 1, 0, 2,
+                            Tuple.Create(0.2, (ILoot) new TierLoot(6, ItemType.Weapon)),
+                            Tuple.Create(0.1, (ILoot) new TierLoot(7, ItemType.Weapon)),
+                            Tuple.Create(0.09, (ILoot) new TierLoot(8, ItemType.Weapon)),
+                            Tuple.Create(0.3, (ILoot) new TierLoot(6, ItemType.Armor)),
+                            Tuple.Create(0.2, (ILoot) new TierLoot(7, ItemType.Armor)),
+                            Tuple.Create(0.3, (ILoot) new TierLoot(3, ItemType.Ring)),
+                            Tuple.Create(0.2, (ILoot) new TierLoot(3, ItemType.Ability))
+                            )
+                            )));
+
+        // Elder Lair White Spectre
+        public static readonly Definition M_Elder_Lair_White_Spectre = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    SimpleWandering.Instance(2f),
+                    Cooldown.Instance(1000, SimpleAttack.Instance(14, projectileIndex: 0)),
+                    Cooldown.Instance(1000, ThrowAttack.Instance(2, 8, 90))
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 1, 0, 2,
+                        Tuple.Create(0.2, (ILoot) new TierLoot(4, ItemType.Ability))
+                        ))));
+
+        // Elder Lil Feratu
+        public static readonly Definition M_Elder_Lil_Feratu = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                                SimpleWandering.Instance(1, 1),
+                                Cooldown.Instance(1200, MultiAttack.Instance(7, 18 * (float)Math.PI / 360, 5, 0, projectileIndex: 0))
+                              )
+            },
+            null,
+            null);
 
         // Elder Limon Element 1
         public static readonly Definition M_Elder_Limon_Element_1 = new Definition(
@@ -2602,57 +3117,6 @@ namespace WorldServer.logic.doomed
             null,
             null);
 
-        // Elder Mask Hunter
-        public static readonly Definition M_Elder_Mask_Hunter = new Definition(
-            new Behavior[] {
-                new RunBehaviors(
-                        Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 4, 0, projectileIndex: 0)),
-                        SimpleWandering.Instance(2, 2)
-                    ),
-                Cooldown.Instance(1000,
-                        Rand.Instance(
-                            new RandomTaunt(0.001, "Die"),
-                            new RandomTaunt(0.001, "Die")
-                        )
-                    )
-            },
-            null,
-            null);
-
-        // Elder Mask Shaman
-        public static readonly Definition M_Elder_Mask_Shaman = new Definition(
-            new Behavior[] {
-                new RunBehaviors(
-                        Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 4, 0, projectileIndex: 0)),
-                        SimpleWandering.Instance(2, 2)
-                    ),
-                Cooldown.Instance(1000,
-                        Rand.Instance(
-                            new RandomTaunt(0.001, "Die"),
-                            new RandomTaunt(0.001, "Die")
-                        )
-                    )
-            },
-            null,
-            null);
-
-        // Elder Mask Warrior
-        public static readonly Definition M_Elder_Mask_Warrior = new Definition(
-            new Behavior[] {
-                new RunBehaviors(
-                        Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 4, 0, projectileIndex: 0)),
-                        SimpleWandering.Instance(2, 2)
-                    ),
-                Cooldown.Instance(1000,
-                        Rand.Instance(
-                            new RandomTaunt(0.001, "Die"),
-                            new RandomTaunt(0.001, "Die")
-                        )
-                    )
-            },
-            null,
-            null);
-
         // Elder Masked Party God
         public static readonly Definition M_Elder_Masked_Party_God = new Definition(
             new Behavior[] {
@@ -2980,21 +3444,6 @@ namespace WorldServer.logic.doomed
             null,
             null);
 
-        // Elder Pirate
-        public static readonly Definition M_Elder_Pirate = new Definition(
-            new Behavior[] {
-                IfNot.Instance(
-                        Chasing.Instance(8.5f, 6, 0, null), SimpleWandering.Instance(4)),
-                Cooldown.Instance(2500, SimpleAttack.Instance(3))
-            },
-            null,
-            new LootBehavior(
-                        new LootDef(0, 2, 0, 8,
-                            Tuple.Create(0.2, (ILoot)new TierLoot(1, ItemType.Weapon)),
-                            Tuple.Create(0.03, (ILoot)HpPotionLoot.Instance)
-                        )
-                    ));
-
         // Elder Pirate Admiral
         public static readonly Definition M_Elder_Pirate_Admiral = new Definition(
             new Behavior[] {
@@ -3083,30 +3532,23 @@ namespace WorldServer.logic.doomed
                            Tuple.Create(0.01, (ILoot)new ItemLoot("Pirate Rum"))
                            ))));
 
-        // Elder Piratess
-        public static readonly Definition M_Elder_Piratess = new Definition(
+        // Elder Pit Snake
+        public static readonly Definition M_Elder_Pit_Snake = new Definition(
             new Behavior[] {
-                IfNot.Instance(
-                        Once.Instance(
-                            SpawnMinionImmediate.Instance( null, 3, 2, 5)
-                        ),
-                        IfNot.Instance(
-                            Chasing.Instance(11f, 6, 1, null),
-                            SimpleWandering.Instance(6))
-                    ),
-                Cooldown.Instance(2500, SimpleAttack.Instance(3)),
-                Rand.Instance(
-                        Reproduce.Instance( null, 5),
-                        Reproduce.Instance( T("Piratess"), 5)
-                    )
+                SimpleWandering.Instance(8),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0))
             },
             null,
-            new LootBehavior(
-                        new LootDef(0, 2, 0, 8,
-                            Tuple.Create(0.2, (ILoot)new TierLoot(1, ItemType.Armor)),
-                            Tuple.Create(0.03, (ILoot)HpPotionLoot.Instance)
-                        )
-                    ));
+            null);
+
+        // Elder Pit Viper
+        public static readonly Definition M_Elder_Pit_Viper = new Definition(
+            new Behavior[] {
+                SimpleWandering.Instance(9),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0))
+            },
+            null,
+            null);
 
         // Elder Pyramid Artifact 1
         public static readonly Definition M_Elder_Pyramid_Artifact_1 = new Definition(
@@ -3272,6 +3714,20 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(0.2, (ILoot)new ItemLoot("Healing Ichor"))
                         ))));
 
+        // Elder Scarab
+        public static readonly Definition M_Elder_Scarab = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(12, 9, 6, T("Elder Scarab")),
+                    Chasing.Instance(8.5f, 8, 1, null)
+                    ),
+                Cooldown.Instance(200, SimpleAttack.Instance(3, projectileIndex: 0)),
+                Cooldown.Instance(400, RingAttack.Instance(5, 10, 0, 1)
+                    )
+            },
+            null,
+            null);
+
         // Elder Sea Horse
         public static readonly Definition M_Elder_Sea_Horse = new Definition(
             new Behavior[] {
@@ -3306,6 +3762,23 @@ namespace WorldServer.logic.doomed
                     )
             },
             null,
+            null);
+
+        // Elder Septavius Summoner
+        public static readonly Definition M_Elder_Septavius_Summoner = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                    SetConditionEffect.Instance(ConditionEffectIndex.Invincible),
+                    Cooldown.Instance(2000),
+                    new SetKey(-1, 1)),
+                IfEqual.Instance(-1, 1,
+                    If.Instance(IsEntityNotPresent.Instance(100, T("Elder Septavius the Ghost God")), Die.Instance)
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new DeathPortal( T("Elder Abyss Portal"), 100, -1)
+                },
             null);
 
         // Elder Septavius the Ghost God
@@ -4687,6 +5160,24 @@ namespace WorldServer.logic.doomed
             null,
             null);
 
+        // Elder Yellow Python
+        public static readonly Definition M_Elder_Yellow_Python = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(10, 10, 1, null),
+                    SimpleWandering.Instance(8)
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10, projectileIndex: 0)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.1, (ILoot) new ItemLoot("Snake Oil")),
+                        Tuple.Create(0.1, (ILoot) new ItemLoot("Ring of Speed")),
+                        Tuple.Create(0.1, (ILoot) new ItemLoot("Ring of Vitality"))
+                        )));
+
         // Ent Minion
         public static readonly Definition M_Ent_Minion = new Definition(
             new Behavior[] {
@@ -4879,26 +5370,6 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(0.1, (ILoot) new ItemLoot("Tincture of Mana"))
                         )
                     ));
-
-        // HeartZ
-        public static readonly Definition M_HeartZ = new Definition(
-            new Behavior[] {
-                new QueuedBehavior(
-                    CooldownExact.Instance(500, SetSize.Instance(220)),
-                    CooldownExact.Instance(500, SetSize.Instance(200))
-                    ),
-                new RunBehaviors(
-                    CooldownExact.Instance(12500, new SimpleTaunt("Ouch! Please spare my other {HP} hitpoints!"))
-                    )
-            },
-            null,
-            new LootBehavior(LootDef.Empty,
-                    Tuple.Create(100, new LootDef(0, 5, 0, 8,
-                        Tuple.Create(0.25, (ILoot) new TierLoot(3, ItemType.Armor)),
-                        Tuple.Create(0.05, (ILoot)new ItemLoot("Large Heart Cloth")),
-                        Tuple.Create(0.05, (ILoot)new ItemLoot("Small Heart Cloth")),
-                        Tuple.Create(0.005, (ILoot) new ItemLoot("Tome of Nothing"))
-                        ))));
 
         // Hell Hound
         public static readonly Definition M_Hell_Hound = new Definition(
@@ -5435,73 +5906,6 @@ namespace WorldServer.logic.doomed
             
                             Tuple.Create(0.1, (ILoot)new ItemLoot("Flying Doom Daggers"))
                 ))));
-
-        // Reaper of Doom
-        public static readonly Definition M_Reaper_of_Doom = new Definition(
-            new Behavior[] {
-                new RunBehaviors(
-                    new State("idle",
-                        SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)
-                        ),
-                    new State("begin", new QueuedBehavior(
-                        new SimpleTaunt("Who has awoken me?!"),
-                        CooldownExact.Instance(3000, NullBehavior.Instance),
-                        new SimpleTaunt("Well, time to have some fun!"),
-                        Timed.Instance(2000, False.Instance(Flashing.Instance(250, 0xffffff00))),
-                        SetState.Instance("grow")
-                        )),
-                    new State("grow", SimpleWandering.Instance(5), new QueuedBehavior(
-                        CooldownExact.Instance(1000, SetSize.Instance(120)),
-                        CooldownExact.Instance(1000, SetSize.Instance(140)),
-                        CooldownExact.Instance(1000, SetSize.Instance(160)),
-                        CooldownExact.Instance(1000, SetSize.Instance(180)),
-                        CooldownExact.Instance(1000, SetSize.Instance(200)),
-                        new SimpleTaunt("Fear my strongest form!"),
-                        CooldownExact.Instance(1000, SetState.Instance("attack"))
-                        )),
-                    new State("attack",
-                        StateOnce.Instance(UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)),
-                        Chasing.Instance(5, 12, 1, null),
-                        Cooldown.Instance(500, SimpleAttack.Instance(12, 1)),
-                        CooldownExact.Instance(1000, MultiAttack.Instance(8, 10*(float) Math.PI/180, 6)),
-                        HpLesserPercent.Instance((float) 0.1, new RunBehaviors(
-                            SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
-                            SetState.Instance("dying")))
-                        ),
-                    new State("dying",
-                        StateOnce.Instance(new SimpleTaunt("I CANNOT DIE!")),
-                        new QueuedBehavior(
-                            CooldownExact.Instance(1500,
-                                UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)),
-                            CooldownExact.Instance(500, SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable))
-                            ),
-                        Flashing.Instance(250, 0xffff0000),
-                        CooldownExact.Instance(200, RingAttack.Instance(8))
-                        )
-                    )
-            },
-            new ConditionalBehavior[]
-                {
-                    new OnHit(new State("idle", SetState.Instance("begin")))
-                },
-            new LootBehavior(LootDef.Empty,
-                    Tuple.Create(100, new LootDef(0, 5, 0, 8,
-                        Tuple.Create(0.001, (ILoot) new TierLoot(8, ItemType.Ability)),
-                        Tuple.Create(0.005, (ILoot) new TierLoot(7, ItemType.Ability)),
-                        Tuple.Create(0.05, (ILoot) new TierLoot(6, ItemType.Ability)),
-                        Tuple.Create(0.001, (ILoot) new TierLoot(15, ItemType.Armor)),
-                        Tuple.Create(0.005, (ILoot) new TierLoot(14, ItemType.Armor)),
-                        Tuple.Create(0.05, (ILoot) new TierLoot(13, ItemType.Armor)),
-                        Tuple.Create(0.001, (ILoot) new TierLoot(14, ItemType.Weapon)),
-                        Tuple.Create(0.005, (ILoot) new TierLoot(13, ItemType.Weapon)),
-                        Tuple.Create(0.05, (ILoot) new TierLoot(12, ItemType.Weapon)),
-                        Tuple.Create(0.05, (ILoot) new TierLoot(5, ItemType.Ring)),
-                        Tuple.Create(0.005, (ILoot) new ItemLoot("Potion of Oryx")),
-                        Tuple.Create(0.1, (ILoot) new StatPotionLoot(StatPotion.Att)),
-                        Tuple.Create(0.1, (ILoot) new StatPotionLoot(StatPotion.Wis)),
-                        Tuple.Create(0.1, (ILoot) new StatPotionLoot(StatPotion.Vit)),
-                        Tuple.Create(0.1, (ILoot) new StatPotionLoot(StatPotion.Spd))
-                        ))));
 
         // Red Balloon
         public static readonly Definition M_Red_Balloon = new Definition(

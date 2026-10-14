@@ -18,6 +18,8 @@ through <DungeonName>.
 import base64
 import glob
 import json
+import math
+import make_elder
 import os
 import re
 import struct
@@ -74,6 +76,18 @@ ELDER_WORLDS = {
     "ElderBeachZone": ("BeachZone", "Elder Beach Zone", ["Elder Beach Portal"]),
     "ElderDavy": ("Davy", "Elder Davy Jones' Locker", ["Elder Davy Portal"]),
 }
+# Elder dungeons built from betterSkillys' own map of the regular dungeon instead of Doomed Realms'
+# one (tools/make_elder.py lists them and makes their Elder tiles and monsters): each ground,
+# wall and monster swapped for its Elder version, braziers lighting the rooms, and a new layout
+# for every visit where the regular dungeon has one.
+BS_MAPS = os.path.join(ROOT, "source", "Shared", "resources", "worlds")
+BS_ELDER_WORLDS = make_elder.DUNGEONS
+ELDER_BRAZIER = "Elder Brazier"
+# braziers stand by the rooms' walls, corners first, at least this many tiles apart
+BRAZIER_SPACING = 9
+# the floor a brazier lights becomes the "<ground> Lit <level>" ground (tools/make_elder.py), where
+# it can see the tile: level 6 within 2.5 tiles of it, down to level 1 within 10
+LIGHT_REACH = [10, 8.5, 7, 5.5, 4, 2.5]
 # Doomed Realms' shop map places merchants as objects; betterSkillys places them on store regions
 SHOP_WORLD = "ShopMap"
 
@@ -198,6 +212,95 @@ def elder_swap(wmap, dr_ids):
     return dict(wmap, dict=entries)
 
 
+def place_braziers(j, brazier, walls, lit_grounds):
+    """Puts a brazier by the walls of every room (in its corners first, then along its walls) and
+    lights the floor around it."""
+    w, h, d = j["width"], j["height"], j["dict"]
+    grid = list(struct.unpack(">%dh" % (w * h), zlib.decompress(base64.b64decode(j["data"]))[:2 * w * h]))
+    tile = lambda x, y: d[grid[y * w + x]] if 0 <= x < w and 0 <= y < h else {}
+    is_wall = lambda x, y: any(o["id"] in walls for o in tile(x, y).get("objs") or [])
+    # part of a wall, not a lone pillar
+    wall = lambda x, y: is_wall(x, y) and any(is_wall(x + i, y + k) for i, k in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+
+    def floor(x, y):
+        t = tile(x, y)
+        # (maps made in the editor can hold an object with an empty id, which is no object)
+        return t.get("ground") not in (None, "Empty") and not any(o.get("id") for o in t.get("objs") or []) \
+            and not t.get("regions")
+
+    cands = []
+    for y in range(h):
+        for x in range(w):
+            if not floor(x, y):
+                continue
+            n, s_, e, wst = wall(x, y - 1), wall(x, y + 1), wall(x + 1, y), wall(x - 1, y)
+            sides = n + s_ + e + wst
+            # by one wall or in a corner, not in a passage between two walls, and with room around it
+            if sides == 0 or (n and s_) or (e and wst):
+                continue
+            if sum(floor(x + i, y + k) for i in (-1, 0, 1) for k in (-1, 0, 1)) < 4:
+                continue
+            cands.append((0 if sides == 2 else 1, y, x))
+    placed = []
+    for _, y, x in sorted(cands):
+        if all(max(abs(x - px), abs(y - py)) >= BRAZIER_SPACING for px, py in placed):
+            placed.append((x, y))
+    entries = {}
+    for x, y in placed:
+        i = grid[y * w + x]
+        if i not in entries:
+            entries[i] = len(d)
+            d.append(dict(d[i], objs=[{"id": brazier}]))
+        grid[y * w + x] = entries[i]
+
+    # light passes over floor, not through walls or the empty space outside the rooms
+    def clear(x, y):
+        return tile(x, y).get("ground") not in (None, "Empty") and not is_wall(x, y)
+
+    def sees(x0, y0, x1, y1):
+        n = max(abs(x1 - x0), abs(y1 - y0))
+        return all(clear(int(round(x0 + (x1 - x0) * k / n)), int(round(y0 + (y1 - y0) * k / n))) for k in range(1, n))
+
+    light = {}
+    reach = max(LIGHT_REACH)
+    for bx, by in placed:
+        for y in range(by - reach, by + reach + 1):
+            for x in range(bx - reach, bx + reach + 1):
+                level = sum(math.hypot(x - bx, y - by) <= r for r in LIGHT_REACH)
+                if level and light.get((x, y), 0) < level and tile(x, y).get("ground") in lit_grounds \
+                        and not is_wall(x, y) and sees(bx, by, x, y):
+                    light[(x, y)] = level
+    lit = {}
+    for (x, y), level in light.items():
+        i = grid[y * w + x]
+        if (i, level) not in lit:
+            lit[(i, level)] = len(d)
+            d.append(dict(d[i], ground="%s Lit %d" % (d[i]["ground"], level)))
+        grid[y * w + x] = lit[(i, level)]
+    j["data"] = base64.b64encode(zlib.compress(b"".join(struct.pack(">h", i) for i in grid), 9)).decode("ascii")
+    return len(placed)
+
+
+def bs_elder_map(path, dr_ids):
+    """A betterSkillys .jm map with its grounds, walls and monsters swapped for their Elder versions,
+    and braziers lighting its rooms."""
+    objects, grounds = make_elder.load(make_elder.xml_files(include_elder=True))
+    known = set(objects) | set(dr_ids)
+    j = json.load(open(os.path.join(BS_MAPS, path), encoding="utf-8-sig"))
+    walls = set()
+    for e in j["dict"]:
+        if e.get("ground") and "Elder " + e["ground"] in grounds:
+            e["ground"] = "Elder " + e["ground"]
+        for o in e.get("objs") or []:
+            if "Elder " + o["id"] in known:
+                if o["id"] in objects and objects[o["id"]].findtext("Class") in make_elder.WALL_CLASSES:
+                    walls.add("Elder " + o["id"])
+                o["id"] = "Elder " + o["id"]
+    place_braziers(j, ELDER_BRAZIER, walls, make_elder.lit_grounds())
+    objs = [(None, o["id"], o.get("name", ""), 0) for e in j["dict"] for o in e.get("objs") or []]
+    return {"width": j["width"], "height": j["height"], "dict": objs, "jm": json.dumps(j)}
+
+
 def shop_regions(wmap):
     """Merchant objects become Store_1 region tiles (where the shop world puts its merchants)."""
     store = REGIONS.index("Store_1")
@@ -218,6 +321,10 @@ def world_maps(dr_root, dr_ids=frozenset()):
     for cls, (base, name, _) in ELDER_WORLDS.items():
         _, bg, tp, maps = classes[base]
         out[cls] = (name, bg, tp, [elder_swap(read_wmap(find_map(dr_root, m)), dr_ids) for m in maps])
+    # the Elder dungeons built from betterSkillys' maps instead
+    for cls, (name, bg, tp, _) in list(out.items()):
+        if cls in BS_ELDER_WORLDS:
+            out[cls] = (name, bg, tp, [bs_elder_map(BS_ELDER_WORLDS[cls][0], dr_ids)])
     return out
 
 
@@ -241,7 +348,7 @@ def write_worlds(worlds, dr_grounds, object_id):
         for i, wm in enumerate(maps):
             fname = safe + (" %d" % (i + 1) if len(maps) > 1 else "") + ".jm"
             with open(os.path.join(WORLDS_DIR, fname), "w", encoding="utf-8") as f:
-                f.write(to_jm(wm, dr_grounds, object_id))
+                f.write(wm["jm"] if "jm" in wm else to_jm(wm, dr_grounds, object_id))
             files.append("Doomed/" + fname)
         ids[cls] = name
         w = max(m["width"] for m in maps)
@@ -251,6 +358,9 @@ def write_worlds(worlds, dr_grounds, object_id):
         lines.append("\t\t<Height>%d</Height>" % h)
         lines += ["\t\t<MapJM>%s</MapJM>" % f.replace("&", "&amp;") for f in files]
         lines.append("\t\t<VisibilityType>1</VisibilityType>")
+        if cls in BS_ELDER_WORLDS:
+            objects, _ = make_elder.load(make_elder.xml_files(include_elder=True))
+            lines += ["\t\t" + x for x in make_elder.random_layout(BS_ELDER_WORLDS[cls][0], set(objects)) or []]
         if not tp:
             lines.append("\t\t<DisableTeleport/>")
         lines.append("\t\t<Dungeon/>")

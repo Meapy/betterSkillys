@@ -6,7 +6,6 @@
 package kabam.rotmg.assets
 {
 import kabam.rotmg.assets.custom.xmls.*;
-import kabam.rotmg.assets.prod.xmls.*;
 
 public class EmbeddedData
     {
@@ -282,6 +281,8 @@ public class EmbeddedData
         private static const customProj:Class = CustomProj;
         private static const doomedRealmsGrounds:Class = DoomedRealmsGrounds;
         private static const doomedRealms:Class = DoomedRealms;
+        private static const elderGrounds:Class = ElderGrounds;
+        private static const elderObjects:Class = ElderObjects;
 
         public static const skins:Array = [new SkinsCXML()];
         public static const eqSets:Array = [new EquipmentSetsCXML()];
@@ -317,7 +318,8 @@ public class EmbeddedData
             new archbishopGroundCXML(),
             new ancientRuinsGroundCXML(),
             new customGrounds(),
-            new doomedRealmsGrounds()
+            new doomedRealmsGrounds(),
+            new elderGrounds()
         ];
 
         public static const objectFiles:Array = [
@@ -326,6 +328,7 @@ public class EmbeddedData
             new customProj(),
             new customEntities(),
             new customObjects(),
+            new elderObjects(),
             new ProjectilesCXML(),
             new EquipKeysCXML(),
             new EquipSkinsCXML(),

@@ -3,6 +3,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Undead Lair.jm</MapJM>
+		<RandomLayout passage="4" corridor="3">
+			<Goal>Septavius the Ghost God</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
@@ -48,6 +51,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Snake Pit.jm</MapJM>
+		<RandomLayout passage="4" corridor="3">
+			<Goal>Stheno the Snake Queen</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
@@ -62,6 +68,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Abyss of Demons.jm</MapJM>
+		<RandomLayout passage="4" corridor="3">
+			<Goal>Archdemon Malphas</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
@@ -132,6 +141,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Tomb of the Ancients.jm</MapJM>
+		<RandomLayout>
+			<Goal>Inactive Sarcophagus</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
@@ -230,6 +242,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Ancient Ruins.jm</MapJM>
+		<RandomLayout passage="4" corridor="3">
+			<Goal>Ruins Boss Golem</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>	
@@ -244,6 +259,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Pirate Cave.jm</MapJM>
+		<RandomLayout passage="4" corridor="3">
+			<Goal>Dreadstump the Pirate King</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
@@ -265,6 +283,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Ocean Trench.jm</MapJM>
+		<RandomLayout passage="4" corridor="3">
+			<Goal>Thessal the Mermaid Goddess</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
@@ -279,6 +300,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Forest Maze.jm</MapJM>
+		<RandomLayout passage="4" corridor="3">
+			<Goal>Mama Megamoth</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
@@ -300,6 +324,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Toxic Sewers.jm</MapJM>
+		<RandomLayout passage="4" corridor="3">
+			<Goal>DS Gulpord the Slime God</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
@@ -315,6 +342,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Spider Den.jm</MapJM>
+		<RandomLayout passage="4" corridor="3">
+			<Goal>Arachna the Spider Queen</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
@@ -335,6 +365,9 @@
 		<Width>256</Width>
 		<Height>256</Height>
 		<MapJM>Dungeons/Woodland Labyrinth.jm</MapJM>
+		<RandomLayout passage="4" corridor="3">
+			<Goal>Epic Larva</Goal>
+		</RandomLayout>
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>

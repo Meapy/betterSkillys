@@ -107,18 +107,19 @@ namespace WorldServer.logic.behaviors
                 taunt = taunt.Replace("{PLAYER}", player.Name);
             }
 
-            taunt = taunt.Replace("{HP}", (host as Enemy).Health.ToString());
+            // game objects (spawners, controllers) can taunt too; only enemies have HP and a rarity
+            var enemy = host as Enemy;
 
-            Enemy enemy = null;
+            if (enemy != null)
+                taunt = taunt.Replace("{HP}", enemy.Health.ToString());
 
-            if (host is Enemy)
-                enemy = host as Enemy;
-
+            var name = host.ObjectDesc.DisplayId ?? host.ObjectDesc.IdName;
             var displayenemy =
-                  enemy.IsLegendary ? $"Legendary {host.ObjectDesc.DisplayId ?? host.ObjectDesc.IdName}" :
-                  enemy.IsEpic ? $"Epic {host.ObjectDesc.DisplayId ?? host.ObjectDesc.IdName}" :
-                  enemy.IsRare ? $"Rare {host.ObjectDesc.DisplayId ?? host.ObjectDesc.IdName}" :
-                  host.ObjectDesc.DisplayId ?? host.ObjectDesc.IdName;
+                  enemy == null ? name :
+                  enemy.IsLegendary ? $"Legendary {name}" :
+                  enemy.IsEpic ? $"Epic {name}" :
+                  enemy.IsRare ? $"Rare {name}" :
+                  name;
 
             var packet = new Text() { Name = "#" + displayenemy, ObjectId = host.Id, NumStars = -1, BubbleTime = 3, Recipient = "", Txt = taunt };
 

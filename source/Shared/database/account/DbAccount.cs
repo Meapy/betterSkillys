@@ -46,6 +46,12 @@ namespace Shared.database.account
         public string UUID { get => GetValue<string>("uuid"); set => SetValue("uuid", value); }
         public int VaultCount { get => GetValue<int>("vaultCount"); set => SetValue("vaultCount", value); }
         public int[] StoredPotions { get => GetValue<int[]>("storedPotions"); set => SetValue("storedPotions", value); }
+        // each upgrade (500 fame) holds 50 more of every potion
+        public int PotionStorageLevel { get => GetValue<int>("potionStorageLevel"); set => SetValue("potionStorageLevel", value); }
+        public int PotionStorageCapacity => PotionStorageBase + PotionStorageLevel * PotionStoragePerLevel;
+        public const int PotionStorageBase = 50;
+        public const int PotionStoragePerLevel = 50;
+        public const int PotionStorageUpgradeCost = 500;
         internal string LockToken { get; set; }
 
         public DbAccount(IDatabase db, int accountId, string field = null, bool isAsync = false)

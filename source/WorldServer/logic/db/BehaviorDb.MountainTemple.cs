@@ -16,6 +16,7 @@ namespace WorldServer.logic
         private _ MountainTemple = () => Behav() // by runes :)
         .Init("Daichi the Fallen",
             new State(
+                new DropPortalOnDeath("Realm Portal", 1.0),
                 new ConditionEffectBehavior(ConditionEffectIndex.Invincible),
                 new State("init",
                     new PlayerWithinTransition(6, "moveCenter")
@@ -178,11 +179,14 @@ namespace WorldServer.logic
                     new Order(15, "Fire Power", "spawn"),
                     new Order(15, "Air Power", "spawn"),
                     new Order(15, "Water Power", "spawn"),
-                    new Order(15, "Earth Power", "spawn")
+                    new Order(15, "Earth Power", "spawn"),
+                    // the elementals order "increaseSize" after 4 s; this only catches the case where they don't
+                    new TimedTransition(10000, "increaseSize")
                     ),
                 new State("increaseSize",
                     new ConditionEffectBehavior(ConditionEffectIndex.Invincible),
-                    new ChangeSize(20, 200)
+                    new ChangeSize(20, 200),
+                    new TimedTransition(2000, "noBreak")
                     ),
                 new State("noBreak",
                     new ConditionEffectBehavior(ConditionEffectIndex.Invincible),

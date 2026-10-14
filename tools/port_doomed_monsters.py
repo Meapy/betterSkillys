@@ -135,6 +135,9 @@ def definition(block, type_to_id, refs):
         elif s.startswith("new ConditionalBehavior[]"):
             cond = translate(s, type_to_id, refs)
         else:
+            # a behaviour can be passed by name ("attack: new RunBehaviors(...)"); here it's an
+            # array element
+            s = re.sub(r"^[A-Za-z_]\w*:\s*", "", s)
             behaviours.append(translate(s, type_to_id, refs))
     return name, behaviours, cond, loot
 
@@ -156,7 +159,7 @@ def write_monsters(dr_root, monsters, aliases=None):
         members.append("        // %s\n        public static readonly Definition %s = new Definition(\n"
                        "            new Behavior[] {\n                %s\n            },\n            %s,\n            %s);\n"
                        % (oid, field, body, cond, loot))
-        inits.append("            .Init(%s, DoomedSetup.State(DoomedMonsterDefs.%s), DoomedSetup.Drops(%s, DoomedMonsterDefs.%s))"
+        inits.append("            .InitDoomed(%s, DoomedSetup.State(DoomedMonsterDefs.%s), DoomedSetup.Drops(%s, DoomedMonsterDefs.%s))"
                      % (cs_string(oid), field, cs_string(oid), field))
 
     with open(DEFS_CS, "w", encoding="utf-8", newline="\r\n") as f:

@@ -50,8 +50,6 @@ import kabam.rotmg.game.view.components.StatsMediator;
 import kabam.rotmg.game.view.components.StatsView;
 import kabam.rotmg.game.view.components.TabStripMediator;
 import kabam.rotmg.game.view.components.TabStripView;
-import kabam.rotmg.storage.PotionStorageModal;
-import kabam.rotmg.storage.PotionStorageModalMediator;
 import kabam.rotmg.ui.model.TabStripModel;
 import kabam.rotmg.ui.view.GameObjectStatusPanelMediator;
 

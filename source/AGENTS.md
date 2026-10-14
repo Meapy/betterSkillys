@@ -78,6 +78,9 @@ dotnet build source\WorldServer\WorldServer.csproj -c Debug -o build\wscheck   #
   - The monster definitions in `logic/doomed/DoomedMonsters.cs` are generated.
   - Elder monsters without a behaviour share their regular version's (`DoomedAliases`, applied in
     `BehaviorDb.Initialize`).
+  - A hand-written behaviour replaces a generated one: `BehaviorDb.DoomedMonsters.cs` registers with
+    `InitDoomed`, which steps aside for an `Init` of the same monster. `BehaviorDb.Tomb.cs` builds
+    both the Tomb and the Elder Tomb this way.
 - **Never spawn hostile monsters in the nexus**: they kill low-level characters there.
 - **The start-up log lists "Failed to add behavior ... Xml data not found"** for a few upstream
   behaviours with no object data. That's long-standing upstream noise, not a new error.

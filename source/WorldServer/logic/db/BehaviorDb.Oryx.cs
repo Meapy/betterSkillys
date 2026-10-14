@@ -10,6 +10,7 @@ namespace WorldServer.logic
         private _ Oryx = () => Behav()
             .Init("Oryx the Mad God 2",
                 new State(
+                    new DropPortalOnDeath("Realm Portal", 1.0, xAdjustment: -2),
                     new ScaleHP2(30),
                     new DropPortalOnDeath("Lost Halls Portal", 0.1, timeout: 120),
                     new State("Attack",

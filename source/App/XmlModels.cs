@@ -291,6 +291,7 @@ namespace App
 
         public Vault Vault { get; private set; }
         public int[] StoredPotions { get; private set; }
+        public int PotionStorageCapacity { get; private set; }
         public Stats Stats { get; private set; }
         public GuildIdentity Guild { get; private set; }
 
@@ -316,6 +317,7 @@ namespace App
 
                 Vault = Vault.FromDb(acc, new DbVault(acc)),
                 StoredPotions = acc.StoredPotions ?? new int[8],
+                PotionStorageCapacity = acc.PotionStorageCapacity,
                 Stats = Stats.FromDb(acc, new DbClassStats(acc)),
                 Guild = GuildIdentity.FromDb(acc, new DbGuild(acc)),
 
@@ -351,7 +353,8 @@ namespace App
 
         public XElement PotionsToXml()
         {
-            return new XElement("StoredPotions", string.Join(",", StoredPotions));
+            // the eight counts, then how many of each the storage holds (older clients read the first eight)
+            return new XElement("StoredPotions", string.Join(",", StoredPotions) + "," + PotionStorageCapacity);
         }
     }
 
@@ -475,6 +478,11 @@ namespace App
             foreach (string c in cs.AllKeys
                 .Select(key => core._classes[(ushort)(int)key]))
                 classes[c] = "unrestricted";
+
+            // admin-only classes are hidden from everyone else
+            if (!acc.Admin)
+                foreach (var desc in core.Resources.GameData.Classes.Values.Where(d => d.AdminOnly))
+                    classes[desc.IdName] = "unavailable";
 
             return new ClassAvailability()
             {

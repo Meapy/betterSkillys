@@ -1,4 +1,5 @@
 ﻿using Shared;
+using Shared.database.account;
 using WorldServer.core.objects;
 using WorldServer.core.worlds;
 using WorldServer.logic.behaviors;
@@ -39,7 +40,27 @@ namespace WorldServer.core.net.handlers
                 case 3: // max
                     ModifyRemove(player, type, typeName, false, true);
                     break;
+                case 4: // upgrade: 50 more of every potion
+                    Upgrade(player);
+                    break;
             }
+        }
+
+        private static void Upgrade(Player player)
+        {
+            var acc = player.Client.Account;
+            acc.Reload("fame");
+            if (acc.Fame < DbAccount.PotionStorageUpgradeCost)
+            {
+                player.SendError($"Upgrading your potion storage costs {DbAccount.PotionStorageUpgradeCost} fame.");
+                return;
+            }
+
+            player.GameServer.Database.UpdateFame(acc, -DbAccount.PotionStorageUpgradeCost).Wait();
+            player.CurrentFame = acc.Fame;
+            acc.PotionStorageLevel++;
+            acc.FlushAsync();
+            player.SendInfo($"Your potion storage now holds {acc.PotionStorageCapacity} of each potion.");
         }
 
         private void ModifyAdd(Player player, byte type, string typeName)
@@ -187,7 +208,7 @@ namespace WorldServer.core.net.handlers
         private static bool CanModifyStat(Player player, byte type, bool checkZero)
         {
             var stored = player.Client.Account.StoredPotions;
-            return checkZero ? stored[type] <= 0 : stored[type] < 50;
+            return checkZero ? stored[type] <= 0 : stored[type] < player.Client.Account.PotionStorageCapacity;
         }
     }
 }

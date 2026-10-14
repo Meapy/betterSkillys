@@ -13,6 +13,7 @@ namespace WorldServer.logic
 
         .Init("DS Gulpord the Slime God",
             new State(
+                new DropPortalOnDeath("Realm Portal", 1.0),
                 new ScaleHP2(20),
                 new State("Waiting Player",
                     new PlayerWithinTransition(10, "Start Shooting")

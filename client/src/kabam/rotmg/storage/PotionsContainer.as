@@ -48,6 +48,7 @@ public class PotionsContainer extends Sprite{
     public var add_:Sprite;
     public var remove_:Sprite;
     private var bar_:StatusBar;
+    private var overText_:SimpleText;
     private var icon_:Bitmap;
     public var consumeButton:TextButton;
     public var maxButton:TextButton;
@@ -83,7 +84,17 @@ public class PotionsContainer extends Sprite{
     public function draw():void{
         if (bar_ == null)
             return;
-        this.bar_.draw(this.amount,50,0);
+        this.drawBar();
+    }
+
+    // the bar stops at the storage's capacity; potions stored above it (stored before the limit
+    // applied) show as "+N" beside it, so the real count is never hidden
+    private function drawBar():void
+    {
+        this.bar_.draw(this.amount, this.model_.capacity, 0);
+        var over:int = this.amount - this.model_.capacity;
+        this.overText_.setText(over > 0 ? "+" + over : "");
+        this.overText_.visible = over > 0;
     }
 
     private function addIcons():void
@@ -135,24 +146,33 @@ public class PotionsContainer extends Sprite{
         this.bar_.y = 42;
         this.bar_.x = 5;
         addChild(this.bar_);
+
+        this.overText_ = new SimpleText(13, 0xFF6060, false, 60, 0);
+        this.overText_.setBold(true);
+        this.overText_.x = 60;
+        this.overText_.y = 26;
+        this.overText_.visible = false;
+        addChild(this.overText_);
     }
 
-    private function handlePotions(type:int)
+    private function handlePotions(type:int) : void
     {
         switch (type)
         {
             case 0: // deposit via. inventory
                 var len:int = this.plr.equipment_.length;
                 for (var i:uint = 4; i < len; i++) {
+                    if (this.amount >= this.model_.capacity)
+                        break;
                     if (this.plr.equipment_[i] == potionsToIndex[statType_]) {
                         this.amount += 1;
-                        this.bar_.draw(this.amount,50,0);
+                        this.drawBar();
                         break;
                     }
                     if (this.plr.equipment_[i] == greaterPotionsToIndex[statType_])
                     {
                         this.amount += 2;
-                        this.bar_.draw(this.amount,50,0);
+                        this.drawBar();
                         break;
                     }
                 }
@@ -161,27 +181,27 @@ public class PotionsContainer extends Sprite{
                 if (this.amount > 0)
                 {
                     this.amount -= 1;
-                    this.bar_.draw(this.amount,50,0);
+                    this.drawBar();
                 }
                 break;
             case 2: // consume potion.
                 if (this.amount > 0 && (this.stats[statType_] < this.statsMax[statType_]))
                 {
                     this.amount -= 1;
-                    this.bar_.draw(this.amount,50,0);
+                    this.drawBar();
                 }
                 break;
             case 3: // max potions.
                 if (this.amount >= (this.statsMax[statType_] - this.stats[statType_]))
                 {
                     this.amount -= this.statsMax[statType_] - this.stats[statType_];
-                    this.bar_.draw(this.amount, 50, 0);
+                    this.drawBar();
                 } else
                 {
                     if (this.amount > 0)
                     {
                         this.amount = 0;
-                        this.bar_.draw(this.amount, 50, 0);
+                        this.drawBar();
                     }
                 }
                 break;

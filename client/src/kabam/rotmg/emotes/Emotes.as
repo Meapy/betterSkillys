@@ -8,7 +8,6 @@ import flash.utils.Dictionary;
 import kabam.rotmg.assets.custom.images.Emotes;
 import kabam.rotmg.assets.custom.xmls.EmotesXML;
 
-import kabam.rotmg.emotes.data.EmotesCXML;
 
 
 public class Emotes

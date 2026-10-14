@@ -16,4 +16,46 @@
 		</Texture>
 		<Static />
 	</Object>
+	<!-- the Elder Tomb's boss anchor: its bosses circle it, and it drops the exit portal once
+	     they are dead -->
+	<Object type="0xe901" id="Elder Tomb Boss Anchor">
+		<Class>Character</Class>
+		<Texture><File>lofiChar216x16</File><Index>0x0e</Index></Texture>
+		<Size>0</Size>
+		<Defense>0</Defense>
+		<XpMult>0.0</XpMult>
+		<NoMiniMap/>
+	</Object>
+	<!-- a brazier for the Elder dungeons' rooms; the light on the floor around it is lit ground
+	     tiles (tools/port_doomed_worlds.py) -->
+	<Object type="0xe902" id="Elder Brazier">
+		<Class>GameObject</Class>
+		<Texture>
+			<File>lofiObjBig</File>
+			<Index>0x07</Index>
+		</Texture>
+		<Animation prob="1.0" period="0.0">
+			<Frame time="0.2">
+				<Texture>
+					<File>lofiObjBig</File>
+					<Index>0x07</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>lofiObjBig</File>
+					<Index>0x08</Index>
+				</Texture>
+			</Frame>
+			<Frame time="0.2">
+				<Texture>
+					<File>lofiObjBig</File>
+					<Index>0x09</Index>
+				</Texture>
+			</Frame>
+		</Animation>
+		<Size>100</Size>
+		<Static/>
+		<ShadowSize>70</ShadowSize>
+	</Object>
 </Objects>

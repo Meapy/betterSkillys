@@ -101,14 +101,6 @@ namespace WorldServer.core.net.handlers
                 return;
             }
 
-            if (player.Client.Account.Admin && (from as Container ?? to as Container) != null && Array.IndexOf((from as Container ?? to as Container).BagOwners, player.AccountId) == -1)
-            {
-                from.ForceUpdate(slotFrom);
-                to.ForceUpdate(slotTo);
-                player.Client.SendPacket(new InvResult() { Result = 1 });
-                return;
-            }
-
             // setup swap
             var queue = new Queue<Action>();
             var conFromTrans = conFrom.Inventory.CreateTransaction();
@@ -247,7 +239,7 @@ namespace WorldServer.core.net.handlers
                             return false;
                     }
             }
-            return container == player || item == null || !item.Soulbound && !player.Client.Account.Admin || IsSoleContainerOwner(player, container);
+            return container == player || item == null || !item.Soulbound || IsSoleContainerOwner(player, container);
         }
 
         private bool IsSoleContainerOwner(Player player, IContainer con)

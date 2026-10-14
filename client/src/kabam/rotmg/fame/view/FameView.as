@@ -56,7 +56,7 @@ import flash.events.MouseEvent;
             WebMain.STAGE.addEventListener(Event.RESIZE, positionAssets);
       }
 
-      public function positionAssets(e:Event = null)
+      public function positionAssets(e:Event = null) : void
       {
          if (e != null)
          {

@@ -408,6 +408,76 @@ def fix_doomed_data(dr):
         key.find("Description").text = "A key which opens an entrance to Elder Davy Jones' Locker."
 
 
+# Doomed Realms balanced its Elder monsters for its own, much stronger characters: 10 to 700 times
+# the health and 10 or more times the damage of the regular monster. Here an Elder monster gets
+# these multiples of its regular version's stats instead.
+ELDER_HP = 2.0
+ELDER_DEFENSE = 10      # added
+ELDER_DAMAGE = 1.3
+ELDER_XP = 2            # <XpBonus>: the experience (and so fame) of a kill, and its per-kill cap
+
+
+def rebalance_elders(dr, bs):
+    """Elder monsters' health, defense, projectile damage and quest flags, from their regular version's,
+    and their experience bonus."""
+    def number(o, tag):
+        e = o.find(tag)
+        try:
+            return float(e.text) if e is not None and e.text else None
+        except ValueError:
+            return None
+
+    def projectile_damage(o):
+        out = {}
+        for p in o.findall("Projectile"):
+            out[p.get("id")] = {t: number(p, t) for t in ("Damage", "MinDamage", "MaxDamage") if number(p, t) is not None}
+        return out
+
+    changed = 0
+    for oid, o in dr.items():
+        regular = bs.get(oid[len("Elder "):]) if oid.startswith("Elder ") else None
+        if regular is None and oid.startswith("Elder "):
+            regular = dr.get(oid[len("Elder "):])
+        if regular is None or o.find("Enemy") is None:
+            continue
+        hp = number(regular, "MaxHitPoints")
+        if hp and o.find("MaxHitPoints") is not None:
+            o.find("MaxHitPoints").text = str(int(round(hp * ELDER_HP)))
+        defense = number(regular, "Defense")
+        if o.find("Defense") is not None:
+            o.find("Defense").text = str(int(round((defense or 0) + ELDER_DEFENSE)))
+        # a quest where the regular one is (the quest arrow leads to it)
+        for tag in ("Quest", "Level"):
+            if regular.find(tag) is not None and o.find(tag) is None:
+                ET.SubElement(o, tag).text = regular.find(tag).text
+        bonus = o.find("XpBonus") if o.find("XpBonus") is not None else ET.SubElement(o, "XpBonus")
+        bonus.text = str(ELDER_XP)
+        # projectiles: no id twice (Elder Septavius had two 0s), and every one of the regular
+        # monster's, since an Elder monster can fight with the regular behaviour (Elder Lord Ruthven
+        # lacked the Cross Bullet)
+        ids = set()
+        for p in list(o.findall("Projectile")):
+            if p.get("id") in ids:
+                o.remove(p)
+            ids.add(p.get("id"))
+        for p in regular.findall("Projectile"):
+            if p.get("id") not in ids:
+                o.append(copy.deepcopy(p))
+                ids.add(p.get("id"))
+        base = projectile_damage(regular)
+        for p in o.findall("Projectile"):
+            reg = base.get(p.get("id"))
+            if not reg:
+                continue
+            # one damage for tags the regular projectile doesn't have (Damage vs MinDamage/MaxDamage)
+            avg = reg.get("Damage") or (reg.get("MinDamage", 0) + reg.get("MaxDamage", reg.get("MinDamage", 0))) / 2
+            for tag in ("Damage", "MinDamage", "MaxDamage"):
+                if p.find(tag) is not None:
+                    p.find(tag).text = str(int(round(reg.get(tag, avg) * ELDER_DAMAGE)))
+        changed += 1
+    return changed
+
+
 def fix_portals_and_keys(converted, portal_world):
     """Portals point at their ported dungeon; keys create them (Doomed Realms "Create" is "CreatePortal")."""
     portal_ids = {o.get("id") for o in converted if o.findtext("Class") == "Portal"}
@@ -611,9 +681,14 @@ def main():
     args = ap.parse_args()
 
     dr = load_objects(glob.glob(os.path.join(args.dr, "db", "data", "*.xml")))
+    # the Elder dungeons' tiles and the Elder monsters Doomed Realms didn't make, first, so the
+    # rest of the port sees them
+    import make_elder
+    print("Elder dungeons: %d grounds, %d objects, %d sprites." % make_elder.build(set(dr)))
     bs = load_objects([f for f in glob.glob(os.path.join(ROOT, "source", "Shared", "resources", "xml", "**", "*.xml"), recursive=True)
                        if os.path.abspath(f) != os.path.abspath(SERVER_XML)])
     fix_doomed_data(dr)
+    print("Elder monsters rebalanced from their regular version: %d" % rebalance_elders(dr, bs))
     # dungeons: what their maps place, their portals, what the minigames spawn and what the
     # monsters' behaviours spawn
     import port_doomed_worlds as pw
@@ -621,6 +696,8 @@ def main():
     worlds = pw.world_maps(args.dr, set(dr))
     map_objs = {o for (_, _, _, maps) in worlds.values() for wm in maps for (_, o, _, _) in wm["dict"] if o}
     map_objs |= MINIGAME_SPAWNS
+    # the Elder versions of what the Elder dungeons' (regular) behaviours spawn
+    map_objs |= make_elder.referenced_elders(set(dr))
     portal_world = {pid: worlds[cls][0] for pid, cls in pw.portal_worlds().items()}
     dr_by_type = {int(o.get("type"), 16): oid for oid, o in dr.items() if o.get("type")}
     blocks = pm.load_blocks(args.dr)

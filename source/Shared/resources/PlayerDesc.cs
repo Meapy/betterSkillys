@@ -8,6 +8,7 @@ namespace Shared.resources
         public new ushort[] Equipment;
         public Stat[] Stats;
         public UnlockClass Unlock;
+        public readonly bool AdminOnly;     // <AdminOnly/>: only admin accounts can see, make or play it
 
         public PlayerDesc(ushort type, XElement e) : base(type, e)
         {
@@ -18,6 +19,7 @@ namespace Shared.resources
                 Stats[i] = new Stat(i, e);
             if (e.HasElement("UnlockLevel") || e.HasElement("UnlockCost"))
                 Unlock = new UnlockClass(e);
+            AdminOnly = e.HasElement("AdminOnly");
         }
     }
 }

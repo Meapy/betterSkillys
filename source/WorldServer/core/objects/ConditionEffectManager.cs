@@ -72,6 +72,13 @@ namespace WorldServer.core.objects
                 }
         }
 
+        // sends the condition flags again even though they haven't changed
+        public void Resend()
+        {
+            _host.InvokeStatChange(StatDataType.ConditionBatch1, _batch1.GetValue());
+            _host.InvokeStatChange(StatDataType.ConditionBatch2, _batch2.GetValue());
+        }
+
         public void RemoveCondition(byte effect)
         {
             _durations[effect] = 0;

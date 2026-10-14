@@ -8,6 +8,7 @@ package kabam.rotmg.assets
 import kabam.rotmg.assets.custom.images.AnimEmotes;
 import kabam.rotmg.assets.custom.images.CustomAssets8x8;
 import kabam.rotmg.assets.custom.images.CustomUV128x128;
+import kabam.rotmg.assets.custom.images.ElderAssets8x8;
 import kabam.rotmg.assets.custom.images.Emotes;
 import kabam.rotmg.assets.custom.objects.japaneseSign;
 public class EmbeddedAssets
@@ -17,6 +18,7 @@ public class EmbeddedAssets
    public static var emotes:Class = Emotes;
    public static var customAssets8x8:Class = CustomAssets8x8;
    public static var customUV128x128:Class = CustomUV128x128;
+   public static var elderAssets8x8:Class = ElderAssets8x8;
 
    // production.
    private static var JapaneseSign:Class = japaneseSign;
