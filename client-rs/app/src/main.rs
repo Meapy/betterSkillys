@@ -89,7 +89,15 @@ struct App {
     /// `--say <text>` (desktop tests): sent once we're in the game.
     say: Option<String>,
     alt_held: bool,
+    shift_held: bool,
+    /// `--mouse` was given: ignore the real cursor.
+    mouse_fixed: bool,
+    /// `--mouse-script` (tests): (ms after joining, down/up/move, where), oldest first.
+    mouse_script: Vec<(i32, MouseStep, (f64, f64))>,
     map_colors: hud::MapColors,
+    hud: hud::HudState,
+    /// Left button presses (true) and releases since the last frame, and where.
+    clicks: Vec<(bool, (f64, f64))>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -101,6 +109,122 @@ fn shot_args() -> Option<(String, f32)> {
 
 #[cfg(target_arch = "wasm32")]
 fn shot_args() -> Option<(String, f32)> {
+    None
+}
+
+/// Carry out what the player did on the HUD (`ItemGridMediator`).
+fn apply_action(game: &mut Game, panel: &hud::Panel, action: hud::Action, now: i32, data: &bsk_data::GameData) {
+    use hud::{Action, Button, SlotKind};
+    let slot_of = |s: &hud::Slot| (s.owner, s.index, s.item);
+    // The first empty inventory slot (nextAvailableInventorySlot), as a swap target.
+    let free = |game: &Game| -> Option<(i32, u8, i32)> {
+        let me = game.world.as_ref()?.player()?;
+        let backpack = me.stat_int(hud::stat::HAS_BACKPACK).unwrap_or(0) != 0;
+        let last = if backpack { 20 } else { 12 };
+        (4..last).find(|&i| me.stat_int(hud::slot_stat(i)).unwrap_or(-1) <= 0).map(|i| (me.id, i, -1))
+    };
+    match action {
+        Action::Swap(a, b) => game.inv_swap(now, slot_of(&a), slot_of(&b)),
+        Action::Use(s) => {
+            if let SlotKind::Potion(_) = s.kind {
+                game.use_potion(now, if s.index == hud::POTIONS[0].1 { 0 } else { 1 });
+            } else if matches!(s.kind, SlotKind::Inventory(_) | SlotKind::Container) {
+                game.use_item(now, s.owner, s.index, s.item, data);
+            }
+        }
+        Action::EquipOrUse(s) => match s.kind {
+            SlotKind::Potion(_) => game.use_potion(now, if s.index == hud::POTIONS[0].1 { 0 } else { 1 }),
+            // From a bag: into the inventory, else use it (equipOrUseContainer).
+            SlotKind::Container => match free(game) {
+                Some(to) => game.inv_swap(now, slot_of(&s), to),
+                None => {
+                    game.use_item(now, s.owner, s.index, s.item, data);
+                }
+            },
+            _ => {
+                // getMatchingSlotIndex: the equipment slot of this item's type.
+                let item_type = hud::item_slot_type(data, s.item);
+                let target = panel
+                    .slots
+                    .iter()
+                    .find(|e| matches!(e.kind, SlotKind::Equip(t) if t == item_type && t != 0) && !e.is(&s));
+                match (target, s.kind) {
+                    (Some(e), SlotKind::Inventory(_)) => game.inv_swap(now, slot_of(&s), slot_of(e)),
+                    _ => {
+                        game.use_item(now, s.owner, s.index, s.item, data);
+                    }
+                }
+            }
+        },
+        // Onto the ground: into the bag we stand on if it has room, else a new bag.
+        Action::Drop(s) => {
+            if let SlotKind::Potion(_) = s.kind {
+                return;
+            }
+            let bag_slot = panel.slots.iter().find(|b| b.kind == SlotKind::Container && b.item <= 0);
+            match bag_slot {
+                Some(b) => game.inv_swap(now, slot_of(&s), slot_of(b)),
+                None => game.inv_drop(s.owner, s.index, s.item),
+            }
+        }
+        Action::Take(s) => {
+            if let Some(to) = free(game) {
+                game.inv_swap(now, slot_of(&s), to);
+            }
+        }
+        Action::Button(Button::Nexus) => game.escape(),
+        Action::Button(Button::Enter(id)) => game.use_portal(id),
+        Action::Button(Button::Page(_)) => {}
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum MouseStep {
+    Down,
+    Up,
+    Move,
+}
+
+/// `--mouse-script "down@1500:x,y;move@1600:x,y;up@1700:x,y"` (desktop tests): left-button
+/// steps at times (ms) after joining, for drags and clicks on the HUD.
+fn mouse_script_arg() -> Vec<(i32, MouseStep, (f64, f64))> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let args: Vec<String> = std::env::args().collect();
+        let Some(script) = args.iter().position(|a| a == "--mouse-script").and_then(|i| args.get(i + 1)) else { return Vec::new() };
+        let mut steps: Vec<_> = script
+            .split(';')
+            .filter_map(|step| {
+                let (kind, rest) = step.trim().split_once('@')?;
+                let (ms, pos) = rest.split_once(':')?;
+                let (x, y) = pos.split_once(',')?;
+                let kind = match kind {
+                    "down" => MouseStep::Down,
+                    "up" => MouseStep::Up,
+                    "move" => MouseStep::Move,
+                    _ => return None,
+                };
+                Some((ms.parse().ok()?, kind, (x.parse().ok()?, y.parse().ok()?)))
+            })
+            .collect();
+        steps.sort_by_key(|s| s.0);
+        steps
+    }
+    #[cfg(target_arch = "wasm32")]
+    Vec::new()
+}
+
+/// `--mouse <x>,<y>` (desktop tests): where the mouse starts, in window pixels (for tooltips
+/// and aiming in screenshots).
+fn mouse_arg() -> Option<(f64, f64)> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let args: Vec<String> = std::env::args().collect();
+        let v = args.iter().position(|a| a == "--mouse").and_then(|i| args.get(i + 1));
+        if let Some((x, y)) = v.and_then(|v| v.split_once(',')) {
+            return Some((x.parse().ok()?, y.parse().ok()?));
+        }
+    }
     None
 }
 
@@ -175,6 +299,17 @@ fn hold_args() -> Vec<(KeyCode, i32)> {
                     "r" => KeyCode::KeyR,
                     "f" => KeyCode::F23, // fire toward --aim
                     "0" => KeyCode::Digit0,
+                    "1" => KeyCode::Digit1,
+                    "2" => KeyCode::Digit2,
+                    "3" => KeyCode::Digit3,
+                    "4" => KeyCode::Digit4,
+                    "5" => KeyCode::Digit5,
+                    "6" => KeyCode::Digit6,
+                    "7" => KeyCode::Digit7,
+                    "8" => KeyCode::Digit8,
+                    "space" => KeyCode::Space,
+                    "hp" => KeyCode::KeyF,
+                    "mp" => KeyCode::KeyV,
                     "-" => KeyCode::F24, // a pause: holds nothing
                     _ => return None,
                 };
@@ -299,10 +434,22 @@ impl App {
                 }
             }
         }
-        if self.holds_from.is_none() && !self.holds.is_empty() && self.walk_to.is_none() {
+        if self.holds_from.is_none() && !(self.holds.is_empty() && self.mouse_script.is_empty()) && self.walk_to.is_none() {
             if let Phase::Playing(game) = &self.phase {
                 if game.world.as_ref().is_some_and(|w| w.player().is_some()) {
                     self.holds_from = Some(now);
+                }
+            }
+        }
+        // Scripted mouse steps that are due.
+        if let Some(from) = self.holds_from {
+            while self.mouse_script.first().is_some_and(|s| now - from >= s.0) {
+                let (_, step, pos) = self.mouse_script.remove(0);
+                self.mouse = pos;
+                match step {
+                    MouseStep::Down => self.clicks.push((true, pos)),
+                    MouseStep::Up => self.clicks.push((false, pos)),
+                    MouseStep::Move => {}
                 }
             }
         }
@@ -316,11 +463,17 @@ impl App {
         }
         let pressed = std::mem::take(&mut self.pressed);
         let scripted_fire = self.scripted_key(now) == Some(KeyCode::F23);
-        let wants_fire = self.mouse_down || self.autofire || scripted_fire;
+        let wants_fire_scripted = self.autofire || scripted_fire;
         let (mouse, script_aim) = (self.mouse, self.script_aim);
         let Some(loaded) = self.loaded.as_mut() else { return };
         let Loaded { renderer, sprites, data, redrawer, fonts, text, ground } = &mut **loaded;
+        let lay = hud::Layout::new(renderer.size().0, renderer.size().1);
+        let mut ability = false;
+        let mut panel = None;
         if let Phase::Playing(game) = &mut self.phase {
+            // The panel as it stands, for clicks and number keys.
+            let built = game.world.as_ref().map(|w| hud::Panel::new(&lay, w, data, self.hud.page));
+            let mut actions = Vec::new();
             for key in pressed {
                 match key {
                     KeyCode::Digit0 | KeyCode::Numpad0 => {
@@ -330,9 +483,44 @@ impl App {
                     }
                     KeyCode::KeyR => game.escape(),
                     KeyCode::KeyI => self.autofire = !self.autofire,
-                    _ => {}
+                    KeyCode::Space => ability = true,
+                    KeyCode::KeyF => game.use_potion(now, 0),
+                    KeyCode::KeyV => game.use_potion(now, 1),
+                    // 1-8: equip or use what's in that inventory slot (MapUserInput.useItem).
+                    _ => {
+                        let n = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8]
+                            .iter()
+                            .position(|&k| k == key);
+                        if let (Some(n), Some(p)) = (n, &built) {
+                            if let Some(slot) = p.slots.iter().find(|s| s.kind == hud::SlotKind::Inventory(n as u8 + 1)) {
+                                if slot.item > 0 {
+                                    actions.push(hud::Action::EquipOrUse(*slot));
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            if let Some(p) = &built {
+                p.moved(&mut self.hud, self.mouse);
+                for (down, pos) in std::mem::take(&mut self.clicks) {
+                    if down {
+                        let taken = self.chat_input.is_none() && p.press(&mut self.hud, &lay, pos, self.shift_held, now, &mut actions);
+                        self.mouse_down = !taken;
+                    } else {
+                        self.mouse_down = false;
+                        p.release(&mut self.hud, &lay, data, pos, &mut actions);
+                    }
+                }
+                for action in actions {
+                    apply_action(game, p, action, now, data);
+                }
+            } else {
+                for (down, _) in std::mem::take(&mut self.clicks) {
+                    self.mouse_down = down && !lay.on_panel(self.mouse.0, self.mouse.1);
+                }
+            }
+            panel = built;
             for line in self.chat_send.drain(..) {
                 game.say(&line);
             }
@@ -348,9 +536,9 @@ impl App {
             game.update(now, dt, keys, rotate, data);
         }
 
+        let wants_fire = (self.mouse_down && self.hud.drag.is_none()) || wants_fire_scripted;
         renderer.begin();
-        let (w, h) = renderer.size();
-        let lay = hud::Layout::new(w, h);
+        let (_, h) = renderer.size();
         let status = match &self.phase {
             Phase::Idle(why) => why.clone(),
             Phase::SigningIn(..) => "Signing in…".into(),
@@ -358,6 +546,7 @@ impl App {
         };
         let mut view_radius = None;
         let mut fire = None;
+        let mut ability_at = None;
         match &self.phase {
             Phase::Idle(_) | Phase::SigningIn(..) => {}
             Phase::Playing(game) => {
@@ -393,11 +582,16 @@ impl App {
                                 _ => Some(game.camera_angle + (mouse.1 - camera.cy).atan2(mouse.0 - camera.cx)),
                             };
                         }
-                        let scene = view::Scene { sprites, data, world, camera, time: now, damage_texts: &game.damage_texts };
+                        if ability {
+                            ability_at = Some(camera.to_world(mouse.0, mouse.1));
+                        }
+                        let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters };
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
                     }
-                    let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
-                    hud::draw_panel(&mut ui, &lay, world, game.camera_angle, &mut self.map_colors);
+                    if let Some(p) = &panel {
+                        let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+                        hud::draw_panel(&mut ui, &lay, world, game.camera_angle, &mut self.map_colors, p, &self.hud, mouse);
+                    }
                 }
                 let me = game.world.as_ref().and_then(|w| w.player()).and_then(|p| p.name()).unwrap_or("").to_owned();
                 let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
@@ -409,16 +603,19 @@ impl App {
             if let Some(angle) = fire {
                 game.shoot(now, angle, data);
             }
+            if let Some((x, y)) = ability_at {
+                game.use_ability(now, x, y, data);
+            }
         }
         if !status.is_empty() {
             let style = text::Style { size: 18.0, bold: true, color: 0xFFFFFF };
             text.draw_centered(fonts, renderer, &status, lay.view_w() / 2.0, h as f32 / 2.0 + 40.0, style);
         }
-        if let Phase::Playing(game) = &self.phase {
-            if let Some((_, name)) = game.nearest_portal(data) {
-                let style = text::Style { size: lay.font(18.0), bold: true, color: 0xFFFFFF };
-                let hint = format!("{name}  (0 to enter)");
-                text.draw_centered(fonts, renderer, &hint, lay.view_w() / 2.0, h as f32 * 0.82, style);
+        // The dragged item and tooltips go over everything.
+        if let (Phase::Playing(game), Some(p)) = (&self.phase, &panel) {
+            if let Some(world) = &game.world {
+                let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+                hud::draw_overlay(&mut ui, &lay, world, p, &self.hud, mouse);
             }
         }
         if let Some((_, after)) = &self.shot {
@@ -534,7 +731,10 @@ impl ApplicationHandler<UserEvent> for App {
                     loaded.renderer.resize(size.width, size.height);
                 }
             }
-            WindowEvent::ModifiersChanged(m) => self.alt_held = m.state().alt_key(),
+            WindowEvent::ModifiersChanged(m) => {
+                self.alt_held = m.state().alt_key();
+                self.shift_held = m.state().shift_key();
+            }
             WindowEvent::KeyboardInput { event, .. } => {
                 let PhysicalKey::Code(code) = event.physical_key else { return };
                 let pressed = event.state == ElementState::Pressed;
@@ -605,9 +805,11 @@ impl ApplicationHandler<UserEvent> for App {
                 self.keys.clear();
                 self.mouse_down = false;
             }
-            WindowEvent::CursorMoved { position, .. } => self.mouse = (position.x, position.y),
+            // A --mouse test position stays put whatever the real cursor does.
+            WindowEvent::CursorMoved { position, .. } if !self.mouse_fixed => self.mouse = (position.x, position.y),
             WindowEvent::MouseInput { state, button: winit::event::MouseButton::Left, .. } => {
-                self.mouse_down = state == ElementState::Pressed;
+                // Handled in the frame, where the HUD's layout is known.
+                self.clicks.push((state == ElementState::Pressed, self.mouse));
             }
             WindowEvent::RedrawRequested => {
                 self.frame();
@@ -662,9 +864,14 @@ fn main() {
         chat_send: Vec::new(),
         say: say_arg(),
         alt_held: false,
+        shift_held: false,
+        hud: Default::default(),
+        clicks: Vec::new(),
         map_colors: Default::default(),
         walk_to: walk_to_arg(),
-        mouse: (0.0, 0.0),
+        mouse: mouse_arg().unwrap_or((0.0, 0.0)),
+        mouse_fixed: mouse_arg().is_some() || !mouse_script_arg().is_empty(),
+        mouse_script: mouse_script_arg(),
         mouse_down: false,
         autofire: false,
         script_aim: aim_arg(),

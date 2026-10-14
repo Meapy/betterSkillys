@@ -39,6 +39,13 @@ impl Camera {
         [(self.cx + sx * self.scale) as f32, (self.cy + sy * self.scale) as f32]
     }
 
+    /// The ground point under a screen point (`Map.pSTopW`).
+    pub fn to_world(&self, px: f64, py: f64) -> (f64, f64) {
+        let (s, c) = self.angle.sin_cos();
+        let (sx, sy) = ((px - self.cx) / self.scale, (py - self.cy) / self.scale);
+        (self.x + sx * c - sy * s, self.y + sx * s + sy * c)
+    }
+
     /// The quad through world points p0, p1 (along the texture's x) and p3 (along its y).
     fn quad(&self, p0: [f64; 3], p1: [f64; 3], p3: [f64; 3]) -> Quad {
         let o = self.to_screen(p0[0], p0[1], p0[2]);
@@ -71,6 +78,24 @@ fn normal(v0: [f64; 3], v1: [f64; 3], v2: [f64; 3]) -> [f64; 3] {
     [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
 }
 
+/// Text rising over an object (`CharacterStatusText`): damage numbers, notifications.
+#[derive(Debug, Clone)]
+pub struct Floater {
+    pub object_id: i32,
+    pub text: String,
+    pub color: u32,
+    pub at: i32,
+    /// How long it shows, ms.
+    pub life: i32,
+}
+
+impl Floater {
+    /// A damage number: red, for a second.
+    pub fn damage(object_id: i32, amount: i32, at: i32) -> Self {
+        Floater { object_id, text: format!("-{amount}"), color: 0xFF0000, at, life: 1000 }
+    }
+}
+
 pub struct Scene<'a> {
     pub sprites: &'a Sprites,
     pub data: &'a GameData,
@@ -78,7 +103,7 @@ pub struct Scene<'a> {
     pub camera: Camera,
     pub time: i32,
     /// (object id, amount, colour, when) of the damage numbers to show.
-    pub damage_texts: &'a [(i32, i32, u32, i32)],
+    pub floaters: &'a [Floater],
 }
 
 /// The image an object shows now, before redrawing.
@@ -345,14 +370,14 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         }
     }
 
-    // Damage numbers, rising over a second above whoever took the damage.
-    let style = Style { size: 18.0, bold: true, color: 0xFF0000 };
-    for &(id, amount, color, at) in scene.damage_texts {
-        let Some(obj) = world.objects.get(&id) else { continue };
-        let age = (scene.time - at) as f32 / 1000.0;
+    // Damage numbers and notifications, rising above the object.
+    let style = Style { size: (18.0 * k).round().max(10.0), bold: true, color: 0xFF0000 };
+    for f in scene.floaters {
+        let Some(obj) = world.objects.get(&f.object_id) else { continue };
+        let age = (scene.time - f.at) as f32 / 1000.0;
         let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
         let y = py - (55.0 + 40.0 * age) * k;
-        text.draw_centered(fonts, renderer, &format!("-{amount}"), px, y, Style { color, ..style });
+        text.draw_centered(fonts, renderer, &f.text, px, y, Style { color: f.color, ..style });
     }
 
     // Names (`GameObject.drawName`): bold 16 px white, centred under the object.

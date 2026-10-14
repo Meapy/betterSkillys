@@ -5,8 +5,8 @@
 use bsk_data::{GameData, ObjectClass};
 use bsk_net::{GameSocket, SocketEvent, Target};
 use bsk_proto::{
-    ClientMessage, EnemyHit, Escape, GroundDamage, OtherHit, PlayerHit, PlayerShoot, PlayerText, Reconnect,
-    ServerMessage, SquareHit, UsePortal, ViewRadius, WorldPos,
+    ClientMessage, EnemyHit, Escape, GroundDamage, InvDrop, InvSwap, OtherHit, PlayerHit, PlayerShoot, PlayerText,
+    Reconnect, ServerMessage, SlotObject, SquareHit, UseItem, UsePortal, ViewRadius, WorldPos,
 };
 use bsk_session::{Event, HelloParams, Join, Session};
 use bsk_world::{Hit, MoveInput, Projectile, World};
@@ -35,8 +35,10 @@ pub struct Game {
     /// The sight radius the server uses for us, and when we last changed it.
     sent_view_radius: i32,
     view_radius_sent_at: i32,
-    /// Damage numbers to show: (object id, amount, colour, when).
-    pub damage_texts: Vec<(i32, i32, u32, i32)>,
+    /// Text rising over objects: damage numbers and the server's notifications.
+    pub floaters: Vec<crate::view::Floater>,
+    /// When the ability (Space) can be used again (`Player.nextAltAttack_`).
+    next_ability: i32,
     /// What we sent, by message name (logged when the game closes).
     pub counts: std::collections::BTreeMap<&'static str, u32>,
     /// Chat, oldest first (kept across worlds, as the AIR client's TextBox is).
@@ -63,7 +65,8 @@ impl Game {
             out: Vec::new(),
             sent_view_radius: MIN_VIEW_RADIUS,
             view_radius_sent_at: i32::MIN / 2,
-            damage_texts: Vec::new(),
+            floaters: Vec::new(),
+            next_ability: 0,
             counts: Default::default(),
             chat: Vec::new(),
         };
@@ -192,10 +195,20 @@ impl Game {
                 let p = Projectile::new(a.owner_id, a.bullet_id, a.container_type as u16, 0, a.angle as f64, now, x, y, 1.0, 0, false);
                 world.add_projectile(p);
             }
+            ServerMessage::Notification(n) => {
+                // CharacterStatusText: two seconds over the object.
+                self.floaters.push(crate::view::Floater {
+                    object_id: n.object_id,
+                    text: n.text.clone(),
+                    color: n.color & 0xFF_FFFF,
+                    at: now,
+                    life: 2000,
+                });
+            }
             ServerMessage::Damage(d) => {
                 // Someone was hit (not by our shots): show the number.
                 if Some(d.object_id) != world.me {
-                    self.damage_texts.push((d.target_id, d.damage_amount, 0xFF0000, now));
+                    self.floaters.push(crate::view::Floater::damage(d.target_id, d.damage_amount, now));
                 }
             }
             _ => {}
@@ -251,12 +264,12 @@ impl Game {
             let msg: ClientMessage = match hit {
                 Hit::Player { bullet_id, owner_id, damage } => {
                     if let Some(me) = world.me {
-                        self.damage_texts.push((me, damage, 0xFF0000, now));
+                        self.floaters.push(crate::view::Floater::damage(me, damage, now));
                     }
                     PlayerHit { bullet_id, object_id: owner_id }.into()
                 }
                 Hit::Enemy { time, bullet_id, target_id, kill, damage } => {
-                    self.damage_texts.push((target_id, damage, 0xFF0000, now));
+                    self.floaters.push(crate::view::Floater::damage(target_id, damage, now));
                     EnemyHit { time, bullet_id, target_id, kill }.into()
                 }
                 Hit::Other { time, bullet_id, owner_id, target_id } => {
@@ -265,7 +278,7 @@ impl Game {
                 Hit::Square { time, bullet_id, owner_id } => SquareHit { time, bullet_id, object_id: owner_id }.into(),
                 Hit::Ground { time, x, y, damage } => {
                     if let Some(me) = world.me {
-                        self.damage_texts.push((me, damage, 0xFF0000, now));
+                        self.floaters.push(crate::view::Floater::damage(me, damage, now));
                     }
                     GroundDamage { time, position: WorldPos { x: x as f32, y: y as f32 } }.into()
                 }
@@ -273,8 +286,7 @@ impl Game {
             *self.counts.entry(msg.name()).or_default() += 1;
             self.socket.send(&msg);
         }
-        // Damage numbers rise for a second.
-        self.damage_texts.retain(|t| now - t.3 < 1000);
+        self.floaters.retain(|f| now - f.at < f.life);
     }
 
     /// Advance the world by `dt` ms with the keys held; `rotate` is -1, 0 or 1.
@@ -315,6 +327,100 @@ impl Game {
             .filter(|(d, _, _)| *d < 1.0)
             .min_by(|a, b| a.0.total_cmp(&b.0))
             .map(|(_, o, desc)| (o.id, o.name().unwrap_or(&desc.display_id)))
+    }
+
+    fn send(&mut self, msg: ClientMessage) {
+        *self.counts.entry(msg.name()).or_default() += 1;
+        self.socket.send(&msg);
+    }
+
+    /// Set an inventory slot locally until the server's update arrives (the AIR client changes
+    /// `equipment_` as it sends).
+    fn predict(&mut self, owner: i32, slot: u8, item: i32) {
+        if let Some(o) = self.world.as_mut().and_then(|w| w.objects.get_mut(&owner)) {
+            o.stats.insert(crate::hud::slot_stat(slot), bsk_proto::StatValue::Int(item));
+        }
+    }
+
+    /// `GameServerConnection.invSwap`.
+    pub fn inv_swap(&mut self, now: i32, a: (i32, u8, i32), b: (i32, u8, i32)) {
+        let Some(me) = self.world.as_ref().and_then(|w| w.player()) else { return };
+        let position = WorldPos { x: me.x as f32, y: me.y as f32 };
+        let msg = InvSwap {
+            time: now,
+            position,
+            slot_object1: SlotObject { object_id: a.0, slot_id: a.1, object_type: a.2 },
+            slot_object2: SlotObject { object_id: b.0, slot_id: b.1, object_type: b.2 },
+        };
+        self.send(msg.into());
+        self.predict(a.0, a.1, b.2);
+        self.predict(b.0, b.1, a.2);
+    }
+
+    /// `useItem_new`: use a consumable (or InvUse item) in a slot. False if it can't be used.
+    pub fn use_item(&mut self, now: i32, owner: i32, slot: u8, item: i32, data: &GameData) -> bool {
+        let Some(xml) = data.objects.get(&(item as u16)).map(|d| &d.xml) else { return false };
+        if !(xml.has("Consumable") || xml.has("InvUse")) {
+            return false;
+        }
+        let consumable = xml.has("Consumable");
+        let msg = UseItem {
+            time: now,
+            slot_object: SlotObject { object_id: owner, slot_id: slot, object_type: item },
+            item_use_pos: WorldPos { x: 0.0, y: 0.0 },
+            use_type: 0,
+        };
+        self.send(msg.into());
+        if consumable {
+            self.predict(owner, slot, -1);
+        }
+        true
+    }
+
+    /// `invDrop`: put it on the ground.
+    pub fn inv_drop(&mut self, owner: i32, slot: u8, item: i32) {
+        self.send(InvDrop { slot_object: SlotObject { object_id: owner, slot_id: slot, object_type: item } }.into());
+        self.predict(owner, slot, -1);
+    }
+
+    /// `Player.useAltWeapon` (Space): the ability in slot 1, aimed at a world point.
+    pub fn use_ability(&mut self, now: i32, x: f64, y: f64, data: &GameData) {
+        if self.session.map.as_ref().is_some_and(|m| m.disable_abilities) {
+            return;
+        }
+        let Some(me) = self.world.as_ref().and_then(|w| w.player()) else { return };
+        let item = me.stat_int(crate::hud::slot_stat(1)).unwrap_or(-1);
+        let mp = me.stat_int(crate::hud::stat::MP).unwrap_or(0);
+        let (id, paused) = (me.id, bsk_world::condition::has(me.conditions(), bsk_world::condition::PAUSED));
+        let Some(xml) = data.objects.get(&(item as u16)).map(|d| &d.xml) else { return };
+        if paused || !xml.has("Usable") || now < self.next_ability || xml.int("MpCost", 0) > mp {
+            return;
+        }
+        self.next_ability = now + (xml.number("Cooldown", 0.5) * 1000.0) as i32;
+        let msg = UseItem {
+            time: now,
+            slot_object: SlotObject { object_id: id, slot_id: 1, object_type: item },
+            item_use_pos: WorldPos { x: x as f32, y: y as f32 },
+            use_type: 1,
+        };
+        self.send(msg.into());
+    }
+
+    /// F and V: a health or magic potion from the stacks (`UseBuyPotionCommand`).
+    pub fn use_potion(&mut self, now: i32, which: usize) {
+        let Some(me) = self.world.as_ref().and_then(|w| w.player()) else { return };
+        let stack = if which == 0 { crate::hud::stat::HEALTH_POTION_STACK } else { crate::hud::stat::MAGIC_POTION_STACK };
+        if me.stat_int(stack).unwrap_or(0) <= 0 {
+            return;
+        }
+        let (item, slot) = crate::hud::POTIONS[which];
+        let msg = UseItem {
+            time: now,
+            slot_object: SlotObject { object_id: me.id, slot_id: slot, object_type: item },
+            item_use_pos: WorldPos { x: me.x as f32, y: me.y as f32 },
+            use_type: 1,
+        };
+        self.send(msg.into());
     }
 
     pub fn use_portal(&mut self, object_id: i32) {

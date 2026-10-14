@@ -43,7 +43,7 @@ pub fn config() -> Result<Option<LoginConfig>, String> {
             "--account" => account = it.next(),
             "--credentials" => credentials = it.next(),
             // Read by main (screenshots, scripted keys).
-            "--shot" | "--shot-after" | "--hold" | "--walk-to" | "--aim" | "--say" | "--size" => {
+            "--shot" | "--shot-after" | "--hold" | "--walk-to" | "--aim" | "--say" | "--size" | "--mouse" | "--mouse-script" => {
                 it.next();
             }
             _ => return Err(format!("unknown argument {a}")),

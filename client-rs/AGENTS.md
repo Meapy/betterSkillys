@@ -54,10 +54,12 @@ The client itself can be scripted for tests (desktop only):
 |---|---|
 | `--shot <png> --shot-after <seconds>` | Save one frame, then quit (logs the position and what it sent) |
 | `--walk-to x,y` | Walk to a world position (in the first world joined) |
-| `--hold <key>:<ms>` | Hold keys one after another: `w a s d q e r 0`, `f` fires, `-` waits |
+| `--hold <key>:<ms>` | Hold keys one after another: `w a s d q e r 0 1`-`8 space hp mp`, `f` fires, `-` waits |
 | `--aim <degrees>` / `--aim auto` | Where `f` fires on the screen, or at the nearest enemy |
 | `--say <text>` | Send a chat line or command once in the game |
 | `--size WxH` | Open the window at this size (physical pixels), to check the layout |
+| `--mouse x,y` | Put the mouse there (window pixels) and ignore the real one: tooltips, aiming |
+| `--mouse-script "down@ms:x,y;move@ms:x,y;up@ms:x,y"` | Left-button steps after joining: drags and clicks on the HUD |
 
 For example, the Battle Arena (its monsters come 60 s after you enter):
 `--walk-to 106.5,75.4 --hold 0:200 --hold -:6000 --hold f:100000 --aim auto --shot a.png --shot-after 95`.
@@ -83,8 +85,13 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
 - **Atlas:** pages are 4096², or the GPU's limit (WebGL2 can be 2048). Sheets bigger than a page
   are cut into pieces on tile boundaries (`Sheet::rect`).
 - **Colours:** the surface is non-sRGB and the atlas premultiplied, so blending matches Flash.
+- **Controls:** WASD move, Q/E turn, Z resets the view, mouse fires (I toggles autofire), Space
+  uses the ability at the mouse, 1-8 equip or use an inventory slot, F/V drink a stacked potion,
+  0 enters a portal, R goes to the Nexus, Enter or / chats. Items drag between slots, onto the
+  world to drop; double-click equips, uses or takes from a bag; shift-click uses.
 - **Layout:** `hud::Layout` works everything out from the window size each frame: one scale for
-  the AIR client's 200×600 HUD (fitted to the height, at most 28% of the width), the world in
+  the HUD (the AIR client's 200×600 panel plus stats, potions and the interact area: 200×690,
+  fitted to the height, at most 28% of the width), the world in
   the rest, and chat wrapped to the space. F11 or Alt+Enter toggles fullscreen.
 - **Async loading:** everything that touches files or the GPU at startup is `async`, because the
   browser can't block. On desktop it runs under `pollster::block_on`.
