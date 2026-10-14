@@ -224,7 +224,9 @@ def place_braziers(j, brazier, walls, lit_grounds):
 
     def floor(x, y):
         t = tile(x, y)
-        return t.get("ground") not in (None, "Empty") and not t.get("objs") and not t.get("regions")
+        # (maps made in the editor can hold an object with an empty id, which is no object)
+        return t.get("ground") not in (None, "Empty") and not any(o.get("id") for o in t.get("objs") or []) \
+            and not t.get("regions")
 
     cands = []
     for y in range(h):
@@ -354,11 +356,9 @@ def write_worlds(worlds, dr_grounds, object_id):
         lines.append("\t\t<Height>%d</Height>" % h)
         lines += ["\t\t<MapJM>%s</MapJM>" % f.replace("&", "&amp;") for f in files]
         lines.append("\t\t<VisibilityType>1</VisibilityType>")
-        goals = BS_ELDER_WORLDS[cls][2] if cls in BS_ELDER_WORLDS else None
-        if goals:
-            lines.append("\t\t<RandomLayout>")
-            lines += ["\t\t\t<Goal>%s</Goal>" % g for g in goals]
-            lines.append("\t\t</RandomLayout>")
+        if cls in BS_ELDER_WORLDS:
+            objects, _ = make_elder.load(make_elder.xml_files(include_elder=True))
+            lines += ["\t\t" + x for x in make_elder.random_layout(BS_ELDER_WORLDS[cls][0], set(objects)) or []]
         if not tp:
             lines.append("\t\t<DisableTeleport/>")
         lines.append("\t\t<Dungeon/>")

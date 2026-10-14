@@ -45,17 +45,36 @@ TYPES = os.path.join(ROOT, "tools", "elder", "types.json")
 GROUND_TYPES = (0xE800, 0xF000)
 OBJECT_TYPES = (0xF000, 0xF800)
 
-FLOOR = (0.4, 0.36, 0.42)       # red, green and blue multipliers
-WALL = (0.75, 0.6, 0.42)
-LIGHT_TOP = (0.58, 0.47, 0.42)  # the floor beside a brazier
+# A sprite's shade scales it towards a target brightness (the Tomb's: dark stone floors, aged gold
+# walls) within limits, so dark dungeons stay readable, then tints it. A floor lit by a brazier is
+# up to LIGHT_GAIN brighter and warmer.
+FLOOR_TARGET, FLOOR_RANGE, FLOOR_TINT = 69.0, (0.4, 0.75), (1.0, 0.9, 1.05)
+WALL_TARGET, WALL_RANGE, WALL_TINT = 150.0, (0.5, 0.9), (1.0, 0.8, 0.56)
+LIGHT_GAIN, LIGHT_TINT = 0.45, (1.0, 0.81, 0.724)
 LIGHT_LEVELS = 6
-LIGHT = [tuple(f + (t - f) * n / LIGHT_LEVELS for f, t in zip(FLOOR, LIGHT_TOP)) for n in range(1, LIGHT_LEVELS + 1)]
+FLOOR = ("floor", 0)
+WALL = ("wall", 0)
+LIGHT = [("floor", n) for n in range(1, LIGHT_LEVELS + 1)]
+
+
+def multipliers(shade, brightness):
+    """The red, green and blue multipliers of a shade for a sprite of this average brightness."""
+    kind, level = shade
+    target, (lo, hi), tint = (FLOOR_TARGET, FLOOR_RANGE, FLOOR_TINT) if kind == "floor" else (WALL_TARGET, WALL_RANGE, WALL_TINT)
+    m = min(hi, max(lo, target / brightness)) if brightness > 0 else lo
+    if level:
+        f = level / LIGHT_LEVELS
+        m *= 1 + LIGHT_GAIN * f
+        tint = tuple(t + (lt - t) * f for t, lt in zip(tint, LIGHT_TINT))
+    return tuple(m * t for t in tint)
 WALL_CLASSES = ("Wall", "ConnectedWall", "CaveWall")
 
-# Doomed Realms world class -> (regular betterSkillys map, regular behaviour file, the objects
-# that end a branch of a random layout, or None for the regular map's own layout)
+# Doomed Realms world class -> (regular betterSkillys map, regular behaviour file). An Elder
+# dungeon is laid out anew for every visit if its regular one is (port_doomed_worlds.py copies its
+# <RandomLayout>, with each goal swapped for its Elder version).
 DUNGEONS = {
-    "ElderTombMap": ("Dungeons/Tomb of the Ancients.jm", "BehaviorDb.Tomb.cs", ["Elder Inactive Sarcophagus"]),
+    "ElderTombMap": ("Dungeons/Tomb of the Ancients.jm", "BehaviorDb.Tomb.cs"),
+    "ElderPirateCave": ("Dungeons/Pirate Cave.jm", "BehaviorDb.PirateCave.cs"),
 }
 
 
@@ -202,10 +221,14 @@ class Sheet:
             sw, _, px = sources[sheet]
             sx, sy = (index % (sw // 8)) * 8, (index // (sw // 8)) * 8
             dx, dy = (n % 16) * 8, (n // 16) * 8
+            seen = [px(sx + x, sy + y) for y in range(8) for x in range(8)]
+            seen = [p for p in seen if p[3] > 0]
+            brightness = sum(0.299 * r + 0.587 * g + 0.114 * b for r, g, b, _ in seen) / max(1, len(seen))
+            mr, mg, mb = multipliers(shade, brightness)
             for y in range(8):
                 for x in range(8):
                     r, g, b, a = px(sx + x, sy + y)
-                    pix[dy + y][dx + x] = (int(r * shade[0]), int(g * shade[1]), int(b * shade[2]), a)
+                    pix[dy + y][dx + x] = (min(255, int(r * mr)), min(255, int(g * mg)), min(255, int(b * mb)), a)
         write_png(SHEET, w, h, pix)
 
 
@@ -259,7 +282,7 @@ def build(dr_ids):
         new_grounds.append(g)
         made_grounds.add(name)
 
-    for cls, (path, behaviours, _) in sorted(DUNGEONS.items()):
+    for cls, (path, behaviours) in sorted(DUNGEONS.items()):
         map_grounds, map_objects = map_ids(path)
         for gid in sorted(map_grounds):
             if gid == "Empty" or gid.startswith("Elder "):
@@ -308,6 +331,25 @@ def build(dr_ids):
     sheet.write()
     types.save()
     return len(new_grounds), len(new_objects), len(sheet.sprites)
+
+
+def random_layout(path, known):
+    """The <RandomLayout> lines of the regular world whose map is path, with each goal swapped for
+    its Elder version (known: the ids that exist), or None."""
+    for f in glob.glob(os.path.join(XML_DIR, "*.xml")):
+        text = re.sub(r"<\?xml[^>]*\?>", "", open(f, encoding="utf-8-sig", errors="replace").read())
+        try:
+            root = ET.fromstring("<r>" + text + "</r>")
+        except ET.ParseError:
+            continue
+        for w in root.iter("World"):
+            if path not in [m.text for m in w.findall("MapJM")] or w.find("RandomLayout") is None:
+                continue
+            rl = w.find("RandomLayout")
+            attrs = "".join(' %s="%s"' % kv for kv in sorted(rl.attrib.items()))
+            goals = ["Elder " + g.text if "Elder " + g.text in known else g.text for g in rl.findall("Goal")]
+            return ["<RandomLayout%s>" % attrs] + ["\t<Goal>%s</Goal>" % g for g in goals] + ["</RandomLayout>"]
+    return None
 
 
 def lit_grounds():

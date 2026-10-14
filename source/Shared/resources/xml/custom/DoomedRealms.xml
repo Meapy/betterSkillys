@@ -15069,51 +15069,6 @@
 		<Activate id="Oryx's Christmas Portal">CreatePortal</Activate>
 		<OldSound>use_key</OldSound>
 	</Object>
-	<Object type="0xD308" id="Elder Pirate">
-		<Group>Pirates</Group>
-		<Enemy />
-		<Class>Character</Class>
-		<AnimatedTexture>
-			<File>drChars8x8rBeach</File>
-			<Index>1</Index>
-		</AnimatedTexture>
-		<HitSound>monster/pirates_hit</HitSound>
-		<DeathSound>monster/pirates_death</DeathSound>
-		<Size>100</Size>
-		<MaxHitPoints>10</MaxHitPoints>
-		<Defense>10</Defense>
-		<Terrain>ShoreSand</Terrain>
-		<Projectile id="0">
-			<ObjectId>Blade</ObjectId>
-			<Damage>5</Damage>
-			<Speed>40</Speed>
-			<LifetimeMS>600</LifetimeMS>
-		</Projectile>
-		<XpBonus>2</XpBonus>
-	</Object>
-	<Object type="0xD309" id="Elder Piratess">
-		<Group>Pirates</Group>
-		<Enemy />
-		<Class>Character</Class>
-		<AnimatedTexture>
-			<File>drChars8x8rBeach</File>
-			<Index>2</Index>
-		</AnimatedTexture>
-		<HitSound>monster/pirates_hit</HitSound>
-		<DeathSound>monster/pirates_death</DeathSound>
-		<Size>100</Size>
-		<MaxHitPoints>12</MaxHitPoints>
-		<Defense>10</Defense>
-		<Terrain>ShoreSand</Terrain>
-		<SpawnProb>1.0</SpawnProb>
-		<Projectile id="0">
-			<ObjectId>Blade</ObjectId>
-			<Damage>5</Damage>
-			<Speed>40</Speed>
-			<LifetimeMS>600</LifetimeMS>
-		</Projectile>
-		<XpBonus>2</XpBonus>
-	</Object>
 	<Object type="0xD30A" id="Elder Pirate Lieutenant">
 		<Group>Cave Pirate Bosses</Group>
 		<Enemy />

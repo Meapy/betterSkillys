@@ -108,10 +108,13 @@
 		<Dungeon/>
 	</World>
 	<World id="Elder Pirate Cave">
-		<Width>102</Width>
-		<Height>142</Height>
+		<Width>94</Width>
+		<Height>98</Height>
 		<MapJM>Doomed/Elder Pirate Cave.jm</MapJM>
 		<VisibilityType>1</VisibilityType>
+		<RandomLayout corridor="3" passage="4">
+			<Goal>Elder Dreadstump the Pirate King</Goal>
+		</RandomLayout>
 		<DisableTeleport/>
 		<Dungeon/>
 	</World>

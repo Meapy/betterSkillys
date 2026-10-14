@@ -2945,21 +2945,6 @@ namespace WorldServer.logic.doomed
             null,
             null);
 
-        // Elder Pirate
-        public static readonly Definition M_Elder_Pirate = new Definition(
-            new Behavior[] {
-                IfNot.Instance(
-                        Chasing.Instance(8.5f, 6, 0, null), SimpleWandering.Instance(4)),
-                Cooldown.Instance(2500, SimpleAttack.Instance(3))
-            },
-            null,
-            new LootBehavior(
-                        new LootDef(0, 2, 0, 8,
-                            Tuple.Create(0.2, (ILoot)new TierLoot(1, ItemType.Weapon)),
-                            Tuple.Create(0.03, (ILoot)HpPotionLoot.Instance)
-                        )
-                    ));
-
         // Elder Pirate Admiral
         public static readonly Definition M_Elder_Pirate_Admiral = new Definition(
             new Behavior[] {
@@ -3047,31 +3032,6 @@ namespace WorldServer.logic.doomed
                            Tuple.Create(100, new LootDef(0, 1, 0, 2,
                            Tuple.Create(0.01, (ILoot)new ItemLoot("Pirate Rum"))
                            ))));
-
-        // Elder Piratess
-        public static readonly Definition M_Elder_Piratess = new Definition(
-            new Behavior[] {
-                IfNot.Instance(
-                        Once.Instance(
-                            SpawnMinionImmediate.Instance( null, 3, 2, 5)
-                        ),
-                        IfNot.Instance(
-                            Chasing.Instance(11f, 6, 1, null),
-                            SimpleWandering.Instance(6))
-                    ),
-                Cooldown.Instance(2500, SimpleAttack.Instance(3)),
-                Rand.Instance(
-                        Reproduce.Instance( null, 5),
-                        Reproduce.Instance( T("Piratess"), 5)
-                    )
-            },
-            null,
-            new LootBehavior(
-                        new LootDef(0, 2, 0, 8,
-                            Tuple.Create(0.2, (ILoot)new TierLoot(1, ItemType.Armor)),
-                            Tuple.Create(0.03, (ILoot)HpPotionLoot.Instance)
-                        )
-                    ));
 
         // Elder Pyramid Artifact 1
         public static readonly Definition M_Elder_Pyramid_Artifact_1 = new Definition(
