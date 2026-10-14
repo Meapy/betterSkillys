@@ -61,6 +61,9 @@ struct App {
     /// `--shot <file> --shot-after <seconds>`: save one frame as PNG, then quit (desktop).
     shot: Option<(String, f32)>,
     quit: bool,
+    /// Scripted key holds (`--hold`), and when the first one started.
+    holds: Vec<(KeyCode, i32)>,
+    holds_from: Option<i32>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -73,6 +76,33 @@ fn shot_args() -> Option<(String, f32)> {
 #[cfg(target_arch = "wasm32")]
 fn shot_args() -> Option<(String, f32)> {
     None
+}
+
+/// `--hold <key>:<ms>` (repeatable): keys to hold one after another once in the game, for
+/// testing movement without touching the window (desktop).
+fn hold_args() -> Vec<(KeyCode, i32)> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let args: Vec<String> = std::env::args().collect();
+        args.windows(2)
+            .filter(|w| w[0] == "--hold")
+            .filter_map(|w| {
+                let (key, ms) = w[1].split_once(':')?;
+                let code = match key {
+                    "w" => KeyCode::KeyW,
+                    "a" => KeyCode::KeyA,
+                    "s" => KeyCode::KeyS,
+                    "d" => KeyCode::KeyD,
+                    "q" => KeyCode::KeyQ,
+                    "e" => KeyCode::KeyE,
+                    _ => return None,
+                };
+                Some((code, ms.parse().ok()?))
+            })
+            .collect()
+    }
+    #[cfg(target_arch = "wasm32")]
+    Vec::new()
 }
 
 async fn load(window: Arc<Window>) -> Result<Box<Loaded>, String> {
@@ -137,7 +167,19 @@ impl App {
     }
 
     fn held(&self, codes: &[KeyCode]) -> bool {
-        codes.iter().any(|c| self.keys.contains(c))
+        codes.iter().any(|c| self.keys.contains(c) || self.scripted_key(self.now()) == Some(*c))
+    }
+
+    /// The key a `--hold` script holds at `now`, counted from when we joined the world.
+    fn scripted_key(&self, now: i32) -> Option<KeyCode> {
+        let mut t = now - self.holds_from?;
+        for &(code, ms) in &self.holds {
+            if t < ms {
+                return Some(code);
+            }
+            t -= ms;
+        }
+        None
     }
 
     fn frame(&mut self) {
@@ -162,6 +204,13 @@ impl App {
         let rotate = self.held(&[KeyCode::KeyE]) as i32 as f64 - self.held(&[KeyCode::KeyQ]) as i32 as f64;
         let reset_angle = self.held(&[KeyCode::KeyZ]);
 
+        if self.holds_from.is_none() && !self.holds.is_empty() {
+            if let Phase::Playing(game) = &self.phase {
+                if game.world.as_ref().is_some_and(|w| w.player().is_some()) {
+                    self.holds_from = Some(now);
+                }
+            }
+        }
         let Some(loaded) = self.loaded.as_mut() else { return };
         let Loaded { renderer, sprites, data, redrawer } = &mut **loaded;
         if let Phase::Playing(game) = &mut self.phase {
@@ -317,6 +366,9 @@ impl ApplicationHandler<UserEvent> for App {
                 self.frame();
                 if self.quit {
                     if let Phase::Playing(game) = &mut self.phase {
+                        if let Some(me) = game.world.as_ref().and_then(|w| w.player()) {
+                            log::info!("player at ({:.2}, {:.2}); {}", me.x, me.y, if game.ended { &game.status } else { "connected" });
+                        }
                         game.close();
                     }
                     event_loop.exit();
@@ -355,6 +407,8 @@ fn main() {
         last_title: String::new(),
         shot: shot_args(),
         quit: false,
+        holds: hold_args(),
+        holds_from: None,
     };
     #[cfg(not(target_arch = "wasm32"))]
     {
