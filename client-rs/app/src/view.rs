@@ -7,6 +7,7 @@
 
 use crate::redraw::{Redrawer, PAD};
 use crate::sprites::{SrcRect, Sprites};
+use crate::text::{Fonts, Style, Text};
 use bsk_assets::Facing;
 use bsk_data::{GameData, ObjectDesc, TextureData, TextureRef};
 use bsk_render::{Quad, Renderer, Tint};
@@ -169,7 +170,7 @@ enum Item<'a> {
     Wall { obj: &'a GameObj, desc: &'a ObjectDesc },
 }
 
-pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer) {
+pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, fonts: &Fonts, text: &mut Text) {
     let (w, h) = renderer.size();
     let cam = scene.camera;
     let radius = cam.radius(w as f64, h as f64);
@@ -228,6 +229,18 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer) {
                 renderer.sprite(sprite.rect, Quad::rect(px - sw / 2.0, py - sh, sw, sh), Tint::NONE);
             }
         }
+    }
+
+    // Names (`GameObject.drawName`): bold 16 px white, centred under the object.
+    let style = Style { size: 16.0, bold: true, color: 0xFFFFFF };
+    for (_, item) in &items {
+        let Item::Sprite { obj, desc } = item else { continue };
+        if !desc.show_name {
+            continue;
+        }
+        let Some(name) = obj.name() else { continue };
+        let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
+        text.draw_centered(fonts, renderer, name, px, py, style);
     }
     let _ = PAD;
 }

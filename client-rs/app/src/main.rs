@@ -5,6 +5,7 @@ mod login;
 mod redraw;
 #[allow(dead_code)] // lookups the game screens will use
 mod sprites;
+mod text;
 mod view;
 
 use bsk_assets::AssetSource;
@@ -32,6 +33,8 @@ struct Loaded {
     sprites: Sprites,
     data: GameData,
     redrawer: redraw::Redrawer,
+    fonts: text::Fonts,
+    text: text::Text,
 }
 
 enum UserEvent {
@@ -122,7 +125,9 @@ async fn load(window: Arc<Window>) -> Result<Box<Loaded>, String> {
         data.objects.len(),
         t.elapsed().as_millis()
     );
-    Ok(Box::new(Loaded { renderer, sprites, data, redrawer: Default::default() }))
+    let (regular, bold) = futures::join!(source.load(&manifest.fonts.regular), source.load(&manifest.fonts.bold));
+    let fonts = text::Fonts::new(regular.map_err(|e| e.to_string())?, bold.map_err(|e| e.to_string())?)?;
+    Ok(Box::new(Loaded { renderer, sprites, data, redrawer: Default::default(), fonts, text: Default::default() }))
 }
 
 impl App {
@@ -212,7 +217,7 @@ impl App {
             }
         }
         let Some(loaded) = self.loaded.as_mut() else { return };
-        let Loaded { renderer, sprites, data, redrawer } = &mut **loaded;
+        let Loaded { renderer, sprites, data, redrawer, fonts, text } = &mut **loaded;
         if let Phase::Playing(game) = &mut self.phase {
             game.poll(now, data);
             if reset_angle {
@@ -246,10 +251,14 @@ impl App {
                             cy: h as f64 * 13.0 / 24.0,
                         };
                         let scene = view::Scene { sprites, data, world, camera, time: now };
-                        view::draw(&scene, renderer, redrawer);
+                        view::draw(&scene, renderer, redrawer, fonts, text);
                     }
                 }
             }
+        }
+        if !status.is_empty() {
+            let style = text::Style { size: 18.0, bold: true, color: 0xFFFFFF };
+            text.draw_centered(fonts, renderer, &status, w as f32 / 2.0, h as f32 / 2.0 + 40.0, style);
         }
         if let Some((_, after)) = &self.shot {
             if now as f32 >= after * 1000.0 && !renderer.capture_next_frame() {

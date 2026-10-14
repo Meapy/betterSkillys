@@ -9,6 +9,7 @@ name = "betterskillys"
 path = "src/main.rs"
 
 [dependencies]
+ab_glyph = "0.2"
 bsk-assets.workspace = true
 bsk-data.workspace = true
 bsk-net.workspace = true
