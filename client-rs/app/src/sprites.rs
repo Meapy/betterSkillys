@@ -5,26 +5,29 @@ use bsk_assets::{AssetSource, Facing, Manifest};
 use bsk_render::{AtlasRect, Renderer};
 use std::collections::HashMap;
 
-/// One sheet file in the atlas. A sheet taller than an atlas page is stored as several bands,
-/// cut on a row boundary that every tile size registered for the file shares.
+/// One sheet file in the atlas. A sheet bigger than an atlas page is stored as a grid of pieces,
+/// cut on column and row boundaries that every tile size registered for the file shares.
 pub struct Sheet {
     pub width: u32,
     pub height: u32,
-    band_height: u32,
-    bands: Vec<AtlasRect>,
+    piece_w: u32,
+    piece_h: u32,
+    columns: u32,
+    /// Row by row.
+    pieces: Vec<AtlasRect>,
 }
 
 impl Sheet {
     /// The atlas rectangle for a pixel rectangle of the sheet, or `None` if it's outside the
-    /// sheet or crosses a band edge.
+    /// sheet or crosses a piece edge.
     pub fn rect(&self, x: u32, y: u32, w: u32, h: u32) -> Option<AtlasRect> {
         if x + w > self.width || y + h > self.height {
             return None;
         }
-        let band = (y / self.band_height) as usize;
-        let top = y - band as u32 * self.band_height;
-        let rect = self.bands.get(band)?;
-        (top + h <= rect.h as u32).then(|| rect.sub(x, top, w, h))
+        let (px, py) = (x / self.piece_w, y / self.piece_h);
+        let piece = self.pieces.get((py * self.columns + px) as usize)?;
+        let (left, top) = (x - px * self.piece_w, y - py * self.piece_h);
+        (left + w <= piece.w as u32 && top + h <= piece.h as u32).then(|| piece.sub(left, top, w, h))
     }
 }
 
@@ -102,24 +105,28 @@ impl Sprites {
     /// the atlas.
     pub async fn load(source: &AssetSource, manifest: &Manifest, renderer: &mut Renderer) -> Result<Self, String> {
         let files = manifest.sheet_files();
+        let t = web_time::Instant::now();
         let fetched = futures::future::join_all(files.iter().map(|f| source.load(f))).await;
+        let fetch_ms = t.elapsed().as_millis();
+        let (mut decode, mut upload) = (std::time::Duration::ZERO, std::time::Duration::ZERO);
 
-        // Each file is cut into bands on a multiple of every row height registered for it.
-        let mut heights: Vec<(&str, u32)> = Vec::new();
+        // Each file is cut into pieces whose sides are multiples of every tile and block size
+        // registered for it, so no tile straddles two pieces.
+        let mut sizes: Vec<(&str, u32, u32)> = Vec::new();
         for s in &manifest.image_sets {
             if let Some(f) = &s.file {
-                heights.push((f, s.h));
+                sizes.push((f, s.w, s.h));
             }
         }
         for c in &manifest.animated_chars {
             for f in std::iter::once(&c.file).chain(&c.mask) {
-                heights.extend([(f.as_str(), c.sheet_h), (f.as_str(), c.h)]);
+                sizes.extend([(f.as_str(), c.sheet_w, c.sheet_h), (f.as_str(), c.w, c.h)]);
             }
         }
-        let mut unit: HashMap<&str, u32> = HashMap::new();
-        for (file, h) in heights {
-            let u = unit.entry(file).or_insert(1);
-            *u = lcm(*u, h.max(1));
+        let mut unit: HashMap<&str, (u32, u32)> = HashMap::new();
+        for (file, w, h) in sizes {
+            let u = unit.entry(file).or_insert((1, 1));
+            *u = (lcm(u.0, w.max(1)), lcm(u.1, h.max(1)));
         }
 
         let mut sprites = Sprites::default();
@@ -127,24 +134,34 @@ impl Sprites {
         let max = renderer.max_image_size();
         for (file, bytes) in files.iter().zip(fetched) {
             let bytes = bytes.map_err(|e| e.to_string())?;
+            let t = web_time::Instant::now();
             let image = bsk_assets::decode_image(file, &bytes).map_err(|e| e.to_string())?;
+            decode += t.elapsed();
+            let t = web_time::Instant::now();
             let (width, height) = image.dimensions();
-            let u = unit[file];
-            if width > max || u > max {
-                return Err(format!("{file}: {width}×{height} doesn't fit an atlas page"));
+            let (uw, uh) = unit[file];
+            if uw > max || uh > max {
+                return Err(format!("{file}: a {uw}×{uh} tile doesn't fit an atlas page"));
             }
-            let band_height = (max / u) * u;
-            let mut bands = Vec::new();
-            let mut y = 0;
-            while y < height {
-                let h = band_height.min(height - y);
-                let band = image::imageops::crop_imm(&image, 0, y, width, h).to_image();
-                bands.push(renderer.add_image(&band).ok_or_else(|| format!("{file}: atlas full"))?);
-                y += h;
+            let (piece_w, piece_h) = ((max / uw) * uw, (max / uh) * uh);
+            let columns = width.div_ceil(piece_w);
+            let mut pieces = Vec::new();
+            for y in (0..height).step_by(piece_h as usize) {
+                for x in (0..width).step_by(piece_w as usize) {
+                    let (w, h) = (piece_w.min(width - x), piece_h.min(height - y));
+                    let piece = image::imageops::crop_imm(&image, x, y, w, h).to_image();
+                    pieces.push(renderer.add_image(&piece).ok_or_else(|| format!("{file}: atlas full"))?);
+                }
             }
+            upload += t.elapsed();
             index_of.insert(file, sprites.sheets.len());
-            sprites.sheets.push(Sheet { width, height, band_height, bands });
+            sprites.sheets.push(Sheet { width, height, piece_w, piece_h, columns, pieces });
         }
+        log::info!(
+            "sheets: fetch {fetch_ms} ms, decode {} ms, atlas {} ms",
+            decode.as_millis(),
+            upload.as_millis()
+        );
 
         for s in &manifest.image_sets {
             let sheet = s.file.as_deref().map(|f| index_of[f]);
@@ -188,4 +205,35 @@ fn gcd(a: u32, b: u32) -> u32 {
 
 fn lcm(a: u32, b: u32) -> u32 {
     a / gcd(a, b) * b
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rect_finds_the_piece_holding_a_tile() {
+        // A 300×250 sheet cut into 128×96 pieces: 3 columns, 3 rows.
+        let mut pieces = Vec::new();
+        for row in 0..3u16 {
+            for col in 0..3u16 {
+                let w = if col == 2 { 44 } else { 128 };
+                let h = if row == 2 { 58 } else { 96 };
+                pieces.push(AtlasRect { page: row * 3 + col, x: 100, y: 200, w, h });
+            }
+        }
+        let sheet = Sheet { width: 300, height: 250, piece_w: 128, piece_h: 96, columns: 3, pieces };
+        assert_eq!(sheet.rect(0, 0, 16, 16), Some(AtlasRect { page: 0, x: 100, y: 200, w: 16, h: 16 }));
+        assert_eq!(sheet.rect(144, 112, 16, 16), Some(AtlasRect { page: 4, x: 116, y: 216, w: 16, h: 16 }));
+        assert_eq!(sheet.rect(256, 192, 32, 32), Some(AtlasRect { page: 8, x: 100, y: 200, w: 32, h: 32 }));
+        assert_eq!(sheet.rect(120, 0, 16, 16), None, "crosses a column edge");
+        assert_eq!(sheet.rect(0, 240, 16, 16), None, "outside the sheet");
+    }
+
+    #[test]
+    fn lcm_of_tile_sizes() {
+        assert_eq!(lcm(8, 16), 16);
+        assert_eq!(lcm(16, 24), 48);
+        assert_eq!(lcm(40, 8), 40);
+    }
 }

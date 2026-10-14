@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "client-rs-web",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8095", "--bind", "127.0.0.1", "--directory", "build/client-rs/web"],
+      "port": 8095
+    }
+  ]
+}

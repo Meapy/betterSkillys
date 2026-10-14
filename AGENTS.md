@@ -4,6 +4,8 @@ A Realm of the Mad God private server (C#, .NET 8) and its Adobe AIR client (Act
 on this PC for a small group of players. Read the guide for the part you're changing:
 
 - [client/AGENTS.md](client/AGENTS.md): the AIR client (rendering, UI, messages, test client).
+- [client-rs/AGENTS.md](client-rs/AGENTS.md): the Rust rewrite of the client (desktop and
+  browser), in progress.
 - [source/AGENTS.md](source/AGENTS.md): the servers (account server, world server, behaviours,
   worlds, Redis data).
 - [SETUP-LOCAL.md](SETUP-LOCAL.md): how to run and share the game, and the list of changes made
@@ -56,3 +58,4 @@ window. It skips any of them whose process name (`redis-server.exe`, `App.exe`,
 - Python 3 for the scripts in `tools/`.
 - The .NET 8 SDK for the servers.
 - AIR SDK 32 for the client, unzipped into `tools/airsdk/`.
+- Rust (stable, with the `wasm32-unknown-unknown` target) for `client-rs/`.

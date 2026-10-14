@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>betterSkillys-rs</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+    canvas { display: block; width: 100vw; height: 100vh; outline: none; }
+    #status { position: fixed; left: 16px; bottom: 16px; color: #ccc; font: 14px sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="status">Loading…</div>
+  <script type="module">
+    import init from "./betterskillys.js";
+    const status = document.getElementById("status");
+    init().then(() => status.remove(), (e) => { status.textContent = "Failed to start: " + e; });
+  </script>
+</body>
+</html>

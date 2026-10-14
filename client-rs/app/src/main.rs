@@ -1,5 +1,6 @@
 //! betterSkillys client: the desktop executable and, built for wasm32, the browser version.
 
+#[allow(dead_code)] // lookups the game screens will use
 mod sprites;
 
 use bsk_assets::AssetSource;
@@ -110,15 +111,15 @@ impl ApplicationHandler<UserEvent> for App {
         if self.window.is_some() {
             return;
         }
-        #[allow(unused_mut)]
-        let mut attributes = Window::default_attributes()
-            .with_title(TITLE)
-            .with_inner_size(winit::dpi::LogicalSize::new(1024.0, 768.0));
+        let attributes = Window::default_attributes().with_title(TITLE);
+        #[cfg(not(target_arch = "wasm32"))]
+        let attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1024.0, 768.0));
+        // In a browser the page's CSS sizes the canvas.
         #[cfg(target_arch = "wasm32")]
-        {
+        let attributes = {
             use winit::platform::web::WindowAttributesExtWebSys;
-            attributes = attributes.with_append(true);
-        }
+            attributes.with_append(true)
+        };
         let window = Arc::new(event_loop.create_window(attributes).expect("create window"));
         self.window = Some(window.clone());
 
