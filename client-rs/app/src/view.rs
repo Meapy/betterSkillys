@@ -6,7 +6,7 @@
 //! u = (−sin a, cos a). That's affine, so every tile, wall face and sprite is one quad.
 
 use crate::ground::Ground;
-use crate::redraw::{Redrawer, PAD};
+use crate::redraw::{Dye, Redrawer, PAD};
 use crate::sprites::{SrcRect, Sprites};
 use crate::text::{Fonts, Style, Text};
 use bsk_assets::Facing;
@@ -82,6 +82,8 @@ pub struct Scene<'a> {
 struct Look {
     src: SrcRect,
     mirror: bool,
+    /// The frame's dye mask, for sheets that have one.
+    mask: Option<SrcRect>,
 }
 
 const SEC_TO_DIRS: [[Dir; 3]; 8] = {
@@ -109,9 +111,11 @@ impl Scene<'_> {
     /// `GameObject.getTexture` for animated characters: the frame for the facing (relative to
     /// the camera), walking or standing.
     fn look(&self, obj: &GameObj, desc: &ObjectDesc) -> Option<Look> {
-        let tex = desc.texture.pick(obj.id);
+        // A skin (TEXTURE_STAT) is the object type whose texture replaces the class's.
+        let skin = obj.stat_int(76).filter(|&t| t != 0).and_then(|t| self.data.objects.get(&(t as u16)));
+        let tex = skin.map_or(&desc.texture, |s| &s.texture).pick(obj.id);
         let TextureRef::Animated { set, index } = &tex.main else {
-            return self.texture_src(tex, obj.id).map(|src| Look { src, mirror: false });
+            return self.texture_src(tex, obj.id).map(|src| Look { src, mirror: false, mask: None });
         };
         let sheet = self.sprites.char_sheet(set)?;
         let rows = sheet.rows();
@@ -143,7 +147,8 @@ impl Scene<'_> {
             } else if symmetric {
                 // walk1 mirrored stands in for a blank walk2.
                 let src = self.sprites.char_src(set, *index, row, 1)?;
-                return Some(Look { src, mirror: !mirror });
+                let mask = self.sprites.char_mask_src(set, *index, row, 1);
+                return Some(Look { src, mirror: !mirror, mask });
             } else {
                 0
             }
@@ -151,7 +156,8 @@ impl Scene<'_> {
             0
         };
         let src = self.sprites.char_src(set, *index, row, frame)?;
-        Some(Look { src, mirror })
+        let mask = self.sprites.char_mask_src(set, *index, row, frame);
+        Some(Look { src, mirror, mask })
     }
 }
 
@@ -271,7 +277,8 @@ fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, 
         return;
     }
     let size = obj.stat_int(2).unwrap_or(desc.min_size);
-    let Some(sprite) = redrawer.get(scene.sprites, renderer, look.src, look.mirror, size) else { return };
+    let dye = look.mask.map(|mask| Dye { mask, tex1: obj.stat_int(32).unwrap_or(0), tex2: obj.stat_int(33).unwrap_or(0) });
+    let Some(sprite) = redrawer.get(scene.sprites, renderer, look.src, look.mirror, size, dye) else { return };
     // The canvas's bottom centre stands on the object (raised by its z); sprites scale with the
     // map. On sinking ground (water) the sprite is drawn lower with its bottom cut off, unless it
     // flies.

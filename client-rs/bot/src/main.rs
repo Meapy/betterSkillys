@@ -155,7 +155,14 @@ fn run(args: Args) -> Result<(), String> {
             SocketEvent::Message(msg) => {
                 *received.entry(msg.name()).or_default() += 1;
                 match &*msg {
-                    ServerMessage::Update(u) => objects.extend(u.new_objs.iter().map(|o| o.status.object_id)),
+                    ServerMessage::Update(u) => {
+                        objects.extend(u.new_objs.iter().map(|o| o.status.object_id));
+                        if let Some(me) = u.new_objs.iter().find(|o| Some(o.status.object_id) == session.object_id) {
+                            let stats: Vec<String> =
+                                me.status.stats.iter().map(|s| format!("{}={:?}", s.id, s.value)).collect();
+                            log::debug!("our stats: {}", stats.join(" "));
+                        }
+                    }
                     ServerMessage::Text(t) if !t.text.is_empty() => {
                         log::info!("chat <{}> {}", t.name, t.text)
                     }

@@ -15,6 +15,60 @@ struct Key {
     src: SrcRect,
     mirror: bool,
     size: i32,
+    dye: Option<Dye>,
+}
+
+/// Cloth and dye on a masked sprite (players): the mask's red channel takes `tex1`, its green
+/// channel `tex2` (the TEX1/TEX2 stats).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Dye {
+    pub mask: SrcRect,
+    pub tex1: i32,
+    pub tex2: i32,
+}
+
+/// `TextureRedrawer.getTexture`: the high byte of a dye id says what it is (1: a colour,
+/// 4/5/9/10: a cloth pattern from that textile set), the low 24 bits which.
+fn dye_texture(sprites: &Sprites, id: i32) -> Option<RgbaImage> {
+    if id == 0 {
+        return None;
+    }
+    let (kind, value) = ((id >> 24) & 0xFF, (id & 0xFF_FFFF) as u32);
+    let set = match kind {
+        1 => {
+            let [r, g, b] = [(value >> 16) as u8, (value >> 8) as u8, value as u8];
+            return Some(RgbaImage::from_pixel(1, 1, Rgba([r, g, b, 255])));
+        }
+        4 => "textile4x4",
+        5 => "textile5x5",
+        9 => "textile9x9",
+        10 => "textile10x10",
+        _ => return None,
+    };
+    sprites.tile_src(set, value).map(|r| sprites.pixels(r))
+}
+
+/// `TextureRedrawer.retexture` (its pixel shader): the sprite at ×5, where the mask is red or
+/// green replaced by the dye textures (tiled at ×5 pixel scale), scaled by the mask's amount.
+fn retexture(src: &RgbaImage, mask: &RgbaImage, tex1: Option<&RgbaImage>, tex2: Option<&RgbaImage>) -> RgbaImage {
+    let (w, h) = src.dimensions();
+    RgbaImage::from_fn(w * 5, h * 5, |x, y| {
+        let mut p = *src.get_pixel(x / 5, y / 5);
+        let m = if x / 5 < mask.width() && y / 5 < mask.height() { *mask.get_pixel(x / 5, y / 5) } else { Rgba([0; 4]) };
+        for (amount, tex) in [(m[0], tex1), (m[1], tex2)] {
+            if let (true, Some(t)) = (amount > 0, tex) {
+                let c = t.get_pixel(x % t.width(), y % t.height());
+                for i in 0..3 {
+                    p[i] = (c[i] as u32 * amount as u32 / 255) as u8;
+                }
+            }
+        }
+        p
+    })
+}
+
+fn mirrored(img: &RgbaImage) -> RgbaImage {
+    image::imageops::flip_horizontal(img)
 }
 
 /// A redrawn sprite: where it is in the atlas, and its canvas size in pixels.
@@ -47,7 +101,8 @@ impl Redrawer {
         self.shadow
     }
 
-    /// `src` scaled for `size` (100 = normal), mirrored left-right if asked, with its outline.
+    /// `src` scaled for `size` (100 = normal), mirrored left-right if asked, dyed if given, with
+    /// its outline.
     pub fn get(
         &mut self,
         sprites: &Sprites,
@@ -55,10 +110,24 @@ impl Redrawer {
         src: SrcRect,
         mirror: bool,
         size: i32,
+        dye: Option<Dye>,
     ) -> Option<Redrawn> {
-        let key = Key { src, mirror, size };
+        let dye = dye.filter(|d| d.tex1 != 0 || d.tex2 != 0);
+        let key = Key { src, mirror, size, dye };
         *self.cache.entry(key).or_insert_with(|| {
-            let image = redraw(&sprites.pixels(src), mirror, size, 5.0);
+            let image = match dye {
+                None => redraw(&sprites.pixels(src), mirror, size, 5.0),
+                Some(d) => {
+                    // TextureRedrawer.resize with a mask: retexture at ×5, then size / 5.
+                    let (mut pixels, mut mask) = (sprites.pixels(src), sprites.pixels(d.mask));
+                    if mirror {
+                        (pixels, mask) = (mirrored(&pixels), mirrored(&mask));
+                    }
+                    let (t1, t2) = (dye_texture(sprites, d.tex1), dye_texture(sprites, d.tex2));
+                    let dyed = retexture(&pixels, &mask, t1.as_ref(), t2.as_ref());
+                    redraw(&dyed, false, size / 5, 5.0)
+                }
+            };
             let (w, h) = image.dimensions();
             renderer.add_image(&image).map(|rect| Redrawn { rect, w, h })
         })
@@ -146,5 +215,23 @@ mod tests {
         assert_eq!(*out.get_pixel(12 + 39, 12), Rgba([255, 0, 0, 255]));
         // Size 50 halves it.
         assert_eq!(redraw(&src, false, 50, 5.0).dimensions(), (20 + 24, 20 + 13));
+    }
+
+    #[test]
+    fn dyes_follow_the_mask() {
+        // Two grey pixels; the mask marks the first red (full) and the second green (half).
+        let mut src = RgbaImage::from_pixel(2, 1, Rgba([128, 128, 128, 255]));
+        src.put_pixel(1, 0, Rgba([128, 128, 128, 200]));
+        let mut mask = RgbaImage::new(2, 1);
+        mask.put_pixel(0, 0, Rgba([255, 0, 0, 255]));
+        mask.put_pixel(1, 0, Rgba([0, 128, 0, 255]));
+        let red = RgbaImage::from_pixel(1, 1, Rgba([255, 0, 0, 255]));
+        let blue = RgbaImage::from_pixel(1, 1, Rgba([0, 0, 255, 255]));
+        let out = retexture(&src, &mask, Some(&red), Some(&blue));
+        assert_eq!(out.dimensions(), (10, 5));
+        assert_eq!(*out.get_pixel(2, 2), Rgba([255, 0, 0, 255]));
+        assert_eq!(*out.get_pixel(7, 2), Rgba([0, 0, 128, 200]), "half-strength blue, alpha kept");
+        // Without a second dye, the green part keeps its colour.
+        assert_eq!(*retexture(&src, &mask, Some(&red), None).get_pixel(7, 2), Rgba([128, 128, 128, 200]));
     }
 }
