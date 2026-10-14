@@ -452,6 +452,18 @@ def rebalance_elders(dr, bs):
                 ET.SubElement(o, tag).text = regular.find(tag).text
         bonus = o.find("XpBonus") if o.find("XpBonus") is not None else ET.SubElement(o, "XpBonus")
         bonus.text = str(ELDER_XP)
+        # projectiles: no id twice (Elder Septavius had two 0s), and every one of the regular
+        # monster's, since an Elder monster can fight with the regular behaviour (Elder Lord Ruthven
+        # lacked the Cross Bullet)
+        ids = set()
+        for p in list(o.findall("Projectile")):
+            if p.get("id") in ids:
+                o.remove(p)
+            ids.add(p.get("id"))
+        for p in regular.findall("Projectile"):
+            if p.get("id") not in ids:
+                o.append(copy.deepcopy(p))
+                ids.add(p.get("id"))
         base = projectile_damage(regular)
         for p in o.findall("Projectile"):
             reg = base.get(p.get("id"))
@@ -684,6 +696,8 @@ def main():
     worlds = pw.world_maps(args.dr, set(dr))
     map_objs = {o for (_, _, _, maps) in worlds.values() for wm in maps for (_, o, _, _) in wm["dict"] if o}
     map_objs |= MINIGAME_SPAWNS
+    # the Elder versions of what the Elder dungeons' (regular) behaviours spawn
+    map_objs |= make_elder.referenced_elders(set(dr))
     portal_world = {pid: worlds[cls][0] for pid, cls in pw.portal_worlds().items()}
     dr_by_type = {int(o.get("type"), 16): oid for oid, o in dr.items() if o.get("type")}
     blocks = pm.load_blocks(args.dr)

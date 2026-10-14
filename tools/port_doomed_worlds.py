@@ -317,12 +317,14 @@ def world_maps(dr_root, dr_ids=frozenset()):
         maps = [read_wmap(find_map(dr_root, m)) for m in maps]
         if cls == SHOP_WORLD:
             maps = [shop_regions(m) for m in maps]
-        if cls in BS_ELDER_WORLDS:
-            maps = [bs_elder_map(BS_ELDER_WORLDS[cls][0], dr_ids)]
         out[cls] = (name, bg, tp, maps)
     for cls, (base, name, _) in ELDER_WORLDS.items():
         _, bg, tp, maps = classes[base]
         out[cls] = (name, bg, tp, [elder_swap(read_wmap(find_map(dr_root, m)), dr_ids) for m in maps])
+    # the Elder dungeons built from betterSkillys' maps instead
+    for cls, (name, bg, tp, _) in list(out.items()):
+        if cls in BS_ELDER_WORLDS:
+            out[cls] = (name, bg, tp, [bs_elder_map(BS_ELDER_WORLDS[cls][0], dr_ids)])
     return out
 
 

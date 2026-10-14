@@ -16,6 +16,7 @@ namespace WorldServer.logic
             .InitDoomed("Christmas Oryx", DoomedSetup.State(DoomedMonsterDefs.M_Christmas_Oryx), DoomedSetup.Drops("Christmas Oryx", DoomedMonsterDefs.M_Christmas_Oryx))
             .InitDoomed("Christmas Present", DoomedSetup.State(DoomedMonsterDefs.M_Christmas_Present), DoomedSetup.Drops("Christmas Present", DoomedMonsterDefs.M_Christmas_Present))
             .InitDoomed("Crawler", DoomedSetup.State(DoomedMonsterDefs.M_Crawler), DoomedSetup.Drops("Crawler", DoomedMonsterDefs.M_Crawler))
+            .InitDoomed("Elder Abyss Idol", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Abyss_Idol), DoomedSetup.Drops("Elder Abyss Idol", DoomedMonsterDefs.M_Elder_Abyss_Idol))
             .InitDoomed("Elder Active Sarcophagus", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Active_Sarcophagus), DoomedSetup.Drops("Elder Active Sarcophagus", DoomedMonsterDefs.M_Elder_Active_Sarcophagus))
             .InitDoomed("Elder Arachna Web Spoke 1", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Arachna_Web_Spoke_1), DoomedSetup.Drops("Elder Arachna Web Spoke 1", DoomedMonsterDefs.M_Elder_Arachna_Web_Spoke_1))
             .InitDoomed("Elder Arachna Web Spoke 2", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Arachna_Web_Spoke_2), DoomedSetup.Drops("Elder Arachna Web Spoke 2", DoomedMonsterDefs.M_Elder_Arachna_Web_Spoke_2))
@@ -28,11 +29,11 @@ namespace WorldServer.logic
             .InitDoomed("Elder Arachna Web Spoke 9", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Arachna_Web_Spoke_9), DoomedSetup.Drops("Elder Arachna Web Spoke 9", DoomedMonsterDefs.M_Elder_Arachna_Web_Spoke_9))
             .InitDoomed("Elder Arachna the Spider Queen", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Arachna_the_Spider_Queen), DoomedSetup.Drops("Elder Arachna the Spider Queen", DoomedMonsterDefs.M_Elder_Arachna_the_Spider_Queen))
             .InitDoomed("Elder Archdemon Malphas", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Archdemon_Malphas), DoomedSetup.Drops("Elder Archdemon Malphas", DoomedMonsterDefs.M_Elder_Archdemon_Malphas))
-            .InitDoomed("Elder Basilisk", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Basilisk), DoomedSetup.Drops("Elder Basilisk", DoomedMonsterDefs.M_Elder_Basilisk))
-            .InitDoomed("Elder Basilisk Baby", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Basilisk_Baby), DoomedSetup.Drops("Elder Basilisk Baby", DoomedMonsterDefs.M_Elder_Basilisk_Baby))
             .InitDoomed("Elder Beam Priest", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Beam_Priest), DoomedSetup.Drops("Elder Beam Priest", DoomedMonsterDefs.M_Elder_Beam_Priest))
             .InitDoomed("Elder Beam Priestess", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Beam_Priestess), DoomedSetup.Drops("Elder Beam Priestess", DoomedMonsterDefs.M_Elder_Beam_Priestess))
+            .InitDoomed("Elder Black Den Spider", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Black_Den_Spider), DoomedSetup.Drops("Elder Black Den Spider", DoomedMonsterDefs.M_Elder_Black_Den_Spider))
             .InitDoomed("Elder Black Dragon God", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Black_Dragon_God), DoomedSetup.Drops("Elder Black Dragon God", DoomedMonsterDefs.M_Elder_Black_Dragon_God))
+            .InitDoomed("Elder Black Spotted Den Spider", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Black_Spotted_Den_Spider), DoomedSetup.Drops("Elder Black Spotted Den Spider", DoomedMonsterDefs.M_Elder_Black_Spotted_Den_Spider))
             .InitDoomed("Elder Bloated Mummy", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Bloated_Mummy), DoomedSetup.Drops("Elder Bloated Mummy", DoomedMonsterDefs.M_Elder_Bloated_Mummy))
             .InitDoomed("Elder Blue Dragon God", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Blue_Dragon_God), DoomedSetup.Drops("Elder Blue Dragon God", DoomedMonsterDefs.M_Elder_Blue_Dragon_God))
             .InitDoomed("Elder Brown Den Spider", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Brown_Den_Spider), DoomedSetup.Drops("Elder Brown Den Spider", DoomedMonsterDefs.M_Elder_Brown_Den_Spider))
@@ -48,6 +49,7 @@ namespace WorldServer.logic
             .InitDoomed("Elder Cave Pirate Parrot", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Cave_Pirate_Parrot), DoomedSetup.Drops("Elder Cave Pirate Parrot", DoomedMonsterDefs.M_Elder_Cave_Pirate_Parrot))
             .InitDoomed("Elder Cave Pirate Sailor", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Cave_Pirate_Sailor), DoomedSetup.Drops("Elder Cave Pirate Sailor", DoomedMonsterDefs.M_Elder_Cave_Pirate_Sailor))
             .InitDoomed("Elder Cave Pirate Veteran", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Cave_Pirate_Veteran), DoomedSetup.Drops("Elder Cave Pirate Veteran", DoomedMonsterDefs.M_Elder_Cave_Pirate_Veteran))
+            .InitDoomed("Elder Coffin", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Coffin), DoomedSetup.Drops("Elder Coffin", DoomedMonsterDefs.M_Elder_Coffin))
             .InitDoomed("Elder Coral Bomb Big", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Coral_Bomb_Big), DoomedSetup.Drops("Elder Coral Bomb Big", DoomedMonsterDefs.M_Elder_Coral_Bomb_Big))
             .InitDoomed("Elder Coral Bomb Small", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Coral_Bomb_Small), DoomedSetup.Drops("Elder Coral Bomb Small", DoomedMonsterDefs.M_Elder_Coral_Bomb_Small))
             .InitDoomed("Elder Coral Gift", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Coral_Gift), DoomedSetup.Drops("Elder Coral Gift", DoomedMonsterDefs.M_Elder_Coral_Gift))
@@ -60,7 +62,13 @@ namespace WorldServer.logic
             .InitDoomed("Elder Eagle Sentry", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Eagle_Sentry), DoomedSetup.Drops("Elder Eagle Sentry", DoomedMonsterDefs.M_Elder_Eagle_Sentry))
             .InitDoomed("Elder Fire Python", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Fire_Python), DoomedSetup.Drops("Elder Fire Python", DoomedMonsterDefs.M_Elder_Fire_Python))
             .InitDoomed("Elder Fishman Warrior", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Fishman_Warrior), DoomedSetup.Drops("Elder Fishman Warrior", DoomedMonsterDefs.M_Elder_Fishman_Warrior))
+            .InitDoomed("Elder Ghost Mage of Septavius", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Ghost_Mage_of_Septavius), DoomedSetup.Drops("Elder Ghost Mage of Septavius", DoomedMonsterDefs.M_Elder_Ghost_Mage_of_Septavius))
+            .InitDoomed("Elder Ghost Rogue of Septavius", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Ghost_Rogue_of_Septavius), DoomedSetup.Drops("Elder Ghost Rogue of Septavius", DoomedMonsterDefs.M_Elder_Ghost_Rogue_of_Septavius))
+            .InitDoomed("Elder Ghost Warrior of Septavius", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Ghost_Warrior_of_Septavius), DoomedSetup.Drops("Elder Ghost Warrior of Septavius", DoomedMonsterDefs.M_Elder_Ghost_Warrior_of_Septavius))
             .InitDoomed("Elder Giant Squid", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Giant_Squid), DoomedSetup.Drops("Elder Giant Squid", DoomedMonsterDefs.M_Elder_Giant_Squid))
+            .InitDoomed("Elder Great Coil Snake", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Great_Coil_Snake), DoomedSetup.Drops("Elder Great Coil Snake", DoomedMonsterDefs.M_Elder_Great_Coil_Snake))
+            .InitDoomed("Elder Great Snake Egg", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Great_Snake_Egg), DoomedSetup.Drops("Elder Great Snake Egg", DoomedMonsterDefs.M_Elder_Great_Snake_Egg))
+            .InitDoomed("Elder Great Temple Snake", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Great_Temple_Snake), DoomedSetup.Drops("Elder Great Temple Snake", DoomedMonsterDefs.M_Elder_Great_Temple_Snake))
             .InitDoomed("Elder Greater Pit Snake", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Greater_Pit_Snake), DoomedSetup.Drops("Elder Greater Pit Snake", DoomedMonsterDefs.M_Elder_Greater_Pit_Snake))
             .InitDoomed("Elder Greater Pit Viper", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Greater_Pit_Viper), DoomedSetup.Drops("Elder Greater Pit Viper", DoomedMonsterDefs.M_Elder_Greater_Pit_Viper))
             .InitDoomed("Elder Green Den Spider Hatchling", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Green_Den_Spider_Hatchling), DoomedSetup.Drops("Elder Green Den Spider Hatchling", DoomedMonsterDefs.M_Elder_Green_Den_Spider_Hatchling))
@@ -68,15 +76,38 @@ namespace WorldServer.logic
             .InitDoomed("Elder Grey Sea Slurp", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Grey_Sea_Slurp), DoomedSetup.Drops("Elder Grey Sea Slurp", DoomedMonsterDefs.M_Elder_Grey_Sea_Slurp))
             .InitDoomed("Elder Imp of the Abyss", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Imp_of_the_Abyss), DoomedSetup.Drops("Elder Imp of the Abyss", DoomedMonsterDefs.M_Elder_Imp_of_the_Abyss))
             .InitDoomed("Elder Inactive Sarcophagus", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Inactive_Sarcophagus), DoomedSetup.Drops("Elder Inactive Sarcophagus", DoomedMonsterDefs.M_Elder_Inactive_Sarcophagus))
+            .InitDoomed("Elder Ink Bubble", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Ink_Bubble), DoomedSetup.Drops("Elder Ink Bubble", DoomedMonsterDefs.M_Elder_Ink_Bubble))
             .InitDoomed("Elder Jackal Assassin", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Jackal_Assassin), DoomedSetup.Drops("Elder Jackal Assassin", DoomedMonsterDefs.M_Elder_Jackal_Assassin))
             .InitDoomed("Elder Jackal Lord", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Jackal_Lord), DoomedSetup.Drops("Elder Jackal Lord", DoomedMonsterDefs.M_Elder_Jackal_Lord))
             .InitDoomed("Elder Jackal Veteran", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Jackal_Veteran), DoomedSetup.Drops("Elder Jackal Veteran", DoomedMonsterDefs.M_Elder_Jackal_Veteran))
             .InitDoomed("Elder Jackal Warrior", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Jackal_Warrior), DoomedSetup.Drops("Elder Jackal Warrior", DoomedMonsterDefs.M_Elder_Jackal_Warrior))
-            .InitDoomed("Elder Jungle Fire", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Jungle_Fire), DoomedSetup.Drops("Elder Jungle Fire", DoomedMonsterDefs.M_Elder_Jungle_Fire))
+            .InitDoomed("Elder Lair Big Black Slime", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Big_Black_Slime), DoomedSetup.Drops("Elder Lair Big Black Slime", DoomedMonsterDefs.M_Elder_Lair_Big_Black_Slime))
+            .InitDoomed("Elder Lair Big Brown Slime", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Big_Brown_Slime), DoomedSetup.Drops("Elder Lair Big Brown Slime", DoomedMonsterDefs.M_Elder_Lair_Big_Brown_Slime))
+            .InitDoomed("Elder Lair Blast Trap", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Blast_Trap), DoomedSetup.Drops("Elder Lair Blast Trap", DoomedMonsterDefs.M_Elder_Lair_Blast_Trap))
             .InitDoomed("Elder Lair Blue Spectre", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Blue_Spectre), DoomedSetup.Drops("Elder Lair Blue Spectre", DoomedMonsterDefs.M_Elder_Lair_Blue_Spectre))
+            .InitDoomed("Elder Lair Brown Bat", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Brown_Bat), DoomedSetup.Drops("Elder Lair Brown Bat", DoomedMonsterDefs.M_Elder_Lair_Brown_Bat))
+            .InitDoomed("Elder Lair Burst Trap", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Burst_Trap), DoomedSetup.Drops("Elder Lair Burst Trap", DoomedMonsterDefs.M_Elder_Lair_Burst_Trap))
             .InitDoomed("Elder Lair Construct Giant", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Construct_Giant), DoomedSetup.Drops("Elder Lair Construct Giant", DoomedMonsterDefs.M_Elder_Lair_Construct_Giant))
             .InitDoomed("Elder Lair Construct Titan", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Construct_Titan), DoomedSetup.Drops("Elder Lair Construct Titan", DoomedMonsterDefs.M_Elder_Lair_Construct_Titan))
+            .InitDoomed("Elder Lair Ghost Bat", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Ghost_Bat), DoomedSetup.Drops("Elder Lair Ghost Bat", DoomedMonsterDefs.M_Elder_Lair_Ghost_Bat))
+            .InitDoomed("Elder Lair Ghost Warrior", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Ghost_Warrior), DoomedSetup.Drops("Elder Lair Ghost Warrior", DoomedMonsterDefs.M_Elder_Lair_Ghost_Warrior))
             .InitDoomed("Elder Lair Grey Spectre", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Grey_Spectre), DoomedSetup.Drops("Elder Lair Grey Spectre", DoomedMonsterDefs.M_Elder_Lair_Grey_Spectre))
+            .InitDoomed("Elder Lair Little Black Slime", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Little_Black_Slime), DoomedSetup.Drops("Elder Lair Little Black Slime", DoomedMonsterDefs.M_Elder_Lair_Little_Black_Slime))
+            .InitDoomed("Elder Lair Little Brown Slime", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Little_Brown_Slime), DoomedSetup.Drops("Elder Lair Little Brown Slime", DoomedMonsterDefs.M_Elder_Lair_Little_Brown_Slime))
+            .InitDoomed("Elder Lair Medium Black Slime", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Medium_Black_Slime), DoomedSetup.Drops("Elder Lair Medium Black Slime", DoomedMonsterDefs.M_Elder_Lair_Medium_Black_Slime))
+            .InitDoomed("Elder Lair Mummy", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Mummy), DoomedSetup.Drops("Elder Lair Mummy", DoomedMonsterDefs.M_Elder_Lair_Mummy))
+            .InitDoomed("Elder Lair Mummy King", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Mummy_King), DoomedSetup.Drops("Elder Lair Mummy King", DoomedMonsterDefs.M_Elder_Lair_Mummy_King))
+            .InitDoomed("Elder Lair Mummy Pharaoh", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Mummy_Pharaoh), DoomedSetup.Drops("Elder Lair Mummy Pharaoh", DoomedMonsterDefs.M_Elder_Lair_Mummy_Pharaoh))
+            .InitDoomed("Elder Lair Reaper", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Reaper), DoomedSetup.Drops("Elder Lair Reaper", DoomedMonsterDefs.M_Elder_Lair_Reaper))
+            .InitDoomed("Elder Lair Skeleton", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Skeleton), DoomedSetup.Drops("Elder Lair Skeleton", DoomedMonsterDefs.M_Elder_Lair_Skeleton))
+            .InitDoomed("Elder Lair Skeleton King", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Skeleton_King), DoomedSetup.Drops("Elder Lair Skeleton King", DoomedMonsterDefs.M_Elder_Lair_Skeleton_King))
+            .InitDoomed("Elder Lair Skeleton Mage", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Skeleton_Mage), DoomedSetup.Drops("Elder Lair Skeleton Mage", DoomedMonsterDefs.M_Elder_Lair_Skeleton_Mage))
+            .InitDoomed("Elder Lair Skeleton Swordsman", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Skeleton_Swordsman), DoomedSetup.Drops("Elder Lair Skeleton Swordsman", DoomedMonsterDefs.M_Elder_Lair_Skeleton_Swordsman))
+            .InitDoomed("Elder Lair Skeleton Veteran", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Skeleton_Veteran), DoomedSetup.Drops("Elder Lair Skeleton Veteran", DoomedMonsterDefs.M_Elder_Lair_Skeleton_Veteran))
+            .InitDoomed("Elder Lair Vampire", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Vampire), DoomedSetup.Drops("Elder Lair Vampire", DoomedMonsterDefs.M_Elder_Lair_Vampire))
+            .InitDoomed("Elder Lair Vampire King", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_Vampire_King), DoomedSetup.Drops("Elder Lair Vampire King", DoomedMonsterDefs.M_Elder_Lair_Vampire_King))
+            .InitDoomed("Elder Lair White Spectre", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lair_White_Spectre), DoomedSetup.Drops("Elder Lair White Spectre", DoomedMonsterDefs.M_Elder_Lair_White_Spectre))
+            .InitDoomed("Elder Lil Feratu", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Lil_Feratu), DoomedSetup.Drops("Elder Lil Feratu", DoomedMonsterDefs.M_Elder_Lil_Feratu))
             .InitDoomed("Elder Limon Element 1", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Limon_Element_1), DoomedSetup.Drops("Elder Limon Element 1", DoomedMonsterDefs.M_Elder_Limon_Element_1))
             .InitDoomed("Elder Limon Element 2", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Limon_Element_2), DoomedSetup.Drops("Elder Limon Element 2", DoomedMonsterDefs.M_Elder_Limon_Element_2))
             .InitDoomed("Elder Limon Element 3", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Limon_Element_3), DoomedSetup.Drops("Elder Limon Element 3", DoomedMonsterDefs.M_Elder_Limon_Element_3))
@@ -87,9 +118,6 @@ namespace WorldServer.logic
             .InitDoomed("Elder Malphas Flamer", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Malphas_Flamer), DoomedSetup.Drops("Elder Malphas Flamer", DoomedMonsterDefs.M_Elder_Malphas_Flamer))
             .InitDoomed("Elder Malphas Missile", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Malphas_Missile), DoomedSetup.Drops("Elder Malphas Missile", DoomedMonsterDefs.M_Elder_Malphas_Missile))
             .InitDoomed("Elder Malphas Protector", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Malphas_Protector), DoomedSetup.Drops("Elder Malphas Protector", DoomedMonsterDefs.M_Elder_Malphas_Protector))
-            .InitDoomed("Elder Mask Hunter", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Mask_Hunter), DoomedSetup.Drops("Elder Mask Hunter", DoomedMonsterDefs.M_Elder_Mask_Hunter))
-            .InitDoomed("Elder Mask Shaman", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Mask_Shaman), DoomedSetup.Drops("Elder Mask Shaman", DoomedMonsterDefs.M_Elder_Mask_Shaman))
-            .InitDoomed("Elder Mask Warrior", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Mask_Warrior), DoomedSetup.Drops("Elder Mask Warrior", DoomedMonsterDefs.M_Elder_Mask_Warrior))
             .InitDoomed("Elder Masked Party God", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Masked_Party_God), DoomedSetup.Drops("Elder Masked Party God", DoomedMonsterDefs.M_Elder_Masked_Party_God))
             .InitDoomed("Elder Mixcoatl the Masked God", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Mixcoatl_the_Masked_God), DoomedSetup.Drops("Elder Mixcoatl the Masked God", DoomedMonsterDefs.M_Elder_Mixcoatl_the_Masked_God))
             .InitDoomed("Elder NM Green Dragon Shield", DoomedSetup.State(DoomedMonsterDefs.M_Elder_NM_Green_Dragon_Shield), DoomedSetup.Drops("Elder NM Green Dragon Shield", DoomedMonsterDefs.M_Elder_NM_Green_Dragon_Shield))
@@ -106,15 +134,19 @@ namespace WorldServer.logic
             .InitDoomed("Elder Pirate Captain", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Pirate_Captain), DoomedSetup.Drops("Elder Pirate Captain", DoomedMonsterDefs.M_Elder_Pirate_Captain))
             .InitDoomed("Elder Pirate Commander", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Pirate_Commander), DoomedSetup.Drops("Elder Pirate Commander", DoomedMonsterDefs.M_Elder_Pirate_Commander))
             .InitDoomed("Elder Pirate Lieutenant", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Pirate_Lieutenant), DoomedSetup.Drops("Elder Pirate Lieutenant", DoomedMonsterDefs.M_Elder_Pirate_Lieutenant))
+            .InitDoomed("Elder Pit Snake", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Pit_Snake), DoomedSetup.Drops("Elder Pit Snake", DoomedMonsterDefs.M_Elder_Pit_Snake))
+            .InitDoomed("Elder Pit Viper", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Pit_Viper), DoomedSetup.Drops("Elder Pit Viper", DoomedMonsterDefs.M_Elder_Pit_Viper))
             .InitDoomed("Elder Pyramid Artifact 1", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Pyramid_Artifact_1), DoomedSetup.Drops("Elder Pyramid Artifact 1", DoomedMonsterDefs.M_Elder_Pyramid_Artifact_1))
             .InitDoomed("Elder Pyramid Artifact 2", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Pyramid_Artifact_2), DoomedSetup.Drops("Elder Pyramid Artifact 2", DoomedMonsterDefs.M_Elder_Pyramid_Artifact_2))
             .InitDoomed("Elder Pyramid Artifact 3", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Pyramid_Artifact_3), DoomedSetup.Drops("Elder Pyramid Artifact 3", DoomedMonsterDefs.M_Elder_Pyramid_Artifact_3))
             .InitDoomed("Elder Red Dragon God", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Red_Dragon_God), DoomedSetup.Drops("Elder Red Dragon God", DoomedMonsterDefs.M_Elder_Red_Dragon_God))
             .InitDoomed("Elder Red Spider", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Red_Spider), DoomedSetup.Drops("Elder Red Spider", DoomedMonsterDefs.M_Elder_Red_Spider))
             .InitDoomed("Elder Red Spotted Den Spider", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Red_Spotted_Den_Spider), DoomedSetup.Drops("Elder Red Spotted Den Spider", DoomedMonsterDefs.M_Elder_Red_Spotted_Den_Spider))
+            .InitDoomed("Elder Scarab", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Scarab), DoomedSetup.Drops("Elder Scarab", DoomedMonsterDefs.M_Elder_Scarab))
             .InitDoomed("Elder Sea Horse", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Sea_Horse), DoomedSetup.Drops("Elder Sea Horse", DoomedMonsterDefs.M_Elder_Sea_Horse))
             .InitDoomed("Elder Sea Mare", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Sea_Mare), DoomedSetup.Drops("Elder Sea Mare", DoomedMonsterDefs.M_Elder_Sea_Mare))
             .InitDoomed("Elder Sea Slurp Home", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Sea_Slurp_Home), DoomedSetup.Drops("Elder Sea Slurp Home", DoomedMonsterDefs.M_Elder_Sea_Slurp_Home))
+            .InitDoomed("Elder Septavius Summoner", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Septavius_Summoner), DoomedSetup.Drops("Elder Septavius Summoner", DoomedMonsterDefs.M_Elder_Septavius_Summoner))
             .InitDoomed("Elder Septavius the Ghost God", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Septavius_the_Ghost_God), DoomedSetup.Drops("Elder Septavius the Ghost God", DoomedMonsterDefs.M_Elder_Septavius_the_Ghost_God))
             .InitDoomed("Elder Snakepit Guard", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Snakepit_Guard), DoomedSetup.Drops("Elder Snakepit Guard", DoomedMonsterDefs.M_Elder_Snakepit_Guard))
             .InitDoomed("Elder Sphinx Artifact 1", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Sphinx_Artifact_1), DoomedSetup.Drops("Elder Sphinx Artifact 1", DoomedMonsterDefs.M_Elder_Sphinx_Artifact_1))
@@ -137,12 +169,12 @@ namespace WorldServer.logic
             .InitDoomed("Elder Tree Roots", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Tree_Roots), DoomedSetup.Drops("Elder Tree Roots", DoomedMonsterDefs.M_Elder_Tree_Roots))
             .InitDoomed("Elder Vampire Bat", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Vampire_Bat), DoomedSetup.Drops("Elder Vampire Bat", DoomedMonsterDefs.M_Elder_Vampire_Bat))
             .InitDoomed("Elder Vampire Bat Swarmer 1", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Vampire_Bat_Swarmer_1), DoomedSetup.Drops("Elder Vampire Bat Swarmer 1", DoomedMonsterDefs.M_Elder_Vampire_Bat_Swarmer_1))
+            .InitDoomed("Elder Yellow Python", DoomedSetup.State(DoomedMonsterDefs.M_Elder_Yellow_Python), DoomedSetup.Drops("Elder Yellow Python", DoomedMonsterDefs.M_Elder_Yellow_Python))
             .InitDoomed("Ent Minion", DoomedSetup.State(DoomedMonsterDefs.M_Ent_Minion), DoomedSetup.Drops("Ent Minion", DoomedMonsterDefs.M_Ent_Minion))
             .InitDoomed("Giant Herding Sheep", DoomedSetup.State(DoomedMonsterDefs.M_Giant_Herding_Sheep), DoomedSetup.Drops("Giant Herding Sheep", DoomedMonsterDefs.M_Giant_Herding_Sheep))
             .InitDoomed("Green Dragon God", DoomedSetup.State(DoomedMonsterDefs.M_Green_Dragon_God), DoomedSetup.Drops("Green Dragon God", DoomedMonsterDefs.M_Green_Dragon_God))
             .InitDoomed("Green Forest Wisp", DoomedSetup.State(DoomedMonsterDefs.M_Green_Forest_Wisp), DoomedSetup.Drops("Green Forest Wisp", DoomedMonsterDefs.M_Green_Forest_Wisp))
             .InitDoomed("Green Guardian Wisp", DoomedSetup.State(DoomedMonsterDefs.M_Green_Guardian_Wisp), DoomedSetup.Drops("Green Guardian Wisp", DoomedMonsterDefs.M_Green_Guardian_Wisp))
-            .InitDoomed("HeartZ", DoomedSetup.State(DoomedMonsterDefs.M_HeartZ), DoomedSetup.Drops("HeartZ", DoomedMonsterDefs.M_HeartZ))
             .InitDoomed("Hell Hound", DoomedSetup.State(DoomedMonsterDefs.M_Hell_Hound), DoomedSetup.Drops("Hell Hound", DoomedMonsterDefs.M_Hell_Hound))
             .InitDoomed("Herding Sheep", DoomedSetup.State(DoomedMonsterDefs.M_Herding_Sheep), DoomedSetup.Drops("Herding Sheep", DoomedMonsterDefs.M_Herding_Sheep))
             .InitDoomed("Knight of Doom", DoomedSetup.State(DoomedMonsterDefs.M_Knight_of_Doom), DoomedSetup.Drops("Knight of Doom", DoomedMonsterDefs.M_Knight_of_Doom))
@@ -152,7 +184,6 @@ namespace WorldServer.logic
             .InitDoomed("Oryx the Birthday God", DoomedSetup.State(DoomedMonsterDefs.M_Oryx_the_Birthday_God), DoomedSetup.Drops("Oryx the Birthday God", DoomedMonsterDefs.M_Oryx_the_Birthday_God))
             .InitDoomed("Oryx the Mad God 4", DoomedSetup.State(DoomedMonsterDefs.M_Oryx_the_Mad_God_4), DoomedSetup.Drops("Oryx the Mad God 4", DoomedMonsterDefs.M_Oryx_the_Mad_God_4))
             .InitDoomed("Oryx the Mad God 5", DoomedSetup.State(DoomedMonsterDefs.M_Oryx_the_Mad_God_5), DoomedSetup.Drops("Oryx the Mad God 5", DoomedMonsterDefs.M_Oryx_the_Mad_God_5))
-            .InitDoomed("Reaper of Doom", DoomedSetup.State(DoomedMonsterDefs.M_Reaper_of_Doom), DoomedSetup.Drops("Reaper of Doom", DoomedMonsterDefs.M_Reaper_of_Doom))
             .InitDoomed("Red Balloon", DoomedSetup.State(DoomedMonsterDefs.M_Red_Balloon), DoomedSetup.Drops("Red Balloon", DoomedMonsterDefs.M_Red_Balloon))
             .InitDoomed("Red Forest Wisp", DoomedSetup.State(DoomedMonsterDefs.M_Red_Forest_Wisp), DoomedSetup.Drops("Red Forest Wisp", DoomedMonsterDefs.M_Red_Forest_Wisp))
             .InitDoomed("Red Guardian Wisp", DoomedSetup.State(DoomedMonsterDefs.M_Red_Guardian_Wisp), DoomedSetup.Drops("Red Guardian Wisp", DoomedMonsterDefs.M_Red_Guardian_Wisp))
@@ -170,10 +201,32 @@ namespace WorldServer.logic
         // (applied by Initialize once every behaviour is registered)
         private static readonly (string Elder, string Regular)[] DoomedAliases =
         {
+            ("Elder Armor Guard", "Armor Guard"),
+            ("Elder Captain Summoner", "Captain Summoner"),
             ("Elder Coffin Creature", "Coffin Creature"),
+            ("Elder Deep Sea Beast Spawner", "Deep Sea Beast Spawner"),
             ("Elder Fishman", "Fishman"),
-            ("Elder Jungle Totem", "Jungle Totem"),
+            ("Elder Ghost of Roger", "Ghost of Roger"),
+            ("Elder GhostShip Rat", "GhostShip Rat"),
+            ("Elder Hellhound", "Hellhound"),
+            ("Elder Lair Ghost Archer", "Lair Ghost Archer"),
+            ("Elder Lair Ghost Knight", "Lair Ghost Knight"),
+            ("Elder Lair Ghost Mage", "Lair Ghost Mage"),
+            ("Elder Lair Ghost Paladin", "Lair Ghost Paladin"),
+            ("Elder Lair Ghost Rogue", "Lair Ghost Rogue"),
+            ("Elder Lesser Bald Vampire", "Lesser Bald Vampire"),
+            ("Elder Lil' Ghost Pirate", "Lil' Ghost Pirate"),
+            ("Elder Lost Soul", "Lost Soul"),
+            ("Elder Nosferatu", "Nosferatu"),
+            ("Elder RockBomb", "RockBomb"),
+            ("Elder School of Ghostfish", "School of Ghostfish"),
             ("Elder Snakepit Button", "Snakepit Button"),
+            ("Elder Snakepit Dart Thrower", "Snakepit Dart Thrower"),
+            ("Elder Snakepit Guard Spawner", "Snakepit Guard Spawner"),
+            ("Elder Vampire Bat Swarmer", "Vampire Bat Swarmer"),
+            ("Elder Violent Spirit", "Violent Spirit"),
+            ("Elder Zombie Pirate Jr", "Zombie Pirate Jr"),
+            ("Elder Zombie Pirate Sr", "Zombie Pirate Sr"),
         };
     }
 }

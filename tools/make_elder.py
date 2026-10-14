@@ -12,6 +12,8 @@ regular dungeon (port_doomed_worlds.py does that, from this file's names):
 - Monsters: every monster the regular map places, or the regular dungeon's behaviours define,
   that has no Elder version in Doomed Realms gets an "Elder <id>" copy with the Elder stats
   (port_doomed.rebalance_elders). They share the regular monster's sprite and behaviour.
+- Spawners: other objects the map places and the behaviours define (Snake Grate) get an
+  "Elder <id>" copy, so the Elder version's behaviour spawns Elder monsters.
 
 Outputs (generated, don't edit): source/Shared/resources/xml/custom/ElderGrounds.xml and
 ElderObjects.xml, their client copies, and the sheet. Type codes are kept stable in
@@ -75,6 +77,16 @@ WALL_CLASSES = ("Wall", "ConnectedWall", "CaveWall")
 DUNGEONS = {
     "ElderTombMap": ("Dungeons/Tomb of the Ancients.jm", "BehaviorDb.Tomb.cs"),
     "ElderPirateCave": ("Dungeons/Pirate Cave.jm", "BehaviorDb.PirateCave.cs"),
+    "ElderSpiderDen": ("Dungeons/Spider Den.jm", "BehaviorDb.SpiderDen.cs"),
+    "ElderSnakePit": ("Dungeons/Snake Pit.jm", "BehaviorDb.SnakePit.cs"),
+    "ElderUndeadL": ("Dungeons/Undead Lair.jm", "BehaviorDb.UndeadLair.cs"),
+    "ElderAbyss": ("Dungeons/Abyss of Demons.jm", "BehaviorDb.Abyss.cs"),
+    "ElderOceanTrench": ("Dungeons/Ocean Trench.jm", "BehaviorDb.OceanTrench.cs"),
+    "ElderBeachZone": ("Dungeons/Beachzone.jm", "BehaviorDb.Beachzone.cs"),
+    "ElderJungle": ("Dungeons/Forbidden Jungle.jm", "BehaviorDb.ForbiddenJungle.cs"),
+    "ElderManor": ("Dungeons/Manor of the Immortals.jm", "BehaviorDb.Manor.cs"),
+    "ElderSpriteWorld": ("Dungeons/Sprite World.jm", "BehaviorDb.SpriteWorld.cs"),
+    "ElderDavy": ("Dungeons/Davy Jones' Locker.jm", "BehaviorDb.DavyJones.cs"),
 }
 
 
@@ -116,6 +128,12 @@ def behaviour_ids(name):
     """The monsters a behaviour file defines or refers to by id."""
     text = open(os.path.join(BEHAVIOURS, name), encoding="utf-8-sig").read()
     return set(re.findall(r'"([^"\n]+)"', text))
+
+
+def defined_ids(name):
+    """The objects a dungeon's shared builder (BehaviorDb.Elder.cs) gives a behaviour."""
+    text = open(os.path.join(BEHAVIOURS, name), encoding="utf-8-sig").read()
+    return set(re.findall(r'\.Init\(E\("([^"\n]+)"\)', text))
 
 
 def sheet_sizes():
@@ -271,6 +289,10 @@ def build(dr_ids):
     types = Types()
     new_grounds, new_objects = [], []
     made_grounds, made_objects = set(), set()
+    scripted = set()
+    for f in glob.glob(os.path.join(BEHAVIOURS, "*.cs")):
+        if "Doomed" not in os.path.basename(f):
+            scripted |= set(re.findall(r'"([^"\n]+)"', open(f, encoding="utf-8-sig").read()))
 
     def elder_ground(gid, shade, name):
         if name in made_grounds or gid not in grounds:
@@ -292,13 +314,15 @@ def build(dr_ids):
                 for n, shade in enumerate(LIGHT, 1):
                     elder_ground(gid, shade, "Elder %s Lit %d" % (gid, n))
         monsters = set()
+        defined = defined_ids(behaviours)
         for oid in sorted(map_objects | behaviour_ids(behaviours)):
             o = objects.get(oid)
             if o is None or oid.startswith("Elder "):
                 continue
             name = "Elder " + oid
             if o.findtext("Class") in WALL_CLASSES and oid in map_objects:
-                if name in made_objects or name in objects:
+                # walls a behaviour opens or breaks by name (Davy's doors) stay as they are
+                if name in made_objects or name in objects or oid in scripted:
                     continue
                 w = copy.deepcopy(o)
                 w.set("id", name)
@@ -308,6 +332,15 @@ def build(dr_ids):
                 made_objects.add(name)
             elif o.find("Enemy") is not None and name not in dr_ids and name not in objects and name not in made_objects:
                 monsters.add(oid)
+            elif oid in map_objects and oid in defined and name not in dr_ids and name not in objects and name not in made_objects:
+                # a spawner the map places (Snake Grate): its Elder copy spawns the Elder monsters
+                g = copy.deepcopy(o)
+                g.set("id", name)
+                g.set("type", types.get(name, OBJECT_TYPES))
+                if g.find("DrawOnGround") is not None:
+                    sheet.retexture(g, FLOOR)
+                new_objects.append(g)
+                made_objects.add(name)
         copies = {}
         for oid in sorted(monsters):
             m = copy.deepcopy(objects[oid])
@@ -350,6 +383,16 @@ def random_layout(path, known):
             goals = ["Elder " + g.text if "Elder " + g.text in known else g.text for g in rl.findall("Goal")]
             return ["<RandomLayout%s>" % attrs] + ["\t<Goal>%s</Goal>" % g for g in goals] + ["</RandomLayout>"]
     return None
+
+
+def referenced_elders(dr_ids):
+    """The Doomed Realms Elder monsters whose regular version an Elder dungeon's map or behaviours
+    use (so the port brings them over even when nothing places them)."""
+    out = set()
+    for path, behaviours in DUNGEONS.values():
+        _, map_objects = map_ids(path)
+        out |= {"Elder " + oid for oid in behaviour_ids(behaviours) | map_objects if "Elder " + oid in dr_ids}
+    return out
 
 
 def lit_grounds():

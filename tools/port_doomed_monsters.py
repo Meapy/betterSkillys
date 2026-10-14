@@ -135,6 +135,9 @@ def definition(block, type_to_id, refs):
         elif s.startswith("new ConditionalBehavior[]"):
             cond = translate(s, type_to_id, refs)
         else:
+            # a behaviour can be passed by name ("attack: new RunBehaviors(...)"); here it's an
+            # array element
+            s = re.sub(r"^[A-Za-z_]\w*:\s*", "", s)
             behaviours.append(translate(s, type_to_id, refs))
     return name, behaviours, cond, loot
 
