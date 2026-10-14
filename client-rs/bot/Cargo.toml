@@ -1,0 +1,13 @@
+[package]
+name = "bsk-bot"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+description = "Headless client: logs in, joins the nexus and stays connected, for protocol tests"
+
+[dependencies]
+bsk-net.workspace = true
+bsk-proto.workspace = true
+bsk-session.workspace = true
+env_logger.workspace = true
+log.workspace = true

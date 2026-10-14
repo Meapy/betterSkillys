@@ -1,0 +1,9 @@
+[package]
+name = "bsk-session"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+bsk-proto.workspace = true
+log.workspace = true

@@ -1,0 +1,26 @@
+[package]
+name = "bsk-net"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+base64 = "0.22"
+bsk-proto.workspace = true
+log.workspace = true
+rand = "0.8"
+roxmltree = "0.20"
+rsa = { version = "0.9", features = ["pem"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ureq = { version = "2", default-features = false, features = ["tls"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+js-sys.workspace = true
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+web-sys = { workspace = true, features = [
+    "BinaryType", "CloseEvent", "ErrorEvent", "Event", "Headers", "MessageEvent", "Request", "RequestInit",
+    "Response", "WebSocket", "Window",
+] }

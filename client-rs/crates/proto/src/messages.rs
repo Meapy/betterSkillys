@@ -1,0 +1,215 @@
+//! Every message of the game protocol. Ids and layouts match `GameServerConnection.as` and the
+//! world server's `MessageIds.cs`, `networking/packets/outgoing` and `core/net/handlers`.
+
+use crate::data::*;
+use crate::wire::{List16, List8, LongString, Reader, Result, Wire, Writer};
+use crate::wire_struct;
+
+/// Declares the message structs, plus an enum of them with id-based decoding and encoding.
+macro_rules! messages {
+    ($(#[$em:meta])* pub enum $enum:ident {
+        $($id:literal => $name:ident { $($field:ident : $ty:ty),* $(,)? }),* $(,)?
+    }) => {
+        $(
+            wire_struct! { pub struct $name { $(pub $field: $ty),* } }
+            impl From<$name> for $enum {
+                fn from(m: $name) -> Self { $enum::$name(m) }
+            }
+        )*
+
+        $(#[$em])*
+        #[derive(Debug, Clone, PartialEq)]
+        pub enum $enum {
+            $($name($name),)*
+            /// A message id this client doesn't know, kept as raw bytes.
+            Unknown { id: u8, body: Vec<u8> },
+        }
+
+        impl $enum {
+            pub fn id(&self) -> u8 {
+                match self {
+                    $($enum::$name(_) => $id,)*
+                    $enum::Unknown { id, .. } => *id,
+                }
+            }
+
+            pub fn name(&self) -> &'static str {
+                match self {
+                    $($enum::$name(_) => stringify!($name),)*
+                    $enum::Unknown { .. } => "Unknown",
+                }
+            }
+
+            /// Decode a message body. Bytes left over after the known fields are ignored, as
+            /// the AIR client does, so a server can append fields.
+            pub fn decode(id: u8, body: &[u8]) -> Result<Self> {
+                let mut r = Reader::new(body);
+                Ok(match id {
+                    $($id => $enum::$name(<$name as Wire>::read(&mut r)?),)*
+                    _ => $enum::Unknown { id, body: body.to_vec() },
+                })
+            }
+
+            /// The message body (without the frame header).
+            pub fn encode_body(&self, w: &mut Writer) {
+                match self {
+                    $($enum::$name(m) => m.write(w),)*
+                    $enum::Unknown { body, .. } => w.bytes(body),
+                }
+            }
+        }
+    };
+}
+
+wire_struct! {
+    /// EnemyShoot's tail: how many bullets and the angle between them.
+    #[derive(Copy)]
+    pub struct ShotSpread {
+        pub num_shots: u8,
+        pub angle_inc: f32,
+    }
+}
+
+/// Pic: a raw ARGB image.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct PicData {
+    pub width: i32,
+    pub height: i32,
+    pub argb: Vec<u8>,
+}
+
+impl Wire for PicData {
+    fn read(r: &mut Reader) -> Result<Self> {
+        let width = i32::read(r)?;
+        let height = i32::read(r)?;
+        let len = (width.max(0) as usize).saturating_mul(height.max(0) as usize).saturating_mul(4);
+        Ok(Self { width, height, argb: r.bytes(len)?.to_vec() })
+    }
+    fn write(&self, w: &mut Writer) {
+        self.width.write(w);
+        self.height.write(w);
+        w.bytes(&self.argb);
+    }
+}
+
+messages! {
+    /// Messages from the world server to the client.
+    pub enum ServerMessage {
+        0 => Failure { error_id: i32, description: String },
+        1 => CreateSuccess { object_id: i32, char_id: i32 },
+        6 => Text {
+            name: String, object_id: i32, num_stars: i32, bubble_time: u8, recipient: String,
+            text: String, clean_text: String, name_color: i32, text_color: i32,
+        },
+        7 => ServerPlayerShoot {
+            bullet_id: i32, owner_id: i32, container_type: i32, starting_pos: WorldPos, angle: f32, damage: i32,
+        },
+        8 => Damage {
+            target_id: i32, effects: List8<u8>, damage_amount: i32, kill: bool, bullet_id: i32, object_id: i32,
+            pierce: bool,
+        },
+        9 => Update { tiles: List16<GroundTile>, new_objs: List16<ObjectData>, drops: List16<i32> },
+        11 => Notification { object_id: i32, text: String, color: u32, player_id: i32 },
+        12 => NewTick { tick_id: i32, tick_time: i32, statuses: List16<ObjectStatus> },
+        15 => ShowEffect {
+            effect_type: u8, target_object_id: i32, pos1: WorldPos, pos2: WorldPos, color: u32, duration: i32,
+            object_type: u16,
+        },
+        17 => Goto { object_id: i32, pos: WorldPos },
+        19 => InvResult { result: i32 },
+        20 => Reconnect { name: String, host: String, port: i32, game_id: i32, key_time: i32, key: List16<u8> },
+        21 => Ping { serial: i32, round_trip_time: i32 },
+        23 => MapInfo {
+            width: i16, height: i16, name: String, display_name: String, seed: u32, background: u8,
+            difficulty: u8, allow_player_teleport: bool, show_displays: bool, music: String,
+            disable_shooting: bool, disable_abilities: bool,
+        },
+        25 => Pic { pic: PicData },
+        29 => Death { account_id: i32, char_id: i32, killed_by: String },
+        31 => BuyResult { result: i32, result_string: String },
+        32 => Aoe {
+            pos: WorldPos, radius: f32, damage: u16, effect: u8, duration: f32, orig_type: u16, color: u32,
+        },
+        42 => AccountList { account_list_id: i32, account_ids: List16<String> },
+        43 => QuestObjId { object_id: i32 },
+        45 => NameResult { success: bool, error_text: String },
+        47 => GuildResult { success: bool, error_text: String },
+        50 => AllyShoot { bullet_id: i32, owner_id: i32, container_type: i32, angle: f32 },
+        51 => EnemyShoot {
+            bullet_id: i32, owner_id: i32, bullet_type: u8, starting_pos: WorldPos, angle: f32, damage: i32,
+            spread: Option<ShotSpread>,
+        },
+        53 => TradeRequested { name: String },
+        54 => TradeStart { my_items: List16<TradeItem>, your_name: String, your_items: List16<TradeItem> },
+        56 => TradeChanged { offer: List16<bool> },
+        59 => TradeDone { code: i32, description: String },
+        60 => TradeAccepted { my_offer: List16<bool>, your_offer: List16<bool> },
+        61 => ClientStat { name: String, value: i32 },
+        64 => File { filename: String, contents: LongString },
+        65 => InvitedToGuild { name: String, guild_name: String },
+        68 => PlaySound { owner_id: i32, sound_id: u8 },
+        69 => GlobalNotification { kind: i32, text: String },
+        72 => InvitedToParty { name: String, party_id: i32 },
+        75 => SwitchMusic { music: String },
+        77 => MarketSearchResult { results: List16<MarketData>, description: String },
+        79 => MarketBuyResult { code: i32, description: String, offer_id: i32 },
+        81 => MarketAddResult { code: i32, description: String },
+        83 => MarketRemoveResult { code: i32, description: String },
+        85 => MarketMyOffersResult { results: List16<MarketData> },
+        87 => ImminentArenaWave { current_runtime: i32, wave: i32, current_state: i32 },
+    }
+}
+
+messages! {
+    /// Messages from the client to the world server.
+    pub enum ClientMessage {
+        2 => Create { class_type: u16, skin_type: u16 },
+        3 => PlayerShoot { time: i32, bullet_id: i32, container_type: i32, starting_pos: WorldPos, angle: f32 },
+        4 => Move { tick_id: i32, time: i32, new_position: WorldPos, records: List16<MoveRecord> },
+        5 => PlayerText { text: String },
+        10 => UpdateAck {},
+        13 => InvSwap { time: i32, position: WorldPos, slot_object1: SlotObject, slot_object2: SlotObject },
+        14 => UseItem { time: i32, slot_object: SlotObject, item_use_pos: WorldPos, use_type: u8 },
+        16 => Hello {
+            build_version: String, game_id: i32, guid: String, password: String, key_time: i32,
+            key: List16<u8>, map_json: LongString,
+        },
+        18 => InvDrop { slot_object: SlotObject },
+        22 => Pong { serial: i32, time: i32 },
+        24 => Load { char_id: i32 },
+        27 => Teleport { object_id: i32 },
+        28 => UsePortal { object_id: i32 },
+        30 => Buy { object_id: i32 },
+        33 => GroundDamage { time: i32, position: WorldPos },
+        34 => PlayerHit { bullet_id: i32, object_id: i32 },
+        35 => EnemyHit { time: i32, bullet_id: i32, target_id: i32, kill: bool },
+        36 => AoeAck { time: i32, position: WorldPos },
+        37 => ShootAck { time: i32 },
+        38 => OtherHit { time: i32, bullet_id: i32, object_id: i32, target_id: i32 },
+        39 => SquareHit { time: i32, bullet_id: i32, object_id: i32 },
+        40 => GotoAck { time: i32 },
+        41 => EditAccountList { account_list_id: i32, add: bool, object_id: i32 },
+        44 => ChooseName { name: String },
+        46 => CreateGuild { name: String },
+        48 => GuildRemove { name: String },
+        49 => GuildInvite { name: String },
+        52 => RequestTrade { name: String },
+        55 => ChangeTrade { offer: List16<bool> },
+        57 => AcceptTrade { my_offer: List16<bool>, your_offer: List16<bool> },
+        58 => CancelTrade {},
+        63 => Escape {},
+        66 => JoinGuild { guild_name: String },
+        67 => ChangeGuildRank { name: String, guild_rank: i32 },
+        70 => Reskin { skin_id: i32 },
+        71 => PartyInvite { name: String },
+        73 => JoinParty { leader: String, party_id: i32 },
+        74 => UseStorage { kind: u8, action: u8 },
+        76 => MarketSearch { item_type: i32 },
+        78 => MarketBuy { id: i32 },
+        80 => MarketAdd { slots: List8<u8>, price: i32, currency: i32, hours: i32 },
+        82 => MarketRemove { id: i32 },
+        84 => MarketMyOffers {},
+        86 => BreakdownSlot { time: i32, slot: u8, object_id: i32 },
+        88 => ViewRadius { radius: i32 },
+    }
+}

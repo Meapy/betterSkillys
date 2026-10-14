@@ -1,0 +1,127 @@
+//! Structures shared by several messages (`kabam/rotmg/messaging/impl/data` in the AIR client).
+
+use crate::wire::{List16, Reader, Result, Wire, Writer};
+use crate::wire_struct;
+
+wire_struct! {
+    /// A position in tiles.
+    #[derive(Copy)]
+    pub struct WorldPos {
+        pub x: f32,
+        pub y: f32,
+    }
+}
+
+wire_struct! {
+    pub struct GroundTile {
+        pub x: i16,
+        pub y: i16,
+        pub tile_type: i32,
+    }
+}
+
+wire_struct! {
+    /// An item slot: the container object, the slot index and the item type in it.
+    #[derive(Copy)]
+    pub struct SlotObject {
+        pub object_id: i32,
+        pub slot_id: u8,
+        pub object_type: i32,
+    }
+}
+
+wire_struct! {
+    #[derive(Copy)]
+    pub struct MoveRecord {
+        pub time: i32,
+        pub x: f32,
+        pub y: f32,
+    }
+}
+
+wire_struct! {
+    pub struct TradeItem {
+        pub item: i32,
+        pub slot_type: i32,
+        pub tradeable: bool,
+        pub included: bool,
+        pub item_data: String,
+    }
+}
+
+wire_struct! {
+    pub struct MarketData {
+        pub id: i32,
+        pub item_type: u16,
+        pub seller_name: String,
+        pub seller_id: i32,
+        pub currency: i32,
+        pub price: i32,
+        pub start_time: i32,
+        pub time_left: i32,
+        pub item_data: String,
+    }
+}
+
+/// Stat ids (`StatData.as`, `StatDataType.cs`). Only the ones the protocol itself needs; the
+/// game model names the rest.
+pub mod stat {
+    pub const NAME: u8 = 31;
+    pub const GUILD_NAME: u8 = 62;
+    /// `INVDATA0`..`INVDATA11` and `BACKPACKDATA0`..`BACKPACKDATA7`: per-slot item data (JSON).
+    pub const ITEM_DATA: std::ops::RangeInclusive<u8> = 122..=141;
+
+    /// Whether the value of this stat is a string rather than an int, as the AIR client decides.
+    pub fn is_string(id: u8) -> bool {
+        id == NAME || id == GUILD_NAME || ITEM_DATA.contains(&id)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StatValue {
+    Int(i32),
+    Str(String),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StatData {
+    pub id: u8,
+    pub value: StatValue,
+}
+
+impl Default for StatData {
+    fn default() -> Self {
+        Self { id: 0, value: StatValue::Int(0) }
+    }
+}
+
+impl Wire for StatData {
+    fn read(r: &mut Reader) -> Result<Self> {
+        let id = u8::read(r)?;
+        let value = if stat::is_string(id) { StatValue::Str(String::read(r)?) } else { StatValue::Int(i32::read(r)?) };
+        Ok(Self { id, value })
+    }
+    fn write(&self, w: &mut Writer) {
+        self.id.write(w);
+        match &self.value {
+            StatValue::Int(v) => v.write(w),
+            StatValue::Str(s) => s.write(w),
+        }
+    }
+}
+
+wire_struct! {
+    /// An object's id, position and changed stats.
+    pub struct ObjectStatus {
+        pub object_id: i32,
+        pub pos: WorldPos,
+        pub stats: List16<StatData>,
+    }
+}
+
+wire_struct! {
+    pub struct ObjectData {
+        pub object_type: i32,
+        pub status: ObjectStatus,
+    }
+}
