@@ -40,12 +40,20 @@ fn escape(s: &str, out: &mut String) {
 mod imp {
     pub fn post(url: String, body: String, done: impl FnOnce(super::Response) + Send + 'static) {
         std::thread::spawn(move || {
-            let result = ureq::post(&url)
+            let result = match ureq::post(&url)
                 .set("Content-Type", "application/x-www-form-urlencoded")
                 .timeout(std::time::Duration::from_secs(20))
                 .send_string(&body)
-                .map_err(|e| e.to_string())
-                .and_then(|r| r.into_string().map_err(|e| e.to_string()));
+            {
+                Ok(r) => r.into_string().map_err(|e| e.to_string()),
+                // Some answers come with an error status but an <Error> body that says why
+                // (purchaseCharSlot answers 404 "Insufficient funds"): keep the body.
+                Err(ureq::Error::Status(code, r)) => match r.into_string() {
+                    Ok(text) if text.trim_start().starts_with('<') => Ok(text),
+                    _ => Err(format!("{url}: status code {code}")),
+                },
+                Err(e) => Err(e.to_string()),
+            };
             done(result);
         });
     }
@@ -72,11 +80,14 @@ mod imp {
         let window = web_sys::window().ok_or("no window")?;
         let response: web_sys::Response =
             JsFuture::from(window.fetch_with_request(&request)).await.map_err(err)?.dyn_into().map_err(err)?;
-        if !response.ok() {
-            return Err(format!("HTTP {}", response.status()));
-        }
+        let status = response.status();
         let text = JsFuture::from(response.text().map_err(err)?).await.map_err(err)?;
-        text.as_string().ok_or_else(|| "response isn't text".into())
+        let text = text.as_string().ok_or("response isn't text")?;
+        // An error status with an <Error> body: the body says why (see the native side).
+        if !response.ok() && !text.trim_start().starts_with('<') {
+            return Err(format!("HTTP {status}"));
+        }
+        Ok(text)
     }
 }
 

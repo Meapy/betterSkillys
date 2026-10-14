@@ -3,7 +3,8 @@
 A rewrite of the AIR client in Rust that runs on Windows, Linux, macOS and in the browser. It
 uses the same art and the same server protocol, so the servers don't change; browsers reach them
 through the WebSocket bridge in `gateway`. The AIR client stays the real client until this one
-reaches parity. Read [../AGENTS.md](../AGENTS.md) first.
+reaches parity. Read [../AGENTS.md](../AGENTS.md) first. [PARITY.md](PARITY.md) lists everything the AIR client does
+and what's still to port: keep it up to date.
 
 ## Build and run
 

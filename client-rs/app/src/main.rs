@@ -61,6 +61,13 @@ enum Request {
     CharList { auto_play: bool },
     Register,
     Delete,
+    BuySlot,
+    BuySkin(u16),
+    /// The new password, kept for when it succeeds.
+    ChangePassword(String),
+    Legends,
+    /// A dead character's fame summary.
+    Fame,
 }
 
 struct App {
@@ -463,7 +470,41 @@ impl App {
                 self.front.show(Screen::Busy);
             }
             Action::Play(id) => self.play(Join::Load { char_id: id }),
-            Action::Create(class) => self.play(Join::Create { class_type: class, skin_type: 0 }),
+            Action::Create(class, skin) => self.play(Join::Create { class_type: class, skin_type: skin }),
+            Action::BuySlot => {
+                let (Some(endpoint), Some((email, password))) = (&self.endpoint, &self.account) else { return };
+                self.request = Some((Request::BuySlot, endpoint.buy_slot(email, password)));
+            }
+            Action::BuySkin(skin) => {
+                let (Some(endpoint), Some((email, password))) = (&self.endpoint, &self.account) else { return };
+                self.request = Some((Request::BuySkin(skin), endpoint.buy_skin(email, password, skin)));
+            }
+            Action::ChangePassword => {
+                let f = &self.front.fields;
+                let (current, new) = (f[screens::PASSWORD].clone(), f[screens::NEW_PASSWORD].clone());
+                let problem = if current.is_empty() || new.is_empty() {
+                    Some("Fill in every field.")
+                } else if new != f[screens::NEW_CONFIRM] {
+                    Some("The new passwords don't match.")
+                } else if new.chars().count() < 6 {
+                    Some("Use at least 6 characters.")
+                } else {
+                    None
+                };
+                if let Some(p) = problem {
+                    self.front.message = Some((p.into(), true));
+                    return;
+                }
+                let (Some(endpoint), Some((email, _))) = (&self.endpoint, &self.account) else { return };
+                self.request = Some((Request::ChangePassword(new.clone()), endpoint.change_password(email, &current, &new)));
+                self.front.message = None;
+            }
+            Action::Legends(span) => {
+                if let Some(endpoint) = &self.endpoint {
+                    self.front.legends = None;
+                    self.request = Some((Request::Legends, endpoint.legends(span)));
+                }
+            }
             Action::Delete(id) => {
                 let (Some(endpoint), Some((email, password))) = (&self.endpoint, &self.account) else { return };
                 self.request = Some((Request::Delete, endpoint.delete_char(email, password, id)));
@@ -506,7 +547,11 @@ impl App {
 
     /// Leave the game for the character list, saying why.
     fn leave_game(&mut self, why: Option<String>) {
+        let mut death = None;
         if let Phase::Playing(game) = &mut self.phase {
+            if game.died {
+                death = Some(game.char_id);
+            }
             game.close();
         }
         self.phase = Phase::Menu;
@@ -514,7 +559,16 @@ impl App {
         self.mouse_down = false;
         self.front.message = why.map(|w| (w, true));
         self.front.show(screens::Screen::Chars);
-        self.refresh();
+        // After a death: the fame summary first (FameView), then the list.
+        let account_id = self.front.list.as_ref().map(|l| l.account_id);
+        if let (Some(char_id), Some(account_id), Some(endpoint)) = (death, account_id, &self.endpoint) {
+            self.request = Some((Request::Fame, endpoint.char_fame(account_id, char_id)));
+            self.front.busy = "Counting your fame…".into();
+            self.front.message = None;
+            self.front.show(screens::Screen::Busy);
+        } else {
+            self.refresh();
+        }
     }
 
     /// Move through the sign-in steps as their answers arrive.
@@ -569,6 +623,56 @@ impl App {
                 Ok(()) => self.refresh(),
                 Err(e) => self.front.message = Some((e, true)),
             },
+            Request::BuySlot => match login::parse_success(response) {
+                Ok(()) => {
+                    self.front.message = Some(("You have a new character slot.".into(), false));
+                    self.refresh();
+                }
+                Err(e) => self.front.message = Some((e, true)),
+            },
+            Request::BuySkin(skin) => match login::parse_success(response) {
+                Ok(()) => {
+                    self.front.skin = skin;
+                    self.front.message = Some(("Skin bought.".into(), false));
+                    self.refresh();
+                }
+                Err(e) => self.front.message = Some((e, true)),
+            },
+            Request::ChangePassword(new) => match login::parse_success(response) {
+                Ok(()) => {
+                    if let Some((email, password)) = &mut self.account {
+                        *password = new.clone();
+                        if login::remembered().is_some() {
+                            login::remember(Some((email, &new)));
+                        }
+                    }
+                    self.front.fields[screens::PASSWORD] = new;
+                    self.front.message = Some(("Password changed.".into(), false));
+                    self.front.show(Screen::Chars);
+                }
+                Err(e) => self.front.message = Some((e, true)),
+            },
+            Request::Legends => match bsk_net::account::parse_fame_list(&response.unwrap_or_default()) {
+                Ok(list) => self.front.legends = Some(list),
+                Err(e) => {
+                    self.front.legends = Some(Vec::new());
+                    self.front.message = Some((e, true));
+                }
+            },
+            Request::Fame => {
+                match response.and_then(|xml| bsk_net::account::parse_char_fame(&xml)) {
+                    Ok(summary) => {
+                        self.front.death = Some(summary);
+                        self.front.show(Screen::Death);
+                    }
+                    Err(e) => {
+                        self.front.message = Some((format!("You died. ({e})"), true));
+                        self.front.show(Screen::Chars);
+                    }
+                }
+                // The list behind it, for afterwards.
+                self.refresh();
+            }
         }
     }
 
@@ -621,6 +725,10 @@ impl App {
                     keys = (rel.cos(), rel.sin());
                 }
             }
+        }
+        // A mouse script can also start on the character list (tests of the screens).
+        if self.holds_from.is_none() && !self.mouse_script.is_empty() && matches!(self.phase, Phase::Menu) && self.front.screen == screens::Screen::Chars {
+            self.holds_from = Some(now);
         }
         if self.holds_from.is_none() && !(self.holds.is_empty() && self.mouse_script.is_empty()) && self.walk_to.is_none() {
             if let Phase::Playing(game) = &self.phase {

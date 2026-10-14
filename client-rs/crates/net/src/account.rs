@@ -47,10 +47,16 @@ pub struct CharList {
     pub max_num_chars: i32,
     pub chars: Vec<CharSummary>,
     pub servers: Vec<ServerEntry>,
-    /// `<Account>`: the player's name, gold and fame.
+    /// `<Account>`: the player's id, name, gold and fame.
+    pub account_id: i32,
     pub name: String,
     pub credits: i32,
     pub fame: i32,
+    /// What the next character slot costs, and in what (0 gold, 1 fame).
+    pub next_slot_price: i32,
+    pub next_slot_currency: i32,
+    /// `<OwnedSkins>`.
+    pub owned_skins: Vec<u16>,
     /// `<ClassStats>`: the best level and fame reached with each class.
     pub class_stats: std::collections::HashMap<u16, (i32, i32)>,
 }
@@ -97,8 +103,12 @@ pub fn parse_char_list(xml: &str) -> Result<CharList, String> {
         });
     }
     if let Some(account) = root.children().find(|c| c.has_tag_name("Account")) {
+        let int = |n: &str| child_text(account, n).and_then(parse_int).unwrap_or(0) as i32;
+        list.account_id = int("AccountId");
         list.name = child_text(account, "Name").unwrap_or("").to_owned();
-        list.credits = child_text(account, "Credits").and_then(parse_int).unwrap_or(0) as i32;
+        list.credits = int("Credits");
+        list.next_slot_price = int("NextCharSlotPrice");
+        list.next_slot_currency = int("NextCharSlotCurrency");
         if let Some(stats) = account.children().find(|c| c.has_tag_name("Stats")) {
             list.fame = child_text(stats, "Fame").and_then(parse_int).unwrap_or(0) as i32;
             for cs in stats.children().filter(|c| c.has_tag_name("ClassStats")) {
@@ -107,6 +117,9 @@ pub fn parse_char_list(xml: &str) -> Result<CharList, String> {
                 list.class_stats.insert(t, (best("BestLevel"), best("BestFame")));
             }
         }
+    }
+    if let Some(skins) = child_text(root, "OwnedSkins") {
+        list.owned_skins = skins.split(',').filter_map(|s| parse_int(s).map(|v| v as u16)).collect();
     }
     if let Some(servers) = root.children().find(|c| c.has_tag_name("Servers")) {
         for s in servers.children().filter(|c| c.has_tag_name("Server")) {
@@ -119,6 +132,98 @@ pub fn parse_char_list(xml: &str) -> Result<CharList, String> {
         }
     }
     Ok(list)
+}
+
+/// One line of `/fame/list` (the legends).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Legend {
+    pub account_id: i32,
+    pub char_id: i32,
+    pub name: String,
+    pub object_type: u16,
+    pub tex1: i32,
+    pub tex2: i32,
+    pub skin: i32,
+    pub equipment: Vec<i32>,
+    pub total_fame: i32,
+}
+
+/// `/fame/list`.
+pub fn parse_fame_list(xml: &str) -> Result<Vec<Legend>, String> {
+    if let Some(e) = error_text(xml) {
+        return Err(e);
+    }
+    let doc = roxmltree::Document::parse(xml).map_err(|e| e.to_string())?;
+    let root = doc.root_element();
+    Ok(root
+        .children()
+        .filter(|c| c.has_tag_name("FameListElem"))
+        .map(|e| {
+            let int = |n: &str| child_text(e, n).and_then(parse_int).unwrap_or(0);
+            Legend {
+                account_id: e.attribute("accountId").and_then(parse_int).unwrap_or(0) as i32,
+                char_id: e.attribute("charId").and_then(parse_int).unwrap_or(0) as i32,
+                name: child_text(e, "Name").unwrap_or("").to_owned(),
+                object_type: int("ObjectType") as u16,
+                tex1: int("Tex1") as i32,
+                tex2: int("Tex2") as i32,
+                skin: int("Texture") as i32,
+                equipment: child_text(e, "Equipment")
+                    .map(|q| q.split(',').map(|i| parse_int(i).unwrap_or(-1) as i32).collect())
+                    .unwrap_or_default(),
+                total_fame: int("TotalFame") as i32,
+            }
+        })
+        .collect())
+}
+
+/// `/char/fame`: how a dead character's fame was counted.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct FameSummary {
+    pub object_type: u16,
+    pub level: i32,
+    pub base_fame: i32,
+    pub total_fame: i32,
+    pub killed_by: String,
+    /// (what, fame added).
+    pub bonuses: Vec<(String, i32)>,
+    /// (stat tag, value): shots, kills, dungeons and so on, as the server lists them.
+    pub stats: Vec<(String, i64)>,
+}
+
+pub fn parse_char_fame(xml: &str) -> Result<FameSummary, String> {
+    if let Some(e) = error_text(xml) {
+        return Err(e);
+    }
+    let doc = roxmltree::Document::parse(xml).map_err(|e| e.to_string())?;
+    let root = doc.root_element();
+    let int = |n: &str| child_text(root, n).and_then(parse_int).unwrap_or(0);
+    let mut out = FameSummary {
+        base_fame: int("BaseFame") as i32,
+        total_fame: int("TotalFame") as i32,
+        killed_by: child_text(root, "KilledBy").unwrap_or("").to_owned(),
+        ..Default::default()
+    };
+    if let Some(c) = root.children().find(|c| c.has_tag_name("Char")) {
+        out.object_type = child_text(c, "ObjectType").and_then(parse_int).unwrap_or(0) as u16;
+        out.level = child_text(c, "Level").and_then(parse_int).unwrap_or(0) as i32;
+    }
+    for e in root.children().filter(|c| c.is_element()) {
+        let tag = e.tag_name().name();
+        match tag {
+            "Bonus" => out.bonuses.push((
+                e.attribute("desc").or(e.attribute("id")).unwrap_or("").to_owned(),
+                e.text().and_then(parse_int).unwrap_or(0) as i32,
+            )),
+            "Char" | "BaseFame" | "TotalFame" | "KilledBy" | "CreatedOn" => {}
+            _ => {
+                if let Some(v) = e.text().and_then(parse_int) {
+                    out.stats.push((tag.to_owned(), v));
+                }
+            }
+        }
+    }
+    Ok(out)
 }
 
 #[cfg(test)]
@@ -156,6 +261,35 @@ mod tests {
         assert_eq!(list.class_stats[&0x30e], (7, 3));
         assert_eq!(success("<Success/>"), Ok(()));
         assert_eq!(success("<Error>Duplicated name</Error>"), Err("Duplicated name".into()));
+    }
+
+    #[test]
+    fn slots_skins_legends_and_fame() {
+        let xml = r#"<Chars nextCharId="2" maxNumChars="1"><OwnedSkins>835,0x0343</OwnedSkins>
+            <Account><AccountId>7</AccountId><NextCharSlotPrice>500</NextCharSlotPrice>
+            <NextCharSlotCurrency>1</NextCharSlotCurrency></Account></Chars>"#;
+        let list = parse_char_list(xml).unwrap();
+        assert_eq!((list.account_id, list.next_slot_price, list.next_slot_currency), (7, 500, 1));
+        assert_eq!(list.owned_skins, vec![835, 0x343]);
+
+        let legends = parse_fame_list(
+            r#"<FameList timespan="week"><FameListElem accountId="1" charId="4"><Name>Bob</Name>
+            <ObjectType>782</ObjectType><Equipment>2580, -1</Equipment><TotalFame>120</TotalFame>
+            </FameListElem></FameList>"#,
+        )
+        .unwrap();
+        assert_eq!((legends[0].name.as_str(), legends[0].char_id, legends[0].total_fame), ("Bob", 4, 120));
+
+        let fame = parse_char_fame(
+            r#"<Fame><Char id="4"><ObjectType>782</ObjectType><Level>20</Level></Char><BaseFame>100</BaseFame>
+            <TotalFame>130</TotalFame><Shots>50</Shots><Bonus id="Ancestor" desc="First born">30</Bonus>
+            <CreatedOn>1</CreatedOn><KilledBy>Pirate</KilledBy></Fame>"#,
+        )
+        .unwrap();
+        assert_eq!((fame.object_type, fame.level, fame.base_fame, fame.total_fame), (782, 20, 100, 130));
+        assert_eq!(fame.bonuses, vec![("First born".to_owned(), 30)]);
+        assert_eq!(fame.stats, vec![("Shots".to_owned(), 50)]);
+        assert_eq!(fame.killed_by, "Pirate");
     }
 
     #[test]

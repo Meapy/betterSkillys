@@ -41,6 +41,36 @@ impl Endpoint {
         )
     }
 
+    /// `/account/purchaseCharSlot`.
+    pub fn buy_slot(&self, email: &str, password: &str) -> Pending<http::Response> {
+        http::post_form(&format!("{}/account/purchaseCharSlot", self.account), &[("guid", email), ("password", password)])
+    }
+
+    /// `/account/purchaseSkin`.
+    pub fn buy_skin(&self, email: &str, password: &str, skin: u16) -> Pending<http::Response> {
+        let t = skin.to_string();
+        http::post_form(&format!("{}/account/purchaseSkin", self.account), &[("guid", email), ("password", password), ("skinType", &t)])
+    }
+
+    /// `/account/changePassword`.
+    pub fn change_password(&self, email: &str, password: &str, new_password: &str) -> Pending<http::Response> {
+        http::post_form(
+            &format!("{}/account/changePassword", self.account),
+            &[("guid", email), ("password", password), ("newPassword", new_password)],
+        )
+    }
+
+    /// `/fame/list`: the legends for "week", "month" or "all".
+    pub fn legends(&self, timespan: &str) -> Pending<http::Response> {
+        http::post_form(&format!("{}/fame/list", self.account), &[("timespan", timespan)])
+    }
+
+    /// `/char/fame`: a dead character's fame summary.
+    pub fn char_fame(&self, account_id: i32, char_id: i32) -> Pending<http::Response> {
+        let (a, c) = (account_id.to_string(), char_id.to_string());
+        http::post_form(&format!("{}/char/fame", self.account), &[("accountId", &a), ("charId", &c)])
+    }
+
     pub fn target(&self, host: &str, port: u16) -> Target {
         Target { host: host.to_owned(), port, gateway: self.gateway.clone() }
     }

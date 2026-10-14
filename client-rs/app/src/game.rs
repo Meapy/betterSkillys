@@ -25,11 +25,13 @@ pub struct Game {
     target: Target,
     /// What Hello needs again on a reconnect.
     hello: HelloParams,
-    char_id: i32,
+    pub char_id: i32,
     pub world: Option<World>,
     /// What to show while there's no world yet, or why the game ended.
     pub status: String,
     pub ended: bool,
+    /// The character died (the game ended with its death).
+    pub died: bool,
     pub camera_angle: f64,
     out: Vec<ClientMessage>,
     /// The sight radius the server uses for us, and when we last changed it.
@@ -68,6 +70,7 @@ impl Game {
             char_id,
             world: None,
             ended: false,
+            died: false,
             camera_angle: DEFAULT_CAMERA_ANGLE,
             out: Vec::new(),
             sent_view_radius: MIN_VIEW_RADIUS,
@@ -171,6 +174,7 @@ impl Game {
             if d.char_id == self.char_id {
                 self.status = format!("You died, killed by {}.", d.killed_by);
                 self.ended = true;
+                self.died = true;
                 return;
             }
         }
