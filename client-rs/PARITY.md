@@ -43,17 +43,17 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Items: swap, drop, use, equip, bags | `ItemGridMediator` | Done |
 | Chat, slash commands, speech balloons | `TextBox`, `onText` | Done |
 | Tells: reply key, tab completion | `TextBox` | To do |
-| Notifications over objects, global notifications | `onNotification`, `onGlobalNotification` | Partly (global ones to do) |
-| Quest arrow | `QuestObjId`, `QuestArrow` | To do |
-| Boss health bar | `BossHealthBar` | To do |
-| Dungeon keys view | `KeysView` | To do |
+| Notifications over objects, global notifications (keys) | `onNotification`, `onGlobalNotification` | Done |
+| Quest arrow | `QuestObjId`, `QuestArrow` | Done |
+| Boss health bar | `BossHealthBar` | Done (without the damage-dealt percentage) |
+| Dungeon keys view | `KeysView` | Done |
 | Legendary and mythical drop pop-ups | `LegendaryNotifView` | To do |
 | Portals, Nexus, Escape menu | `PortalPanel`, `onReconnect` | Done |
 | Player menu: trade, invite, teleport, lock, ignore | `PlayerMenu`, `EditAccountList` | To do |
 | Trading | `TradePanel`, `onTrade*` | To do |
 | Party: invite, panel | `PartyPanel`, `onInvitedToParty` | To do |
 | Guild: invite, register, board, chronicle, hall portal | `Guild*Panel`, `onInvitedToGuild`, `/guild/*` | To do |
-| Merchants and shops | `SellableObjectPanel`, `onBuyResult` | To do |
+| Merchants and shops (and their balloons) | `SellableObjectPanel`, `Merchant`, `onBuyResult` | Done |
 | Market | `MarketPanel`, `onMarket*Result` | To do |
 | Forge | `ForgePanel` | To do |
 | Potion storage | `PotionsPanel`, `/account/grabPotions` | To do |

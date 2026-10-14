@@ -5,7 +5,7 @@
 use bsk_data::{GameData, ObjectClass};
 use bsk_net::{GameSocket, SocketEvent, Target};
 use bsk_proto::{
-    ClientMessage, EnemyHit, Escape, GroundDamage, InvDrop, InvSwap, OtherHit, PlayerHit, PlayerShoot, PlayerText,
+    Buy, ClientMessage, EnemyHit, Escape, GroundDamage, InvDrop, InvSwap, OtherHit, PlayerHit, PlayerShoot, PlayerText,
     Reconnect, ServerMessage, SlotObject, SquareHit, UseItem, UsePortal, ViewRadius, WorldPos,
 };
 use bsk_session::{Event, HelloParams, Join, Session};
@@ -32,6 +32,8 @@ pub struct Game {
     pub ended: bool,
     /// The character died (the game ended with its death).
     pub died: bool,
+    /// How many times we've changed worlds.
+    pub reconnects: u32,
     pub camera_angle: f64,
     out: Vec<ClientMessage>,
     /// The sight radius the server uses for us, and when we last changed it.
@@ -41,6 +43,12 @@ pub struct Game {
     pub floaters: Vec<crate::view::Floater>,
     /// Speech balloons, one per speaker.
     pub bubbles: Vec<crate::view::Bubble>,
+    /// The quest's object (`QuestObjId`), for the arrow and the boss bar.
+    pub quest: Option<i32>,
+    /// Dungeon keys the server says we have (`GlobalNotification`), as colours.
+    pub keys: Vec<u32>,
+    /// When merchants last spoke (`Merchant.update`'s balloons every 5 s), and which message.
+    merchant_talk: std::collections::HashMap<i32, (i32, usize)>,
     /// When the ability (Space) can be used again (`Player.nextAltAttack_`).
     next_ability: i32,
     /// What we sent, by message name (logged when the game closes).
@@ -71,12 +79,16 @@ impl Game {
             world: None,
             ended: false,
             died: false,
+            reconnects: 0,
             camera_angle: DEFAULT_CAMERA_ANGLE,
             out: Vec::new(),
             sent_view_radius: MIN_VIEW_RADIUS,
             view_radius_sent_at: i32::MIN / 2,
             floaters: Vec::new(),
             bubbles: Vec::new(),
+            quest: None,
+            keys: Vec::new(),
+            merchant_talk: Default::default(),
             next_ability: 0,
             counts: Default::default(),
             chat: Vec::new(),
@@ -88,6 +100,7 @@ impl Game {
     /// `GameServerConnection.onReconnect`: connect again, to another server if the message
     /// names one, with its game id and key.
     fn reconnect(&mut self, r: &Reconnect) {
+        self.reconnects += 1;
         self.socket.close();
         if !r.host.is_empty() {
             self.target.host = r.host.clone();
@@ -169,6 +182,28 @@ impl Game {
                 return;
             }
             None => {}
+        }
+        match msg {
+            ServerMessage::QuestObjId(q) => self.quest = Some(q.object_id),
+            ServerMessage::BuyResult(b) => {
+                let name = if b.result == 0 { "" } else { "*Error*" };
+                self.add_chat(name, "", &b.result_string, 0, 0, now);
+            }
+            ServerMessage::GlobalNotification(n) => {
+                let key = match n.text.as_str() {
+                    "yellow" => Some(0xF5D33C),
+                    "red" => Some(0xE04040),
+                    "green" => Some(0x4CC94C),
+                    "purple" => Some(0xA060E0),
+                    _ => None,
+                };
+                if let Some(k) = key {
+                    if !self.keys.contains(&k) {
+                        self.keys.push(k);
+                    }
+                }
+            }
+            _ => {}
         }
         if let ServerMessage::Death(d) = msg {
             if d.char_id == self.char_id {
@@ -483,6 +518,55 @@ impl Game {
             use_type: 1,
         };
         self.send(msg.into());
+    }
+
+    /// `Buy`: buy what the shop sells.
+    pub fn buy(&mut self, object_id: i32) {
+        self.send(Buy { object_id }.into());
+    }
+
+    /// `Merchant.update`: every 5 s a merchant in view says what's special about it ("New!",
+    /// "2 left!", "20% off!").
+    pub fn merchant_balloons(&mut self, now: i32, data: &GameData) {
+        let Some(world) = &self.world else { return };
+        for o in world.objects.values() {
+            let Some(d) = data.objects.get(&o.object_type) else { continue };
+            if d.class != ObjectClass::Merchant {
+                continue;
+            }
+            let stat = |id: u8| o.stat_int(id);
+            let mut lines: Vec<(String, [u32; 3])> = Vec::new();
+            match stat(crate::hud::merch::MINS_LEFT) {
+                Some(i32::MAX) => lines.push(("New!".into(), [0xE6E6E6, 0xFFFFFF, 0x5A8025])),
+                Some(m @ 0..=5) => {
+                    let t = match m {
+                        0 => "Going soon!".to_owned(),
+                        1 => "Going in 1 min!".to_owned(),
+                        m => format!("Going in {m} mins!"),
+                    };
+                    lines.push((t, [0x5B2626, 0xFC8642, 0xFC8642]));
+                }
+                _ => {}
+            }
+            if let Some(c @ 1..=2) = stat(crate::hud::merch::COUNT) {
+                lines.push((format!("{c} left!"), [0x5B2626, 0xFC8642, 0xFC8642]));
+            }
+            if let Some(dsc) = stat(crate::hud::merch::DISCOUNT).filter(|&d| d > 0) {
+                lines.push((format!("{dsc}% off!"), [0x608033, 0xFFFF8F, 0xFFFF8F]));
+            }
+            if lines.is_empty() {
+                continue;
+            }
+            let entry = self.merchant_talk.entry(o.id).or_insert((now - 5000, 0));
+            if now - entry.0 < 5000 {
+                continue;
+            }
+            entry.1 = (entry.1 + 1) % lines.len();
+            entry.0 = now;
+            let (text, colors) = lines[entry.1].clone();
+            self.bubbles.retain(|b| b.object_id != o.id);
+            self.bubbles.push(crate::view::Bubble { object_id: o.id, text, colors, at: now, life: 3000 });
+        }
     }
 
     pub fn use_portal(&mut self, object_id: i32) {

@@ -162,6 +162,12 @@ impl Scene<'_> {
             tex = alt;
         }
         let tex = tex.pick(obj.id);
+        // Merchant.getTexture: a merchant shows what it sells.
+        if desc.class == bsk_data::ObjectClass::Merchant {
+            if let Some(item) = obj.stat_int(crate::hud::merch::TYPE).filter(|&t| t > 0).and_then(|t| self.data.objects.get(&(t as u16))) {
+                return self.texture_src(&item.texture, obj.id).map(|src| Look { src, mirror: false, mask: None, wide: false });
+            }
+        }
         let TextureRef::Animated { set, index } = &tex.main else {
             // An <Animation> frame, while one plays.
             let tex = obj

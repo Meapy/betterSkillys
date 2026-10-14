@@ -256,6 +256,8 @@ pub enum SlotKind {
     Container,
     /// A potion stack (F, V), holding `count`.
     Potion(i32),
+    /// For sale (tooltips only): no hints about using it.
+    Shop,
 }
 
 /// One slot on the panel.
@@ -353,7 +355,7 @@ pub fn can_hold(data: &GameData, kind: SlotKind, item: i32) -> bool {
     match kind {
         _ if item <= 0 => true,
         SlotKind::Equip(t) => t == 0 || item_slot_type(data, item) == t,
-        SlotKind::Potion(_) => false,
+        SlotKind::Potion(_) | SlotKind::Shop => false,
         _ => true,
     }
 }
@@ -373,6 +375,8 @@ pub enum Button {
     Page(Page),
     /// Enter the portal.
     Enter(i32),
+    /// Buy from the shop.
+    Buy(i32),
 }
 
 /// The thing beside us the interact area shows (`InteractPanel`): a bag or a portal.
@@ -380,10 +384,36 @@ pub enum Button {
 pub struct Interact {
     pub id: i32,
     pub name: String,
-    pub container: bool,
+    pub kind: InteractKind,
 }
 
-/// `GameSprite.updateNearestInteractive`: the closest bag or portal within a tile.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum InteractKind {
+    Container,
+    Portal,
+    /// `SellableObject` (merchants, guild merchants, closed vault chests): what it sells (-1
+    /// when it sells itself), the price and currency (0 gold, 1 fame, 2 guild fame), the rank
+    /// it needs.
+    Shop { item: i32, price: i32, currency: i32, rank_req: i32 },
+}
+
+/// Merchandise stats (`StatData`).
+pub mod merch {
+    pub const TYPE: u8 = 34;
+    pub const PRICE: u8 = 36;
+    pub const CURRENCY: u8 = 40;
+    pub const COUNT: u8 = 42;
+    pub const MINS_LEFT: u8 = 43;
+    pub const DISCOUNT: u8 = 44;
+    pub const RANK_REQ: u8 = 45;
+}
+
+/// Whether objects of this description are sold where they stand.
+pub fn is_shop(d: &ObjectDesc) -> bool {
+    d.class == ObjectClass::Merchant || matches!(&d.class, ObjectClass::Other(c) if c == "GuildMerchant" || c == "ClosedVaultChest")
+}
+
+/// `GameSprite.updateNearestInteractive`: the closest bag, portal or shop within a tile.
 pub fn interact_target(world: &World, data: &GameData) -> Option<Interact> {
     let me = world.player()?;
     world
@@ -391,18 +421,44 @@ pub fn interact_target(world: &World, data: &GameData) -> Option<Interact> {
         .values()
         .filter_map(|o| {
             let d = data.objects.get(&o.object_type)?;
-            let container = matches!(d.class, ObjectClass::Container | ObjectClass::OneWayContainer);
-            let portal = matches!(d.class, ObjectClass::Portal | ObjectClass::GuildHallPortal);
+            let kind = if matches!(d.class, ObjectClass::Container | ObjectClass::OneWayContainer) {
+                InteractKind::Container
+            } else if matches!(d.class, ObjectClass::Portal | ObjectClass::GuildHallPortal) {
+                InteractKind::Portal
+            } else if is_shop(d) {
+                let stat = |id: u8| o.stat_int(id).unwrap_or(0);
+                let item = if d.class == ObjectClass::Merchant { o.stat_int(merch::TYPE).unwrap_or(-1) } else { -1 };
+                InteractKind::Shop { item, price: stat(merch::PRICE), currency: stat(merch::CURRENCY), rank_req: stat(merch::RANK_REQ) }
+            } else {
+                return None;
+            };
             let dist = (o.x - me.x).hypot(o.y - me.y);
-            ((container || portal) && dist < 1.0).then(|| (dist, o, d, container))
+            (dist < 1.0).then_some((dist, o, d, kind))
         })
         .min_by(|a, b| a.0.total_cmp(&b.0))
-        .map(|(_, o, d, container)| Interact {
+        .map(|(_, o, d, kind)| Interact {
             id: o.id,
-            // Bags by their type's name (their name stat is internal); portals by their name.
-            name: if container { d.display_id.clone() } else { o.name().map(str::to_owned).unwrap_or_else(|| d.display_id.clone()) },
-            container,
+            // Bags and shops by their type's name (or the item's), portals by their name.
+            name: match kind {
+                InteractKind::Container => d.display_id.clone(),
+                InteractKind::Shop { item, .. } if item > 0 => {
+                    data.objects.get(&(item as u16)).map_or_else(|| d.display_id.clone(), |i| i.display_id.clone())
+                }
+                InteractKind::Shop { .. } => d.display_id.clone(),
+                InteractKind::Portal => o.name().map(str::to_owned).unwrap_or_else(|| d.display_id.clone()),
+            },
+            kind,
         })
+}
+
+/// A price as text: "120 gold".
+pub fn price_text(price: i32, currency: i32) -> String {
+    let what = match currency {
+        1 => "fame",
+        2 => "guild fame",
+        _ => "gold",
+    };
+    format!("{price} {what}")
 }
 
 /// HUD state kept between frames.
@@ -438,13 +494,15 @@ pub struct Panel {
     buttons: Vec<(Button, [f32; 4])>,
     pub interact: Option<Interact>,
     has_backpack: bool,
+    /// A shop's merchandise icon (for its tooltip), and the item.
+    shop_icon: Option<([f32; 4], i32)>,
 }
 
 const DOUBLE_CLICK_MS: i32 = 350;
 
 impl Panel {
     pub fn new(lay: &Layout, world: &World, data: &GameData, page: Page) -> Self {
-        let mut panel = Panel { slots: Vec::new(), buttons: Vec::new(), interact: None, has_backpack: false };
+        let mut panel = Panel { slots: Vec::new(), buttons: Vec::new(), interact: None, has_backpack: false, shop_icon: None };
         let Some(me) = world.player() else { return panel };
         let item = |o: &GameObj, slot: u8| o.stat_int(slot_stat(slot)).unwrap_or(-1);
         let types = class_slot_types(data.objects.get(&me.object_type));
@@ -487,7 +545,7 @@ impl Panel {
         // InteractPanel: a bag's eight slots, or a portal's Enter button.
         panel.interact = interact_target(world, data);
         if let Some(target) = &panel.interact {
-            if target.container {
+            if target.kind == InteractKind::Container {
                 if let Some(bag) = world.objects.get(&target.id) {
                     for i in 0..8u8 {
                         panel.slots.push(Slot {
@@ -499,8 +557,13 @@ impl Panel {
                         });
                     }
                 }
-            } else {
+            } else if target.kind == InteractKind::Portal {
                 panel.buttons.push((Button::Enter(target.id), lay.rect(40.0, 624.0, 120.0, 34.0)));
+            } else {
+                panel.buttons.push((Button::Buy(target.id), lay.rect(16.0, 656.0, 168.0, 32.0)));
+                if let InteractKind::Shop { item, .. } = target.kind {
+                    panel.shop_icon = Some((lay.rect(76.0, 610.0, 48.0, 44.0), item));
+                }
             }
         }
         panel
@@ -679,16 +742,6 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
         }
     }
 
-    // Buttons: Nexus, and Enter for a portal.
-    for (button, r) in &panel.buttons {
-        let (label, kind) = match button {
-            Button::Nexus => ("Nexus  R", Kind::Secondary),
-            Button::Enter(_) => ("Enter  0", Kind::Primary),
-            Button::Page(_) => continue,
-        };
-        ui.button(*r, label, kind, inside(*r, mouse), s);
-    }
-
     // The interact area's title: what we stand by.
     if let Some(target) = &panel.interact {
         let r = lay.rect(8.0, 588.0, 184.0, 108.0);
@@ -696,6 +749,34 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
         let size = lay.font(13.0);
         let w = ui.measure(&target.name, size, true);
         ui.label(&target.name, lay.panel_x + (PANEL_W * s - w) / 2.0, 592.0 * s, size, true, color::ACCENT_HI);
+        // A shop: what it sells, and the rank it asks for.
+        if let InteractKind::Shop { rank_req, .. } = target.kind {
+            if let Some((r, item)) = panel.shop_icon {
+                ui.slot_box(r, if item > 0 { crate::screens::tier_edge(ui.data, item) } else { None }, inside(r, mouse), s);
+                let shop_type = world.objects.get(&target.id).map(|o| o.object_type as i32).unwrap_or(-1);
+                ui.item_icon(if item > 0 { item } else { shop_type }, 80, r[0] + r[2] / 2.0, r[1] + r[3] / 2.0, s);
+            }
+            if rank_req > 0 {
+                let t = format!("Rank {rank_req} needed");
+                let small = lay.font(10.0);
+                let tw = ui.measure(&t, small, true);
+                ui.label(&t, lay.panel_x + (PANEL_W * s - tw) / 2.0, 643.0 * s, small, true, 0xFFB070);
+            }
+        }
+    }
+
+    // Buttons: Nexus, and Enter for a portal.
+    for (button, r) in &panel.buttons {
+        let (label, kind) = match button {
+            Button::Nexus => ("Nexus  R".to_owned(), Kind::Secondary),
+            Button::Enter(_) => ("Enter  0".to_owned(), Kind::Primary),
+            Button::Buy(_) => match panel.interact.as_ref().map(|i| i.kind) {
+                Some(InteractKind::Shop { price, currency, .. }) => (format!("Buy  ·  {}", price_text(price, currency)), Kind::Primary),
+                _ => continue,
+            },
+            Button::Page(_) => continue,
+        };
+        ui.button(*r, &label, kind, inside(*r, mouse), s);
     }
 }
 
@@ -880,6 +961,13 @@ pub fn draw_overlay(ui: &mut Ui, lay: &Layout, world: &World, panel: &Panel, sta
         ui.item_icon(drag.item, 80, mx, my, lay.s);
         return;
     }
+    if let Some((r, item)) = panel.shop_icon {
+        if item > 0 && inside(r, mouse) {
+            let lines = item_tooltip(ui.data, item, world.player(), SlotKind::Shop);
+            draw_tooltip(ui, lay, &lines, Some(item), crate::screens::tier_edge(ui.data, item), mouse);
+            return;
+        }
+    }
     let Some(slot) = panel.slot_at(mouse) else { return };
     let me = world.player();
     let lines = if slot.item > 0 {
@@ -1016,7 +1104,9 @@ pub fn item_tooltip(data: &GameData, item: i32, me: Option<&GameObj>, kind: Slot
     if xml.has("Consumable") {
         note("Consumed with use", ATTR);
     }
-    if xml.has("Usable") && matches!(kind, SlotKind::Equip(_)) {
+    if kind == SlotKind::Shop {
+        // Nothing to do with it until it's bought.
+    } else if xml.has("Usable") && matches!(kind, SlotKind::Equip(_)) {
         note("Press [Space] in the world to use", 0xFFFFFF);
     } else if xml.has("Consumable") || xml.has("InvUse") {
         note("Double-click or shift-click to use", 0xFFFFFF);
@@ -1084,6 +1174,82 @@ fn draw_tooltip(ui: &mut Ui, lay: &Layout, lines: &[Line], icon: Option<i32>, ac
     for (i, (text, size, bold, color, ry)) in rows.iter().enumerate() {
         let indent = if i < 2 && icon.is_some() && *ry < icon_w { icon_w } else { 0.0 };
         ui.label(text, x0 + pad + indent, y0 + pad + ry, *size, *bold, *color);
+    }
+}
+
+/// `QuestArrow` and `BossHealthBar`: the quest's health along the top of the view, and an arrow
+/// at the view's edge pointing to it when it's off screen. Then the dungeon keys (`KeysView`).
+pub fn draw_quest(ui: &mut Ui, lay: &Layout, world: &World, camera: &crate::view::Camera, quest: Option<i32>, keys: &[u32]) {
+    let s = lay.s;
+    for (i, &c) in keys.iter().enumerate() {
+        // A key: a ring and a shaft, in the key's colour.
+        let (x, y) = (12.0 * s + i as f32 * 26.0 * s, 12.0 * s);
+        theme::fill(ui.renderer, [x - 3.0 * s, y - 3.0 * s, 24.0 * s, 24.0 * s], 6.0 * s, 0x000000, 0.45);
+        theme::fill(ui.renderer, [x, y + 4.0 * s, 10.0 * s, 10.0 * s], 5.0 * s, c, 1.0);
+        theme::fill(ui.renderer, [x + 8.0 * s, y + 7.0 * s, 10.0 * s, 4.0 * s], 1.0, c, 1.0);
+        theme::fill(ui.renderer, [x + 14.0 * s, y + 11.0 * s, 3.0 * s, 4.0 * s], 1.0, c, 1.0);
+    }
+    let Some(q) = quest.and_then(|id| world.objects.get(&id)) else { return };
+    let Some(desc) = ui.data.objects.get(&q.object_type) else { return };
+    let (hp, max) = (q.stat_int(stat::HP).unwrap_or(0), q.stat_int(stat::MAX_HP).unwrap_or(0));
+    let vw = lay.view_w();
+    // The bar.
+    if max > 0 {
+        let (w, h) = (320.0 * s, 20.0 * s);
+        let r = [(vw - w) / 2.0 + 20.0 * s, 26.0 * s, w, h];
+        theme::shadow(ui.renderer, r, 6.0 * s, 8.0 * s, 0.4);
+        theme::frame(ui.renderer, r, 6.0 * s, s.max(1.0), (color::BORDER_HI, 1.0), ((color::TRACK, 0.9), (theme::shade(color::TRACK, 0.1), 0.9)));
+        let frac = (hp as f32 / max as f32).clamp(0.0, 1.0);
+        if frac > 0.0 {
+            let c = if frac > 0.5 { 0x3FC04A } else if frac > 0.25 { 0xE0B030 } else { 0xE0403E };
+            let inner = [r[0] + s, r[1] + s, (r[2] - 2.0 * s) * frac, r[3] - 2.0 * s];
+            theme::rounded(ui.renderer, inner, 5.0 * s, (theme::shade(c, 0.25), 1.0), (theme::shade(c, -0.2), 1.0));
+        }
+        let size = lay.font(12.0);
+        let t = format!("{hp} / {max}");
+        let tw = ui.measure(&t, size, true);
+        ui.label(&t, r[0] + (r[2] - tw) / 2.0, r[1] + (r[3] - size * 1.22) / 2.0, size, true, color::TEXT);
+        let name = q.name().unwrap_or(&desc.display_id).to_owned();
+        let ns = lay.font(13.0);
+        let nw = ui.measure(&name, ns, true);
+        ui.label(&name, r[0] + (r[2] - nw) / 2.0, r[1] - ns * 1.35, ns, true, color::ACCENT_HI);
+        if let Some(src) = ui.src(&desc.texture) {
+            if let Some(icon) = ui.redrawer.get(ui.sprites, ui.renderer, src, false, 60, None) {
+                let (iw, ih) = (icon.w as f32 * s, icon.h as f32 * s);
+                ui.renderer.sprite(icon.rect, Quad::rect(r[0] - iw - 2.0 * s, r[1] + r[3] / 2.0 - ih / 2.0, iw, ih), Tint::NONE);
+            }
+        }
+    }
+    // The arrow, when it's off screen.
+    let [px, py] = camera.to_screen(q.x, q.y, 0.0);
+    let margin = 26.0 * s;
+    let (l, t, r, b) = (margin, margin + 60.0 * s, vw - margin, lay.h - margin);
+    if px >= l && px <= r && py >= t && py <= b {
+        return;
+    }
+    let (cx, cy) = (camera.cx as f32, camera.cy as f32);
+    let (dx, dy) = (px - cx, py - cy);
+    // Where the line from us to it leaves the inset view.
+    let mut k = 1.0f32;
+    if dx > 0.0 { k = k.min((r - cx) / dx); }
+    if dx < 0.0 { k = k.min((l - cx) / dx); }
+    if dy > 0.0 { k = k.min((b - cy) / dy); }
+    if dy < 0.0 { k = k.min((t - cy) / dy); }
+    let (ax, ay) = (cx + dx * k, cy + dy * k);
+    let a = dy.atan2(dx);
+    let (ca, sa) = (a.cos(), a.sin());
+    let tri = |len: f32, wide: f32| -> [[f32; 2]; 3] {
+        [[ax + ca * len, ay + sa * len], [ax - sa * wide, ay + ca * wide], [ax + sa * wide, ay - ca * wide]]
+    };
+    let white = ui.renderer.white();
+    ui.renderer.triangle(white, tri(16.0 * s, 11.0 * s), [[0.5, 0.5]; 3], Tint::color(0x5A1010, 1.0));
+    ui.renderer.triangle(white, tri(13.0 * s, 8.5 * s), [[0.5, 0.5]; 3], Tint::color(0xF98441, 1.0));
+    if let Some(src) = ui.src(&desc.texture) {
+        if let Some(icon) = ui.redrawer.get(ui.sprites, ui.renderer, src, false, 50, None) {
+            let (iw, ih) = (icon.w as f32 * s, icon.h as f32 * s);
+            let (ix, iy) = (ax - ca * 26.0 * s - iw / 2.0, ay - sa * 26.0 * s - ih / 2.0);
+            ui.renderer.sprite(icon.rect, Quad::rect(ix, iy, iw, ih), Tint::NONE);
+        }
     }
 }
 

@@ -104,6 +104,8 @@ struct App {
     chat_send: Vec<String>,
     /// `--say <text>` (desktop tests): sent once we're in the game.
     say: Option<String>,
+    /// Whether --say was given (walking waits for the world it may move us to).
+    say_given: Option<()>,
     alt_held: bool,
     shift_held: bool,
     /// `--mouse` was given: ignore the real cursor.
@@ -201,6 +203,7 @@ fn apply_action(game: &mut Game, panel: &hud::Panel, action: hud::Action, now: i
         }
         Action::Button(Button::Nexus) => game.escape(),
         Action::Button(Button::Enter(id)) => game.use_portal(id),
+        Action::Button(Button::Buy(id)) => game.buy(id),
         Action::Button(Button::Page(_)) => {}
     }
 }
@@ -715,7 +718,9 @@ impl App {
         let reset_angle = self.held(&[KeyCode::KeyZ]);
 
         // Scripted walking (--walk-to), then the --hold script.
-        if let (Some((tx, ty)), Phase::Playing(game)) = (self.walk_to, &self.phase) {
+        // With --say (a command that may move us, like /shop), walk once we've arrived.
+        let walk_ready = self.say_given.is_none_or(|_| matches!(&self.phase, Phase::Playing(g) if g.reconnects > 0 && g.world.is_some()));
+        if let (Some((tx, ty)), Phase::Playing(game), true) = (self.walk_to, &self.phase, walk_ready) {
             if let Some(me) = game.world.as_ref().and_then(|w| w.player()) {
                 let (dx, dy) = (tx - me.x, ty - me.y);
                 if dx.hypot(dy) < 0.15 {
@@ -817,11 +822,16 @@ impl App {
             let mut actions = Vec::new();
             for key in pressed {
                 match key {
-                    KeyCode::Digit0 | KeyCode::Numpad0 => {
-                        if let Some((id, _)) = game.nearest_portal(data) {
-                            game.use_portal(id);
+                    // 0: interact with what we stand by (enter the portal, buy from the shop).
+                    KeyCode::Digit0 | KeyCode::Numpad0 => match built.as_ref().and_then(|p| p.interact.clone()) {
+                        Some(hud::Interact { id, kind: hud::InteractKind::Portal, .. }) => game.use_portal(id),
+                        Some(hud::Interact { id, kind: hud::InteractKind::Shop { .. }, .. }) => game.buy(id),
+                        _ => {
+                            if let Some((id, _)) = game.nearest_portal(data) {
+                                game.use_portal(id);
+                            }
                         }
-                    }
+                    },
                     KeyCode::KeyR => game.escape(),
                     KeyCode::KeyI => self.autofire = !self.autofire,
                     KeyCode::Space => ability = true,
@@ -875,6 +885,7 @@ impl App {
                 game.camera_angle = game::DEFAULT_CAMERA_ANGLE;
             }
             game.update(now, dt, keys, rotate, data);
+            game.merchant_balloons(now, data);
         }
 
         let wants_fire = (self.mouse_down && self.hud.drag.is_none()) || wants_fire_scripted;
@@ -929,6 +940,8 @@ impl App {
                         }
                         let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters, bubbles: &game.bubbles };
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
+                        let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+                        hud::draw_quest(&mut ui, &lay, world, &camera, game.quest, &game.keys);
                     }
                     if let Some(p) = &panel {
                         let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
@@ -1232,6 +1245,7 @@ fn main() {
         chat_input: None,
         chat_send: Vec::new(),
         say: say_arg(),
+        say_given: say_arg().map(|_| ()),
         alt_held: false,
         shift_held: false,
         hud: Default::default(),
