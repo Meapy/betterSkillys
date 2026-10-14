@@ -1,0 +1,10 @@
+[package]
+name = "bsk-world"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+bsk-data.workspace = true
+bsk-proto.workspace = true
+log.workspace = true

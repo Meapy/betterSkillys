@@ -359,6 +359,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bsk-data"
+version = "0.1.0"
+dependencies = [
+ "bsk-assets",
+ "futures",
+ "log",
+ "pollster",
+ "roxmltree",
+]
+
+[[package]]
 name = "bsk-gateway"
 version = "0.1.0"
 dependencies = [
@@ -410,6 +421,15 @@ dependencies = [
 name = "bsk-session"
 version = "0.1.0"
 dependencies = [
+ "bsk-proto",
+ "log",
+]
+
+[[package]]
+name = "bsk-world"
+version = "0.1.0"
+dependencies = [
+ "bsk-data",
  "bsk-proto",
  "log",
 ]

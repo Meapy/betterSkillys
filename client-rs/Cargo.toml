@@ -13,6 +13,8 @@ bsk-render = { path = "crates/render" }
 bsk-proto = { path = "crates/proto" }
 bsk-session = { path = "crates/session" }
 bsk-net = { path = "crates/net" }
+bsk-data = { path = "crates/data" }
+bsk-world = { path = "crates/world" }
 
 bytemuck = { version = "1", features = ["derive"] }
 futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
