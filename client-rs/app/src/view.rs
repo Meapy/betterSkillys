@@ -5,6 +5,7 @@
 //! screen as `scale × (r·d, u·d − z)`, d being the offset from the camera, r = (cos a, sin a) and
 //! u = (−sin a, cos a). That's affine, so every tile, wall face and sprite is one quad.
 
+use crate::ground::Ground;
 use crate::redraw::{Redrawer, PAD};
 use crate::sprites::{SrcRect, Sprites};
 use crate::text::{Fonts, Style, Text};
@@ -170,7 +171,8 @@ enum Item<'a> {
     Wall { obj: &'a GameObj, desc: &'a ObjectDesc },
 }
 
-pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, fonts: &Fonts, text: &mut Text) {
+#[allow(clippy::too_many_arguments)]
+pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, ground: &mut Ground, fonts: &Fonts, text: &mut Text) {
     let (w, h) = renderer.size();
     let cam = scene.camera;
     let radius = cam.radius(w as f64, h as f64);
@@ -178,17 +180,24 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, fon
     let (x0, x1) = ((cam.x - radius).floor() as i32, (cam.x + radius).ceil() as i32);
     let (y0, y1) = ((cam.y - radius).floor() as i32, (cam.y + radius).ceil() as i32);
 
-    // Ground.
+    // Ground: all base faces, then the blended overlays (Map.draw's two passes).
+    let mut overlays = Vec::new();
     for ty in y0.max(0)..=y1.min(world.height - 1) {
         for tx in x0.max(0)..=x1.min(world.width - 1) {
-            let Some(tile) = world.tile(tx, ty) else { continue };
-            let Some(ground) = scene.data.grounds.get(&tile) else { continue };
-            let pick = bsk_data::ground::tile_hash(tx, ty);
-            let Some(src) = scene.texture_src(&ground.texture, pick) else { continue };
-            let Some(rect) = scene.sprites.atlas(src) else { continue };
+            let Some(layers) = ground.layers(world, scene.data, scene.sprites, renderer, tx, ty) else { continue };
             let (x, y) = (tx as f64, ty as f64);
-            renderer.sprite(rect, cam.quad([x, y, 0.0], [x + 1.0, y, 0.0], [x, y + 1.0, 0.0]), Tint::NONE);
+            let quad = cam.quad([x, y, 0.0], [x + 1.0, y, 0.0], [x, y + 1.0, 0.0]);
+            if let Some((rect, kind, dx, dy)) = layers.base {
+                let (ox, oy) = crate::ground::scroll(kind, dx, dy, scene.time);
+                crate::ground::draw_scrolled(renderer, rect, quad, ox, oy, Tint::NONE);
+            }
+            if let Some(rect) = layers.overlay {
+                overlays.push((rect, quad));
+            }
         }
+    }
+    for (rect, quad) in overlays {
+        renderer.sprite(rect, quad, Tint::NONE);
     }
 
     // Objects and walls, back to front by the screen y of their ground point.
@@ -222,11 +231,20 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, fon
                     continue;
                 }
                 // The canvas's bottom centre stands on the object (raised by its z); sprites
-                // scale with the map.
+                // scale with the map. On sinking ground (water) the sprite is drawn lower with
+                // its bottom cut off, unless it flies.
                 let k = (cam.scale / TILE_PX) as f32;
                 let [px, py] = cam.to_screen(obj.x, obj.y, desc.z);
+                let mut sink = 0.0;
+                if !desc.flying && !desc.protect_from_sink() {
+                    if let Some(l) = ground.layers(world, scene.data, scene.sprites, renderer, obj.x as i32, obj.y as i32) {
+                        sink = (l.sink as f32).min(sprite.h as f32);
+                    }
+                }
                 let (sw, sh) = (sprite.w as f32 * k, sprite.h as f32 * k);
-                renderer.sprite(sprite.rect, Quad::rect(px - sw / 2.0, py - sh, sw, sh), Tint::NONE);
+                let cut = 1.0 - sink / sprite.h as f32;
+                let quad = Quad::rect(px - sw / 2.0, py - sh + sink * k, sw, sh * cut);
+                renderer.sprite_part(sprite.rect, [0.0, 0.0, 1.0, cut], quad, Tint::NONE);
             }
         }
     }

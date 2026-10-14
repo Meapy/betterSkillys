@@ -353,12 +353,18 @@ impl Renderer {
 
     /// Draw `src` (an atlas rectangle) onto `dst`.
     pub fn sprite(&mut self, src: AtlasRect, dst: Quad, tint: Tint) {
+        self.sprite_part(src, [0.0, 0.0, 1.0, 1.0], dst, tint);
+    }
+
+    /// Draw part of `src` onto `dst`: `part` is (u0, v0, u1, v1) within the rectangle, 0..1.
+    pub fn sprite_part(&mut self, src: AtlasRect, part: [f32; 4], dst: Quad, tint: Tint) {
         let inv = 1.0 / self.atlas.size as f32;
+        let (x, y, w, h) = (src.x as f32, src.y as f32, src.w as f32, src.h as f32);
         let uv = [
-            src.x as f32 * inv,
-            src.y as f32 * inv,
-            (src.x + src.w) as f32 * inv,
-            (src.y + src.h) as f32 * inv,
+            (x + part[0] * w) * inv,
+            (y + part[1] * h) * inv,
+            (x + part[2] * w) * inv,
+            (y + part[3] * h) * inv,
         ];
         self.instances.push(Instance {
             axes: [dst.x_axis[0], dst.x_axis[1], dst.y_axis[0], dst.y_axis[1]],

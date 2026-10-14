@@ -1,6 +1,7 @@
 //! betterSkillys client: the desktop executable and, built for wasm32, the browser version.
 
 mod game;
+mod ground;
 mod login;
 mod redraw;
 #[allow(dead_code)] // lookups the game screens will use
@@ -35,6 +36,7 @@ struct Loaded {
     redrawer: redraw::Redrawer,
     fonts: text::Fonts,
     text: text::Text,
+    ground: ground::Ground,
 }
 
 enum UserEvent {
@@ -127,7 +129,7 @@ async fn load(window: Arc<Window>) -> Result<Box<Loaded>, String> {
     );
     let (regular, bold) = futures::join!(source.load(&manifest.fonts.regular), source.load(&manifest.fonts.bold));
     let fonts = text::Fonts::new(regular.map_err(|e| e.to_string())?, bold.map_err(|e| e.to_string())?)?;
-    Ok(Box::new(Loaded { renderer, sprites, data, redrawer: Default::default(), fonts, text: Default::default() }))
+    Ok(Box::new(Loaded { renderer, sprites, data, redrawer: Default::default(), fonts, text: Default::default(), ground: Default::default() }))
 }
 
 impl App {
@@ -217,7 +219,7 @@ impl App {
             }
         }
         let Some(loaded) = self.loaded.as_mut() else { return };
-        let Loaded { renderer, sprites, data, redrawer, fonts, text } = &mut **loaded;
+        let Loaded { renderer, sprites, data, redrawer, fonts, text, ground } = &mut **loaded;
         if let Phase::Playing(game) = &mut self.phase {
             game.poll(now, data);
             if reset_angle {
@@ -251,7 +253,7 @@ impl App {
                             cy: h as f64 * 13.0 / 24.0,
                         };
                         let scene = view::Scene { sprites, data, world, camera, time: now };
-                        view::draw(&scene, renderer, redrawer, fonts, text);
+                        view::draw(&scene, renderer, redrawer, ground, fonts, text);
                     }
                 }
             }

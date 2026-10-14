@@ -94,6 +94,11 @@ pub struct ObjectDesc {
 }
 
 impl ObjectDesc {
+    /// `<ProtectFromSink>`: doesn't sink into water.
+    pub fn protect_from_sink(&self) -> bool {
+        self.xml.has("ProtectFromSink")
+    }
+
     pub fn from_xml(xml: &Element) -> Self {
         let (mut min_size, mut max_size, mut size_step) = (100, 100, 5);
         if xml.has("Size") {
