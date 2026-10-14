@@ -52,6 +52,8 @@ The client itself can be scripted for tests (desktop only):
 
 | Flag | What |
 |---|---|
+| `--credentials <file>` | Sign in with the file's `email:` and `password:` and play the first character |
+| `--stay` | With `--credentials`: stop at the character list instead |
 | `--shot <png> --shot-after <seconds>` | Save one frame, then quit (logs the position and what it sent) |
 | `--walk-to x,y` | Walk to a world position (in the first world joined) |
 | `--hold <key>:<ms>` | Hold keys one after another: `w a s d q e r 0 1`-`8 space hp mp`, `f` fires, `-` waits |
@@ -85,12 +87,20 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
 - **Atlas:** pages are 4096², or the GPU's limit (WebGL2 can be 2048). Sheets bigger than a page
   are cut into pieces on tile boundaries (`Sheet::rect`).
 - **Colours:** the surface is non-sRGB and the atlas premultiplied, so blending matches Flash.
+- **Signing in:** the client opens on its own sign-in screen (register, character select, new
+  character, delete). The account server is `--account <url>`, else `BSK_ACCOUNT` from the
+  environment or the build, else `http://127.0.0.1:8080`. "Remember me" keeps the login in
+  `%APPDATA%\betterSkillys-rs\login.txt` (`~/.config/...` on Linux and macOS, local storage in a
+  browser), as the AIR client keeps it in its shared object.
+- **Look:** `theme.rs` holds the shared style (glass panels, shadows, gradients, the gold accent,
+  buttons, fields, slots edged by item tier); the HUD and the screens draw with it.
 - **Controls:** WASD move, Q/E turn, Z resets the view, mouse fires (I toggles autofire), Space
   uses the ability at the mouse, 1-8 equip or use an inventory slot, F/V drink a stacked potion,
-  0 enters a portal, R goes to the Nexus, Enter or / chats. Items drag between slots, onto the
+  0 enters a portal, R goes to the Nexus, Enter or / chats, Escape opens the menu (character select,
+  log out). Items drag between slots, onto the
   world to drop; double-click equips, uses or takes from a bag; shift-click uses.
 - **Layout:** `hud::Layout` works everything out from the window size each frame: one scale for
-  the HUD (the AIR client's 200×600 panel plus stats, potions and the interact area: 200×690,
+  the HUD (the AIR client's 200×600 panel plus stats, potions and the interact area: 200×700,
   fitted to the height, at most 28% of the width), the world in
   the rest, and chat wrapped to the space. F11 or Alt+Enter toggles fullscreen.
 - **Async loading:** everything that touches files or the GPU at startup is `async`, because the
@@ -106,6 +116,10 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
    particles.
 3. Combat: projectiles (exact port of the paths and `Random`), hits, conditions. **Done**
    (shooting, enemy and player hits, ground damage, damage numbers); particles still to do.
-4. In-game UI, 5. front-end screens, 6. market/guild/party/emotes/sound, 7. packaging.
+4. In-game UI: HUD, minimap, inventory and bags, tooltips, chat and speech balloons, the Escape
+   menu. **Done**, except trading, options and player menus.
+5. Front-end screens: sign in, register, character select and delete, new character, servers.
+   **Done.**
+6. Market, guild, party, emotes, sound. 7. Packaging.
 
 Not planned: the map editor, the tutorial, Kabam's payment, offer and news screens.

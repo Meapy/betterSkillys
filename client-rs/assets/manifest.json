@@ -3206,5 +3206,8 @@
  "fonts": {
   "regular": "com/company/ui/fonts/MyriadPro.otf",
   "bold": "com/company/ui/fonts/MyriadProBold.otf"
+ },
+ "screens": {
+  "title": "kabam/rotmg/ui/view/ProjectOryx1.png"
  }
 }

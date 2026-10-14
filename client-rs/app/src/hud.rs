@@ -11,6 +11,7 @@
 
 use crate::redraw::{Dye, Redrawer};
 use crate::sprites::{SrcRect, Sprites};
+use crate::theme::{self, color, Kind};
 use crate::text::{Fonts, Style, Text};
 use bsk_data::{GameData, ObjectClass, ObjectDesc, TextureData, TextureRef};
 use bsk_render::{Quad, Renderer, Tint};
@@ -30,7 +31,7 @@ pub struct Layout {
 
 /// The panel's design size.
 const PANEL_W: f32 = 200.0;
-const PANEL_H: f32 = 690.0;
+const PANEL_H: f32 = 700.0;
 
 impl Layout {
     pub fn new(w: u32, h: u32) -> Self {
@@ -94,21 +95,18 @@ pub struct Ui<'a> {
 }
 
 impl Ui<'_> {
-    fn rect(&mut self, x: f32, y: f32, w: f32, h: f32, rgb: u32, alpha: f32) {
+    pub(crate) fn rect(&mut self, x: f32, y: f32, w: f32, h: f32, rgb: u32, alpha: f32) {
         let white = self.renderer.white();
         self.renderer.sprite(white, Quad::rect(x, y, w, h), Tint::color(rgb, alpha));
     }
 
-    fn cut_rect(&mut self, r: [f32; 4], cut: f32, cuts: [bool; 4], rgb: u32, alpha: f32) {
-        cut_rect(self.renderer, r, cut, cuts, rgb, alpha);
-    }
 
 
-    fn label(&mut self, s: &str, x: f32, y: f32, size: f32, bold: bool, color: u32) {
+    pub(crate) fn label(&mut self, s: &str, x: f32, y: f32, size: f32, bold: bool, color: u32) {
         self.text.draw(self.fonts, self.renderer, s, x, y, Style { size, bold, color });
     }
 
-    fn measure(&mut self, s: &str, size: f32, bold: bool) -> f32 {
+    pub(crate) fn measure(&mut self, s: &str, size: f32, bold: bool) -> f32 {
         self.text.measure(self.fonts, self.renderer, s, Style { size, bold, color: 0 })
     }
 
@@ -121,7 +119,7 @@ impl Ui<'_> {
     }
 
     /// `getRedrawnTextureFromType(type, size, true)`, centred on (cx, cy) at `scale`.
-    fn item_icon(&mut self, item: i32, size: i32, cx: f32, cy: f32, scale: f32) {
+    pub(crate) fn item_icon(&mut self, item: i32, size: i32, cx: f32, cy: f32, scale: f32) {
         let Some(desc) = self.data.objects.get(&(item as u16)) else { return };
         let Some(src) = self.src(&desc.texture) else { return };
         let size = if src.h == 16 { size / 2 } else { size };
@@ -244,13 +242,8 @@ pub fn slot_stat(slot: u8) -> u8 {
 /// The health and magic potions kept in stacks (`PotionInventoryModel`): item, slot id.
 pub const POTIONS: [(i32, u8); 2] = [(2594, 254), (2595, 255)];
 
-/// Colours (`Slot`, `HUDView`, `CharacterWindowBackground`).
-const SLOT_FILL: u32 = 0x545454;
-const SLOT_ICON: u32 = 0x363636;
-const PANEL_FILL: u32 = 0x3A3A3A;
+/// The minimap's ground where nothing is known.
 const MINIMAP_FILL: u32 = 0x1B1B1B;
-const BOX_OUTER: u32 = 0x676767;
-const BOX_INNER: u32 = 0x454545;
 
 /// What a slot holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -273,8 +266,6 @@ pub struct Slot {
     pub item: i32,
     pub kind: SlotKind,
     rect: [f32; 4],
-    /// Corners cut, as ItemGrid gives them.
-    cuts: [bool; 4],
 }
 
 impl Slot {
@@ -457,21 +448,13 @@ impl Panel {
         let Some(me) = world.player() else { return panel };
         let item = |o: &GameObj, slot: u8| o.stat_int(slot_stat(slot)).unwrap_or(-1);
         let types = class_slot_types(data.objects.get(&me.object_type));
-        // ItemGrid's cuts for one row of four, and for two rows.
-        let row_cuts = |i: usize, rows: usize| -> [bool; 4] {
-            let (col, row) = (i % 4, i / 4);
-            let top = row == 0;
-            let bottom = row + 1 == rows;
-            [col == 0 && top, col == 3 && top, col == 3 && bottom, col == 0 && bottom]
-        };
         for i in 0..4u8 {
             panel.slots.push(Slot {
                 owner: me.id,
                 index: i,
                 item: item(me, i),
                 kind: SlotKind::Equip(types.get(i as usize).copied().unwrap_or(0)),
-                rect: lay.rect(14.0 + 44.0 * i as f32, 306.0, 40.0, 40.0),
-                cuts: row_cuts(i as usize, 1),
+                rect: lay.rect(14.0 + 44.0 * i as f32, 307.0, 40.0, 40.0),
             });
         }
         panel.has_backpack = me.stat_int(stat::HAS_BACKPACK).unwrap_or(0) != 0;
@@ -483,13 +466,12 @@ impl Panel {
                 index: first + i,
                 item: item(me, first + i),
                 kind: SlotKind::Inventory(i + 1),
-                rect: lay.rect(14.0 + 44.0 * (i % 4) as f32, 376.0 + 44.0 * (i / 4) as f32, 40.0, 40.0),
-                cuts: row_cuts(i as usize, 2),
+                rect: lay.rect(14.0 + 44.0 * (i % 4) as f32, 381.0 + 44.0 * (i / 4) as f32, 40.0, 40.0),
             });
         }
         if panel.has_backpack {
-            panel.buttons.push((Button::Page(Page::Inventory), lay.rect(14.0, 352.0, 84.0, 20.0)));
-            panel.buttons.push((Button::Page(Page::Backpack), lay.rect(102.0, 352.0, 84.0, 20.0)));
+            panel.buttons.push((Button::Page(Page::Inventory), lay.rect(14.0, 355.0, 84.0, 20.0)));
+            panel.buttons.push((Button::Page(Page::Backpack), lay.rect(102.0, 355.0, 84.0, 20.0)));
         }
         for (k, (potion, slot_id)) in POTIONS.iter().enumerate() {
             let count = me.stat_int(if k == 0 { stat::HEALTH_POTION_STACK } else { stat::MAGIC_POTION_STACK }).unwrap_or(0);
@@ -498,11 +480,10 @@ impl Panel {
                 index: *slot_id,
                 item: *potion,
                 kind: SlotKind::Potion(count),
-                rect: lay.rect(14.0 + 44.0 * k as f32, 528.0, 40.0, 40.0),
-                cuts: [k == 0, k == 1, k == 1, k == 0],
+                rect: lay.rect(14.0 + 44.0 * k as f32, 538.0, 40.0, 40.0),
             });
         }
-        panel.buttons.push((Button::Nexus, lay.rect(108.0, 536.0, 80.0, 24.0)));
+        panel.buttons.push((Button::Nexus, lay.rect(106.0, 544.0, 82.0, 28.0)));
         // InteractPanel: a bag's eight slots, or a portal's Enter button.
         panel.interact = interact_target(world, data);
         if let Some(target) = &panel.interact {
@@ -514,13 +495,12 @@ impl Panel {
                             index: i,
                             item: item(bag, i),
                             kind: SlotKind::Container,
-                            rect: lay.rect(14.0 + 44.0 * (i % 4) as f32, 600.0 + 44.0 * (i / 4) as f32, 40.0, 40.0),
-                            cuts: row_cuts(i as usize, 2),
+                            rect: lay.rect(14.0 + 44.0 * (i % 4) as f32, 612.0 + 44.0 * (i / 4) as f32, 40.0, 40.0),
                         });
                     }
                 }
             } else {
-                panel.buttons.push((Button::Enter(target.id), lay.rect(50.0, 620.0, 100.0, 30.0)));
+                panel.buttons.push((Button::Enter(target.id), lay.rect(40.0, 624.0, 120.0, 34.0)));
             }
         }
         panel
@@ -596,58 +576,75 @@ impl Panel {
 /// interact area.
 pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, colors: &mut MapColors, panel: &Panel, state: &HudState, mouse: (f64, f64)) {
     let s = lay.s;
-    ui.rect(lay.panel_x, 0.0, lay.w - lay.panel_x, lay.h, PANEL_FILL, 1.0);
+    let (px, pw) = (lay.panel_x, lay.w - lay.panel_x);
+    // A soft shadow cast onto the world, the body, and a light edge.
+    for i in 0..8 {
+        let a = 0.22 * (1.0 - i as f32 / 8.0);
+        ui.rect(px - (i + 1) as f32 * 2.0 * s, 0.0, 2.0 * s, lay.h, 0x000000, a);
+    }
+    theme::rounded(ui.renderer, [px, 0.0, pw, lay.h], 0.0, (color::PANEL_TOP, 0.98), (color::PANEL_BOTTOM, 0.99));
+    ui.rect(px, 0.0, s.max(1.0), lay.h, color::BORDER_HI, 0.7);
     let Some(me) = world.player() else { return };
     draw_minimap(ui, lay, world, me, camera_angle, colors);
 
-    // CharacterDetailsView: portrait and name.
+    // The portrait, name, and class and level.
     draw_portrait(ui, lay, me);
-    let (x, y) = lay.at(42.0, 204.0);
+    let (x, y) = lay.at(44.0, 199.0);
     let name = me.name().unwrap_or("").to_owned();
-    ui.label(&name, x, y, lay.font(18.0), true, 0xFFFFFF);
-
-    // StatMetersView: experience (fame at level 20), HP, MP.
+    ui.label(&name, x, y, lay.font(17.0), true, color::TEXT);
     let stat = |id: u8| me.stat_int(id).unwrap_or(0);
     let level = stat(stat::LEVEL);
+    let class = ui.data.objects.get(&me.object_type).map_or("", |d| d.display_id.as_str()).to_owned();
+    let (x, y) = lay.at(44.0, 217.0);
+    ui.label(&format!("{class}  ·  Level {level}"), x, y, lay.font(11.0), false, color::TEXT_DIM);
+
+    // Experience (fame at level 20), HP, MP.
     let bars = [
         if level < 20 {
-            (format!("Lvl {level}"), stat(stat::EXP), stat(stat::NEXT_LEVEL_EXP), 0x5A8025)
+            ("XP".to_owned(), stat(stat::EXP), stat(stat::NEXT_LEVEL_EXP), 0x6FAF2E)
         } else {
-            ("Fame".to_owned(), stat(stat::CURR_FAME), stat(stat::NEXT_CLASS_QUEST_FAME), 0xE25F00)
+            ("Fame".to_owned(), stat(stat::CURR_FAME), stat(stat::NEXT_CLASS_QUEST_FAME), 0xF07A1E)
         },
-        ("HP".to_owned(), stat(stat::HP), stat(stat::MAX_HP), 0xE03434),
-        ("MP".to_owned(), stat(stat::MP), stat(stat::MAX_MP), 0x6084E0),
+        ("HP".to_owned(), stat(stat::HP), stat(stat::MAX_HP), 0xE0403E),
+        ("MP".to_owned(), stat(stat::MP), stat(stat::MAX_MP), 0x4C7BE8),
     ];
-    for (i, (label, value, max, color)) in bars.into_iter().enumerate() {
-        let (bx, by) = lay.at(12.0, 232.0 + 24.0 * i as f32);
-        status_bar(ui, lay, bx, by, &label, value, max, color);
+    for (i, (label, value, max, c)) in bars.into_iter().enumerate() {
+        let (bx, by) = lay.at(12.0, 236.0 + 22.0 * i as f32);
+        status_bar(ui, lay, bx, by, &label, value, max, c);
     }
 
-    // The equipment's box (HUDView's equippedGridBG).
-    ui.cut_rect(lay.rect(10.0, 302.0, 180.0, 48.0), 6.0 * s, [true; 4], BOX_OUTER, 1.0);
-    ui.cut_rect(lay.rect(11.0, 303.0, 178.0, 46.0), 6.0 * s, [true; 4], BOX_INNER, 1.0);
+    // Sections: equipment, inventory, stats, potions.
+    let section = |ui: &mut Ui, r: [f32; 4]| {
+        theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::BORDER, 0.9), ((0x1C2029, 0.9), (0x16191F, 0.9)));
+    };
+    section(ui, lay.rect(8.0, 302.0, 184.0, 50.0));
+    section(ui, lay.rect(8.0, 376.0, 184.0, 94.0));
+    section(ui, lay.rect(8.0, 474.0, 184.0, 60.0));
+    section(ui, lay.rect(8.0, 538.0 - 5.0, 184.0, 50.0));
 
-    // Page tabs, when there's a backpack.
+    // Inventory and backpack tabs, as pills.
     for (button, r) in &panel.buttons {
         let Button::Page(p) = button else { continue };
         let on = *p == state.page;
-        ui.cut_rect(*r, 4.0 * s, [true, true, false, false], if on { 0x5F5F5F } else { 0x2E2E2E }, 1.0);
+        let over = inside(*r, mouse);
+        let bg = if on { color::ACCENT } else if over { 0x3A4050 } else { 0x262A33 };
+        theme::fill(ui.renderer, *r, r[3] / 2.0, bg, 1.0);
         let label = if *p == Page::Inventory { "Inventory" } else { "Backpack" };
-        let size = lay.font(12.0);
+        let size = lay.font(11.0);
         let w = ui.measure(label, size, true);
-        ui.label(label, r[0] + (r[2] - w) / 2.0, r[1] + (r[3] - size * 1.2) / 2.0, size, true, if on { 0xFFFFFF } else { 0x9B9B9B });
+        ui.label(label, r[0] + (r[2] - w) / 2.0, r[1] + (r[3] - size * 1.22) / 2.0, size, true, if on { color::ACCENT_TEXT } else { color::TEXT_DIM });
     }
 
-    let hover = if state.drag.is_some() { panel.slot_at(mouse) } else { None };
+    let hover_target = if state.drag.is_some() { panel.slot_at(mouse) } else { None };
     for slot in &panel.slots {
         let dragged = state.drag.is_some_and(|d| d.is(slot));
-        let target = hover.is_some_and(|h| h.is(slot));
-        draw_slot(ui, lay, slot, dragged, target);
+        let target = hover_target.is_some_and(|h| h.is(slot));
+        draw_slot(ui, lay, slot, dragged, target, inside(slot.rect, mouse));
     }
 
-    // StatsView: two columns of three. Gold at the class maximum, green while boosted.
-    let class = ui.data.objects.get(&me.object_type);
-    let max_of = |tag: &str| class.and_then(|c| c.xml.child(tag)).and_then(|e| e.attr("max")).and_then(|m| m.parse::<i32>().ok());
+    // Stats, two columns of three: gold at the class maximum, the boost beside in green.
+    let class_desc = ui.data.objects.get(&me.object_type);
+    let max_of = |tag: &str| class_desc.and_then(|c| c.xml.child(tag)).and_then(|e| e.attr("max")).and_then(|m| m.parse::<i32>().ok());
     let stats = [
         ("ATT", stat::ATTACK, stat::ATTACK_BOOST, "Attack"),
         ("DEF", stat::DEFENSE, stat::DEFENSE_BOOST, "Defense"),
@@ -658,106 +655,101 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
     ];
     for (i, (label, id, boost_id, tag)) in stats.into_iter().enumerate() {
         let (value, boost) = (stat(id), stat(boost_id));
-        let (tx, ty) = lay.at(14.0 + 92.0 * (i % 2) as f32, 466.0 + 18.0 * (i / 2) as f32);
-        let size = lay.font(13.0);
-        ui.label(label, tx, ty, size, true, 0xB3B3B3);
-        let color = if max_of(tag).is_some_and(|m| value - boost >= m) {
-            0xFCDF00
-        } else if boost > 0 {
-            0x6EFF6E
-        } else {
-            0xFFFFFF
-        };
-        // The value, then any boost smaller; both shrink if the column is too narrow.
-        let room = 58.0 * s;
+        let (tx, ty) = lay.at(16.0 + 90.0 * (i % 2) as f32, 479.0 + 17.0 * (i / 2) as f32);
+        let size = lay.font(12.0);
+        ui.label(label, tx, ty, size, true, color::TEXT_MUTED);
+        let maxed = max_of(tag).is_some_and(|m| value - boost >= m);
+        let c = if maxed { 0xFFD24A } else { color::TEXT };
+        let room = 50.0 * s;
         let value_s = value.to_string();
         let boost_s = if boost != 0 { format!(" {boost:+}") } else { String::new() };
-        let mut vs = size;
+        let mut vs = lay.font(13.0);
         let mut bs = lay.font(10.0);
-        let mut width = ui.measure(&value_s, vs, false) + ui.measure(&boost_s, bs, false);
-        if width > room {
-            let k = room / width;
+        let full = ui.measure(&value_s, vs, true) + ui.measure(&boost_s, bs, true);
+        if full > room {
+            let k = room / full;
             vs = (vs * k).floor().max(8.0);
             bs = (bs * k).floor().max(7.0);
-            width = ui.measure(&value_s, vs, false);
-        } else {
-            width = ui.measure(&value_s, vs, false);
         }
-        let vx = tx + 32.0 * s;
-        ui.label(&value_s, vx, ty + (size - vs) * 0.8, vs, false, color);
+        let vx = tx + 30.0 * s;
+        ui.label(&value_s, vx, ty + (size - vs) * 0.6, vs, true, c);
         if boost != 0 {
-            let bc = if boost > 0 { 0x6EFF6E } else { 0xFF6E6E };
-            ui.label(&boost_s, vx + width, ty + (size - bs) * 0.8, bs, false, bc);
+            let bx = vx + ui.measure(&value_s, vs, true);
+            ui.label(&boost_s, bx, ty + (size - bs) * 0.9, bs, true, if boost > 0 { color::GOOD } else { color::DANGER });
         }
     }
 
-    // Buttons.
+    // Buttons: Nexus, and Enter for a portal.
     for (button, r) in &panel.buttons {
-        let label = match button {
-            Button::Nexus => "Nexus (R)".to_owned(),
-            Button::Enter(_) => "Enter (0)".to_owned(),
+        let (label, kind) = match button {
+            Button::Nexus => ("Nexus  R", Kind::Secondary),
+            Button::Enter(_) => ("Enter  0", Kind::Primary),
             Button::Page(_) => continue,
         };
-        let over = inside(*r, mouse);
-        ui.cut_rect(*r, 4.0 * s, [true; 4], if over { 0x7A7A7A } else { 0x5F5F5F }, 1.0);
-        let size = lay.font(13.0);
-        let w = ui.measure(&label, size, true);
-        ui.label(&label, r[0] + (r[2] - w) / 2.0, r[1] + (r[3] - size * 1.25) / 2.0, size, true, 0xFFFFFF);
+        ui.button(*r, label, kind, inside(*r, mouse), s);
     }
 
-    // InteractPanel's title.
+    // The interact area's title: what we stand by.
     if let Some(target) = &panel.interact {
-        ui.rect(lay.panel_x + 8.0 * s, 578.0 * s, 184.0 * s, 1.0_f32.max(s), 0x545454, 1.0);
-        let size = lay.font(15.0);
+        let r = lay.rect(8.0, 588.0, 184.0, 108.0);
+        theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::ACCENT, 0.55), ((0x231E16, 0.92), (0x17150F, 0.92)));
+        let size = lay.font(13.0);
         let w = ui.measure(&target.name, size, true);
-        ui.label(&target.name, lay.panel_x + (PANEL_W * s - w) / 2.0, 582.0 * s, size, true, 0xFFFFFF);
+        ui.label(&target.name, lay.panel_x + (PANEL_W * s - w) / 2.0, 592.0 * s, size, true, color::ACCENT_HI);
     }
 }
 
-fn draw_slot(ui: &mut Ui, lay: &Layout, slot: &Slot, dragged: bool, target: bool) {
+fn draw_slot(ui: &mut Ui, lay: &Layout, slot: &Slot, dragged: bool, target: bool, hover: bool) {
     let s = lay.s;
     let [x, y, w, h] = slot.rect;
-    ui.cut_rect(slot.rect, 4.0 * s, slot.cuts, if target { 0x7A7A7A } else { SLOT_FILL }, 1.0);
     let empty = slot.item <= 0 || dragged || matches!(slot.kind, SlotKind::Potion(0));
+    let edge = if target {
+        Some(color::ACCENT)
+    } else if !empty && !matches!(slot.kind, SlotKind::Potion(_)) {
+        crate::screens::tier_edge(ui.data, slot.item)
+    } else {
+        None
+    };
+    ui.slot_box(slot.rect, edge, hover, s);
     if empty {
-        match slot.kind {
-            SlotKind::Equip(t) => {
-                if let Some((set, index)) = slot_type_icon(t) {
-                    ui.silhouette(set, index, x + 4.0 * s, y + 4.0 * s, 32.0 * s, SLOT_ICON);
-                }
+        if let SlotKind::Equip(t) = slot.kind {
+            if let Some((set, index)) = slot_type_icon(t) {
+                ui.silhouette(set, index, x + 6.0 * s, y + 6.0 * s, 28.0 * s, 0x3C4250);
             }
-            SlotKind::Inventory(key) => {
-                let size = lay.font(26.0);
-                let label = key.to_string();
-                let lw = ui.measure(&label, size, true);
-                ui.label(&label, x + (w - lw) / 2.0, y + (h - size * 1.2) / 2.0, size, true, SLOT_ICON);
-            }
-            _ => {}
         }
     }
-    if !empty || matches!(slot.kind, SlotKind::Potion(_)) {
-        if matches!(slot.kind, SlotKind::Potion(0)) {
-            // An empty stack shows its potion greyed out.
-            if let Some(src) = ui.data.objects.get(&(slot.item as u16)).and_then(|d| ui.src(&d.texture)) {
-                if let Some(rect) = ui.sprites.atlas(src) {
-                    ui.renderer.sprite(rect, Quad::rect(x + 4.0 * s, y + 4.0 * s, 32.0 * s, 32.0 * s), Tint { mul: [0.0, 0.0, 0.0, 1.0], add: bsk_render::rgb_f32(SLOT_ICON) });
-                }
+    if !empty {
+        ui.item_icon(slot.item, 80, x + w / 2.0, y + h / 2.0, s);
+    } else if let SlotKind::Potion(_) = slot.kind {
+        // An empty stack shows its potion as a shadow.
+        if let Some(src) = ui.data.objects.get(&(slot.item as u16)).and_then(|d| ui.src(&d.texture)) {
+            if let Some(rect) = ui.sprites.atlas(src) {
+                let add = bsk_render::rgb_f32(0x3C4250);
+                ui.renderer.sprite(rect, Quad::rect(x + 6.0 * s, y + 6.0 * s, 28.0 * s, 28.0 * s), Tint { mul: [0.0, 0.0, 0.0, 1.0], add });
             }
-        } else {
-            ui.item_icon(slot.item, 80, x + w / 2.0, y + h / 2.0, s);
         }
     }
-    // Stack counts and potion keys (ItemTileSprite's DOSE_MATRIX corner).
-    let small = lay.font(12.0);
-    if let SlotKind::Potion(count) = slot.kind {
-        ui.label(&count.to_string(), x + 3.0 * s, y + h - small * 1.25, small, true, 0xFFFFFF);
-        let key = if slot.index == POTIONS[0].1 { "F" } else { "V" };
-        let kw = ui.measure(key, small, true);
-        ui.label(key, x + w - kw - 3.0 * s, y + 1.0 * s, small, true, 0xB3B3B3);
-    } else if !empty {
+    let small = lay.font(10.0);
+    match slot.kind {
+        // The number key, small in the corner.
+        SlotKind::Inventory(key) => ui.label(&key.to_string(), x + 4.0 * s, y + 2.0 * s, small, true, color::TEXT_MUTED),
+        SlotKind::Potion(count) => {
+            let key = if slot.index == POTIONS[0].1 { "F" } else { "V" };
+            ui.label(key, x + 4.0 * s, y + 2.0 * s, small, true, color::TEXT_MUTED);
+            let c = count.to_string();
+            let bw = ui.measure(&c, small, true) + 8.0 * s;
+            let bg = if count > 0 { color::ACCENT } else { 0x3A4050 };
+            let fg = if count > 0 { color::ACCENT_TEXT } else { color::TEXT_DIM };
+            theme::fill(ui.renderer, [x + w - bw - 2.0 * s, y + h - small * 1.3 - 2.0 * s, bw, small * 1.3], small * 0.65, bg, 0.95);
+            ui.label(&c, x + w - bw + 2.0 * s, y + h - small * 1.3 - 2.0 * s, small, true, fg);
+        }
+        _ => {}
+    }
+    if !empty && !matches!(slot.kind, SlotKind::Potion(_)) {
         let doses = ui.data.objects.get(&(slot.item as u16)).and_then(|d| d.xml.text_of("Doses").or(d.xml.text_of("Quantity")).map(str::to_owned));
         if let Some(n) = doses {
-            ui.label(&n, x + 3.0 * s, y + h - small * 1.25, small, true, 0xFFFFFF);
+            let nw = ui.measure(&n, small, true);
+            ui.label(&n, x + w - nw - 4.0 * s, y + h - small * 1.3, small, true, color::TEXT);
         }
     }
 }
@@ -774,35 +766,43 @@ fn draw_portrait(ui: &mut Ui, lay: &Layout, me: &GameObj) {
         tex2: me.stat_int(stat::TEX2).unwrap_or(0),
     });
     let Some(icon) = ui.redrawer.get(ui.sprites, ui.renderer, src, false, 60, dye) else { return };
-    let (cx, cy) = lay.at(22.0, 214.0);
+    let (cx, cy) = lay.at(22.0, 213.0);
     let k = lay.s * 0.8;
     let (w, h) = (icon.w as f32 * k, icon.h as f32 * k);
     ui.renderer.sprite(icon.rect, Quad::rect((cx - w / 2.0).round(), (cy - h / 2.0).round(), w, h), Tint::NONE);
 }
 
-/// `StatusBar`: a filled bar with its label at the left and "value/max" centred.
+/// A status bar: a rounded dark track, a shaded fill, the label at the left and the numbers at
+/// the right.
 #[allow(clippy::too_many_arguments)]
-fn status_bar(ui: &mut Ui, lay: &Layout, x: f32, y: f32, label: &str, value: i32, max: i32, color: u32) {
-    let (w, h) = (176.0 * lay.s, 16.0 * lay.s);
-    ui.rect(x, y, w, h, 0x545454, 1.0);
+fn status_bar(ui: &mut Ui, lay: &Layout, x: f32, y: f32, label: &str, value: i32, max: i32, c: u32) {
+    let s = lay.s;
+    let (w, h) = (176.0 * s, 18.0 * s);
+    let r = [x, y, w, h];
+    theme::frame(ui.renderer, r, 5.0 * s, s.max(1.0), (color::BORDER, 1.0), ((color::TRACK, 1.0), (theme::shade(color::TRACK, 0.08), 1.0)));
     let frac = if max > 0 { (value as f32 / max as f32).clamp(0.0, 1.0) } else { 0.0 };
-    ui.rect(x, y, (w * frac).round(), h, color, 1.0);
-    let size = lay.font(12.0);
-    let ty = y + (h - size * 1.2) / 2.0;
-    ui.label(label, x + 4.0 * lay.s, ty, size, true, 0xFFFFFF);
-    let v = format!("{value}/{max}");
+    let inner = [x + s, y + s, (w - 2.0 * s) * frac, h - 2.0 * s];
+    if inner[2] > 1.0 {
+        theme::rounded(ui.renderer, inner, 4.0 * s, (theme::shade(c, 0.25), 1.0), (theme::shade(c, -0.2), 1.0));
+        theme::fill(ui.renderer, [inner[0] + 2.0 * s, inner[1] + s, (inner[2] - 4.0 * s).max(0.0), inner[3] * 0.35], 2.0 * s, 0xFFFFFF, 0.14);
+    }
+    let size = lay.font(11.0);
+    let ty = y + (h - size * 1.22) / 2.0;
+    ui.label(label, x + 6.0 * s, ty, size, true, color::TEXT);
+    let v = format!("{value} / {max}");
     let vw = ui.measure(&v, size, true);
-    ui.label(&v, x + (w - vw) / 2.0, ty, size, true, 0xFFFFFF);
+    ui.label(&v, x + w - vw - 6.0 * s, ty, size, true, color::TEXT);
 }
 
 /// `MiniMap.draw` at its first zoom (4 units a tile), north up, the player's arrow turned with
 /// the camera. Static objects that fill their square show their colour over the ground.
 fn draw_minimap(ui: &mut Ui, lay: &Layout, world: &World, me: &GameObj, camera_angle: f64, colors: &mut MapColors) {
-    const SIDE: f32 = 192.0;
-    let (x0, y0) = lay.at(4.0, 4.0);
+    const SIDE: f32 = 186.0;
+    let (x0, y0) = lay.at(7.0, 7.0);
     let side = SIDE * lay.s;
-    ui.rect(x0 - lay.s, y0 - lay.s, side + 2.0 * lay.s, side + 2.0 * lay.s, 0x262626, 1.0);
-    ui.rect(x0, y0, side, side, MINIMAP_FILL, 1.0);
+    let e = 3.0 * lay.s;
+    theme::shadow(ui.renderer, [x0, y0, side, side], 6.0 * lay.s, 6.0 * lay.s, 0.35);
+    theme::frame(ui.renderer, [x0 - e, y0 - e, side + 2.0 * e, side + 2.0 * e], 7.0 * lay.s, lay.s.max(1.0), (color::BORDER_HI, 1.0), ((MINIMAP_FILL, 1.0), (MINIMAP_FILL, 1.0)));
     let zoom = 4.0 * lay.s;
     let half = (SIDE / 2.0 / 4.0).ceil() as i32 + 1;
     // Keep the map's edge from leaving a gap: the view stops at the map's sides.
@@ -891,7 +891,8 @@ pub fn draw_overlay(ui: &mut Ui, lay: &Layout, world: &World, panel: &Panel, sta
         };
         vec![Line::new(&format!("Empty {what} Slot"), 14.0, false, 0x9B9B9B)]
     };
-    draw_tooltip(ui, lay, &lines, if slot.item > 0 { Some(slot.item) } else { None }, mouse);
+    let accent = if slot.item > 0 { crate::screens::tier_edge(ui.data, slot.item) } else { None };
+    draw_tooltip(ui, lay, &lines, if slot.item > 0 { Some(slot.item) } else { None }, accent, mouse);
 }
 
 /// One line of a tooltip.
@@ -1040,10 +1041,10 @@ pub fn item_tooltip(data: &GameData, item: i32, me: Option<&GameObj>, kind: Slot
 
 /// A tooltip box beside the mouse, kept inside the window: the item's icon and title on top,
 /// then the lines wrapped to the box.
-fn draw_tooltip(ui: &mut Ui, lay: &Layout, lines: &[Line], icon: Option<i32>, mouse: (f64, f64)) {
+fn draw_tooltip(ui: &mut Ui, lay: &Layout, lines: &[Line], icon: Option<i32>, accent: Option<u32>, mouse: (f64, f64)) {
     let s = lay.s;
     let w = TOOLTIP_W * s;
-    let pad = 8.0 * s;
+    let pad = 10.0 * s;
     let inner = w - 2.0 * pad;
     let icon_w = if icon.is_some() { 44.0 * s } else { 0.0 };
     // Wrap every line; the first ones (title, tier) sit beside the icon.
@@ -1070,8 +1071,13 @@ fn draw_tooltip(ui: &mut Ui, lay: &Layout, lines: &[Line], icon: Option<i32>, mo
         y0 = (lay.h - h).max(0.0);
     }
     x0 = x0.max(0.0);
-    ui.rect(x0 - s, y0 - s, w + 2.0 * s, h + 2.0 * s, 0x9B9B9B, 1.0);
-    ui.rect(x0, y0, w, h, 0x363636, 0.95);
+    let r = [x0, y0, w, h];
+    theme::shadow(ui.renderer, r, 8.0 * s, 12.0 * s, 0.5);
+    let edge = accent.unwrap_or(color::BORDER_HI);
+    theme::frame(ui.renderer, r, 8.0 * s, s.max(1.0), (edge, 0.9), ((color::PANEL_TOP, 0.97), (color::PANEL_BOTTOM, 0.98)));
+    if let Some(c) = accent {
+        theme::rounded(ui.renderer, [x0 + s, y0 + s, w - 2.0 * s, 40.0 * s], 7.0 * s, (c, 0.22), (c, 0.0));
+    }
     if let Some(item) = icon {
         ui.item_icon(item, 60, x0 + pad + icon_w / 2.0 - 2.0 * s, y0 + pad + icon_w / 2.0 - 2.0 * s, s * 0.9);
     }
@@ -1151,22 +1157,28 @@ const CHAT_SHOW_MS: i32 = 30_000;
 /// The chat box at the bottom left of the view: recent lines, wrapped to fit, and the input
 /// line when open.
 pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input: Option<&str>, now: i32) {
+    let s = lay.s;
     let size = lay.font(14.0);
-    let line_h = (size * 1.25).round();
-    let margin = 8.0 * lay.s;
-    let max_w = (lay.view_w() - 2.0 * margin).min(620.0 * lay.s).max(120.0);
+    let line_h = (size * 1.3).round();
+    let margin = 10.0 * s;
+    let max_w = (lay.view_w() - 2.0 * margin - 16.0 * s).min(620.0 * s).max(120.0);
     let max_rows = ((lay.h * 0.4) / line_h).floor().max(3.0) as usize;
     let mut bottom = lay.h - margin;
     if let Some(input) = input {
-        let shown = format!("{input}_");
-        ui.rect(margin - 3.0, bottom - line_h - 2.0, max_w + 6.0, line_h + 4.0, 0x000000, 0.5);
+        let r = [margin, bottom - line_h - 12.0 * s, max_w + 16.0 * s, line_h + 12.0 * s];
+        ui.field_box(r, true, s);
+        let shown = if (now / 530) % 2 == 0 { format!("{input}|") } else { input.to_owned() };
         // Long input scrolls: show its end.
         let mut start = 0;
         while start < shown.len() && ui.measure(&shown[start..], size, false) > max_w {
             start += shown[start..].chars().next().map_or(1, |c| c.len_utf8());
         }
-        ui.label(&shown[start..], margin, bottom - line_h, size, false, 0xFFFFFF);
-        bottom -= line_h + 6.0;
+        if input.is_empty() {
+            ui.label("Say something, or /help", r[0] + 8.0 * s, r[1] + (r[3] - size * 1.22) / 2.0, size, false, color::TEXT_MUTED);
+        } else {
+            ui.label(&shown[start..], r[0] + 8.0 * s, r[1] + (r[3] - size * 1.22) / 2.0, size, false, color::TEXT);
+        }
+        bottom = r[1] - 6.0 * s;
     }
     // Wrap the newest lines into rows, newest at the bottom.
     let mut rows: Vec<Vec<(String, u32)>> = Vec::new();
@@ -1183,11 +1195,18 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
         }
     }
     rows.truncate(max_rows);
+    if rows.is_empty() {
+        return;
+    }
+    // A dark glass behind the lines, so they read over any ground.
+    let widest = rows.iter().map(|row| row.iter().map(|(p, _)| ui.measure(p, size, false)).sum::<f32>()).fold(0.0, f32::max);
+    let back_h = rows.len() as f32 * line_h + 10.0 * s;
+    theme::fill(ui.renderer, [margin, bottom - back_h, widest + 16.0 * s, back_h], 6.0 * s, 0x000000, if input.is_some() { 0.55 } else { 0.32 });
     for (i, row) in rows.iter().enumerate() {
-        let y = bottom - line_h * (i as f32 + 1.0);
-        let mut x = margin;
-        for (piece, color) in row {
-            ui.label(piece, x, y, size, false, *color);
+        let y = bottom - 5.0 * s - line_h * (i as f32 + 1.0);
+        let mut x = margin + 8.0 * s;
+        for (piece, c) in row {
+            ui.label(piece, x, y, size, false, *c);
             x += ui.measure(piece, size, false);
         }
     }

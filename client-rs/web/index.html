@@ -5,40 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>betterSkillys-rs</title>
   <style>
-    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font: 14px sans-serif; color: #ccc; }
+    html, body { margin: 0; height: 100%; background: #07080a; overflow: hidden; font: 14px sans-serif; color: #a9b0be; }
     canvas { display: block; width: 100vw; height: 100vh; outline: none; }
-    #status { position: fixed; left: 16px; bottom: 16px; }
-    /* Until the client has its own login screen. */
-    #login { position: fixed; inset: 0; display: grid; place-items: center; }
-    #login form { display: grid; gap: 8px; width: min(280px, calc(100vw - 32px)); }
-    #login input, #login button { font: inherit; padding: 8px; border-radius: 4px; border: 1px solid #555; background: #111; color: #eee; }
-    #login button { background: #2a5; border-color: #2a5; color: #fff; cursor: pointer; }
+    #status { position: fixed; inset: 0; display: grid; place-items: center; }
   </style>
 </head>
 <body>
-  <div id="login">
-    <form id="login-form">
-      <strong>betterSkillys</strong>
-      <input id="email" type="email" placeholder="Email" autocomplete="username" required>
-      <input id="password" type="password" placeholder="Password" autocomplete="current-password" required>
-      <button type="submit">Play</button>
-    </form>
-  </div>
-  <div id="status"></div>
+  <div id="status">Loading…</div>
   <script type="module">
+    // The client draws its own sign-in screen. A page may set window.bskLogin = {email, password}
+    // before init() to sign in straight away (see client-rs/app/src/login.rs).
     import init from "./betterskillys.js";
     const status = document.getElementById("status");
-    document.getElementById("login-form").addEventListener("submit", (e) => {
-      e.preventDefault();
-      // Read by the client (client-rs/app/src/login.rs); sent only to this page's /api.
-      window.bskLogin = {
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value,
-      };
-      document.getElementById("login").remove();
-      status.textContent = "Loading…";
-      init().then(() => status.remove(), (err) => { status.textContent = "Failed to start: " + err; });
-    });
+    init().then(() => status.remove(), (err) => { status.textContent = "Failed to start: " + err; });
   </script>
 </body>
 </html>

@@ -14,6 +14,16 @@ pub struct Manifest {
     pub object_xml: Vec<String>,
     pub region_xml: Vec<String>,
     pub fonts: Fonts,
+    /// Images for the screens outside the game.
+    #[serde(default)]
+    pub screens: Screens,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct Screens {
+    /// The title screen's background.
+    #[serde(default)]
+    pub title: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

@@ -436,11 +436,21 @@ impl Renderer {
     }
 
     fn push_triangle(&mut self, src: AtlasRect, pts: [[f32; 2]; 3], uvs: [[f32; 2]; 3], tint: Tint, wrap: bool) {
+        self.push_triangle_muls(src, pts, uvs, [tint.mul; 3], wrap);
+    }
+
+    /// A triangle whose colour (RGBA multiplier) differs at each corner, blended across it:
+    /// gradients, drawn with `white()`.
+    pub fn triangle_colors(&mut self, src: AtlasRect, pts: [[f32; 2]; 3], uvs: [[f32; 2]; 3], muls: [[f32; 4]; 3]) {
+        self.push_triangle_muls(src, pts, uvs, muls, false);
+    }
+
+    fn push_triangle_muls(&mut self, src: AtlasRect, pts: [[f32; 2]; 3], uvs: [[f32; 2]; 3], muls: [[f32; 4]; 3], wrap: bool) {
         let inv = 1.0 / self.atlas.size as f32;
         let rect = [src.x as f32 * inv, src.y as f32 * inv, src.w as f32 * inv, src.h as f32 * inv];
         let start = self.tri_vertices.len() as u32;
-        for (p, uv) in pts.iter().zip(uvs) {
-            self.tri_vertices.push(TriVertex { pos: *p, uv, rect, mul: tint.mul, wrap: if wrap { 1.0 } else { 0.0 } });
+        for ((p, uv), mul) in pts.iter().zip(uvs).zip(muls) {
+            self.tri_vertices.push(TriVertex { pos: *p, uv, rect, mul, wrap: if wrap { 1.0 } else { 0.0 } });
         }
         self.extend_run(Kind::Triangles, src.page, start, start + 3);
     }

@@ -146,6 +146,8 @@ def main():
         "object_xml": data_files(data_code, data, "objectFiles"),
         "region_xml": data_files(data_code, data, "regionFiles"),
         "fonts": {"regular": "com/company/ui/fonts/MyriadPro.otf", "bold": "com/company/ui/fonts/MyriadProBold.otf"},
+        # The title screen's background (TitleView's NewHomeScreen).
+        "screens": {"title": "kabam/rotmg/ui/view/ProjectOryx1.png"},
     }
 
     missing = []
@@ -156,6 +158,7 @@ def main():
                     missing.append(entry[key])
     for section in ("ground_xml", "object_xml", "region_xml"):
         missing += [p for p in manifest[section] if not os.path.exists(os.path.join(SRC, p))]
+    missing += [p for p in manifest["screens"].values() if not os.path.exists(os.path.join(SRC, p))]
     if missing:
         sys.exit("missing files:\n  " + "\n  ".join(sorted(set(missing))))
 

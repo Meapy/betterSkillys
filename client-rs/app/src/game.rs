@@ -51,9 +51,14 @@ pub struct Game {
 const CHAT_KEEP: usize = 200;
 
 impl Game {
-    pub fn start(target: Target, hello: HelloParams, char_id: i32) -> Self {
+    /// Connect and load a character, or create one (`Join::Create`).
+    pub fn start(target: Target, hello: HelloParams, join: Join) -> Self {
         let socket = GameSocket::connect(&target);
-        let (session, first) = Session::start(clone_hello(&hello), Join::Load { char_id });
+        let char_id = match join {
+            Join::Load { char_id } => char_id,
+            Join::Create { .. } => -1,
+        };
+        let (session, first) = Session::start(clone_hello(&hello), join);
         let mut game = Self {
             socket,
             session,
@@ -147,7 +152,9 @@ impl Game {
                 self.world = Some(World::new(info.width as i32, info.height as i32, &info.display_name, info.seed));
                 self.status = format!("Entering {}…", info.display_name);
             }
-            Some(Event::Joined { object_id, .. }) => {
+            Some(Event::Joined { object_id, char_id }) => {
+                // A new character has its id now; reconnects load it.
+                self.char_id = char_id;
                 if let Some(w) = &mut self.world {
                     w.me = Some(object_id);
                 }
@@ -159,6 +166,13 @@ impl Game {
                 return;
             }
             None => {}
+        }
+        if let ServerMessage::Death(d) = msg {
+            if d.char_id == self.char_id {
+                self.status = format!("You died, killed by {}.", d.killed_by);
+                self.ended = true;
+                return;
+            }
         }
         if let ServerMessage::Text(t) = msg {
             self.add_chat(&t.name, &t.recipient, &t.text, t.name_color, t.text_color, now);

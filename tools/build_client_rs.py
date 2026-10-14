@@ -42,6 +42,7 @@ def manifest_files():
         files.update(p for p in (entry.get("file"), entry.get("mask")) if p)
     files.update(m["ground_xml"] + m["object_xml"] + m["region_xml"])
     files.update([m["particles"], m["fonts"]["regular"], m["fonts"]["bold"]])
+    files.update(m.get("screens", {}).values())
     return sorted(files)
 
 

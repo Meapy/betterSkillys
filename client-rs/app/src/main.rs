@@ -6,18 +6,19 @@ mod ground;
 mod hud;
 mod login;
 mod redraw;
+mod screens;
 #[allow(dead_code)] // lookups the game screens will use
 mod sprites;
 mod text;
+mod theme;
 mod view;
 
 use bsk_assets::AssetSource;
 use bsk_data::GameData;
 use bsk_net::Pending;
 use bsk_render::Renderer;
-use bsk_session::{HelloParams, NEXUS_GAME_ID};
+use bsk_session::{HelloParams, Join, NEXUS_GAME_ID};
 use game::Game;
-use login::LoginConfig;
 use sprites::Sprites;
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -39,6 +40,8 @@ struct Loaded {
     fonts: text::Fonts,
     text: text::Text,
     ground: ground::Ground,
+    /// The title screen's background and its size.
+    title: Option<(bsk_render::AtlasRect, u32, u32)>,
 }
 
 enum UserEvent {
@@ -46,12 +49,18 @@ enum UserEvent {
     Failed(String),
 }
 
-/// Where we are between start-up and playing.
+/// Where we are: the screens before the game, or in it.
 enum Phase {
-    /// No login given: nothing to connect to.
-    Idle(String),
-    SigningIn(LoginConfig, Pending<bsk_net::http::Response>),
+    Menu,
     Playing(Game),
+}
+
+/// What we asked the account server.
+enum Request {
+    /// The character list; play the first living character when it comes (tests).
+    CharList { auto_play: bool },
+    Register,
+    Delete,
 }
 
 struct App {
@@ -98,6 +107,17 @@ struct App {
     hud: hud::HudState,
     /// Left button presses (true) and releases since the last frame, and where.
     clicks: Vec<(bool, (f64, f64))>,
+    /// The screens before the game.
+    front: screens::Front,
+    endpoint: Option<login::Endpoint>,
+    /// The signed-in account's email and password.
+    account: Option<(String, String)>,
+    request: Option<(Request, Pending<bsk_net::http::Response>)>,
+    /// Keys typed on the screens: (key, text).
+    front_keys: Vec<(KeyCode, Option<String>)>,
+    /// The Escape menu in the game, and its buttons last frame.
+    game_menu: bool,
+    menu_buttons: Vec<(screens::MenuChoice, [f32; 4])>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -179,6 +199,7 @@ fn apply_action(game: &mut Game, panel: &hud::Panel, action: hud::Action, now: i
 }
 
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))] // scripted input is desktop-only
 enum MouseStep {
     Down,
     Up,
@@ -340,7 +361,23 @@ async fn load(window: Arc<Window>) -> Result<Box<Loaded>, String> {
     );
     let (regular, bold) = futures::join!(source.load(&manifest.fonts.regular), source.load(&manifest.fonts.bold));
     let fonts = text::Fonts::new(regular.map_err(|e| e.to_string())?, bold.map_err(|e| e.to_string())?)?;
-    Ok(Box::new(Loaded { renderer, sprites, data, redrawer: Default::default(), fonts, text: Default::default(), ground: Default::default() }))
+    let mut title = None;
+    if let Some(path) = &manifest.screens.title {
+        match source.load(path).await.map_err(|e| e.to_string()).and_then(|b| bsk_assets::decode_image(path, &b).map_err(|e| e.to_string())) {
+            Ok(img) => title = renderer.add_image(&img).map(|r| (r, img.width(), img.height())),
+            Err(e) => log::warn!("{path}: {e}"),
+        }
+    }
+    Ok(Box::new(Loaded {
+        renderer,
+        sprites,
+        data,
+        redrawer: Default::default(),
+        fonts,
+        text: Default::default(),
+        ground: Default::default(),
+        title,
+    }))
 }
 
 impl App {
@@ -348,40 +385,191 @@ impl App {
         self.started.elapsed().as_millis() as i32
     }
 
-    fn start_login(&mut self) {
-        self.phase = match login::config() {
-            Ok(Some(cfg)) => {
-                let pending = cfg.char_list();
-                Phase::SigningIn(cfg, pending)
+    /// After loading: sign in with what we were given or remember, else show the login screen.
+    fn start(&mut self) {
+        self.phase = Phase::Menu;
+        match login::startup() {
+            Ok(start) => {
+                self.front.endpoint_label = format!("Account server: {}", start.endpoint.account);
+                self.endpoint = Some(start.endpoint);
+                if let Some((email, password)) = start.login {
+                    self.front.fields[screens::EMAIL] = email;
+                    self.front.fields[screens::PASSWORD] = password;
+                    // Desktop tests sign in and go straight into the game.
+                    self.front.remember = false;
+                    let stay = cfg!(not(target_arch = "wasm32")) && std::env::args().any(|a| a == "--stay");
+                    self.sign_in(cfg!(not(target_arch = "wasm32")) && !stay);
+                } else if let Some((email, password)) = login::remembered() {
+                    self.front.fields[screens::EMAIL] = email;
+                    self.front.fields[screens::PASSWORD] = password;
+                    self.sign_in(false);
+                } else {
+                    self.front.show(screens::Screen::Login);
+                }
             }
-            Ok(None) => Phase::Idle("no login given (see client-rs/app/src/login.rs)".into()),
-            Err(e) => Phase::Idle(e),
+            Err(e) => {
+                self.front.message = Some((e, true));
+                self.front.show(screens::Screen::Login);
+            }
+        }
+    }
+
+    fn sign_in(&mut self, auto_play: bool) {
+        let (email, password) = (self.front.fields[screens::EMAIL].trim().to_owned(), self.front.fields[screens::PASSWORD].clone());
+        if email.is_empty() || password.is_empty() {
+            self.front.message = Some(("Enter your email and password.".into(), true));
+            self.front.show(screens::Screen::Login);
+            return;
+        }
+        let Some(endpoint) = &self.endpoint else { return };
+        self.request = Some((Request::CharList { auto_play }, endpoint.char_list(&email, &password)));
+        self.account = Some((email, password));
+        self.front.busy = "Signing in…".into();
+        self.front.message = None;
+        self.front.show(screens::Screen::Busy);
+    }
+
+    /// Ask for the character list again (after a game, or a deletion).
+    fn refresh(&mut self) {
+        if let (Some(endpoint), Some((email, password))) = (&self.endpoint, &self.account) {
+            self.request = Some((Request::CharList { auto_play: false }, endpoint.char_list(email, password)));
+        }
+    }
+
+    fn front_action(&mut self, action: screens::Action) {
+        use screens::{Action, Screen};
+        match action {
+            Action::SignIn => self.sign_in(false),
+            Action::Register => {
+                let f = &self.front.fields;
+                let (name, email, password) = (f[screens::NAME].trim().to_owned(), f[screens::EMAIL].trim().to_owned(), f[screens::PASSWORD].clone());
+                let problem = if name.is_empty() || email.is_empty() || password.is_empty() {
+                    Some("Fill in every field.")
+                } else if password != f[screens::CONFIRM] {
+                    Some("The passwords don't match.")
+                } else if !name.chars().all(|c| c.is_ascii_alphabetic()) || name.len() > 10 {
+                    Some("Names are up to 10 letters, A to Z.")
+                } else {
+                    None
+                };
+                if let Some(p) = problem {
+                    self.front.message = Some((p.into(), true));
+                    return;
+                }
+                let Some(endpoint) = &self.endpoint else { return };
+                self.request = Some((Request::Register, endpoint.register(&email, &password, &name)));
+                self.front.busy = "Creating your account…".into();
+                self.front.message = None;
+                self.front.show(Screen::Busy);
+            }
+            Action::Play(id) => self.play(Join::Load { char_id: id }),
+            Action::Create(class) => self.play(Join::Create { class_type: class, skin_type: 0 }),
+            Action::Delete(id) => {
+                let (Some(endpoint), Some((email, password))) = (&self.endpoint, &self.account) else { return };
+                self.request = Some((Request::Delete, endpoint.delete_char(email, password, id)));
+            }
+            Action::Logout => self.logout(),
+        }
+    }
+
+    fn logout(&mut self) {
+        self.account = None;
+        self.front.list = None;
+        self.front.fields[screens::PASSWORD].clear();
+        self.front.message = None;
+        login::remember(None);
+        self.front.show(screens::Screen::Login);
+    }
+
+    /// Into the game with this character (or a new one), on the chosen server.
+    fn play(&mut self, join: Join) {
+        let (Some(endpoint), Some((email, password)), Some(list)) = (&self.endpoint, &self.account, &self.front.list) else { return };
+        let Some(server) = list.servers.get(self.front.server).or(list.servers.first()) else {
+            self.front.message = Some(("The account server lists no world servers.".into(), true));
+            return;
         };
+        log::info!("{join:?} on {} ({}:{})", server.name, server.host, server.port);
+        let hello = HelloParams {
+            build_version: bsk_net::login::BUILD_VERSION.into(),
+            game_id: NEXUS_GAME_ID,
+            guid: bsk_net::login::encrypt(email),
+            password: bsk_net::login::encrypt(password),
+            key_time: -1,
+            key: vec![],
+        };
+        self.phase = Phase::Playing(Game::start(endpoint.target(&server.host, server.port), hello, join));
+        self.hud = Default::default();
+        self.chat_input = None;
+        self.game_menu = false;
+        self.keys.clear();
+    }
+
+    /// Leave the game for the character list, saying why.
+    fn leave_game(&mut self, why: Option<String>) {
+        if let Phase::Playing(game) = &mut self.phase {
+            game.close();
+        }
+        self.phase = Phase::Menu;
+        self.game_menu = false;
+        self.mouse_down = false;
+        self.front.message = why.map(|w| (w, true));
+        self.front.show(screens::Screen::Chars);
+        self.refresh();
     }
 
     /// Move through the sign-in steps as their answers arrive.
     fn advance(&mut self) {
-        let Phase::SigningIn(cfg, pending) = &self.phase else { return };
+        // A game that ended (death, disconnect) goes back to the character list.
+        if let Phase::Playing(game) = &self.phase {
+            if game.ended && self.shot.is_none() {
+                let why = game.status.clone();
+                self.leave_game(Some(why));
+            }
+        }
+        let Some((_, pending)) = &self.request else { return };
         let Some(response) = pending.take() else { return };
-        self.phase = match login::parse_char_list(response) {
-            Err(e) => Phase::Idle(format!("sign-in failed: {e}")),
-            Ok(list) => match (list.chars.iter().find(|c| !c.dead), list.servers.first()) {
-                (Some(ch), Some(server)) => {
-                    log::info!("character {} on {} ({}:{})", ch.id, server.name, server.host, server.port);
-                    let hello = HelloParams {
-                        build_version: bsk_net::login::BUILD_VERSION.into(),
-                        game_id: NEXUS_GAME_ID,
-                        guid: bsk_net::login::encrypt(&cfg.email),
-                        password: bsk_net::login::encrypt(&cfg.password),
-                        key_time: -1,
-                        key: vec![],
-                    };
-                    Phase::Playing(Game::start(cfg.target(&server.host, server.port), hello, ch.id))
+        let Some((kind, _)) = self.request.take() else { return };
+        use screens::Screen;
+        match kind {
+            Request::CharList { auto_play } => match login::parse_char_list(response) {
+                Ok(list) => {
+                    if let Some((email, password)) = &self.account {
+                        login::remember(self.front.remember.then_some((email.as_str(), password.as_str())));
+                    }
+                    self.front.server = self.front.server.min(list.servers.len().saturating_sub(1));
+                    let first = list.chars.iter().find(|c| !c.dead).map(|c| c.id);
+                    self.front.list = Some(list);
+                    if matches!(self.phase, Phase::Menu) {
+                        if self.front.screen == Screen::Busy || self.front.screen == Screen::Login {
+                            self.front.show(Screen::Chars);
+                        }
+                        if let (true, Some(id)) = (auto_play, first) {
+                            self.play(Join::Load { char_id: id });
+                        }
+                    }
                 }
-                (None, _) => Phase::Idle("this account has no living character".into()),
-                (_, None) => Phase::Idle("the account server lists no world servers".into()),
+                Err(e) => {
+                    if self.front.list.is_some() {
+                        self.front.message = Some((e, true));
+                    } else {
+                        self.account = None;
+                        self.front.message = Some((e, true));
+                        self.front.show(Screen::Login);
+                    }
+                }
             },
-        };
+            Request::Register => match login::parse_success(response) {
+                Ok(()) => self.sign_in(false),
+                Err(e) => {
+                    self.front.message = Some((e, true));
+                    self.front.show(Screen::Register);
+                }
+            },
+            Request::Delete => match login::parse_success(response) {
+                Ok(()) => self.refresh(),
+                Err(e) => self.front.message = Some((e, true)),
+            },
+        }
     }
 
     fn held(&self, codes: &[KeyCode]) -> bool {
@@ -466,10 +654,55 @@ impl App {
         let wants_fire_scripted = self.autofire || scripted_fire;
         let (mouse, script_aim) = (self.mouse, self.script_aim);
         let Some(loaded) = self.loaded.as_mut() else { return };
-        let Loaded { renderer, sprites, data, redrawer, fonts, text, ground } = &mut **loaded;
+        let Loaded { renderer, sprites, data, redrawer, fonts, text, title, .. } = &mut **loaded;
         let lay = hud::Layout::new(renderer.size().0, renderer.size().1);
         let mut ability = false;
         let mut panel = None;
+        if matches!(self.phase, Phase::Menu) {
+            let mut actions = Vec::new();
+            for (code, text) in std::mem::take(&mut self.front_keys) {
+                actions.extend(self.front.key(code, text.as_deref()));
+            }
+            for (down, pos) in std::mem::take(&mut self.clicks) {
+                if down {
+                    actions.extend(self.front.click(pos));
+                }
+            }
+            renderer.begin();
+            let (w, h) = renderer.size();
+            let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+            self.front.draw(&mut ui, w as f32, h as f32, *title, mouse, now);
+            self.finish_frame(now);
+            for action in actions {
+                self.front_action(action);
+            }
+            return;
+        }
+        // The Escape menu takes the clicks while it's open.
+        if self.game_menu {
+            let mut choice = None;
+            for (down, pos) in std::mem::take(&mut self.clicks) {
+                if down {
+                    choice = choice.or(screens::menu_click(&self.menu_buttons, pos));
+                }
+            }
+            self.mouse_down = false;
+            match choice {
+                Some(screens::MenuChoice::Resume) => self.game_menu = false,
+                Some(screens::MenuChoice::CharSelect) => {
+                    self.leave_game(None);
+                    return;
+                }
+                Some(screens::MenuChoice::Logout) => {
+                    self.leave_game(None);
+                    self.logout();
+                    return;
+                }
+                None => {}
+            }
+        }
+        let Some(loaded) = self.loaded.as_mut() else { return };
+        let Loaded { renderer, sprites, data, redrawer, fonts, text, ground, .. } = &mut **loaded;
         if let Phase::Playing(game) = &mut self.phase {
             // The panel as it stands, for clicks and number keys.
             let built = game.world.as_ref().map(|w| hud::Panel::new(&lay, w, data, self.hud.page));
@@ -540,15 +773,14 @@ impl App {
         renderer.begin();
         let (_, h) = renderer.size();
         let status = match &self.phase {
-            Phase::Idle(why) => why.clone(),
-            Phase::SigningIn(..) => "Signing in…".into(),
+            Phase::Menu => String::new(),
             Phase::Playing(game) => game.status.clone(),
         };
         let mut view_radius = None;
         let mut fire = None;
         let mut ability_at = None;
         match &self.phase {
-            Phase::Idle(_) | Phase::SigningIn(..) => {}
+            Phase::Menu => {}
             Phase::Playing(game) => {
                 if let Some(world) = &game.world {
                     if let Some(me) = world.player() {
@@ -620,6 +852,22 @@ impl App {
                 hud::draw_overlay(&mut ui, &lay, world, p, &self.hud, mouse);
             }
         }
+        if self.game_menu {
+            let (w, h) = renderer.size();
+            let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+            self.menu_buttons = screens::draw_game_menu(&mut ui, w as f32, h as f32, mouse);
+        }
+        self.finish_frame(now);
+    }
+
+    /// Present the frame: the --shot capture, and the title's frame rate.
+    fn finish_frame(&mut self, now: i32) {
+        let status = match &self.phase {
+            Phase::Menu => String::new(),
+            Phase::Playing(game) => game.status.clone(),
+        };
+        let Some(loaded) = self.loaded.as_mut() else { return };
+        let renderer = &mut loaded.renderer;
         if let Some((_, after)) = &self.shot {
             if now as f32 >= after * 1000.0 && !renderer.capture_next_frame() {
                 log::error!("--shot: this surface can't be read back");
@@ -711,7 +959,7 @@ impl ApplicationHandler<UserEvent> for App {
                     self.loaded.as_mut().unwrap().renderer.resize(size.width, size.height);
                     window.request_redraw();
                 }
-                self.start_login();
+                self.start();
             }
             UserEvent::Failed(e) => {
                 log::error!("startup failed: {e}");
@@ -748,6 +996,12 @@ impl ApplicationHandler<UserEvent> for App {
                     }
                     return;
                 }
+                if matches!(self.phase, Phase::Menu) {
+                    if pressed {
+                        self.front_keys.push((code, event.text.as_ref().map(|t| t.to_string())));
+                    }
+                    return;
+                }
                 // Typing a chat line: keys go to the text, not the game.
                 if let Some(input) = &mut self.chat_input {
                     if pressed {
@@ -774,6 +1028,11 @@ impl ApplicationHandler<UserEvent> for App {
                             }
                         }
                     }
+                    return;
+                }
+                if pressed && !event.repeat && code == KeyCode::Escape {
+                    self.game_menu = !self.game_menu;
+                    self.keys.clear();
                     return;
                 }
                 if pressed && !event.repeat && matches!(self.phase, Phase::Playing(_)) {
@@ -849,7 +1108,7 @@ fn main() {
         proxy: event_loop.create_proxy(),
         window: None,
         loaded: None,
-        phase: Phase::Idle("loading".into()),
+        phase: Phase::Menu,
         started: Instant::now(),
         last_frame: 0,
         keys: HashSet::new(),
@@ -877,6 +1136,13 @@ fn main() {
         mouse_down: false,
         autofire: false,
         script_aim: aim_arg(),
+        front: Default::default(),
+        endpoint: None,
+        account: None,
+        request: None,
+        front_keys: Vec::new(),
+        game_menu: false,
+        menu_buttons: Vec::new(),
     };
     #[cfg(not(target_arch = "wasm32"))]
     {
