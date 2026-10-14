@@ -1,0 +1,3210 @@
+{
+ "_generated_by": "tools/gen_rs_manifest.py; paths are relative to client/src",
+ "image_sets": [
+  {
+   "name": "lofiChar8x8",
+   "file": "kabam/rotmg/assets/prod/images/lofiChar.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiChar16x8",
+   "file": "kabam/rotmg/assets/prod/images/lofiChar.png",
+   "w": 16,
+   "h": 8
+  },
+  {
+   "name": "lofiChar16x16",
+   "file": "kabam/rotmg/assets/prod/images/lofiChar.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lofiChar28x8",
+   "file": "kabam/rotmg/assets/prod/images/lofiChar2.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiChar216x8",
+   "file": "kabam/rotmg/assets/prod/images/lofiChar2.png",
+   "w": 16,
+   "h": 8
+  },
+  {
+   "name": "lofiChar216x16",
+   "file": "kabam/rotmg/assets/prod/images/lofiChar2.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lofiCharBig",
+   "file": "kabam/rotmg/assets/prod/images/lofiCharBig.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lofiEnvironment",
+   "file": "kabam/rotmg/assets/prod/images/lofiEnvironment.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiEnvironment2",
+   "file": "kabam/rotmg/assets/prod/images/lofiEnvironment2.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiEnvironment3",
+   "file": "kabam/rotmg/assets/prod/images/lofiEnvironment3.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiInterface",
+   "file": "kabam/rotmg/assets/prod/images/lofiInterface.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "redLootBag",
+   "file": "kabam/rotmg/assets/prod/objects/redLootBag.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiInterfaceBig",
+   "file": "kabam/rotmg/assets/prod/images/lofiInterfaceBig.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lofiInterface2",
+   "file": "kabam/rotmg/assets/prod/images/lofiInterface2.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiObj",
+   "file": "kabam/rotmg/assets/prod/images/lofiObj.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiObj2",
+   "file": "kabam/rotmg/assets/prod/images/lofiObj2.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiObj3",
+   "file": "kabam/rotmg/assets/prod/images/lofiObj3.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiObj4",
+   "file": "kabam/rotmg/assets/prod/images/lofiObj4.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiObj5",
+   "file": "kabam/rotmg/assets/prod/images/lofiObj5.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiObj5new",
+   "file": "kabam/rotmg/assets/prod/images/lofiObj5b.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiObj6",
+   "file": "kabam/rotmg/assets/prod/images/lofiObj6.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiObjBig",
+   "file": "kabam/rotmg/assets/prod/images/lofiObjBig.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lofiObj40x40",
+   "file": "kabam/rotmg/assets/prod/images/lofiObj40x40.png",
+   "w": 40,
+   "h": 40
+  },
+  {
+   "name": "lofiProjs",
+   "file": "kabam/rotmg/assets/prod/images/lofiProjs.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiParticlesShocker",
+   "file": "kabam/rotmg/assets/prod/images/lofiParticlesShocker.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lofiParticlesBeam",
+   "file": "kabam/rotmg/assets/prod/images/lofiParticlesBeam.png",
+   "w": 16,
+   "h": 32
+  },
+  {
+   "name": "lofiParticlesSkull",
+   "file": "kabam/rotmg/assets/prod/images/lofiParticlesSkull.png",
+   "w": 16,
+   "h": 32
+  },
+  {
+   "name": "lofiParticlesElectric",
+   "file": "kabam/rotmg/assets/prod/images/lofiParticlesElectric.png",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "name": "lofiProjsBig",
+   "file": "kabam/rotmg/assets/prod/images/lofiProjsBig.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lofiParts",
+   "file": "kabam/rotmg/assets/prod/images/lofiParts.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "stars",
+   "file": "kabam/rotmg/assets/prod/objects/stars.png",
+   "w": 5,
+   "h": 5
+  },
+  {
+   "name": "textile4x4",
+   "file": "kabam/rotmg/assets/prod/objects/textile4x4.png",
+   "w": 4,
+   "h": 4
+  },
+  {
+   "name": "textile5x5",
+   "file": "kabam/rotmg/assets/prod/objects/textile5x5.png",
+   "w": 5,
+   "h": 5
+  },
+  {
+   "name": "textile9x9",
+   "file": "kabam/rotmg/assets/prod/objects/textile9x9.png",
+   "w": 9,
+   "h": 9
+  },
+  {
+   "name": "textile10x10",
+   "file": "kabam/rotmg/assets/prod/objects/textile10x10.png",
+   "w": 10,
+   "h": 10
+  },
+  {
+   "name": "inner_mask",
+   "file": "kabam/rotmg/assets/prod/images/innerMask.png",
+   "w": 4,
+   "h": 4
+  },
+  {
+   "name": "sides_mask",
+   "file": "kabam/rotmg/assets/prod/objects/sidesMask.png",
+   "w": 4,
+   "h": 4
+  },
+  {
+   "name": "outer_mask",
+   "file": "kabam/rotmg/assets/prod/objects/outerMask.png",
+   "w": 4,
+   "h": 4
+  },
+  {
+   "name": "innerP1_mask",
+   "file": "kabam/rotmg/assets/prod/images/innerP1Mask.png",
+   "w": 4,
+   "h": 4
+  },
+  {
+   "name": "innerP2_mask",
+   "file": "kabam/rotmg/assets/prod/images/innerP2Mask.png",
+   "w": 4,
+   "h": 4
+  },
+  {
+   "name": "d3LofiObjEmbed",
+   "file": "kabam/rotmg/assets/prod/images/d3LofiObj.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "d3LofiObjEmbed16",
+   "file": "kabam/rotmg/assets/prod/images/d3LofiObj.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "d3LofiObjBigEmbed",
+   "file": "kabam/rotmg/assets/prod/images/d3LofiObjBig.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "d2LofiObjEmbed",
+   "file": "kabam/rotmg/assets/prod/images/d2LofiObj.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "d2LofiObjBigEmbed",
+   "file": "kabam/rotmg/assets/prod/images/d2LofiObjBig.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "d1lofiObjBig",
+   "file": "kabam/rotmg/assets/prod/images/d1LofiObjBig.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "cursorsEmbed",
+   "file": "kabam/rotmg/assets/prod/images/cursors.png",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "name": "mountainTempleObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/mountainTempleObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "mountainTempleObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/mountainTempleObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "oryxHordeObjects8x8",
+   "file": "kabam/rotmg/assets/prod/objects/oryxHordeObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "oryxHordeObjects16x16",
+   "file": "kabam/rotmg/assets/prod/objects/oryxHordeObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "battleOryxObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/battleOryxObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "battleOryxObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/battleOryxObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "santaWorkshopObjects8x8",
+   "file": "kabam/rotmg/assets/prod/objects/santaWorkshopObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "santaWorkshopObjects16x16",
+   "file": "kabam/rotmg/assets/prod/objects/santaWorkshopObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "parasiteDenObjects8x8",
+   "file": "kabam/rotmg/assets/prod/objects/parasiteDenObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "parasiteDenObjects16x16",
+   "file": "kabam/rotmg/assets/prod/objects/parasiteDenObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "stPatricksObjects8x8",
+   "file": "kabam/rotmg/assets/prod/objects/stPatricksObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "stPatricksObjects16x16",
+   "file": "kabam/rotmg/assets/prod/objects/stPatricksObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "buffedBunnyObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/buffedBunnyObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "buffedBunnyObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/buffedBunnyObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "theMachineObjects8x8",
+   "file": "kabam/rotmg/assets/prod/objects/theMachineObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "theMachineObjects16x16",
+   "file": "kabam/rotmg/assets/prod/objects/theMachineObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "SakuraEnvironment16x16",
+   "file": "kabam/rotmg/assets/prod/objects/SakuraEnvironment16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "SakuraEnvironment8x8",
+   "file": "kabam/rotmg/assets/prod/objects/SakuraEnvironment8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "HanamiParts",
+   "file": "kabam/rotmg/assets/prod/images/HanamiParts8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "summerNexusObjects8x8",
+   "file": "kabam/rotmg/assets/prod/objects/summerNexusObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "summerNexusObjects16x16",
+   "file": "kabam/rotmg/assets/prod/objects/summerNexusObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "autumnNexusObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/autumnNexusObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "autumnNexusObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/autumnNexusObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "xmasNexusObjects8x8",
+   "file": "kabam/rotmg/assets/prod/objects/xmasNexusObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "xmasNexusObjects16x16",
+   "file": "kabam/rotmg/assets/prod/objects/xmasNexusObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "epicHiveObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/epicHiveObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "epicHiveObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/epicHiveObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lostHallsObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/lostHallsObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lostHallsObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/lostHallsObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "cnidarianReefObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/cnidarianReefObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "cnidarianReefObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/cnidarianReefObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "magicWoodsObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/magicWoodsObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "magicWoodsObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/magicWoodsObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "secludedThicketObjects8x8",
+   "file": "kabam/rotmg/assets/prod/objects/secludedThicketObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "secludedThicketObjects16x16",
+   "file": "kabam/rotmg/assets/prod/objects/secludedThicketObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lofiGravestone8x8",
+   "file": "kabam/rotmg/assets/prod/images/lofiGravestone.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lofiGravestone16x8",
+   "file": "kabam/rotmg/assets/prod/images/lofiGravestone.png",
+   "w": 16,
+   "h": 8
+  },
+  {
+   "name": "lofiGravestone16x16",
+   "file": "kabam/rotmg/assets/prod/images/lofiGravestone.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "cursedLibraryObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/cursedLibraryObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "cursedLibraryObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/cursedLibraryObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lairOfDraconisObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/lairOfDraconisObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lairOfDraconisObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/lairOfDraconisObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lairOfShaitanObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/lairOfShaitanObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "lairOfShaitanObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/lairOfShaitanObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "alienInvasionObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/alienInvasionObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "alienInvasionObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/alienInvasionObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "crystalCaveObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/crystalCaveObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "crystalCaveObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/crystalCaveObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "fungalCavernObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/fungalCavernObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "fungalCavernObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/fungalCavernObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "innerWorkingsObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/innerWorkingsObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "innerWorkingsObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/innerWorkingsObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "lofiparticlesMusicNotes",
+   "file": "kabam/rotmg/assets/prod/images/lofi.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "oryxSanctuaryObjects8x8",
+   "file": "kabam/rotmg/assets/prod/objects/oryxSanctuaryObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "oryxSanctuaryObjects16x16",
+   "file": "kabam/rotmg/assets/prod/objects/oryxSanctuaryObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "oryxSanctuaryObjects32x32",
+   "file": "kabam/rotmg/assets/prod/objects/oryxSanctuaryObjects32x32.png",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "name": "lofiParticlesHolyBeam",
+   "file": "kabam/rotmg/assets/prod/images/lofiParticlesHolyBeam.png",
+   "w": 16,
+   "h": 32
+  },
+  {
+   "name": "lofiParticlesMeteor",
+   "file": "kabam/rotmg/assets/prod/images/lofiParticlesMeteor.png",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "name": "lofiParticlesTelegraph",
+   "file": "kabam/rotmg/assets/prod/images/lofiParticlesTelegraph.png",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "name": "archbishopObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/archbishopObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "archbishopObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/archbishopObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "archbishopObjects64x64",
+   "file": "kabam/rotmg/assets/prod/images/archbishopObjects64x64.png",
+   "w": 64,
+   "h": 64
+  },
+  {
+   "name": "ancientRuinsObjects8x8",
+   "file": "kabam/rotmg/assets/prod/images/ancientRuinsObjects8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "ancientRuinsObjects16x16",
+   "file": "kabam/rotmg/assets/prod/images/ancientRuinsObjects16x16.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "emotes",
+   "file": "kabam/rotmg/assets/custom/images/Emotes.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "animEmotes",
+   "file": "kabam/rotmg/assets/custom/images/AnimEmotes.png",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "name": "customAssets8x8",
+   "file": "kabam/rotmg/assets/custom/images/CustomAssets8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "customUV128x128",
+   "file": "kabam/rotmg/assets/custom/images/CustomUV128x128.png",
+   "w": 128,
+   "h": 128
+  },
+  {
+   "name": "elderAssets8x8",
+   "file": "kabam/rotmg/assets/custom/images/ElderAssets8x8.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "invisible",
+   "file": null,
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiChar16x16",
+   "file": "kabam/rotmg/assets/doomed/images/lofiChar.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drLofiChar16x8",
+   "file": "kabam/rotmg/assets/doomed/images/lofiChar.png",
+   "w": 16,
+   "h": 8
+  },
+  {
+   "name": "drLofiChar216x16",
+   "file": "kabam/rotmg/assets/doomed/images/lofiChar2.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drLofiChar216x8",
+   "file": "kabam/rotmg/assets/doomed/images/lofiChar2.png",
+   "w": 16,
+   "h": 8
+  },
+  {
+   "name": "drLofiChar28x8",
+   "file": "kabam/rotmg/assets/doomed/images/lofiChar2.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiChar8x8",
+   "file": "kabam/rotmg/assets/doomed/images/lofiChar.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiCharBig",
+   "file": "kabam/rotmg/assets/doomed/images/lofiCharBig.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drLofiEnvironment",
+   "file": "kabam/rotmg/assets/doomed/images/lofiEnvironment.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiEnvironment2",
+   "file": "kabam/rotmg/assets/doomed/images/lofiEnvironment2.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiEnvironment3",
+   "file": "kabam/rotmg/assets/doomed/images/lofiEnvironment3.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiObj",
+   "file": "kabam/rotmg/assets/doomed/images/lofiObj.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiObj2",
+   "file": "kabam/rotmg/assets/doomed/images/lofiObj2.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiObj3",
+   "file": "kabam/rotmg/assets/doomed/images/lofiObj3.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiObj4",
+   "file": "kabam/rotmg/assets/doomed/images/lofiObj4.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiObj5",
+   "file": "kabam/rotmg/assets/doomed/images/lofiObj5.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiObj6",
+   "file": "kabam/rotmg/assets/doomed/images/lofiObj6.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drLofiObjBig",
+   "file": "kabam/rotmg/assets/doomed/images/lofiObjBig.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drLofiProjs",
+   "file": "kabam/rotmg/assets/doomed/images/lofiProjs.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRedLootBag",
+   "file": "kabam/rotmg/assets/doomed/images/redLootBag.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_10045528",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10045528.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_10541999",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10541999.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_10563452",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10563452.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_10618159",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10618159.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_1072207973",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_1072207973.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_1123387135",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_1123387135.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_11474033",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_11474033.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_12389006",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_12389006.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_12669611",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_12669611.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_13189542",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_13189542.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_13838372",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_13838372.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_147293320",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_147293320.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_14738124",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_14738124.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_14775336",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_14775336.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_148269362",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_148269362.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_15401009",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_15401009.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_15445057",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_15445057.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_16368092",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_16368092.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_16642062",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_16642062.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_167943966",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_167943966.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_17221762",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_17221762.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_17898648",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_17898648.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_17903110",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_17903110.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_19089083",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_19089083.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_196073004",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_196073004.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_19795118",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_19795118.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_19845460",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_19845460.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_20036182",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_20036182.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_20482145",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_20482145.png",
+   "w": 1,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_21281370",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_21281370.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_21442058",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_21442058.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_230784358",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_230784358.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_24362609",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_24362609.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_24514195",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_24514195.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_24519031",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_24519031.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_24799885",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_24799885.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_25725614",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_25725614.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_28078990",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_28078990.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_428890379",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_428890379.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_4712140350947328",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4712140350947328.png",
+   "w": 1,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_4749920137379840",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4749920137379840.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_4971186618368000",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4971186618368000.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_4999650740273152",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4999650740273152.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_5286064660938752",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5286064660938752.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_5359574336929792",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5359574336929792.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_5394924042190848",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5394924042190848.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_5406554320797696",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5406554320797696.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_5441780264730624",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5441780264730624.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_54597438",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_54597438.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_5671082709221376",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5671082709221376.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_5757939698630656",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5757939698630656.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_58561314",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_58561314.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_5901058008154112",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5901058008154112.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_5945738800398336",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5945738800398336.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_6077797936136192",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6077797936136192.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_6323904540835840",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6323904540835840.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_6488147892371456",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6488147892371456.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_6514899693862912",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6514899693862912.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_6575055897100288",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6575055897100288.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_6646544889544704",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6646544889544704.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_665337254",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_665337254.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_73960319",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_73960319.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_80594568",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_80594568.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_910137173",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_910137173.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_920755103",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_920755103.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_921191098",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_921191098.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_9212218",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_9212218.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_92593870",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_92593870.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_9317011",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_9317011.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_9431554",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_9431554.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_944103628",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_944103628.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_950358156",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_950358156.png",
+   "w": 16,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_969918974",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_969918974.png",
+   "w": 8,
+   "h": 8
+  },
+  {
+   "name": "drRemote_draw_9720863",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_9720863.png",
+   "w": 2,
+   "h": 16
+  },
+  {
+   "name": "drRemote_draw_988954579",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_988954579.png",
+   "w": 16,
+   "h": 16
+  }
+ ],
+ "animated_chars": [
+  {
+   "name": "chars8x8rBeach",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rBeach.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "chars8x8dBeach",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8dBeach.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "chars8x8rLow1",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rLow1.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "chars8x8rLow2",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rLow2.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "chars8x8rMid",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rMid.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "chars8x8rMid2",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rMid2.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "chars8x8rHigh",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rHigh.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "chars8x8rHero1",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rHero1.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "chars8x8rHero2",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rHero2.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "chars8x8dHero1",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8dHero1.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "chars16x16dMountains1",
+   "file": "kabam/rotmg/assets/prod/images/chars16x16dMountains1.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "chars16x16dMountains2",
+   "file": "kabam/rotmg/assets/prod/images/chars16x16dMountains2.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "chars8x8dEncounters",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8dEncounters.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "chars8x8rEncounters",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rEncounters.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "chars16x8dEncounters",
+   "file": "kabam/rotmg/assets/prod/images/chars16x8dEncounters.png",
+   "mask": null,
+   "w": 16,
+   "h": 8,
+   "sheet_w": 112,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "chars16x8rEncounters",
+   "file": "kabam/rotmg/assets/prod/images/chars16x8rEncounters.png",
+   "mask": null,
+   "w": 16,
+   "h": 8,
+   "sheet_w": 112,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "chars16x16dEncounters",
+   "file": "kabam/rotmg/assets/prod/images/chars16x16dEncounters.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "chars16x16dEncounters2",
+   "file": "kabam/rotmg/assets/prod/images/chars16x16dEncounters2.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "chars16x16rEncounters",
+   "file": "kabam/rotmg/assets/prod/images/chars16x16rEncounters.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "d3Chars8x8rEmbed",
+   "file": "kabam/rotmg/assets/prod/images/d3Chars8x8r.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "d3Chars16x16rEmbed",
+   "file": "kabam/rotmg/assets/prod/images/d3Chars16x16r.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "d2Chars16x16rEmbed",
+   "file": "kabam/rotmg/assets/prod/images/d2Chars16x16r.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "players",
+   "file": "kabam/rotmg/assets/prod/objects/players.png",
+   "mask": "kabam/rotmg/assets/prod/objects/playersMask.png",
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 24,
+   "dir": "right"
+  },
+  {
+   "name": "playerskins",
+   "file": "kabam/rotmg/assets/prod/objects/playersSkins.png",
+   "mask": "kabam/rotmg/assets/prod/objects/playersSkinsMask.png",
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 24,
+   "dir": "right"
+  },
+  {
+   "name": "chars8x8rPets1",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rPets1.png",
+   "mask": "kabam/rotmg/assets/prod/images/chars8x8rPets1Mask.png",
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "chars8x8rPets2",
+   "file": "kabam/rotmg/assets/prod/images/chars8x8rPets2.png",
+   "mask": "kabam/rotmg/assets/prod/images/chars8x8rPets1Mask.png",
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "petsDivine",
+   "file": "kabam/rotmg/assets/prod/objects/petsDivine.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "playerskins16",
+   "file": "kabam/rotmg/assets/prod/objects/playersSkins16.png",
+   "mask": "kabam/rotmg/assets/prod/objects/playersSkins16Mask.png",
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 48,
+   "dir": "right"
+  },
+  {
+   "name": "d1chars16x16r",
+   "file": "kabam/rotmg/assets/prod/images/d1Chars16x16r.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "parasiteDenChars8x8",
+   "file": "kabam/rotmg/assets/prod/objects/parasiteDenChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "parasiteDenChars16x16",
+   "file": "kabam/rotmg/assets/prod/objects/parasiteDenChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "stPatricksChars8x8",
+   "file": "kabam/rotmg/assets/prod/objects/stPatricksChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "stPatricksChars16x16",
+   "file": "kabam/rotmg/assets/prod/objects/stPatricksChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "buffedBunnyChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/buffedBunnyChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "theMachineChars8x8",
+   "file": "kabam/rotmg/assets/prod/objects/theMachineChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "theMachineChars16x16",
+   "file": "kabam/rotmg/assets/prod/objects/theMachineChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "theGoldenArcher",
+   "file": "kabam/rotmg/assets/prod/objects/theGoldenArcher.png",
+   "mask": "kabam/rotmg/assets/prod/objects/theGoldenArcherMask.png",
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 24,
+   "dir": "right"
+  },
+  {
+   "name": "mountainTempleChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/mountainTempleChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "mountainTempleChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/mountainTempleChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "oryxHordeChars8x8",
+   "file": "kabam/rotmg/assets/prod/objects/oryxHordeChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "oryxHordeChars16x16",
+   "file": "kabam/rotmg/assets/prod/objects/oryxHordeChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "battleOryxChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/battleOryxChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "battleOryxChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/battleOryxChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "santaWorkshopChars8x8",
+   "file": "kabam/rotmg/assets/prod/objects/santaWorkshopChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "santaWorkshopChars16x16",
+   "file": "kabam/rotmg/assets/prod/objects/santaWorkshopChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "Hanami8x8chars",
+   "file": "kabam/rotmg/assets/prod/images/Hanami8x8chars.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 64,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "summerNexusChars8x8",
+   "file": "kabam/rotmg/assets/prod/objects/summerNexusChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "summerNexusChars16x16",
+   "file": "kabam/rotmg/assets/prod/objects/summerNexusChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "autumnNexusChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/autumnNexusChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "autumnNexusChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/autumnNexusChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "xmasNexusChars8x8",
+   "file": "kabam/rotmg/assets/prod/objects/xmasNexusChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "xmasNexusChars16x16",
+   "file": "kabam/rotmg/assets/prod/objects/xmasNexusChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "epicHiveChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/epicHiveChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "epicHiveChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/epicHiveChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "lostHallsChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/lostHallsChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "lostHallsChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/lostHallsChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "magicWoodsChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/magicWoodsChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "magicWoodsChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/magicWoodsChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "secludedThicketChars8x8",
+   "file": "kabam/rotmg/assets/prod/objects/secludedThicketChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "secludedThicketChars16x16",
+   "file": "kabam/rotmg/assets/prod/objects/secludedThicketChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "cursedLibraryChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/cursedLibraryChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "cursedLibraryChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/cursedLibraryChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "cursedLibraryCharsAvalon16x16",
+   "file": "kabam/rotmg/assets/prod/images/cursedLibraryCharsAvalon16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 48,
+   "dir": "right"
+  },
+  {
+   "name": "lairOfDraconisChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/lairOfDraconisChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "lairOfDraconisChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/lairOfDraconisChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "lairOfShaitanChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/lairOfShaitanChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "alienInvasionChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/alienInvasionChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "alienInvasionChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/alienInvasionChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "fungalCavernChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/fungalCavernChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "fungalCavernChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/fungalCavernChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "crystalCaveChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/crystalCaveChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "crystalCaveChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/crystalCaveChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "innerWorkingsChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/innerWorkingsChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "innerWorkingsChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/innerWorkingsChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "oryxSanctuaryChars8x8",
+   "file": "kabam/rotmg/assets/prod/objects/oryxSanctuaryChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "oryxSanctuaryChars16x16",
+   "file": "kabam/rotmg/assets/prod/objects/oryxSanctuaryChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "oryxSanctuaryChars32x32",
+   "file": "kabam/rotmg/assets/prod/objects/oryxSanctuaryChars32x32.png",
+   "mask": null,
+   "w": 32,
+   "h": 32,
+   "sheet_w": 224,
+   "sheet_h": 32,
+   "dir": "right"
+  },
+  {
+   "name": "archbishopChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/archbishopChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "archbishopChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/archbishopChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "ancientRuinsChars8x8",
+   "file": "kabam/rotmg/assets/prod/images/ancientRuinsChars8x8.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "ancientRuinsChars16x16",
+   "file": "kabam/rotmg/assets/prod/images/ancientRuinsChars16x16.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "drChars16x16dEncounters",
+   "file": "kabam/rotmg/assets/doomed/images/chars16x16dEncounters.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drChars16x16dEncounters2",
+   "file": "kabam/rotmg/assets/doomed/images/chars16x16dEncounters2.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drChars16x16dMountains1",
+   "file": "kabam/rotmg/assets/doomed/images/chars16x16dMountains1.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drChars16x16rEncounters",
+   "file": "kabam/rotmg/assets/doomed/images/chars16x16rEncounters.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "right"
+  },
+  {
+   "name": "drChars16x8dEncounters",
+   "file": "kabam/rotmg/assets/doomed/images/chars16x8dEncounters.png",
+   "mask": null,
+   "w": 16,
+   "h": 8,
+   "sheet_w": 112,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drChars8x8dBeach",
+   "file": "kabam/rotmg/assets/doomed/images/chars8x8dBeach.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drChars8x8dEncounters",
+   "file": "kabam/rotmg/assets/doomed/images/chars8x8dEncounters.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drChars8x8dHero1",
+   "file": "kabam/rotmg/assets/doomed/images/chars8x8dHero1.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drChars8x8rBeach",
+   "file": "kabam/rotmg/assets/doomed/images/chars8x8rBeach.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "drChars8x8rEncounters",
+   "file": "kabam/rotmg/assets/doomed/images/chars8x8rEncounters.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "drChars8x8rLow2",
+   "file": "kabam/rotmg/assets/doomed/images/chars8x8rLow2.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "drChars8x8rMid",
+   "file": "kabam/rotmg/assets/doomed/images/chars8x8rMid.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "drChars8x8rMid2",
+   "file": "kabam/rotmg/assets/doomed/images/chars8x8rMid2.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "drChars8x8rPets1",
+   "file": "kabam/rotmg/assets/doomed/images/chars8x8rPets1.png",
+   "mask": "kabam/rotmg/assets/doomed/images/chars8x8rPets1Mask.png",
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "right"
+  },
+  {
+   "name": "drPlayers",
+   "file": "kabam/rotmg/assets/doomed/images/players.png",
+   "mask": "kabam/rotmg/assets/doomed/images/playersMask.png",
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 24,
+   "dir": "right"
+  },
+  {
+   "name": "drRemote_draw_1004113964",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_1004113964.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_1004202760",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_1004202760.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_10045528",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10045528.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_1014370454",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_1014370454.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_1014509324",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_1014509324.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_10517376",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10517376.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_10541999",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10541999.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_10563452",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10563452.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_10614512",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10614512.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_10618159",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10618159.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_10645224",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_10645224.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_1074024110",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_1074024110.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_1099102726",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_1099102726.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_1099199083",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_1099199083.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_12389006",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_12389006.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_15329654",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_15329654.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_157565266",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_157565266.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_16368092",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_16368092.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_16813741",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_16813741.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_183307176",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_183307176.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_20482145",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_20482145.png",
+   "mask": null,
+   "w": 1,
+   "h": 8,
+   "sheet_w": 8,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_220164173",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_220164173.png",
+   "mask": null,
+   "w": 2,
+   "h": 16,
+   "sheet_w": 16,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_24735694",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_24735694.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_26077305",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_26077305.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_4560923003977728",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4560923003977728.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_4613116478357504",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4613116478357504.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_4712140350947328",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4712140350947328.png",
+   "mask": null,
+   "w": 1,
+   "h": 8,
+   "sheet_w": 8,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_4749920137379840",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4749920137379840.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_4753894108299264",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4753894108299264.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_4961852222078976",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4961852222078976.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_4971186618368000",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_4971186618368000.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5126358615195648",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5126358615195648.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5227654307381248",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5227654307381248.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5359574336929792",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5359574336929792.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_54597438",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_54597438.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5594580514766848",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5594580514766848.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5598893832142848",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5598893832142848.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5670227773751296",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5670227773751296.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5683160285184000",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5683160285184000.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5696575399526400",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5696575399526400.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5749294074167296",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5749294074167296.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5778162776539136",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5778162776539136.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5918944999243776",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5918944999243776.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_5964462121025536",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_5964462121025536.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_6046102470000640",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6046102470000640.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_6261539245916160",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6261539245916160.png",
+   "mask": null,
+   "w": 2,
+   "h": 16,
+   "sheet_w": 16,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_6518802275631104",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6518802275631104.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_6575055897100288",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6575055897100288.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_6646544889544704",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6646544889544704.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_6686819211018240",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_6686819211018240.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_80594568",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_80594568.png",
+   "mask": null,
+   "w": 8,
+   "h": 8,
+   "sheet_w": 56,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_920755103",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_920755103.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_921191098",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_921191098.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_935820711",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_935820711.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_9372349",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_9372349.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_950358156",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_950358156.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_9720863",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_9720863.png",
+   "mask": null,
+   "w": 2,
+   "h": 16,
+   "sheet_w": 16,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_9772594",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_9772594.png",
+   "mask": null,
+   "w": 1,
+   "h": 8,
+   "sheet_w": 8,
+   "sheet_h": 8,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_980207997",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_980207997.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  },
+  {
+   "name": "drRemote_draw_992396809",
+   "file": "kabam/rotmg/assets/doomed/images/drRemote_draw_992396809.png",
+   "mask": null,
+   "w": 16,
+   "h": 16,
+   "sheet_w": 112,
+   "sheet_h": 16,
+   "dir": "down"
+  }
+ ],
+ "models": [
+  {
+   "name": "Japanese Sign",
+   "file": "kabam/rotmg/assets/custom/objects/japaneseSign.dat"
+  },
+  {
+   "name": "Monster Tank1",
+   "file": "kabam/rotmg/assets/prod/objects/monsterTank1.dat"
+  },
+  {
+   "name": "Monster Tank2",
+   "file": "kabam/rotmg/assets/prod/objects/monsterTank2.dat"
+  },
+  {
+   "name": "Monster Tank3",
+   "file": "kabam/rotmg/assets/prod/objects/monsterTank3.dat"
+  },
+  {
+   "name": "Monster Tank4",
+   "file": "kabam/rotmg/assets/prod/objects/monsterTank4.dat"
+  },
+  {
+   "name": "GasEmitter",
+   "file": "kabam/rotmg/assets/prod/objects/gasEmitter.dat"
+  },
+  {
+   "name": "Lab Tank",
+   "file": "kabam/rotmg/assets/prod/objects/labTank.dat"
+  },
+  {
+   "name": "Tesla",
+   "file": "kabam/rotmg/assets/prod/objects/tesla.dat"
+  },
+  {
+   "name": "CloningVat",
+   "file": "kabam/rotmg/assets/prod/objects/cloningVat.dat"
+  },
+  {
+   "name": "Crate",
+   "file": "kabam/rotmg/assets/prod/objects/crate.dat"
+  },
+  {
+   "name": "ThreeSideCube",
+   "file": "kabam/rotmg/assets/prod/objects/threeSideCube.dat"
+  },
+  {
+   "name": "Squatty3Side",
+   "file": "kabam/rotmg/assets/prod/objects/squatty3Side.dat"
+  },
+  {
+   "name": "Cube",
+   "file": "kabam/rotmg/assets/prod/objects/cube.dat"
+  },
+  {
+   "name": "Big Cube",
+   "file": "kabam/rotmg/assets/prod/objects/bigcube.dat"
+  },
+  {
+   "name": "Ico",
+   "file": "kabam/rotmg/assets/prod/objects/icosahedron.dat"
+  },
+  {
+   "name": "Octa",
+   "file": "kabam/rotmg/assets/prod/objects/octahedron.dat"
+  },
+  {
+   "name": "Pyramid",
+   "file": "kabam/rotmg/assets/prod/objects/pyramid.dat"
+  },
+  {
+   "name": "Tetra",
+   "file": "kabam/rotmg/assets/prod/objects/tetrahedron.dat"
+  },
+  {
+   "name": "Dodec",
+   "file": "kabam/rotmg/assets/prod/objects/dodecahedron.dat"
+  },
+  {
+   "name": "Pillar",
+   "file": "kabam/rotmg/assets/prod/objects/pillar.dat"
+  },
+  {
+   "name": "Broken Pillar",
+   "file": "kabam/rotmg/assets/prod/objects/brokenPillar.dat"
+  },
+  {
+   "name": "Tower",
+   "file": "kabam/rotmg/assets/prod/objects/tower.dat"
+  },
+  {
+   "name": "Obelisk",
+   "file": "kabam/rotmg/assets/prod/objects/obelisk.dat"
+  },
+  {
+   "name": "Table",
+   "file": "kabam/rotmg/assets/prod/objects/table.dat"
+  },
+  {
+   "name": "Table Edge",
+   "file": "kabam/rotmg/assets/prod/objects/tableEdge.dat"
+  },
+  {
+   "name": "Sign",
+   "file": "kabam/rotmg/assets/prod/objects/sign.dat"
+  },
+  {
+   "name": "Web",
+   "file": "kabam/rotmg/assets/prod/objects/web.dat"
+  },
+  {
+   "name": "Candy Col Broken",
+   "file": "kabam/rotmg/assets/prod/objects/candyColBroken.dat"
+  },
+  {
+   "name": "Candy Col Whole",
+   "file": "kabam/rotmg/assets/prod/objects/candyColWhole.dat"
+  },
+  {
+   "name": "Column One and a Half",
+   "file": "kabam/rotmg/assets/prod/objects/columnOneAndHalf.dat"
+  },
+  {
+   "name": "Two High Wall",
+   "file": "kabam/rotmg/assets/prod/objects/twoHighWall.dat"
+  },
+  {
+   "name": "Candy Doughnut 1",
+   "file": "kabam/rotmg/assets/prod/objects/candyDoughnut1.dat"
+  },
+  {
+   "name": "Candy Doughnut 2",
+   "file": "kabam/rotmg/assets/prod/objects/candyDoughnut2.dat"
+  },
+  {
+   "name": "Candy Doughnut 3",
+   "file": "kabam/rotmg/assets/prod/objects/candyDoughnut3.dat"
+  },
+  {
+   "name": "Candy Doughnut 4",
+   "file": "kabam/rotmg/assets/prod/objects/candyDoughnut4.dat"
+  },
+  {
+   "name": "Gate",
+   "file": "kabam/rotmg/assets/prod/objects/newGate.dat"
+  },
+  {
+   "name": "Gate Entry",
+   "file": "kabam/rotmg/assets/prod/objects/newGateEntry.dat"
+  },
+  {
+   "name": "Gate Entry 2",
+   "file": "kabam/rotmg/assets/prod/objects/newGateEntry2.dat"
+  },
+  {
+   "name": "Gate End 1",
+   "file": "kabam/rotmg/assets/prod/objects/newGateEnd1.dat"
+  },
+  {
+   "name": "Gate End 2",
+   "file": "kabam/rotmg/assets/prod/objects/newGateEnd2.dat"
+  },
+  {
+   "name": "Monument 1",
+   "file": "kabam/rotmg/assets/prod/objects/newMonument1.dat"
+  },
+  {
+   "name": "Monument 2",
+   "file": "kabam/rotmg/assets/prod/objects/newMonument2.dat"
+  },
+  {
+   "name": "Monument 3",
+   "file": "kabam/rotmg/assets/prod/objects/newMonument3.dat"
+  },
+  {
+   "name": "Large Monument 1",
+   "file": "kabam/rotmg/assets/prod/objects/largeMonument1.dat"
+  },
+  {
+   "name": "Large Monument 2",
+   "file": "kabam/rotmg/assets/prod/objects/largeMonument2.dat"
+  },
+  {
+   "name": "Large Monument 3",
+   "file": "kabam/rotmg/assets/prod/objects/largeMonument3.dat"
+  },
+  {
+   "name": "Jacko",
+   "file": "kabam/rotmg/assets/prod/objects/jacko.dat"
+  },
+  {
+   "name": "Column",
+   "file": "kabam/rotmg/assets/prod/objects/templeColumn.dat"
+  },
+  {
+   "name": "Oryx Wall",
+   "file": "kabam/rotmg/assets/prod/objects/oryxWallWhole.dat"
+  },
+  {
+   "name": "Four High Wall",
+   "file": "kabam/rotmg/assets/prod/objects/fourBlockWall.dat"
+  },
+  {
+   "name": "Light Shaft",
+   "file": "kabam/rotmg/assets/prod/objects/lightShaft.dat"
+  },
+  {
+   "name": "Light Shaft Quad",
+   "file": "kabam/rotmg/assets/prod/objects/lightShaftQuad.dat"
+  },
+  {
+   "name": "Pet Upgrader Obj",
+   "file": "kabam/rotmg/assets/prod/objects/petUpgrader.dat"
+  },
+  {
+   "name": "Oryx Cage",
+   "file": "kabam/rotmg/assets/prod/objects/oryxCage.dat"
+  },
+  {
+   "name": "Oryx Hung Cage",
+   "file": "kabam/rotmg/assets/prod/objects/oryxCageHung.dat"
+  },
+  {
+   "name": "Oryx Door",
+   "file": "kabam/rotmg/assets/prod/objects/oryxDoor.dat"
+  }
+ ],
+ "particles": "kabam/rotmg/assets/prod/objects/particles.dat",
+ "ground_xml": [
+  "kabam/rotmg/assets/prod/xmls/Ground.xml",
+  "kabam/rotmg/assets/prod/xmls/parasiteDenGround.xml",
+  "kabam/rotmg/assets/prod/xmls/iceCaveGround.xml",
+  "kabam/rotmg/assets/prod/xmls/stPatricksGround.xml",
+  "kabam/rotmg/assets/prod/xmls/hanaminexusGround.xml",
+  "kabam/rotmg/assets/prod/xmls/theMachineGround.xml",
+  "kabam/rotmg/assets/prod/xmls/mountainTempleGround.xml",
+  "kabam/rotmg/assets/prod/xmls/oryxHordeGround.xml",
+  "kabam/rotmg/assets/prod/xmls/battleOryxGround.xml",
+  "kabam/rotmg/assets/prod/xmls/summerNexusGround.xml",
+  "kabam/rotmg/assets/prod/xmls/autumnNexusGround.xml",
+  "kabam/rotmg/assets/prod/xmls/xmasNexusGround.xml",
+  "kabam/rotmg/assets/prod/xmls/epicHiveGround.xml",
+  "kabam/rotmg/assets/prod/xmls/lostHallsGround.xml",
+  "kabam/rotmg/assets/prod/xmls/santaWorkshopGround.xml",
+  "kabam/rotmg/assets/prod/xmls/magicWoodsGround.xml",
+  "kabam/rotmg/assets/prod/xmls/cnidarianReefGround.xml",
+  "kabam/rotmg/assets/prod/xmls/secludedThicketGround.xml",
+  "kabam/rotmg/assets/prod/xmls/cursedLibraryGround.xml",
+  "kabam/rotmg/assets/prod/xmls/lairOfDraconisGround.xml",
+  "kabam/rotmg/assets/prod/xmls/alienInvasionGround.xml",
+  "kabam/rotmg/assets/prod/xmls/crystalCaveGround.xml",
+  "kabam/rotmg/assets/prod/xmls/fungalCavernGround.xml",
+  "kabam/rotmg/assets/prod/xmls/innerWorkingsGround.xml",
+  "kabam/rotmg/assets/prod/xmls/oryxSanctuaryGround.xml",
+  "kabam/rotmg/assets/prod/xmls/archbishopGround.xml",
+  "kabam/rotmg/assets/prod/xmls/ancientRuinsGround.xml",
+  "kabam/rotmg/assets/custom/xmls/CustomGrounds.xml",
+  "kabam/rotmg/assets/custom/xmls/DoomedRealmsGrounds.xml",
+  "kabam/rotmg/assets/custom/xmls/ElderGrounds.xml"
+ ],
+ "object_xml": [
+  "kabam/rotmg/assets/custom/xmls/CustomItems.xml",
+  "kabam/rotmg/assets/custom/xmls/DoomedRealms.xml",
+  "kabam/rotmg/assets/custom/xmls/CustomProj.xml",
+  "kabam/rotmg/assets/custom/xmls/CustomEntities.xml",
+  "kabam/rotmg/assets/custom/xmls/CustomObjects.xml",
+  "kabam/rotmg/assets/custom/xmls/ElderObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/Projectiles.xml",
+  "kabam/rotmg/assets/prod/xmls/EquipKeys.xml",
+  "kabam/rotmg/assets/prod/xmls/EquipSkins.xml",
+  "kabam/rotmg/assets/prod/xmls/EquipTest.xml",
+  "kabam/rotmg/assets/prod/xmls/Equip.xml",
+  "kabam/rotmg/assets/prod/xmls/Dyes.xml",
+  "kabam/rotmg/assets/prod/xmls/Textiles.xml",
+  "kabam/rotmg/assets/prod/xmls/Permapets.xml",
+  "kabam/rotmg/assets/prod/xmls/Token.xml",
+  "kabam/rotmg/assets/prod/xmls/GraveStones.xml",
+  "kabam/rotmg/assets/prod/xmls/WillemTesting.xml",
+  "kabam/rotmg/assets/prod/xmls/TTesting.xml",
+  "kabam/rotmg/assets/prod/xmls/BTesting.xml",
+  "kabam/rotmg/assets/prod/xmls/STesting.xml",
+  "kabam/rotmg/assets/prod/xmls/MTesting.xml",
+  "kabam/rotmg/assets/prod/xmls/KTesting.xml",
+  "kabam/rotmg/assets/prod/xmls/Players.xml",
+  "kabam/rotmg/assets/prod/xmls/Containers.xml",
+  "kabam/rotmg/assets/prod/xmls/Objects.xml",
+  "kabam/rotmg/assets/prod/xmls/Portals.xml",
+  "kabam/rotmg/assets/prod/xmls/TestingObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/StaticObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/TutorialObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/TutorialMonsters.xml",
+  "kabam/rotmg/assets/prod/xmls/Allies.xml",
+  "kabam/rotmg/assets/prod/xmls/Heroes.xml",
+  "kabam/rotmg/assets/prod/xmls/PlayersZombies.xml",
+  "kabam/rotmg/assets/prod/xmls/Pets.xml",
+  "kabam/rotmg/assets/prod/xmls/NPCs.xml",
+  "kabam/rotmg/assets/prod/xmls/Shore.xml",
+  "kabam/rotmg/assets/prod/xmls/Low.xml",
+  "kabam/rotmg/assets/prod/xmls/Mid.xml",
+  "kabam/rotmg/assets/prod/xmls/High.xml",
+  "kabam/rotmg/assets/prod/xmls/Mountains.xml",
+  "kabam/rotmg/assets/prod/xmls/Encounters.xml",
+  "kabam/rotmg/assets/prod/xmls/Arena.xml",
+  "kabam/rotmg/assets/prod/xmls/OryxCastle.xml",
+  "kabam/rotmg/assets/prod/xmls/TombOfTheAncients.xml",
+  "kabam/rotmg/assets/prod/xmls/SpriteWorld.xml",
+  "kabam/rotmg/assets/prod/xmls/UndeadLair.xml",
+  "kabam/rotmg/assets/prod/xmls/OceanTrench.xml",
+  "kabam/rotmg/assets/prod/xmls/ForbiddenJungle.xml",
+  "kabam/rotmg/assets/prod/xmls/OryxChamber.xml",
+  "kabam/rotmg/assets/prod/xmls/OryxChickenChamber.xml",
+  "kabam/rotmg/assets/prod/xmls/OryxWineCellar.xml",
+  "kabam/rotmg/assets/prod/xmls/ManorOfTheImmortals.xml",
+  "kabam/rotmg/assets/prod/xmls/PirateCave.xml",
+  "kabam/rotmg/assets/prod/xmls/SnakePit.xml",
+  "kabam/rotmg/assets/prod/xmls/SpiderDen.xml",
+  "kabam/rotmg/assets/prod/xmls/AbyssOfDemons.xml",
+  "kabam/rotmg/assets/prod/xmls/GhostShip.xml",
+  "kabam/rotmg/assets/prod/xmls/MadLab.xml",
+  "kabam/rotmg/assets/prod/xmls/CaveOfAThousandTreasures.xml",
+  "kabam/rotmg/assets/prod/xmls/CandyLand.xml",
+  "kabam/rotmg/assets/prod/xmls/HauntedCemetery.xml",
+  "kabam/rotmg/assets/prod/xmls/ForestMaze.xml",
+  "kabam/rotmg/assets/prod/xmls/EpicForestMaze.xml",
+  "kabam/rotmg/assets/prod/xmls/EpicPirateCave.xml",
+  "kabam/rotmg/assets/prod/xmls/EpicSpiderDen.xml",
+  "kabam/rotmg/assets/prod/xmls/NexusDestroyed.xml",
+  "kabam/rotmg/assets/prod/xmls/MiniDungeonHub.xml",
+  "kabam/rotmg/assets/prod/xmls/LairOfDraconis.xml",
+  "kabam/rotmg/assets/prod/xmls/LairOfShaitan.xml",
+  "kabam/rotmg/assets/prod/xmls/Shatters.xml",
+  "kabam/rotmg/assets/prod/xmls/Belladonna.xml",
+  "kabam/rotmg/assets/prod/xmls/PuppetMaster.xml",
+  "kabam/rotmg/assets/prod/xmls/iceCaveObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/TheHive.xml",
+  "kabam/rotmg/assets/prod/xmls/ToxicSewers.xml",
+  "kabam/rotmg/assets/prod/xmls/PuppetMasterEncore.xml",
+  "kabam/rotmg/assets/prod/xmls/IceTomb.xml",
+  "kabam/rotmg/assets/prod/xmls/PermaFrostLord.xml",
+  "kabam/rotmg/assets/prod/xmls/parasiteDenObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/stPatricksObject.xml",
+  "kabam/rotmg/assets/prod/xmls/buffedBunnyObject.xml",
+  "kabam/rotmg/assets/prod/xmls/theMachineObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/hanaminexusObject.xml",
+  "kabam/rotmg/assets/prod/xmls/mountainTempleObject.xml",
+  "kabam/rotmg/assets/prod/xmls/oryxHordeObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/battleOryxObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/summerNexusObject.xml",
+  "kabam/rotmg/assets/prod/xmls/autumnNexusObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/xmasNexusObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/epicHiveObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/lostHallsObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/santaWorkshopObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/magicWoodsObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/cnidarianReefObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/secludedThicketObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/eventChestObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/cursedLibraryObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/lairOfDraconisObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/lairOfShaitanObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/alienInvasionObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/crystalCaveObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/fungalCavernObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/innerWorkingsObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/oryxSanctuaryObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/oryxSanctuaryUObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/archbishopObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/archbishopObjectsMen.xml",
+  "kabam/rotmg/assets/prod/xmls/ancientRuinsObjects.xml",
+  "kabam/rotmg/assets/prod/xmls/Skins.xml"
+ ],
+ "region_xml": [
+  "kabam/rotmg/assets/prod/xmls/Regions.xml"
+ ],
+ "fonts": {
+  "regular": "com/company/ui/fonts/MyriadPro.otf",
+  "bold": "com/company/ui/fonts/MyriadProBold.otf"
+ }
+}

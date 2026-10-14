@@ -1,0 +1,46 @@
+[workspace]
+members = ["crates/*", "app"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+publish = false
+
+[workspace.dependencies]
+bsk-assets = { path = "crates/assets" }
+bsk-render = { path = "crates/render" }
+
+bytemuck = { version = "1", features = ["derive"] }
+futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+wgpu = { version = "24", features = ["webgl"] }
+winit = "0.30"
+
+# native only
+env_logger = "0.11"
+pollster = "0.4"
+
+# web only
+console_error_panic_hook = "0.1"
+console_log = "1"
+js-sys = "0.3"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = "0.3"
+web-time = "1"
+
+[profile.dev]
+# Image decoding and the frame loop are far too slow unoptimised; keep debug info for our crates.
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+codegen-units = 1
+lto = "thin"

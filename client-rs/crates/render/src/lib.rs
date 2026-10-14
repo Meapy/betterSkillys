@@ -1,0 +1,445 @@
+//! The GPU renderer: textured quads from atlas pages, batched into as few draws as possible.
+//!
+//! It runs on wgpu, so the same code draws through DirectX 12, Vulkan, Metal, WebGPU or WebGL2.
+//! A frame is `begin`, any number of `sprite` calls in back-to-front order, then `present`.
+
+mod atlas;
+
+pub use atlas::AtlasRect;
+use atlas::{Atlas, Page};
+
+/// Atlas page size, or the GPU's limit if lower (WebGL2 only guarantees 2048). One sheet is
+/// 2048×2048, which needs a bigger page once padded.
+const PAGE_SIZE: u32 = 4096;
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct Instance {
+    axes: [f32; 4],
+    origin: [f32; 2],
+    uv: [f32; 4],
+    mul: [f32; 4],
+    add: [f32; 4],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct Globals {
+    screen: [f32; 2],
+    _pad: [f32; 2],
+}
+
+/// A run of consecutive instances drawn from the same page.
+struct Run {
+    page: u16,
+    end: u32,
+}
+
+/// An affine transform from the unit square to the screen: the quad's corner (0, 0) lands on
+/// `origin`, (1, 0) on `origin + x_axis`, (0, 1) on `origin + y_axis`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Quad {
+    pub origin: [f32; 2],
+    pub x_axis: [f32; 2],
+    pub y_axis: [f32; 2],
+}
+
+impl Quad {
+    /// An upright rectangle.
+    pub fn rect(x: f32, y: f32, w: f32, h: f32) -> Self {
+        Self { origin: [x, y], x_axis: [w, 0.0], y_axis: [0.0, h] }
+    }
+
+    /// A `w`×`h` rectangle centred on (`cx`, `cy`), turned by `angle` radians.
+    pub fn rotated(cx: f32, cy: f32, w: f32, h: f32, angle: f32) -> Self {
+        let (s, c) = angle.sin_cos();
+        let x_axis = [w * c, w * s];
+        let y_axis = [-h * s, h * c];
+        let origin = [cx - (x_axis[0] + y_axis[0]) / 2.0, cy - (x_axis[1] + y_axis[1]) / 2.0];
+        Self { origin, x_axis, y_axis }
+    }
+}
+
+/// Flash's ColorTransform: `colour * mul + add`, with `add` in 0..1 rather than 0..255.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Tint {
+    pub mul: [f32; 4],
+    pub add: [f32; 3],
+}
+
+impl Tint {
+    pub const NONE: Tint = Tint { mul: [1.0; 4], add: [0.0; 3] };
+
+    /// A solid colour, for rectangles drawn with `Renderer::white`.
+    pub fn color(rgb: u32, alpha: f32) -> Self {
+        let [r, g, b] = rgb_f32(rgb);
+        Tint { mul: [r, g, b, alpha], add: [0.0; 3] }
+    }
+}
+
+pub fn rgb_f32(rgb: u32) -> [f32; 3] {
+    [((rgb >> 16) & 255) as f32 / 255.0, ((rgb >> 8) & 255) as f32 / 255.0, (rgb & 255) as f32 / 255.0]
+}
+
+pub struct Renderer {
+    device: wgpu::Device,
+    queue: wgpu::Queue,
+    surface: wgpu::Surface<'static>,
+    config: wgpu::SurfaceConfiguration,
+    pipeline: wgpu::RenderPipeline,
+    page_layout: wgpu::BindGroupLayout,
+    sampler: wgpu::Sampler,
+    globals: wgpu::Buffer,
+    globals_group: wgpu::BindGroup,
+    instance_buffer: wgpu::Buffer,
+    instance_capacity: usize,
+    atlas: Atlas,
+    white: AtlasRect,
+    instances: Vec<Instance>,
+    runs: Vec<Run>,
+    /// GPU draw calls of the last frame.
+    pub last_draws: u32,
+}
+
+impl Renderer {
+    /// Set up the GPU for a window. `target` is usually an `Arc<winit::window::Window>`.
+    pub async fn new(
+        target: impl Into<wgpu::SurfaceTarget<'static>>,
+        width: u32,
+        height: u32,
+    ) -> Result<Self, String> {
+        let instance = wgpu::util::new_instance_with_webgpu_detection(&wgpu::InstanceDescriptor::default()).await;
+        let surface = instance.create_surface(target).map_err(|e| e.to_string())?;
+        let adapter = instance
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                compatible_surface: Some(&surface),
+                force_fallback_adapter: false,
+            })
+            .await
+            .ok_or("no graphics adapter")?;
+        let info = adapter.get_info();
+        log::info!("GPU: {} ({:?})", info.name, info.backend);
+        let limits = wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter.limits());
+        let (device, queue) = adapter
+            .request_device(
+                &wgpu::DeviceDescriptor {
+                    label: Some("bsk"),
+                    required_features: wgpu::Features::empty(),
+                    required_limits: limits,
+                    memory_hints: wgpu::MemoryHints::Performance,
+                },
+                None,
+            )
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let caps = surface.get_capabilities(&adapter);
+        // Flash blends in gamma space; a non-sRGB target keeps the colours the same.
+        let format = caps.formats.iter().copied().find(|f| !f.is_srgb()).unwrap_or(caps.formats[0]);
+        let alpha_mode = caps.alpha_modes[0];
+        let config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format,
+            width: width.max(1),
+            height: height.max(1),
+            present_mode: wgpu::PresentMode::AutoVsync,
+            desired_maximum_frame_latency: 2,
+            alpha_mode,
+            view_formats: vec![],
+        };
+        surface.configure(&device, &config);
+
+        let shader = device.create_shader_module(wgpu::include_wgsl!("sprite.wgsl"));
+        let globals_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("globals"),
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+        });
+        let page_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("page"),
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
+            ],
+        });
+        let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("sprite"),
+            bind_group_layouts: &[&globals_layout, &page_layout],
+            push_constant_ranges: &[],
+        });
+        let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("sprite"),
+            layout: Some(&layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: Some("vs_main"),
+                compilation_options: Default::default(),
+                buffers: &[wgpu::VertexBufferLayout {
+                    array_stride: std::mem::size_of::<Instance>() as u64,
+                    step_mode: wgpu::VertexStepMode::Instance,
+                    attributes: &wgpu::vertex_attr_array![
+                        0 => Float32x4, 1 => Float32x2, 2 => Float32x4, 3 => Float32x4, 4 => Float32x4
+                    ],
+                }],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("fs_main"),
+                compilation_options: Default::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
+
+        let globals = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("globals"),
+            size: std::mem::size_of::<Globals>() as u64,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let globals_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("globals"),
+            layout: &globals_layout,
+            entries: &[wgpu::BindGroupEntry { binding: 0, resource: globals.as_entire_binding() }],
+        });
+        // Pixel art: nearest-neighbour, like Flash with smoothing off.
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("pixel"),
+            mag_filter: wgpu::FilterMode::Nearest,
+            min_filter: wgpu::FilterMode::Nearest,
+            ..Default::default()
+        });
+        let instance_capacity = 4096;
+        let instance_buffer = Self::make_instance_buffer(&device, instance_capacity);
+
+        let page_size = PAGE_SIZE.min(device.limits().max_texture_dimension_2d);
+        let mut renderer = Self {
+            device,
+            queue,
+            surface,
+            config,
+            pipeline,
+            page_layout,
+            sampler,
+            globals,
+            globals_group,
+            instance_buffer,
+            instance_capacity,
+            atlas: Atlas::new(page_size),
+            white: AtlasRect { page: 0, x: 0, y: 0, w: 0, h: 0 },
+            instances: Vec::with_capacity(instance_capacity),
+            runs: Vec::new(),
+            last_draws: 0,
+        };
+        let white = image::RgbaImage::from_pixel(4, 4, image::Rgba([255; 4]));
+        renderer.white = renderer.add_image(&white).expect("4×4 fits").sub(1, 1, 2, 2);
+        Ok(renderer)
+    }
+
+    fn make_instance_buffer(device: &wgpu::Device, capacity: usize) -> wgpu::Buffer {
+        device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("instances"),
+            size: (capacity * std::mem::size_of::<Instance>()) as u64,
+            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        })
+    }
+
+    pub fn resize(&mut self, width: u32, height: u32) {
+        if width == 0 || height == 0 {
+            return;
+        }
+        self.config.width = width;
+        self.config.height = height;
+        self.surface.configure(&self.device, &self.config);
+    }
+
+    pub fn size(&self) -> (u32, u32) {
+        (self.config.width, self.config.height)
+    }
+
+    /// The largest image `add_image` takes.
+    pub fn max_image_size(&self) -> u32 {
+        self.atlas.size - 1
+    }
+
+    /// A 2×2 white block, for solid rectangles (tint it with `Tint::color`).
+    pub fn white(&self) -> AtlasRect {
+        self.white
+    }
+
+    /// Copy an image (straight alpha) into the atlas. `None` if it's bigger than `max_image_size`.
+    pub fn add_image(&mut self, image: &image::RgbaImage) -> Option<AtlasRect> {
+        let (w, h) = image.dimensions();
+        let device = &self.device;
+        let layout = &self.page_layout;
+        let sampler = &self.sampler;
+        let rect = self.atlas.allocate(w, h, |size| new_page(device, layout, sampler, size))?;
+        let mut pixels = image.as_raw().clone();
+        for px in pixels.chunks_exact_mut(4) {
+            let a = px[3] as u16;
+            for c in &mut px[..3] {
+                *c = ((*c as u16 * a + 127) / 255) as u8;
+            }
+        }
+        self.queue.write_texture(
+            wgpu::TexelCopyTextureInfo {
+                texture: &self.atlas.pages[rect.page as usize].texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d { x: rect.x as u32, y: rect.y as u32, z: 0 },
+                aspect: wgpu::TextureAspect::All,
+            },
+            &pixels,
+            wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(4 * w), rows_per_image: Some(h) },
+            wgpu::Extent3d { width: w, height: h, depth_or_array_layers: 1 },
+        );
+        Some(rect)
+    }
+
+    pub fn atlas_pages(&self) -> usize {
+        self.atlas.pages.len()
+    }
+
+    /// Start a frame.
+    pub fn begin(&mut self) {
+        self.instances.clear();
+        self.runs.clear();
+    }
+
+    /// Draw `src` (an atlas rectangle) onto `dst`.
+    pub fn sprite(&mut self, src: AtlasRect, dst: Quad, tint: Tint) {
+        let inv = 1.0 / self.atlas.size as f32;
+        let uv = [
+            src.x as f32 * inv,
+            src.y as f32 * inv,
+            (src.x + src.w) as f32 * inv,
+            (src.y + src.h) as f32 * inv,
+        ];
+        self.instances.push(Instance {
+            axes: [dst.x_axis[0], dst.x_axis[1], dst.y_axis[0], dst.y_axis[1]],
+            origin: dst.origin,
+            uv,
+            mul: tint.mul,
+            add: [tint.add[0], tint.add[1], tint.add[2], 0.0],
+        });
+        let end = self.instances.len() as u32;
+        match self.runs.last_mut() {
+            Some(run) if run.page == src.page => run.end = end,
+            _ => self.runs.push(Run { page: src.page, end }),
+        }
+    }
+
+    /// A solid rectangle.
+    pub fn fill(&mut self, x: f32, y: f32, w: f32, h: f32, rgb: u32, alpha: f32) {
+        self.sprite(self.white, Quad::rect(x, y, w, h), Tint::color(rgb, alpha));
+    }
+
+    /// Send the frame to the GPU and show it.
+    pub fn present(&mut self, clear_rgb: u32) -> Result<(), wgpu::SurfaceError> {
+        let frame = match self.surface.get_current_texture() {
+            Ok(frame) => frame,
+            Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
+                self.surface.configure(&self.device, &self.config);
+                self.surface.get_current_texture()?
+            }
+            Err(e) => return Err(e),
+        };
+        let view = frame.texture.create_view(&Default::default());
+
+        let globals = Globals { screen: [self.config.width as f32, self.config.height as f32], _pad: [0.0; 2] };
+        self.queue.write_buffer(&self.globals, 0, bytemuck::bytes_of(&globals));
+        if self.instances.len() > self.instance_capacity {
+            self.instance_capacity = self.instances.len().next_power_of_two();
+            self.instance_buffer = Self::make_instance_buffer(&self.device, self.instance_capacity);
+        }
+        if !self.instances.is_empty() {
+            self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&self.instances));
+        }
+
+        let mut encoder = self.device.create_command_encoder(&Default::default());
+        {
+            let [r, g, b] = rgb_f32(clear_rgb);
+            let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("frame"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color { r: r as f64, g: g as f64, b: b as f64, a: 1.0 }),
+                        store: wgpu::StoreOp::Store,
+                    },
+                })],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            pass.set_pipeline(&self.pipeline);
+            pass.set_bind_group(0, &self.globals_group, &[]);
+            pass.set_vertex_buffer(0, self.instance_buffer.slice(..));
+            let mut start = 0;
+            for run in &self.runs {
+                pass.set_bind_group(1, &self.atlas.pages[run.page as usize].bind_group, &[]);
+                pass.draw(0..6, start..run.end);
+                start = run.end;
+            }
+        }
+        self.queue.submit([encoder.finish()]);
+        frame.present();
+        self.last_draws = self.runs.len() as u32;
+        Ok(())
+    }
+}
+
+fn new_page(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, sampler: &wgpu::Sampler, size: u32) -> Page {
+    let texture = device.create_texture(&wgpu::TextureDescriptor {
+        label: Some("atlas page"),
+        size: wgpu::Extent3d { width: size, height: size, depth_or_array_layers: 1 },
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: wgpu::TextureFormat::Rgba8Unorm,
+        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+        view_formats: &[],
+    });
+    let view = texture.create_view(&Default::default());
+    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("atlas page"),
+        layout,
+        entries: &[
+            wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&view) },
+            wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(sampler) },
+        ],
+    });
+    Page::new(texture, bind_group)
+}
