@@ -3,9 +3,13 @@
 //! Use it against the isolated test servers only.
 //!
 //!     bsk-bot --account http://127.0.0.1:8082 --credentials <file> [--seconds 60] [--char <id>]
+//!             [--gateway ws://127.0.0.1:8095/ws]
 //!
 //! The credentials file has `email: ...` and `password: ...` lines (test-account.local.txt).
-//! The exit code is 0 if it stayed connected for the whole time.
+//! With `--gateway`, the game connection goes through the gateway's WebSocket bridge, as the
+//! browser client's does. The exit code is 0 if it stayed connected for the whole time.
+
+mod ws;
 
 use bsk_net::{account, http, login, GameSocket, SocketEvent, Target};
 use bsk_proto::{ClientMessage, ServerMessage};
@@ -18,10 +22,39 @@ struct Args {
     credentials: String,
     seconds: u64,
     char_id: Option<i32>,
+    gateway: Option<String>,
+}
+
+/// The game connection: direct TCP, or WebSocket through the gateway.
+enum Conn {
+    Tcp(GameSocket),
+    Ws(ws::WsSocket),
+}
+
+impl Conn {
+    fn send(&mut self, msg: &ClientMessage) {
+        match self {
+            Conn::Tcp(s) => s.send(msg),
+            Conn::Ws(s) => s.send(msg),
+        }
+    }
+    fn poll(&mut self) -> Option<SocketEvent> {
+        match self {
+            Conn::Tcp(s) => s.poll(),
+            Conn::Ws(s) => s.poll(),
+        }
+    }
+    fn close(&mut self) {
+        match self {
+            Conn::Tcp(s) => s.close(),
+            Conn::Ws(s) => s.close(),
+        }
+    }
 }
 
 fn parse_args() -> Result<Args, String> {
-    let mut args = Args { account: String::new(), credentials: String::new(), seconds: 60, char_id: None };
+    let mut args =
+        Args { account: String::new(), credentials: String::new(), seconds: 60, char_id: None, gateway: None };
     let mut it = std::env::args().skip(1);
     while let Some(a) = it.next() {
         let mut value = || it.next().ok_or(format!("{a} needs a value"));
@@ -30,6 +63,7 @@ fn parse_args() -> Result<Args, String> {
             "--credentials" => args.credentials = value()?,
             "--seconds" => args.seconds = value()?.parse().map_err(|e| format!("--seconds: {e}"))?,
             "--char" => args.char_id = Some(value()?.parse().map_err(|e| format!("--char: {e}"))?),
+            "--gateway" => args.gateway = Some(value()?),
             _ => return Err(format!("unknown argument {a}")),
         }
     }
@@ -74,7 +108,10 @@ fn run(args: Args) -> Result<(), String> {
         ch.id, ch.object_type, ch.level, server.name, server.host, server.port
     );
 
-    let mut socket = GameSocket::connect(&Target { host: server.host.clone(), port: server.port, gateway: None });
+    let mut socket = match &args.gateway {
+        None => Conn::Tcp(GameSocket::connect(&Target { host: server.host.clone(), port: server.port, gateway: None })),
+        Some(g) => Conn::Ws(ws::WsSocket::connect(&format!("{}/{}:{}", g.trim_end_matches('/'), server.host, server.port))),
+    };
     let started = Instant::now();
     let now = || started.elapsed().as_millis() as i32;
     let hello = HelloParams {

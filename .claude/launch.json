@@ -3,8 +3,13 @@
   "configurations": [
     {
       "name": "client-rs-web",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8095", "--bind", "127.0.0.1", "--directory", "build/client-rs/web"],
+      "runtimeExecutable": "client-rs/target/debug/bsk-gateway",
+      "runtimeArgs": [
+        "--web", "build/client-rs/web",
+        "--account", "http://127.0.0.1:8082",
+        "--allow", "127.0.0.1:2053",
+        "--bind", "127.0.0.1:8095"
+      ],
       "port": 8095
     }
   ]
