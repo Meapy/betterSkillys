@@ -216,36 +216,32 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
     }
     items.sort_by(|a, b| a.0.total_cmp(&b.0));
 
-    for (_, item) in &items {
+    // Map.draw: DrawUnder objects first, then the shadows, then everything else.
+    let under = |item: &Item| matches!(item, Item::Sprite { desc, .. } if desc.draw_under);
+    for (_, item) in items.iter().filter(|(_, i)| under(i)) {
+        if let Item::Sprite { obj, desc } = item {
+            draw_sprite(scene, renderer, redrawer, ground, obj, desc);
+        }
+    }
+    let k = (cam.scale / TILE_PX) as f32;
+    if let Some(shadow) = redrawer.shadow(renderer) {
+        for (_, item) in items.iter().filter(|(_, i)| !under(i)) {
+            let Item::Sprite { obj, desc } = item else { continue };
+            if desc.shadow_size <= 0 {
+                continue;
+            }
+            // 30 × 15 px half-axes at size 100, under the object's ground point.
+            let size = obj.stat_int(2).unwrap_or(desc.min_size) as f32;
+            let s = size / 100.0 * (desc.shadow_size as f32 / 100.0);
+            let (sw, sh) = (30.0 * s * k, 15.0 * s * k);
+            let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
+            renderer.sprite(shadow, Quad::rect(px - sw, py - sh, 2.0 * sw, 2.0 * sh), Tint::color(desc.shadow_color, 1.0));
+        }
+    }
+    for (_, item) in items.iter().filter(|(_, i)| !under(i)) {
         match item {
             Item::Wall { obj, desc } => draw_wall(scene, renderer, obj, desc),
-            Item::Sprite { obj, desc } => {
-                let Some(look) = scene.look(obj, desc) else { continue };
-                let size = obj.stat_int(2).unwrap_or(desc.min_size);
-                let Some(sprite) = redrawer.get(scene.sprites, renderer, look.src, look.mirror, size) else { continue };
-                if desc.draw_on_ground {
-                    // Flat on its square, like a tile.
-                    let Some(rect) = scene.sprites.atlas(look.src) else { continue };
-                    let (x, y) = (obj.x.floor(), obj.y.floor());
-                    renderer.sprite(rect, cam.quad([x, y, 0.0], [x + 1.0, y, 0.0], [x, y + 1.0, 0.0]), Tint::NONE);
-                    continue;
-                }
-                // The canvas's bottom centre stands on the object (raised by its z); sprites
-                // scale with the map. On sinking ground (water) the sprite is drawn lower with
-                // its bottom cut off, unless it flies.
-                let k = (cam.scale / TILE_PX) as f32;
-                let [px, py] = cam.to_screen(obj.x, obj.y, desc.z);
-                let mut sink = 0.0;
-                if !desc.flying && !desc.protect_from_sink() {
-                    if let Some(l) = ground.layers(world, scene.data, scene.sprites, renderer, obj.x as i32, obj.y as i32) {
-                        sink = (l.sink as f32).min(sprite.h as f32);
-                    }
-                }
-                let (sw, sh) = (sprite.w as f32 * k, sprite.h as f32 * k);
-                let cut = 1.0 - sink / sprite.h as f32;
-                let quad = Quad::rect(px - sw / 2.0, py - sh + sink * k, sw, sh * cut);
-                renderer.sprite_part(sprite.rect, [0.0, 0.0, 1.0, cut], quad, Tint::NONE);
-            }
+            Item::Sprite { obj, desc } => draw_sprite(scene, renderer, redrawer, ground, obj, desc),
         }
     }
 
@@ -261,6 +257,36 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         text.draw_centered(fonts, renderer, name, px, py, style);
     }
     let _ = PAD;
+}
+
+/// `GameObject.draw` for sprite objects.
+fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, ground: &mut Ground, obj: &GameObj, desc: &ObjectDesc) {
+    let cam = scene.camera;
+    let Some(look) = scene.look(obj, desc) else { return };
+    if desc.draw_on_ground {
+        // Flat on its square, like a tile.
+        let Some(rect) = scene.sprites.atlas(look.src) else { return };
+        let (x, y) = (obj.x.floor(), obj.y.floor());
+        renderer.sprite(rect, cam.quad([x, y, 0.0], [x + 1.0, y, 0.0], [x, y + 1.0, 0.0]), Tint::NONE);
+        return;
+    }
+    let size = obj.stat_int(2).unwrap_or(desc.min_size);
+    let Some(sprite) = redrawer.get(scene.sprites, renderer, look.src, look.mirror, size) else { return };
+    // The canvas's bottom centre stands on the object (raised by its z); sprites scale with the
+    // map. On sinking ground (water) the sprite is drawn lower with its bottom cut off, unless it
+    // flies.
+    let k = (cam.scale / TILE_PX) as f32;
+    let [px, py] = cam.to_screen(obj.x, obj.y, desc.z);
+    let mut sink = 0.0;
+    if !desc.flying && !desc.protect_from_sink() {
+        if let Some(l) = ground.layers(scene.world, scene.data, scene.sprites, renderer, obj.x as i32, obj.y as i32) {
+            sink = (l.sink as f32).min(sprite.h as f32);
+        }
+    }
+    let (sw, sh) = (sprite.w as f32 * k, sprite.h as f32 * k);
+    let cut = 1.0 - sink / sprite.h as f32;
+    let quad = Quad::rect(px - sw / 2.0, py - sh + sink * k, sw, sh * cut);
+    renderer.sprite_part(sprite.rect, [0.0, 0.0, 1.0, cut], quad, Tint::NONE);
 }
 
 /// `Wall.draw`: a textured cube. Sides that face away aren't drawn; sides against another wall

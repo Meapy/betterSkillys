@@ -28,9 +28,25 @@ pub struct Redrawn {
 #[derive(Default)]
 pub struct Redrawer {
     cache: HashMap<Key, Option<Redrawn>>,
+    shadow: Option<AtlasRect>,
 }
 
 impl Redrawer {
+    /// The shadow under objects (`GameObject.drawShadow`): a radial gradient from 50% to 0%
+    /// alpha, white, to be tinted with the shadow colour.
+    pub fn shadow(&mut self, renderer: &mut Renderer) -> Option<AtlasRect> {
+        if self.shadow.is_none() {
+            const N: u32 = 64;
+            let img = RgbaImage::from_fn(N, N, |x, y| {
+                let (dx, dy) = ((x as f32 + 0.5) / N as f32 * 2.0 - 1.0, (y as f32 + 0.5) / N as f32 * 2.0 - 1.0);
+                let r = (dx * dx + dy * dy).sqrt();
+                Rgba([255, 255, 255, (0.5 * (1.0 - r).max(0.0) * 255.0).round() as u8])
+            });
+            self.shadow = renderer.add_image(&img);
+        }
+        self.shadow
+    }
+
     /// `src` scaled for `size` (100 = normal), mirrored left-right if asked, with its outline.
     pub fn get(
         &mut self,
