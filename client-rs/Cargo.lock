@@ -343,12 +343,18 @@ name = "bsk-client"
 version = "0.1.0"
 dependencies = [
  "bsk-assets",
+ "bsk-data",
+ "bsk-net",
+ "bsk-proto",
  "bsk-render",
+ "bsk-session",
+ "bsk-world",
  "console_error_panic_hook",
  "console_log",
  "env_logger",
  "futures",
  "image",
+ "js-sys",
  "log",
  "pollster",
  "wasm-bindgen",

@@ -1,15 +1,25 @@
-//! Sprite sheets in the atlas, looked up the way the AIR client's `AssetLibrary` and
-//! `AnimatedChars` do: by set name and tile index.
+//! Sprite sheets, looked up the way the AIR client's `AssetLibrary` and `AnimatedChars` do: by
+//! set name and tile index. Each sheet is in the GPU atlas (for drawing as is, like ground
+//! tiles) and kept in memory (for redrawing, like outlined object sprites).
 
 use bsk_assets::{AssetSource, Facing, Manifest};
 use bsk_render::{AtlasRect, Renderer};
 use std::collections::HashMap;
 
-/// One sheet file in the atlas. A sheet bigger than an atlas page is stored as a grid of pieces,
-/// cut on column and row boundaries that every tile size registered for the file shares.
+/// A rectangle of one sheet, in its pixels.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SrcRect {
+    pub sheet: u16,
+    pub x: u16,
+    pub y: u16,
+    pub w: u16,
+    pub h: u16,
+}
+
+/// One sheet file. A sheet bigger than an atlas page is stored as a grid of pieces, cut on
+/// column and row boundaries that every tile size registered for the file shares.
 pub struct Sheet {
-    pub width: u32,
-    pub height: u32,
+    pub image: image::RgbaImage,
     piece_w: u32,
     piece_h: u32,
     columns: u32,
@@ -21,7 +31,7 @@ impl Sheet {
     /// The atlas rectangle for a pixel rectangle of the sheet, or `None` if it's outside the
     /// sheet or crosses a piece edge.
     pub fn rect(&self, x: u32, y: u32, w: u32, h: u32) -> Option<AtlasRect> {
-        if x + w > self.width || y + h > self.height {
+        if x + w > self.image.width() || y + h > self.image.height() {
             return None;
         }
         let (px, py) = (x / self.piece_w, y / self.piece_h);
@@ -51,6 +61,13 @@ pub struct CharSheet {
     pub facing: Facing,
 }
 
+impl CharSheet {
+    /// Rows of 7 frames per character: 1 (right only), 2 (+ down) or 3 (+ up).
+    pub fn rows(&self) -> u32 {
+        (self.block_h / self.tile_h.max(1)).max(1)
+    }
+}
+
 #[derive(Default)]
 pub struct Sprites {
     sheets: Vec<Sheet>,
@@ -60,45 +77,60 @@ pub struct Sprites {
 
 impl Sprites {
     /// Tile `index` of image set `set`.
-    pub fn tile(&self, set: &str, index: u32) -> Option<AtlasRect> {
+    pub fn tile_src(&self, set: &str, index: u32) -> Option<SrcRect> {
         let s = self.sets.get(set)?;
-        let sheet = &self.sheets[s.sheet?];
         if index >= s.count {
             return None;
         }
-        sheet.rect((index % s.cols) * s.tile_w, (index / s.cols) * s.tile_h, s.tile_w, s.tile_h)
+        Some(src(s.sheet?, (index % s.cols) * s.tile_w, (index / s.cols) * s.tile_h, s.tile_w, s.tile_h))
     }
 
-    pub fn set(&self, name: &str) -> Option<&ImageSet> {
-        self.sets.get(name)
-    }
-
-    /// Frame `frame` (0..7 within the character's block, row `row`) of character `index`.
-    /// Row 0 faces right (or down), the next rows are the other directions for sheets that have them.
-    pub fn char_frame(&self, name: &str, index: u32, row: u32, frame: u32) -> Option<AtlasRect> {
+    /// Frame `frame` (0..7) of row `row` of character `index` in an animated sheet.
+    pub fn char_src(&self, name: &str, index: u32, row: u32, frame: u32) -> Option<SrcRect> {
         let c = self.chars.get(name)?;
-        if index >= c.count {
+        if index >= c.count || row >= c.rows() || frame >= 7 {
             return None;
         }
         let bx = (index % c.blocks_per_row) * c.block_w;
         let by = (index / c.blocks_per_row) * c.block_h;
-        self.sheets[c.sheet].rect(bx + frame * c.tile_w, by + row * c.tile_h, c.tile_w, c.tile_h)
+        Some(src(c.sheet, bx + frame * c.tile_w, by + row * c.tile_h, c.tile_w, c.tile_h))
+    }
+
+    /// The dye mask for a character frame, if the sheet has one.
+    pub fn char_mask_src(&self, name: &str, index: u32, row: u32, frame: u32) -> Option<SrcRect> {
+        let c = self.chars.get(name)?;
+        let mut r = self.char_src(name, index, row, frame)?;
+        r.sheet = c.mask? as u16;
+        Some(r)
     }
 
     pub fn char_sheet(&self, name: &str) -> Option<&CharSheet> {
         self.chars.get(name)
     }
 
-    pub fn char_mask_frame(&self, name: &str, index: u32, row: u32, frame: u32) -> Option<AtlasRect> {
-        let c = self.chars.get(name)?;
-        let mask = &self.sheets[c.mask?];
-        let bx = (index % c.blocks_per_row) * c.block_w;
-        let by = (index / c.blocks_per_row) * c.block_h;
-        mask.rect(bx + frame * c.tile_w, by + row * c.tile_h, c.tile_w, c.tile_h)
+    pub fn set(&self, name: &str) -> Option<&ImageSet> {
+        self.sets.get(name)
     }
 
-    pub fn set_names(&self) -> impl Iterator<Item = &str> {
-        self.sets.keys().map(String::as_str)
+    /// Where a source rectangle is in the atlas.
+    pub fn atlas(&self, r: SrcRect) -> Option<AtlasRect> {
+        self.sheets.get(r.sheet as usize)?.rect(r.x as u32, r.y as u32, r.w as u32, r.h as u32)
+    }
+
+    pub fn tile(&self, set: &str, index: u32) -> Option<AtlasRect> {
+        self.atlas(self.tile_src(set, index)?)
+    }
+
+    /// A copy of the pixels of a source rectangle.
+    pub fn pixels(&self, r: SrcRect) -> image::RgbaImage {
+        image::imageops::crop_imm(&self.sheets[r.sheet as usize].image, r.x as u32, r.y as u32, r.w as u32, r.h as u32)
+            .to_image()
+    }
+
+    /// `MaskedImage.amountTransparent() == 1`: nothing visible.
+    pub fn is_blank(&self, r: SrcRect) -> bool {
+        let img = &self.sheets[r.sheet as usize].image;
+        (r.y..r.y + r.h).all(|y| (r.x..r.x + r.w).all(|x| img.get_pixel(x as u32, y as u32)[3] == 0))
     }
 
     /// Fetch every sheet in the manifest (all at once, which matters in a browser) and put it in
@@ -155,21 +187,17 @@ impl Sprites {
             }
             upload += t.elapsed();
             index_of.insert(file, sprites.sheets.len());
-            sprites.sheets.push(Sheet { width, height, piece_w, piece_h, columns, pieces });
+            sprites.sheets.push(Sheet { image, piece_w, piece_h, columns, pieces });
         }
-        log::info!(
-            "sheets: fetch {fetch_ms} ms, decode {} ms, atlas {} ms",
-            decode.as_millis(),
-            upload.as_millis()
-        );
+        log::info!("sheets: fetch {fetch_ms} ms, decode {} ms, atlas {} ms", decode.as_millis(), upload.as_millis());
 
         for s in &manifest.image_sets {
             let sheet = s.file.as_deref().map(|f| index_of[f]);
             let (cols, count) = match sheet {
                 Some(i) => {
-                    let sh = &sprites.sheets[i];
-                    let cols = sh.width / s.w;
-                    (cols, cols * (sh.height / s.h))
+                    let img = &sprites.sheets[i].image;
+                    let cols = img.width() / s.w;
+                    (cols, cols * (img.height() / s.h))
                 }
                 None => (1, 1),
             };
@@ -177,9 +205,9 @@ impl Sprites {
         }
         for c in &manifest.animated_chars {
             let sheet = index_of[c.file.as_str()];
-            let sh = &sprites.sheets[sheet];
-            let blocks_per_row = (sh.width / c.sheet_w).max(1);
-            let count = blocks_per_row * (sh.height / c.sheet_h);
+            let img = &sprites.sheets[sheet].image;
+            let blocks_per_row = (img.width() / c.sheet_w).max(1);
+            let count = blocks_per_row * (img.height() / c.sheet_h);
             sprites.chars.insert(
                 c.name.clone(),
                 CharSheet {
@@ -197,6 +225,10 @@ impl Sprites {
         }
         Ok(sprites)
     }
+}
+
+fn src(sheet: usize, x: u32, y: u32, w: u32, h: u32) -> SrcRect {
+    SrcRect { sheet: sheet as u16, x: x as u16, y: y as u16, w: w as u16, h: h as u16 }
 }
 
 fn gcd(a: u32, b: u32) -> u32 {
@@ -222,7 +254,8 @@ mod tests {
                 pieces.push(AtlasRect { page: row * 3 + col, x: 100, y: 200, w, h });
             }
         }
-        let sheet = Sheet { width: 300, height: 250, piece_w: 128, piece_h: 96, columns: 3, pieces };
+        let image = image::RgbaImage::new(300, 250);
+        let sheet = Sheet { image, piece_w: 128, piece_h: 96, columns: 3, pieces };
         assert_eq!(sheet.rect(0, 0, 16, 16), Some(AtlasRect { page: 0, x: 100, y: 200, w: 16, h: 16 }));
         assert_eq!(sheet.rect(144, 112, 16, 16), Some(AtlasRect { page: 4, x: 116, y: 216, w: 16, h: 16 }));
         assert_eq!(sheet.rect(256, 192, 32, 32), Some(AtlasRect { page: 8, x: 100, y: 200, w: 32, h: 32 }));

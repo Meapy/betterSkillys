@@ -99,6 +99,9 @@ pub struct Renderer {
     runs: Vec<Run>,
     /// GPU draw calls of the last frame.
     pub last_draws: u32,
+    can_capture: bool,
+    capture_next: bool,
+    captured: Option<image::RgbaImage>,
 }
 
 impl Renderer {
@@ -138,8 +141,16 @@ impl Renderer {
         // Flash blends in gamma space; a non-sRGB target keeps the colours the same.
         let format = caps.formats.iter().copied().find(|f| !f.is_srgb()).unwrap_or(caps.formats[0]);
         let alpha_mode = caps.alpha_modes[0];
+        // Copying frames out (screenshots) needs COPY_SRC on the surface, where it's offered.
+        let can_capture = caps.usages.contains(wgpu::TextureUsages::COPY_SRC)
+            && matches!(format, wgpu::TextureFormat::Bgra8Unorm | wgpu::TextureFormat::Rgba8Unorm);
+        let usage = if can_capture {
+            wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC
+        } else {
+            wgpu::TextureUsages::RENDER_ATTACHMENT
+        };
         let config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            usage,
             format,
             width: width.max(1),
             height: height.max(1),
@@ -261,6 +272,9 @@ impl Renderer {
             instances: Vec::with_capacity(instance_capacity),
             runs: Vec::new(),
             last_draws: 0,
+            can_capture,
+            capture_next: false,
+            captured: None,
         };
         let white = image::RgbaImage::from_pixel(4, 4, image::Rgba([255; 4]));
         renderer.white = renderer.add_image(&white).expect("4×4 fits").sub(1, 1, 2, 2);
@@ -414,10 +428,65 @@ impl Renderer {
                 start = run.end;
             }
         }
+        let readback = (self.capture_next && self.can_capture).then(|| self.copy_out(&mut encoder, &frame.texture));
         self.queue.submit([encoder.finish()]);
+        if let Some((buffer, padded_row)) = readback {
+            self.captured = self.read_back(&buffer, padded_row);
+            self.capture_next = false;
+        }
         frame.present();
         self.last_draws = self.runs.len() as u32;
         Ok(())
+    }
+
+    /// Ask for the next frame's pixels (desktop only); `take_capture` returns them after
+    /// `present`. Returns false if this surface can't be read back.
+    pub fn capture_next_frame(&mut self) -> bool {
+        self.capture_next = self.can_capture;
+        self.can_capture
+    }
+
+    pub fn take_capture(&mut self) -> Option<image::RgbaImage> {
+        self.captured.take()
+    }
+
+    fn copy_out(&self, encoder: &mut wgpu::CommandEncoder, texture: &wgpu::Texture) -> (wgpu::Buffer, u32) {
+        let (w, h) = (self.config.width, self.config.height);
+        let padded_row = (4 * w).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+        let buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("capture"),
+            size: (padded_row * h) as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
+        encoder.copy_texture_to_buffer(
+            texture.as_image_copy(),
+            wgpu::TexelCopyBufferInfo {
+                buffer: &buffer,
+                layout: wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(padded_row), rows_per_image: Some(h) },
+            },
+            wgpu::Extent3d { width: w, height: h, depth_or_array_layers: 1 },
+        );
+        (buffer, padded_row)
+    }
+
+    fn read_back(&self, buffer: &wgpu::Buffer, padded_row: u32) -> Option<image::RgbaImage> {
+        let slice = buffer.slice(..);
+        slice.map_async(wgpu::MapMode::Read, |_| {});
+        self.device.poll(wgpu::Maintain::Wait);
+        let (w, h) = (self.config.width, self.config.height);
+        let data = slice.get_mapped_range();
+        let mut out = image::RgbaImage::new(w, h);
+        let bgra = self.config.format == wgpu::TextureFormat::Bgra8Unorm;
+        for y in 0..h {
+            let row = &data[(y * padded_row) as usize..][..(4 * w) as usize];
+            for x in 0..w {
+                let p = &row[(4 * x) as usize..][..4];
+                let rgba = if bgra { [p[2], p[1], p[0], 255] } else { [p[0], p[1], p[2], 255] };
+                out.put_pixel(x, y, image::Rgba(rgba));
+            }
+        }
+        Some(out)
     }
 }
 

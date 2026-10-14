@@ -1,16 +1,27 @@
 //! betterSkillys client: the desktop executable and, built for wasm32, the browser version.
 
+mod game;
+mod login;
+mod redraw;
 #[allow(dead_code)] // lookups the game screens will use
 mod sprites;
+mod view;
 
 use bsk_assets::AssetSource;
-use bsk_render::{Quad, Renderer, Tint};
+use bsk_data::GameData;
+use bsk_net::Pending;
+use bsk_render::Renderer;
+use bsk_session::{HelloParams, Join, NEXUS_GAME_ID};
+use game::Game;
+use login::LoginConfig;
 use sprites::Sprites;
+use std::collections::HashSet;
 use std::sync::Arc;
 use web_time::Instant;
 use winit::application::ApplicationHandler;
-use winit::event::WindowEvent;
+use winit::event::{ElementState, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy};
+use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{Window, WindowId};
 
 /// Not "betterSkillys": that's the AIR client's window, which tools must never touch.
@@ -19,6 +30,8 @@ const TITLE: &str = "betterSkillys-rs";
 struct Loaded {
     renderer: Renderer,
     sprites: Sprites,
+    data: GameData,
+    redrawer: redraw::Redrawer,
 }
 
 enum UserEvent {
@@ -26,13 +39,40 @@ enum UserEvent {
     Failed(String),
 }
 
+/// Where we are between start-up and playing.
+enum Phase {
+    /// No login given: nothing to connect to.
+    Idle(String),
+    SigningIn(LoginConfig, Pending<bsk_net::http::Response>),
+    Playing(Game),
+}
+
 struct App {
     proxy: EventLoopProxy<UserEvent>,
     window: Option<Arc<Window>>,
     loaded: Option<Box<Loaded>>,
+    phase: Phase,
     started: Instant,
+    last_frame: i32,
+    keys: HashSet<KeyCode>,
     fps_frames: u32,
     fps_since: Instant,
+    last_title: String,
+    /// `--shot <file> --shot-after <seconds>`: save one frame as PNG, then quit (desktop).
+    shot: Option<(String, f32)>,
+    quit: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn shot_args() -> Option<(String, f32)> {
+    let args: Vec<String> = std::env::args().collect();
+    let value = |name: &str| args.iter().position(|a| a == name).and_then(|i| args.get(i + 1)).cloned();
+    Some((value("--shot")?, value("--shot-after").and_then(|s| s.parse().ok()).unwrap_or(5.0)))
+}
+
+#[cfg(target_arch = "wasm32")]
+fn shot_args() -> Option<(String, f32)> {
+    None
 }
 
 async fn load(window: Arc<Window>) -> Result<Box<Loaded>, String> {
@@ -43,62 +83,158 @@ async fn load(window: Arc<Window>) -> Result<Box<Loaded>, String> {
     let manifest = source.manifest().await.map_err(|e| e.to_string())?;
     let t = Instant::now();
     let sprites = Sprites::load(&source, &manifest, &mut renderer).await?;
+    let data = GameData::load(&source, &manifest).await?;
     log::info!(
-        "{} sheets loaded into {} atlas pages in {} ms",
+        "loaded {} sheets ({} atlas pages), {} grounds, {} objects in {} ms",
         manifest.sheet_files().len(),
         renderer.atlas_pages(),
+        data.grounds.len(),
+        data.objects.len(),
         t.elapsed().as_millis()
     );
-    Ok(Box::new(Loaded { renderer, sprites }))
+    Ok(Box::new(Loaded { renderer, sprites, data, redrawer: Default::default() }))
 }
 
 impl App {
-    fn draw(&mut self) {
+    fn now(&self) -> i32 {
+        self.started.elapsed().as_millis() as i32
+    }
+
+    fn start_login(&mut self) {
+        self.phase = match login::config() {
+            Ok(Some(cfg)) => {
+                let pending = cfg.char_list();
+                Phase::SigningIn(cfg, pending)
+            }
+            Ok(None) => Phase::Idle("no login given (see client-rs/app/src/login.rs)".into()),
+            Err(e) => Phase::Idle(e),
+        };
+    }
+
+    /// Move through the sign-in steps as their answers arrive.
+    fn advance(&mut self) {
+        let Phase::SigningIn(cfg, pending) = &self.phase else { return };
+        let Some(response) = pending.take() else { return };
+        self.phase = match login::parse_char_list(response) {
+            Err(e) => Phase::Idle(format!("sign-in failed: {e}")),
+            Ok(list) => match (list.chars.iter().find(|c| !c.dead), list.servers.first()) {
+                (Some(ch), Some(server)) => {
+                    log::info!("character {} on {} ({}:{})", ch.id, server.name, server.host, server.port);
+                    let hello = HelloParams {
+                        build_version: bsk_net::login::BUILD_VERSION.into(),
+                        game_id: NEXUS_GAME_ID,
+                        guid: bsk_net::login::encrypt(&cfg.email),
+                        password: bsk_net::login::encrypt(&cfg.password),
+                        key_time: -1,
+                        key: vec![],
+                    };
+                    Phase::Playing(Game::start(cfg.target(&server.host, server.port), hello, Join::Load { char_id: ch.id }))
+                }
+                (None, _) => Phase::Idle("this account has no living character".into()),
+                (_, None) => Phase::Idle("the account server lists no world servers".into()),
+            },
+        };
+    }
+
+    fn held(&self, codes: &[KeyCode]) -> bool {
+        codes.iter().any(|c| self.keys.contains(c))
+    }
+
+    fn frame(&mut self) {
+        let now = self.now();
+        let dt = (now - self.last_frame).clamp(0, 200);
+        self.last_frame = now;
+        self.advance();
+
+        let mut keys = (0.0, 0.0);
+        if self.held(&[KeyCode::KeyA, KeyCode::ArrowLeft]) {
+            keys.0 -= 1.0;
+        }
+        if self.held(&[KeyCode::KeyD, KeyCode::ArrowRight]) {
+            keys.0 += 1.0;
+        }
+        if self.held(&[KeyCode::KeyW, KeyCode::ArrowUp]) {
+            keys.1 -= 1.0;
+        }
+        if self.held(&[KeyCode::KeyS, KeyCode::ArrowDown]) {
+            keys.1 += 1.0;
+        }
+        let rotate = self.held(&[KeyCode::KeyE]) as i32 as f64 - self.held(&[KeyCode::KeyQ]) as i32 as f64;
+        let reset_angle = self.held(&[KeyCode::KeyZ]);
+
         let Some(loaded) = self.loaded.as_mut() else { return };
-        let Loaded { renderer, sprites } = &mut **loaded;
-        let t = self.started.elapsed().as_secs_f32();
-        let (w, h) = renderer.size();
+        let Loaded { renderer, sprites, data, redrawer } = &mut **loaded;
+        if let Phase::Playing(game) = &mut self.phase {
+            game.poll(now, data);
+            if reset_angle {
+                game.camera_angle = game::DEFAULT_CAMERA_ANGLE;
+            }
+            game.update(now, dt, keys, rotate, data);
+        }
+
         renderer.begin();
-
-        // Phase 0 test scene: a grass field and the player classes walking.
-        let scale = 5.0;
-        let tile = 8.0 * scale;
-        if let Some(grass) = sprites.tile("lofiEnvironment2", 0x31) {
-            let (cols, rows) = ((w as f32 / tile) as i32 + 1, (h as f32 / tile) as i32 + 1);
-            for ty in 0..rows {
-                for tx in 0..cols {
-                    renderer.sprite(grass, Quad::rect(tx as f32 * tile, ty as f32 * tile, tile, tile), Tint::NONE);
+        let (w, h) = renderer.size();
+        let status = match &self.phase {
+            Phase::Idle(why) => why.clone(),
+            Phase::SigningIn(..) => "Signing in…".into(),
+            Phase::Playing(game) => game.status.clone(),
+        };
+        match &self.phase {
+            Phase::Idle(_) | Phase::SigningIn(..) => {}
+            Phase::Playing(game) => {
+                if let Some(world) = &game.world {
+                    if let Some(me) = world.player() {
+                        // Freer layout than the AIR client's 600×600 view beside its HUD: the
+                        // player is centred, a little below the middle, and the map scales
+                        // with the window height.
+                        let scale = view::TILE_PX * (h as f64 / 800.0).max(1.0);
+                        let camera = view::Camera {
+                            x: me.x,
+                            y: me.y,
+                            angle: game.camera_angle,
+                            scale,
+                            cx: w as f64 / 2.0,
+                            cy: h as f64 * 13.0 / 24.0,
+                        };
+                        let scene = view::Scene { sprites, data, world, camera, time: now };
+                        view::draw(&scene, renderer, redrawer);
+                    }
                 }
             }
         }
-        let frame = ((t * 4.0) as u32) % 2 + 1;
-        if let Some(players) = sprites.char_sheet("players") {
-            for i in 0..players.count {
-                let x = 40.0 + (i % 12) as f32 * 80.0;
-                let y = 40.0 + (i / 12) as f32 * 80.0;
-                if let Some(rect) = sprites.char_frame("players", i, 0, frame) {
-                    renderer.sprite(rect, Quad::rect(x, y, tile, tile), Tint::NONE);
-                }
+        if let Some((_, after)) = &self.shot {
+            if now as f32 >= after * 1000.0 && !renderer.capture_next_frame() {
+                log::error!("--shot: this surface can't be read back");
+                self.quit = true;
             }
         }
-        if let Some(rect) = sprites.tile("lofiObj3", 0x1a) {
-            renderer.sprite(rect, Quad::rotated(w as f32 / 2.0, h as f32 / 2.0, tile * 2.0, tile * 2.0, t), Tint::NONE);
-        }
-        renderer.fill(0.0, h as f32 - 24.0, w as f32, 24.0, 0x000000, 0.6);
-
         if let Err(e) = renderer.present(0x000000) {
             log::warn!("present: {e}");
+        }
+        if let Some(image) = renderer.take_capture() {
+            let path = self.shot.take().map(|s| s.0).unwrap_or_default();
+            match image.save(&path) {
+                Ok(()) => log::info!("saved {path}"),
+                Err(e) => log::error!("{path}: {e}"),
+            }
+            self.quit = true;
         }
 
         self.fps_frames += 1;
         let elapsed = self.fps_since.elapsed().as_secs_f32();
-        if elapsed >= 1.0 {
-            if let Some(window) = &self.window {
-                window.set_title(&format!(
-                    "{TITLE} - {:.0} fps, {} draws",
-                    self.fps_frames as f32 / elapsed,
-                    renderer.last_draws
-                ));
+        if elapsed >= 0.5 {
+            let mut title = format!("{TITLE} - {:.0} fps, {} draws", self.fps_frames as f32 / elapsed, renderer.last_draws);
+            if !status.is_empty() {
+                title += &format!(" - {status}");
+            }
+            if title != self.last_title {
+                if let Some(window) = &self.window {
+                    window.set_title(&title);
+                }
+                if !status.is_empty() && !self.last_title.ends_with(&status) {
+                    log::info!("{status}");
+                }
+                self.last_title = title;
             }
             self.fps_frames = 0;
             self.fps_since = Instant::now();
@@ -113,7 +249,7 @@ impl ApplicationHandler<UserEvent> for App {
         }
         let attributes = Window::default_attributes().with_title(TITLE);
         #[cfg(not(target_arch = "wasm32"))]
-        let attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1024.0, 768.0));
+        let attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0));
         // In a browser the page's CSS sizes the canvas.
         #[cfg(target_arch = "wasm32")]
         let attributes = {
@@ -146,6 +282,7 @@ impl ApplicationHandler<UserEvent> for App {
                     self.loaded.as_mut().unwrap().renderer.resize(size.width, size.height);
                     window.request_redraw();
                 }
+                self.start_login();
             }
             UserEvent::Failed(e) => {
                 log::error!("startup failed: {e}");
@@ -156,14 +293,35 @@ impl ApplicationHandler<UserEvent> for App {
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
         match event {
-            WindowEvent::CloseRequested => event_loop.exit(),
+            WindowEvent::CloseRequested => {
+                if let Phase::Playing(game) = &mut self.phase {
+                    game.close();
+                }
+                event_loop.exit();
+            }
             WindowEvent::Resized(size) => {
                 if let Some(loaded) = &mut self.loaded {
                     loaded.renderer.resize(size.width, size.height);
                 }
             }
+            WindowEvent::KeyboardInput { event, .. } => {
+                if let PhysicalKey::Code(code) = event.physical_key {
+                    match event.state {
+                        ElementState::Pressed => self.keys.insert(code),
+                        ElementState::Released => self.keys.remove(&code),
+                    };
+                }
+            }
+            WindowEvent::Focused(false) => self.keys.clear(),
             WindowEvent::RedrawRequested => {
-                self.draw();
+                self.frame();
+                if self.quit {
+                    if let Phase::Playing(game) = &mut self.phase {
+                        game.close();
+                    }
+                    event_loop.exit();
+                    return;
+                }
                 if let Some(window) = &self.window {
                     window.request_redraw();
                 }
@@ -188,9 +346,15 @@ fn main() {
         proxy: event_loop.create_proxy(),
         window: None,
         loaded: None,
+        phase: Phase::Idle("loading".into()),
         started: Instant::now(),
+        last_frame: 0,
+        keys: HashSet::new(),
         fps_frames: 0,
         fps_since: Instant::now(),
+        last_title: String::new(),
+        shot: shot_args(),
+        quit: false,
     };
     #[cfg(not(target_arch = "wasm32"))]
     {
