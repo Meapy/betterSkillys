@@ -16,6 +16,7 @@ struct Key {
     mirror: bool,
     size: i32,
     dye: Option<Dye>,
+    pad_bottom: bool,
 }
 
 /// Cloth and dye on a masked sprite (players): the mask's red channel takes `tex1`, its green
@@ -112,10 +113,26 @@ impl Redrawer {
         size: i32,
         dye: Option<Dye>,
     ) -> Option<Redrawn> {
+        self.get_padded(sprites, renderer, src, mirror, size, dye, false)
+    }
+
+    /// Like `get`; `pad_bottom` pads below as much as above, centring the sprite (projectiles).
+    #[allow(clippy::too_many_arguments)]
+    pub fn get_padded(
+        &mut self,
+        sprites: &Sprites,
+        renderer: &mut Renderer,
+        src: SrcRect,
+        mirror: bool,
+        size: i32,
+        dye: Option<Dye>,
+        pad_bottom: bool,
+    ) -> Option<Redrawn> {
         let dye = dye.filter(|d| d.tex1 != 0 || d.tex2 != 0);
-        let key = Key { src, mirror, size, dye };
+        let key = Key { src, mirror, size, dye, pad_bottom };
         *self.cache.entry(key).or_insert_with(|| {
             let image = match dye {
+                None if pad_bottom => redraw_padded(&sprites.pixels(src), mirror, size, 5.0, PAD),
                 None => redraw(&sprites.pixels(src), mirror, size, 5.0),
                 Some(d) => {
                     // TextureRedrawer.resize with a mask: retexture at ×5, then size / 5.
@@ -136,11 +153,17 @@ impl Redrawer {
 
 /// `TextureRedrawer.resize` then `GlowRedrawer.outlineGlow(texture, 0)`.
 pub fn redraw(src: &impl GenericImageView<Pixel = Rgba<u8>>, mirror: bool, size: i32, scale: f64) -> RgbaImage {
+    redraw_padded(src, mirror, size, scale, 1)
+}
+
+/// `redraw` with `bottom` pixels of padding below the sprite (1 normally, `PAD` for
+/// `resize`'s padBottom).
+pub fn redraw_padded(src: &impl GenericImageView<Pixel = Rgba<u8>>, mirror: bool, size: i32, scale: f64, bottom: u32) -> RgbaImage {
     let (w, h) = src.dimensions();
     let factor = scale * (size as f64 / 100.0);
     let sw = (factor * w as f64) as u32;
     let sh = (factor * h as f64) as u32;
-    let mut out = RgbaImage::new(sw + 2 * PAD, sh + 1 + PAD);
+    let mut out = RgbaImage::new(sw + 2 * PAD, sh + bottom + PAD);
     if sw > 0 && sh > 0 {
         for y in 0..sh {
             // Nearest neighbour, sampling each target pixel's centre, as Flash's draw does.

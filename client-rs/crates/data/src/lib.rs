@@ -9,7 +9,7 @@ pub mod xml;
 
 pub use ground::{Animate, AnimateKind, Ground};
 pub use model::{Model, ModelFace};
-pub use object::{ObjectClass, ObjectDesc};
+pub use object::{ObjectClass, ObjectDesc, ProjectileDesc};
 pub use texture::{TextureData, TextureRef};
 
 use bsk_assets::{AssetSource, Manifest};

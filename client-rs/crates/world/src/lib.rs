@@ -4,14 +4,18 @@
 //!
 //! Times are milliseconds since the game started (`GameSprite.lastUpdate_`).
 
+pub mod combat;
 pub mod condition;
 mod movement;
+pub mod random;
 
 use bsk_data::GameData;
 use bsk_proto::{stat, NewTick, ObjectData, StatData, StatValue, Update};
 use std::collections::HashMap;
 
+pub use combat::{Hit, Projectile};
 pub use movement::{move_speed, MoveInput};
+pub use random::Random;
 
 /// The tile type of a square nothing has been sent for (`Square.tileType_` default).
 pub const NO_TILE: u16 = 255;
@@ -35,6 +39,11 @@ pub struct GameObj {
     pub moving: bool,
     /// The direction it last moved in, radians (for facing).
     pub facing: f64,
+    /// When it last attacked and toward which world angle (for the attack frames).
+    pub attack_start: i32,
+    pub attack_angle: f64,
+    /// Killed by one of our shots, before the server says so.
+    pub dead: bool,
 }
 
 impl GameObj {
@@ -84,10 +93,16 @@ pub struct World {
     /// The ground's effect on our speed (`Player.moveMultiplier_`), and sinking.
     move_multiplier: f64,
     sink_level: i32,
+    pub projectiles: Vec<Projectile>,
+    /// Seeded with the map's seed: shot and ground damage rolls, in step with the server's.
+    pub random: Random,
+    /// Our next shot's bullet id (`GameObject.getBulletId`, from 1).
+    pub next_bullet_id: i32,
+    last_ground_damage: HashMap<(i32, i32), i32>,
 }
 
 impl World {
-    pub fn new(width: i32, height: i32, name: &str) -> Self {
+    pub fn new(width: i32, height: i32, name: &str, seed: u32) -> Self {
         let n = (width.max(0) * height.max(0)) as usize;
         Self {
             width,
@@ -101,6 +116,10 @@ impl World {
             last_tick_id: -1,
             move_multiplier: 1.0,
             sink_level: 0,
+            projectiles: Vec::new(),
+            random: Random::new(seed),
+            next_bullet_id: 1,
+            last_ground_damage: HashMap::new(),
         }
     }
 
@@ -161,6 +180,9 @@ impl World {
             stats: HashMap::new(),
             moving: false,
             facing: 0.0,
+            attack_start: i32::MIN / 2,
+            attack_angle: 0.0,
+            dead: false,
         };
         obj.apply_stats(&o.status.stats);
         self.objects.insert(id, obj);

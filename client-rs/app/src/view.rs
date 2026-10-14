@@ -12,7 +12,7 @@ use crate::text::{Fonts, Style, Text};
 use bsk_assets::Facing;
 use bsk_data::{GameData, Model, ObjectDesc, TextureData, TextureRef};
 use bsk_render::{Quad, Renderer, Tint};
-use bsk_world::{GameObj, World};
+use bsk_world::{GameObj, Projectile, World};
 
 /// Pixels per tile at map scale 1, as in the AIR client.
 pub const TILE_PX: f64 = 50.0;
@@ -76,6 +76,8 @@ pub struct Scene<'a> {
     pub world: &'a World,
     pub camera: Camera,
     pub time: i32,
+    /// (object id, amount, colour, when) of the damage numbers to show.
+    pub damage_texts: &'a [(i32, i32, u32, i32)],
 }
 
 /// The image an object shows now, before redrawing.
@@ -84,6 +86,9 @@ struct Look {
     mirror: bool,
     /// The frame's dye mask, for sheets that have one.
     mask: Option<SrcRect>,
+    /// Two frames wide (the second attack frame with its sword bit); the body is the first
+    /// half (or the second, mirrored).
+    wide: bool,
 }
 
 const SEC_TO_DIRS: [[Dir; 3]; 8] = {
@@ -115,7 +120,7 @@ impl Scene<'_> {
         let skin = obj.stat_int(76).filter(|&t| t != 0).and_then(|t| self.data.objects.get(&(t as u16)));
         let tex = skin.map_or(&desc.texture, |s| &s.texture).pick(obj.id);
         let TextureRef::Animated { set, index } = &tex.main else {
-            return self.texture_src(tex, obj.id).map(|src| Look { src, mirror: false, mask: None });
+            return self.texture_src(tex, obj.id).map(|src| Look { src, mirror: false, mask: None, wide: false });
         };
         let sheet = self.sprites.char_sheet(set)?;
         let rows = sheet.rows();
@@ -131,12 +136,21 @@ impl Scene<'_> {
                 (_, Dir::Up) => (rows >= 3).then_some((2, false)),
             }
         };
-        let rel = bound_to_pi(obj.facing - self.camera.angle);
+        // Attacking (GameObject.getTexture): face the attack, play the attack frames.
+        const ATTACK_PERIOD: i32 = 300;
+        let attacking = self.time < obj.attack_start + ATTACK_PERIOD;
+        let facing = if attacking && !desc.dont_face_attacks { obj.attack_angle } else { obj.facing };
+        let rel = bound_to_pi(facing - self.camera.angle);
         let sec = ((rel / std::f64::consts::FRAC_PI_4 + 4.0) as i32).rem_euclid(8) as usize;
         let dirs = SEC_TO_DIRS[sec];
         let (dir, (row, mirror)) = dirs.iter().find_map(|&d| row_of(d).map(|r| (d, r)))?;
         let symmetric = matches!(dir, Dir::Down | Dir::Up);
 
+        if attacking {
+            if let Some(look) = self.attack_look(set, *index, row, mirror, obj) {
+                return Some(look);
+            }
+        }
         let walking = obj.moving;
         let frame = if walking {
             // walkPer: 400 ms for any normal speed; two frames.
@@ -148,7 +162,7 @@ impl Scene<'_> {
                 // walk1 mirrored stands in for a blank walk2.
                 let src = self.sprites.char_src(set, *index, row, 1)?;
                 let mask = self.sprites.char_mask_src(set, *index, row, 1);
-                return Some(Look { src, mirror: !mirror, mask });
+                return Some(Look { src, mirror: !mirror, mask, wide: false });
             } else {
                 0
             }
@@ -157,7 +171,34 @@ impl Scene<'_> {
         };
         let src = self.sprites.char_src(set, *index, row, frame)?;
         let mask = self.sprites.char_mask_src(set, *index, row, frame);
-        Some(Look { src, mirror, mask })
+        Some(Look { src, mirror, mask, wide: false })
+    }
+
+    /// `AnimatedChar.loadDir`'s attack frames: frame 4, then frame 5 (two frames wide with frame 6,
+    /// the sword bit, when that isn't blank). `None` if both are blank (then it walks instead).
+    fn attack_look(&self, set: &str, index: u32, row: u32, mirror: bool, obj: &GameObj) -> Option<Look> {
+        let a1 = self.sprites.char_src(set, index, row, 4).filter(|r| !self.sprites.is_blank(*r));
+        let a2 = self.sprites.char_src(set, index, row, 5).filter(|r| !self.sprites.is_blank(*r));
+        let frames: Vec<SrcRect> = a1.into_iter().chain(a2).collect();
+        if frames.is_empty() {
+            return None;
+        }
+        let p = ((self.time - obj.attack_start).rem_euclid(300)) as f64 / 300.0;
+        let i = ((p.clamp(0.0, 0.99999) * frames.len() as f64) as usize).min(frames.len() - 1);
+        let mut src = frames[i];
+        let frame = if Some(src) == a1 { 4 } else { 5 };
+        let mut mask = self.sprites.char_mask_src(set, index, row, frame);
+        let mut wide = false;
+        if frame == 5 {
+            if let Some(sword) = self.sprites.char_src(set, index, row, 6).filter(|r| !self.sprites.is_blank(*r)) {
+                src.w += sword.w;
+                if let Some(m) = &mut mask {
+                    m.w += sword.w;
+                }
+                wide = true;
+            }
+        }
+        Some(Look { src, mirror, mask, wide })
     }
 }
 
@@ -176,6 +217,7 @@ enum Item<'a> {
     Sprite { obj: &'a GameObj, desc: &'a ObjectDesc },
     Wall { obj: &'a GameObj, desc: &'a ObjectDesc },
     Model { obj: &'a GameObj, desc: &'a ObjectDesc, model: &'a Model },
+    Projectile(&'a Projectile),
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -224,6 +266,11 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
             items.push((depth, Item::Sprite { obj, desc }));
         }
     }
+    for p in &world.projectiles {
+        if (p.x - cam.x).abs() <= radius && (p.y - cam.y).abs() <= radius {
+            items.push((cam.to_screen(p.x, p.y, 0.0)[1], Item::Projectile(p)));
+        }
+    }
     items.sort_by(|a, b| a.0.total_cmp(&b.0));
 
     // Map.draw: DrawUnder objects first, then the shadows, then everything else.
@@ -252,8 +299,45 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         match item {
             Item::Wall { obj, desc } => draw_wall(scene, renderer, obj, desc),
             Item::Model { obj, desc, model } => draw_model(scene, renderer, obj, desc, model),
+            Item::Projectile(p) => draw_projectile(scene, renderer, redrawer, p),
             Item::Sprite { obj, desc } => draw_sprite(scene, renderer, redrawer, ground, obj, desc),
         }
+    }
+
+    // HP bars (`GameObject.drawHpBar`) under monsters and players.
+    for (_, item) in &items {
+        let Item::Sprite { obj, desc } = item else { continue };
+        if !(desc.enemy || desc.player) || desc.no_mini_map {
+            continue;
+        }
+        let c = obj.conditions();
+        if bsk_world::condition::has(c, bsk_world::condition::INVINCIBLE)
+            || (!desc.player && bsk_world::condition::has(c, bsk_world::condition::INVULNERABLE))
+        {
+            continue;
+        }
+        let (Some(hp), Some(max)) = (obj.stat_int(1), obj.stat_int(0)) else { continue };
+        let max = if desc.player { max } else { max.max(hp) };
+        let offset = if desc.player && Some(obj.id) != world.me { 21.0 } else { 5.0 };
+        let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
+        let (half, tall, border) = (20.0 * k, 5.0 * k, 1.2 * k);
+        let top = py + offset * k;
+        renderer.fill(px - half - border, top - border, 2.0 * (half + border), tall + 2.0 * border, 0x111111, 1.0);
+        if hp > 0 && max > 0 {
+            let f = hp as f32 / max as f32;
+            let color = if f < 0.2 { 0xE01010 } else if f < 0.5 { 0xFF8010 } else { 0x10FF00 };
+            renderer.fill(px - half, top, 2.0 * half * f.min(1.0), tall, color, 1.0);
+        }
+    }
+
+    // Damage numbers, rising over a second above whoever took the damage.
+    let style = Style { size: 18.0, bold: true, color: 0xFF0000 };
+    for &(id, amount, color, at) in scene.damage_texts {
+        let Some(obj) = world.objects.get(&id) else { continue };
+        let age = (scene.time - at) as f32 / 1000.0;
+        let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
+        let y = py - (55.0 + 40.0 * age) * k;
+        text.draw_centered(fonts, renderer, &format!("-{amount}"), px, y, Style { color, ..style });
     }
 
     // Names (`GameObject.drawName`): bold 16 px white, centred under the object.
@@ -297,8 +381,42 @@ fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, 
     }
     let (sw, sh) = (sprite.w as f32 * k, sprite.h as f32 * k);
     let cut = 1.0 - sink / sprite.h as f32;
-    let quad = Quad::rect(px - sw / 2.0, py - sh + sink * k, sw, sh * cut);
+    // A wide attack frame: its body (the first half, or the second when mirrored) is centred.
+    let shift = if look.wide {
+        let body = (sprite.w - 2 * PAD) as f32 / 2.0 * k;
+        if look.mirror { -body / 2.0 } else { body / 2.0 }
+    } else {
+        0.0
+    };
+    let quad = Quad::rect(px - sw / 2.0 + shift, py - sh + sink * k, sw, sh * cut);
     renderer.sprite_part(sprite.rect, [0.0, 0.0, 1.0, cut], quad, Tint::NONE);
+}
+
+/// `Projectile.draw` with projOutline (the AIR client's default): the outlined texture centred
+/// on the projectile (half a tile up), turned to its direction (plus the object's
+/// AngleCorrection, and its spin if it has a Rotation).
+fn draw_projectile(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, p: &Projectile) {
+    let cam = scene.camera;
+    let Some(desc) = scene.world.projectile_desc(p, scene.data) else { return };
+    let Some(look_desc) = scene.data.object_ids.get(&desc.object_id).and_then(|t| scene.data.objects.get(t)) else {
+        return;
+    };
+    let Some(src) = scene.texture_src(&look_desc.texture, p.bullet_id) else { return };
+    let mut size = if desc.size > 0 {
+        desc.size
+    } else {
+        scene.data.objects.get(&p.container_type).map_or(100, |c| c.xml.int("Size", 100))
+    };
+    if src.w >= 16 {
+        size = (size as f64 / (src.w as f64 / 8.0)) as i32;
+    }
+    let Some(sprite) = redrawer.get_padded(scene.sprites, renderer, src, false, size, None, true) else { return };
+    let spin = if look_desc.rotation == 0.0 { 0.0 } else { scene.time as f64 / look_desc.rotation };
+    let angle = p.angle - cam.angle + look_desc.angle_correction + spin;
+    let k = (cam.scale / TILE_PX) as f32;
+    let [px, py] = cam.to_screen(p.x, p.y, p.z);
+    let quad = Quad::rotated(px, py, sprite.w as f32 * k, sprite.h as f32 * k, angle as f32);
+    renderer.sprite(sprite.rect, quad, Tint::NONE);
 }
 
 /// `Object3D.draw`: the model turned by the object's Rotation (degrees) and placed at it; faces

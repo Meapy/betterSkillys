@@ -174,6 +174,11 @@ impl Session {
     pub fn last_tick(&self) -> Option<i32> {
         self.last_tick
     }
+
+    /// When the last Move went out (`MoveRecords.lastClearTime_`).
+    pub fn last_move_time(&self) -> Option<i32> {
+        self.last_move_time
+    }
 }
 
 #[cfg(test)]

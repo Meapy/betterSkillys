@@ -71,6 +71,14 @@ struct App {
     holds_from: Option<i32>,
     last_scripted: Option<KeyCode>,
     walk_to: Option<(f64, f64)>,
+    /// The mouse on the window, and whether the left button is down.
+    mouse: (f64, f64),
+    mouse_down: bool,
+    /// The I key: keep firing toward the mouse.
+    autofire: bool,
+    /// `--aim <degrees>`: where scripted fire (`--hold f:<ms>`) aims, on the screen; `None`
+    /// (`--aim auto`) aims at the nearest enemy.
+    script_aim: Option<f64>,
     /// Keys pressed since the last frame (for one-shot actions).
     pressed: Vec<KeyCode>,
 }
@@ -100,6 +108,33 @@ fn walk_to_arg() -> Option<(f64, f64)> {
     None
 }
 
+/// `--aim <degrees>` (desktop tests): the screen direction scripted fire aims at, or `auto` for
+/// the nearest enemy.
+fn aim_arg() -> Option<f64> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let args: Vec<String> = std::env::args().collect();
+        match args.iter().position(|a| a == "--aim").and_then(|i| args.get(i + 1)) {
+            Some(v) if v == "auto" => None,
+            v => Some(v.and_then(|v| v.parse::<f64>().ok()).unwrap_or(0.0).to_radians()),
+        }
+    }
+    #[cfg(target_arch = "wasm32")]
+    Some(0.0)
+}
+
+/// For `--aim auto`: the world angle from the player to the nearest live enemy, if any.
+fn nearest_enemy_angle(world: &bsk_world::World, data: &bsk_data::GameData) -> Option<f64> {
+    let me = world.player()?;
+    world
+        .objects
+        .values()
+        .filter(|o| !o.dead && data.objects.get(&o.object_type).is_some_and(|d| d.enemy))
+        .map(|o| (o.x - me.x, o.y - me.y))
+        .min_by(|a, b| a.0.hypot(a.1).total_cmp(&b.0.hypot(b.1)))
+        .map(|(dx, dy)| dy.atan2(dx))
+}
+
 /// `--hold <key>:<ms>` (repeatable): keys to hold one after another once in the game, for
 /// testing movement without touching the window (desktop).
 fn hold_args() -> Vec<(KeyCode, i32)> {
@@ -118,6 +153,7 @@ fn hold_args() -> Vec<(KeyCode, i32)> {
                     "q" => KeyCode::KeyQ,
                     "e" => KeyCode::KeyE,
                     "r" => KeyCode::KeyR,
+                    "f" => KeyCode::F23, // fire toward --aim
                     "0" => KeyCode::Digit0,
                     "-" => KeyCode::F24, // a pause: holds nothing
                     _ => return None,
@@ -259,6 +295,9 @@ impl App {
             self.last_scripted = scripted;
         }
         let pressed = std::mem::take(&mut self.pressed);
+        let scripted_fire = self.scripted_key(now) == Some(KeyCode::F23);
+        let wants_fire = self.mouse_down || self.autofire || scripted_fire;
+        let (mouse, script_aim) = (self.mouse, self.script_aim);
         let Some(loaded) = self.loaded.as_mut() else { return };
         let Loaded { renderer, sprites, data, redrawer, fonts, text, ground } = &mut **loaded;
         if let Phase::Playing(game) = &mut self.phase {
@@ -270,6 +309,7 @@ impl App {
                         }
                     }
                     KeyCode::KeyR => game.escape(),
+                    KeyCode::KeyI => self.autofire = !self.autofire,
                     _ => {}
                 }
             }
@@ -288,6 +328,7 @@ impl App {
             Phase::Playing(game) => game.status.clone(),
         };
         let mut view_radius = None;
+        let mut fire = None;
         match &self.phase {
             Phase::Idle(_) | Phase::SigningIn(..) => {}
             Phase::Playing(game) => {
@@ -311,7 +352,16 @@ impl App {
                             .map(|(x, y)| (x - camera.cx).hypot(y - camera.cy) / scale)
                             .fold(0.0, f64::max);
                         view_radius = Some(far);
-                        let scene = view::Scene { sprites, data, world, camera, time: now };
+                        // Firing: toward the mouse from where we stand on the screen (MapUserInput),
+                        // or toward --aim for scripted fire.
+                        if wants_fire {
+                            fire = match (scripted_fire, script_aim) {
+                                (true, Some(screen_angle)) => Some(game.camera_angle + screen_angle),
+                                (true, None) => nearest_enemy_angle(world, data),
+                                _ => Some(game.camera_angle + (mouse.1 - camera.cy).atan2(mouse.0 - camera.cx)),
+                            };
+                        }
+                        let scene = view::Scene { sprites, data, world, camera, time: now, damage_texts: &game.damage_texts };
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
                     }
                 }
@@ -319,6 +369,9 @@ impl App {
         }
         if let (Some(far), Phase::Playing(game)) = (view_radius, &mut self.phase) {
             game.want_view_radius(far, now);
+            if let Some(angle) = fire {
+                game.shoot(now, angle, data);
+            }
         }
         if !status.is_empty() {
             let style = text::Style { size: 18.0, bold: true, color: 0xFFFFFF };
@@ -448,7 +501,14 @@ impl ApplicationHandler<UserEvent> for App {
                     }
                 }
             }
-            WindowEvent::Focused(false) => self.keys.clear(),
+            WindowEvent::Focused(false) => {
+                self.keys.clear();
+                self.mouse_down = false;
+            }
+            WindowEvent::CursorMoved { position, .. } => self.mouse = (position.x, position.y),
+            WindowEvent::MouseInput { state, button: winit::event::MouseButton::Left, .. } => {
+                self.mouse_down = state == ElementState::Pressed;
+            }
             WindowEvent::RedrawRequested => {
                 self.frame();
                 if self.quit {
@@ -499,6 +559,10 @@ fn main() {
         last_scripted: None,
         pressed: Vec::new(),
         walk_to: walk_to_arg(),
+        mouse: (0.0, 0.0),
+        mouse_down: false,
+        autofire: false,
+        script_aim: aim_arg(),
     };
     #[cfg(not(target_arch = "wasm32"))]
     {

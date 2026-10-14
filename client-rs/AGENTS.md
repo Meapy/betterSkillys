@@ -1,9 +1,9 @@
 # Rust client (in progress)
 
 A rewrite of the AIR client in Rust that runs on Windows, Linux, macOS and in the browser. It
-uses the same art and the same server protocol, so no server change is needed except a WebSocket
-bridge for the browser (planned). The AIR client stays the real client until this one reaches
-parity. Read [../AGENTS.md](../AGENTS.md) first.
+uses the same art and the same server protocol, so the servers don't change; browsers reach them
+through the WebSocket bridge in `gateway`. The AIR client stays the real client until this one
+reaches parity. Read [../AGENTS.md](../AGENTS.md) first.
 
 ## Build and run
 
@@ -48,6 +48,18 @@ The bot logs in, joins the nexus with the first living character and answers the
 AIR client does (`bsk-session`); it exits non-zero if it gets disconnected. The second form goes
 through the gateway, as the browser does.
 
+The client itself can be scripted for tests (desktop only):
+
+| Flag | What |
+|---|---|
+| `--shot <png> --shot-after <seconds>` | Save one frame, then quit (logs the position and what it sent) |
+| `--walk-to x,y` | Walk to a world position (in the first world joined) |
+| `--hold <key>:<ms>` | Hold keys one after another: `w a s d q e r 0`, `f` fires, `-` waits |
+| `--aim <degrees>` / `--aim auto` | Where `f` fires on the screen, or at the nearest enemy |
+
+For example, the Battle Arena (its monsters come 60 s after you enter):
+`--walk-to 106.5,75.4 --hold 0:200 --hold -:6000 --hold f:100000 --aim auto --shot a.png --shot-after 95`.
+
 ## Layout
 
 | Part | What |
@@ -58,6 +70,8 @@ through the gateway, as the browser does.
 | `crates/proto` | All 88 messages and framing, no I/O; golden byte tests from the server's C# layouts |
 | `crates/session` | Connection state machine: Hello, Load/Create, the acks and one Move per NewTick |
 | `crates/net` | Account HTTP + XML, Hello's RSA, the game socket (TCP, or WebSocket in a browser) |
+| `crates/data` | Ground and object XML: textures, projectiles, flags; 3D models |
+| `crates/world` | Map, objects, walking (`Player` port), projectiles and hits, the seeded `Random` |
 | `app` | The winit app (`betterskillys` binary, also the wasm module); `sprites.rs` looks up tiles |
 | `bot` | Headless client for protocol tests |
 | `gateway` | Web server and WebSocket bridge for browser play |
@@ -75,8 +89,10 @@ through the gateway, as the browser does.
 0. Scaffolding: manifest, renderer, window on desktop and web. **Done.**
 1. Protocol crate (88 messages, golden tests), headless bot on the isolated stack, WebSocket
    bridge for the browser. **Done.**
-2. World: tiles, objects, walls, 3D objects, shadows, camera; walk around the Nexus.
-3. Combat: projectiles (exact port of the paths and `Random`), hits, conditions, particles.
+2. World: tiles, objects, walls, 3D objects, shadows, camera; walk around the Nexus. **Done**,
+   except connected and cave walls, object animations, AltTexture and particles.
+3. Combat: projectiles (exact port of the paths and `Random`), hits, conditions. **Done**
+   (shooting, enemy and player hits, ground damage, damage numbers); particles still to do.
 4. In-game UI, 5. front-end screens, 6. market/guild/party/emotes/sound, 7. packaging.
 
 Not planned: the map editor, the tutorial, Kabam's payment, offer and news screens.

@@ -31,9 +31,9 @@ fn obj(id: i32, object_type: u16, x: f32, y: f32, speed: i32) -> bsk_proto::Obje
     ObjectData { object_type: object_type as i32, status: ObjectStatus { object_id: id, pos: WorldPos { x, y }, stats: stats.into() } }
 }
 
-/// A 10×10 floor with a wall at (6, 5) and water at (5, 7); our player at (5.5, 5.5).
+/// A 10Ã—10 floor with a wall at (6, 5) and water at (5, 7); our player at (5.5, 5.5).
 fn world(d: &GameData) -> World {
-    let mut w = World::new(10, 10, "test");
+    let mut w = World::new(10, 10, "test", 1);
     let mut tiles = Vec::new();
     for y in 0..10 {
         for x in 0..10 {
@@ -66,7 +66,7 @@ fn speed_formula() {
     assert!((move_speed(0, [0, 0], 1.0) - 0.004).abs() < 1e-12);
     // Slowed ignores the stat.
     assert!((move_speed(75, [1 << 3, 0], 0.5) - 0.002).abs() < 1e-12);
-    // Speedy: ×1.35.
+    // Speedy: Ã—1.35.
     assert!((move_speed(0, [1 << 14, 0], 1.0) - 0.0054).abs() < 1e-12);
 }
 

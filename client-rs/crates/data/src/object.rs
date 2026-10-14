@@ -57,6 +57,61 @@ impl ObjectClass {
     }
 }
 
+/// `<Projectile id="n">` of a weapon or monster (`ProjectileProperties.as`). AS3 reads Speed,
+/// LifetimeMS and Size as ints.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProjectileDesc {
+    pub bullet_type: i32,
+    /// The object (by id) whose texture the projectile shows.
+    pub object_id: String,
+    pub lifetime: i32,
+    pub speed: i32,
+    /// -1: use the container's size.
+    pub size: i32,
+    pub min_damage: i32,
+    pub max_damage: i32,
+    /// Condition effect names it inflicts.
+    pub effects: Vec<String>,
+    pub multi_hit: bool,
+    pub passes_cover: bool,
+    pub armor_piercing: bool,
+    pub wavy: bool,
+    pub parametric: bool,
+    pub boomerang: bool,
+    pub amplitude: f64,
+    pub frequency: f64,
+    pub magnitude: f64,
+}
+
+impl ProjectileDesc {
+    fn from_xml(xml: &Element) -> Self {
+        let (min_damage, max_damage) = if xml.has("Damage") {
+            (xml.int("Damage", 0), xml.int("Damage", 0))
+        } else {
+            (xml.int("MinDamage", 0), xml.int("MaxDamage", 0))
+        };
+        ProjectileDesc {
+            bullet_type: xml.attr_int("id", 0),
+            object_id: xml.text_of("ObjectId").unwrap_or("").to_owned(),
+            lifetime: xml.int("LifetimeMS", 0),
+            speed: xml.int("Speed", 0),
+            size: if xml.has("Size") { crate::xml::to_int32(xml.number("Size", 0.0)) } else { -1 },
+            min_damage,
+            max_damage,
+            effects: xml.children_named("ConditionEffect").map(|c| c.text.clone()).collect(),
+            multi_hit: xml.has("MultiHit"),
+            passes_cover: xml.has("PassesCover"),
+            armor_piercing: xml.has("ArmorPiercing"),
+            wavy: xml.has("Wavy"),
+            parametric: xml.has("Parametric"),
+            boomerang: xml.has("Boomerang"),
+            amplitude: xml.number("Amplitude", 0.0),
+            frequency: xml.number("Frequency", 1.0),
+            magnitude: xml.number("Magnitude", 3.0),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ObjectDesc {
     pub object_type: u16,
@@ -90,10 +145,24 @@ pub struct ObjectDesc {
     pub angle_correction: f64,
     pub rotation: f64,
     pub shadow_color: u32,
+    pub projectiles: std::collections::HashMap<i32, ProjectileDesc>,
     pub xml: Element,
 }
 
 impl ObjectDesc {
+    /// Weapons: `<NumProjectiles>` (1), `<ArcGap>` in degrees (11.25), `<RateOfFire>` (1).
+    pub fn num_projectiles(&self) -> i32 {
+        self.xml.int("NumProjectiles", 1)
+    }
+
+    pub fn arc_gap_degrees(&self) -> f64 {
+        self.xml.number("ArcGap", 11.25)
+    }
+
+    pub fn rate_of_fire(&self) -> f64 {
+        self.xml.number("RateOfFire", 1.0)
+    }
+
     /// `<ProtectFromSink>`: doesn't sink into water.
     pub fn protect_from_sink(&self) -> bool {
         self.xml.has("ProtectFromSink")
@@ -143,6 +212,13 @@ impl ObjectDesc {
             angle_correction: xml.number("AngleCorrection", 0.0) * std::f64::consts::PI / 4.0,
             rotation: xml.number("Rotation", 0.0),
             shadow_color: xml.int("ShadowColor", 0) as u32,
+            projectiles: xml
+                .children_named("Projectile")
+                .map(|p| {
+                    let d = ProjectileDesc::from_xml(p);
+                    (d.bullet_type, d)
+                })
+                .collect(),
             xml: xml.clone(),
         }
     }

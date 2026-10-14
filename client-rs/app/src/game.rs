@@ -4,9 +4,12 @@
 
 use bsk_data::{GameData, ObjectClass};
 use bsk_net::{GameSocket, SocketEvent, Target};
-use bsk_proto::{ClientMessage, Escape, Reconnect, ServerMessage, UsePortal, ViewRadius, WorldPos};
+use bsk_proto::{
+    ClientMessage, EnemyHit, Escape, GroundDamage, OtherHit, PlayerHit, PlayerShoot, Reconnect, ServerMessage,
+    SquareHit, UsePortal, ViewRadius, WorldPos,
+};
 use bsk_session::{Event, HelloParams, Join, Session};
-use bsk_world::{MoveInput, World};
+use bsk_world::{Hit, MoveInput, Projectile, World};
 
 /// The AIR client's default camera angle (`Parameters`: 7π/4), which Z resets to.
 pub const DEFAULT_CAMERA_ANGLE: f64 = 7.0 * std::f64::consts::PI / 4.0;
@@ -32,6 +35,10 @@ pub struct Game {
     /// The sight radius the server uses for us, and when we last changed it.
     sent_view_radius: i32,
     view_radius_sent_at: i32,
+    /// Damage numbers to show: (object id, amount, colour, when).
+    pub damage_texts: Vec<(i32, i32, u32, i32)>,
+    /// What we sent, by message name (logged when the game closes).
+    pub counts: std::collections::BTreeMap<&'static str, u32>,
 }
 
 impl Game {
@@ -51,6 +58,8 @@ impl Game {
             out: Vec::new(),
             sent_view_radius: MIN_VIEW_RADIUS,
             view_radius_sent_at: i32::MIN / 2,
+            damage_texts: Vec::new(),
+            counts: Default::default(),
         };
         game.socket.send(&first);
         game
@@ -97,6 +106,21 @@ impl Game {
         // The session answers first (a NewTick's Move goes out before its statuses apply, as
         // GameServerConnection.onNewTick does).
         let event = self.session.handle(msg, now, &mut self.out);
+        // Shots from an owner we don't know (or that died) are acknowledged with -1, as
+        // GameServerConnection.onEnemyShoot / onServerPlayerShoot do.
+        let unknown_owner = |id: i32| self.world.as_ref().and_then(|w| w.objects.get(&id)).is_none_or(|o| o.dead);
+        let owner = match msg {
+            ServerMessage::EnemyShoot(e) => Some(e.owner_id),
+            ServerMessage::ServerPlayerShoot(s) => Some(s.owner_id),
+            _ => None,
+        };
+        if owner.is_some_and(unknown_owner) {
+            for m in self.out.iter_mut() {
+                if let ClientMessage::ShootAck(ack) = m {
+                    ack.time = -1;
+                }
+            }
+        }
         let sent_move = self.out.iter().any(|m| matches!(m, ClientMessage::Move(_)));
         for m in self.out.drain(..) {
             self.socket.send(&m);
@@ -108,7 +132,7 @@ impl Game {
         }
         match event {
             Some(Event::MapInfo(info)) => {
-                self.world = Some(World::new(info.width as i32, info.height as i32, &info.display_name));
+                self.world = Some(World::new(info.width as i32, info.height as i32, &info.display_name, info.seed));
                 self.status = format!("Entering {}…", info.display_name);
             }
             Some(Event::Joined { object_id, .. }) => {
@@ -129,8 +153,97 @@ impl Game {
             ServerMessage::Update(u) => world.apply_update(u, data, now),
             ServerMessage::NewTick(t) => world.apply_new_tick(t, now),
             ServerMessage::Goto(g) => world.apply_goto(g.object_id, g.pos.x as f64, g.pos.y as f64, now, data),
+            ServerMessage::EnemyShoot(e) => {
+                let Some(owner) = world.objects.get(&e.owner_id).filter(|o| !o.dead) else { return };
+                let container = owner.object_type;
+                let (num, inc) = e.spread.map_or((1, 0.0), |s| (s.num_shots as i32, s.angle_inc as f64));
+                for i in 0..num {
+                    let angle = e.angle as f64 + inc * i as f64;
+                    let (x, y) = (e.starting_pos.x as f64, e.starting_pos.y as f64);
+                    let p = Projectile::new(e.owner_id, e.bullet_id + i, container, e.bullet_type as i32, angle, now, x, y, 1.0, e.damage, true);
+                    world.add_projectile(p);
+                }
+                if let Some(owner) = world.objects.get_mut(&e.owner_id) {
+                    owner.attack_start = now;
+                    owner.attack_angle = e.angle as f64 + inc * (num - 1) as f64 / 2.0;
+                }
+            }
+            ServerMessage::ServerPlayerShoot(s) => {
+                if world.objects.get(&s.owner_id).is_some_and(|o| !o.dead) {
+                    let (x, y) = (s.starting_pos.x as f64, s.starting_pos.y as f64);
+                    let p = Projectile::new(s.owner_id, s.bullet_id, s.container_type as u16, 0, s.angle as f64, now, x, y, 1.0, s.damage, false);
+                    world.add_projectile(p);
+                }
+            }
+            ServerMessage::AllyShoot(a) => {
+                let Some(owner) = world.objects.get_mut(&a.owner_id).filter(|o| !o.dead) else { return };
+                owner.attack_start = now;
+                owner.attack_angle = a.angle as f64;
+                let (x, y) = (owner.x, owner.y);
+                let p = Projectile::new(a.owner_id, a.bullet_id, a.container_type as u16, 0, a.angle as f64, now, x, y, 1.0, 0, false);
+                world.add_projectile(p);
+            }
+            ServerMessage::Damage(d) => {
+                // Someone was hit (not by our shots): show the number.
+                if Some(d.object_id) != world.me {
+                    self.damage_texts.push((d.target_id, d.damage_amount, 0xFF0000, now));
+                }
+            }
             _ => {}
         }
+    }
+
+    /// Fire toward the world angle `angle` (mouse held). Sends a PlayerShoot per projectile.
+    pub fn shoot(&mut self, now: i32, angle: f64, data: &GameData) {
+        if self.session.map.as_ref().is_some_and(|m| m.disable_shooting) {
+            return;
+        }
+        let last_move = self.session.last_move_time().unwrap_or(now);
+        let Some(world) = &mut self.world else { return };
+        for p in world.shoot(now, angle, last_move, data) {
+            let msg = PlayerShoot {
+                time: now,
+                bullet_id: p.bullet_id,
+                container_type: p.container_type as i32,
+                starting_pos: WorldPos { x: p.start_x as f32, y: p.start_y as f32 },
+                angle: p.angle as f32,
+            };
+            *self.counts.entry("PlayerShoot").or_default() += 1;
+            self.socket.send(&msg.into());
+        }
+    }
+
+    /// Move the projectiles and tell the server what they hit.
+    fn update_projectiles(&mut self, now: i32, data: &GameData) {
+        let Some(world) = &mut self.world else { return };
+        for hit in world.update_projectiles(now, data) {
+            let msg: ClientMessage = match hit {
+                Hit::Player { bullet_id, owner_id, damage } => {
+                    if let Some(me) = world.me {
+                        self.damage_texts.push((me, damage, 0xFF0000, now));
+                    }
+                    PlayerHit { bullet_id, object_id: owner_id }.into()
+                }
+                Hit::Enemy { time, bullet_id, target_id, kill, damage } => {
+                    self.damage_texts.push((target_id, damage, 0xFF0000, now));
+                    EnemyHit { time, bullet_id, target_id, kill }.into()
+                }
+                Hit::Other { time, bullet_id, owner_id, target_id } => {
+                    OtherHit { time, bullet_id, object_id: owner_id, target_id }.into()
+                }
+                Hit::Square { time, bullet_id, owner_id } => SquareHit { time, bullet_id, object_id: owner_id }.into(),
+                Hit::Ground { time, x, y, damage } => {
+                    if let Some(me) = world.me {
+                        self.damage_texts.push((me, damage, 0xFF0000, now));
+                    }
+                    GroundDamage { time, position: WorldPos { x: x as f32, y: y as f32 } }.into()
+                }
+            };
+            *self.counts.entry(msg.name()).or_default() += 1;
+            self.socket.send(&msg);
+        }
+        // Damage numbers rise for a second.
+        self.damage_texts.retain(|t| now - t.3 < 1000);
     }
 
     /// Advance the world by `dt` ms with the keys held; `rotate` is -1, 0 or 1.
@@ -141,6 +254,7 @@ impl Game {
         if let Some((x, y)) = world.update(now, dt, &input, data) {
             self.session.set_position(WorldPos { x: x as f32, y: y as f32 }, now);
         }
+        self.update_projectiles(now, data);
     }
 
     /// `GameSprite`'s VIEW_RADIUS: ask the server to send as far as the screen reaches
@@ -184,6 +298,9 @@ impl Game {
     }
 
     pub fn close(&mut self) {
+        if !self.counts.is_empty() {
+            log::info!("sent: {:?}", self.counts);
+        }
         self.socket.close();
     }
 }
