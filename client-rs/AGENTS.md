@@ -56,6 +56,8 @@ The client itself can be scripted for tests (desktop only):
 | `--walk-to x,y` | Walk to a world position (in the first world joined) |
 | `--hold <key>:<ms>` | Hold keys one after another: `w a s d q e r 0`, `f` fires, `-` waits |
 | `--aim <degrees>` / `--aim auto` | Where `f` fires on the screen, or at the nearest enemy |
+| `--say <text>` | Send a chat line or command once in the game |
+| `--size WxH` | Open the window at this size (physical pixels), to check the layout |
 
 For example, the Battle Arena (its monsters come 60 s after you enter):
 `--walk-to 106.5,75.4 --hold 0:200 --hold -:6000 --hold f:100000 --aim auto --shot a.png --shot-after 95`.
@@ -81,6 +83,9 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
 - **Atlas:** pages are 4096², or the GPU's limit (WebGL2 can be 2048). Sheets bigger than a page
   are cut into pieces on tile boundaries (`Sheet::rect`).
 - **Colours:** the surface is non-sRGB and the atlas premultiplied, so blending matches Flash.
+- **Layout:** `hud::Layout` works everything out from the window size each frame: one scale for
+  the AIR client's 200×600 HUD (fitted to the height, at most 28% of the width), the world in
+  the rest, and chat wrapped to the space. F11 or Alt+Enter toggles fullscreen.
 - **Async loading:** everything that touches files or the GPU at startup is `async`, because the
   browser can't block. On desktop it runs under `pollster::block_on`.
 

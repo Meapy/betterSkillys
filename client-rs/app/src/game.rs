@@ -5,8 +5,8 @@
 use bsk_data::{GameData, ObjectClass};
 use bsk_net::{GameSocket, SocketEvent, Target};
 use bsk_proto::{
-    ClientMessage, EnemyHit, Escape, GroundDamage, OtherHit, PlayerHit, PlayerShoot, Reconnect, ServerMessage,
-    SquareHit, UsePortal, ViewRadius, WorldPos,
+    ClientMessage, EnemyHit, Escape, GroundDamage, OtherHit, PlayerHit, PlayerShoot, PlayerText, Reconnect,
+    ServerMessage, SquareHit, UsePortal, ViewRadius, WorldPos,
 };
 use bsk_session::{Event, HelloParams, Join, Session};
 use bsk_world::{Hit, MoveInput, Projectile, World};
@@ -39,7 +39,12 @@ pub struct Game {
     pub damage_texts: Vec<(i32, i32, u32, i32)>,
     /// What we sent, by message name (logged when the game closes).
     pub counts: std::collections::BTreeMap<&'static str, u32>,
+    /// Chat, oldest first (kept across worlds, as the AIR client's TextBox is).
+    pub chat: Vec<crate::hud::ChatLine>,
 }
+
+/// How many chat lines to keep.
+const CHAT_KEEP: usize = 200;
 
 impl Game {
     pub fn start(target: Target, hello: HelloParams, char_id: i32) -> Self {
@@ -60,6 +65,7 @@ impl Game {
             view_radius_sent_at: i32::MIN / 2,
             damage_texts: Vec::new(),
             counts: Default::default(),
+            chat: Vec::new(),
         };
         game.socket.send(&first);
         game
@@ -148,6 +154,9 @@ impl Game {
             }
             None => {}
         }
+        if let ServerMessage::Text(t) = msg {
+            self.add_chat(&t.name, &t.recipient, &t.text, t.name_color, t.text_color, now);
+        }
         let Some(world) = &mut self.world else { return };
         match msg {
             ServerMessage::Update(u) => world.apply_update(u, data, now),
@@ -190,6 +199,28 @@ impl Game {
                 }
             }
             _ => {}
+        }
+    }
+
+    pub fn add_chat(&mut self, name: &str, recipient: &str, text: &str, name_color: i32, text_color: i32, now: i32) {
+        self.chat.push(crate::hud::ChatLine {
+            name: name.to_owned(),
+            recipient: recipient.to_owned(),
+            text: text.to_owned(),
+            name_color,
+            text_color,
+            at: now,
+        });
+        if self.chat.len() > CHAT_KEEP {
+            self.chat.drain(..self.chat.len() - CHAT_KEEP);
+        }
+    }
+
+    /// Send a chat line or command (`PlayerText`); the server echoes what others should see.
+    pub fn say(&mut self, text: &str) {
+        let text = text.trim();
+        if !text.is_empty() {
+            self.socket.send(&PlayerText { text: text.to_owned() }.into());
         }
     }
 

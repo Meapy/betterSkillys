@@ -3,6 +3,7 @@
 mod connected;
 mod game;
 mod ground;
+mod hud;
 mod login;
 mod redraw;
 #[allow(dead_code)] // lookups the game screens will use
@@ -82,6 +83,13 @@ struct App {
     script_aim: Option<f64>,
     /// Keys pressed since the last frame (for one-shot actions).
     pressed: Vec<KeyCode>,
+    /// The chat line being typed (Enter opens it), and lines to send.
+    chat_input: Option<String>,
+    chat_send: Vec<String>,
+    /// `--say <text>` (desktop tests): sent once we're in the game.
+    say: Option<String>,
+    alt_held: bool,
+    map_colors: hud::MapColors,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -93,6 +101,17 @@ fn shot_args() -> Option<(String, f32)> {
 
 #[cfg(target_arch = "wasm32")]
 fn shot_args() -> Option<(String, f32)> {
+    None
+}
+
+/// `--say <text>` (desktop tests): a chat line or command to send once in the game.
+fn say_arg() -> Option<String> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let args: Vec<String> = std::env::args().collect();
+        args.iter().position(|a| a == "--say").and_then(|i| args.get(i + 1)).cloned()
+    }
+    #[cfg(target_arch = "wasm32")]
     None
 }
 
@@ -314,6 +333,14 @@ impl App {
                     _ => {}
                 }
             }
+            for line in self.chat_send.drain(..) {
+                game.say(&line);
+            }
+            if game.world.as_ref().is_some_and(|w| w.player().is_some()) {
+                if let Some(line) = self.say.take() {
+                    game.say(&line);
+                }
+            }
             game.poll(now, data);
             if reset_angle {
                 game.camera_angle = game::DEFAULT_CAMERA_ANGLE;
@@ -323,6 +350,7 @@ impl App {
 
         renderer.begin();
         let (w, h) = renderer.size();
+        let lay = hud::Layout::new(w, h);
         let status = match &self.phase {
             Phase::Idle(why) => why.clone(),
             Phase::SigningIn(..) => "Signing in…".into(),
@@ -336,19 +364,21 @@ impl App {
                 if let Some(world) = &game.world {
                     if let Some(me) = world.player() {
                         // Freer layout than the AIR client's 600×600 view beside its HUD: the
-                        // player is centred, a little below the middle, and the map scales
-                        // with the window height.
-                        let scale = view::TILE_PX * (h as f64 / 800.0).max(1.0);
+                        // world fills the window left of the panel, the player centred in it a
+                        // little below the middle, the map scaled to the space (hud::Layout).
+                        let scale = lay.map_scale();
+                        let (cx, cy) = lay.camera_point();
                         let camera = view::Camera {
                             x: me.x,
                             y: me.y,
                             angle: game.camera_angle,
                             scale,
-                            cx: w as f64 / 2.0,
-                            cy: h as f64 * 13.0 / 24.0,
+                            cx,
+                            cy,
                         };
-                        // The farthest screen corner from us, in tiles.
-                        let far = [(0.0, 0.0), (w as f64, 0.0), (0.0, h as f64), (w as f64, h as f64)]
+                        // The farthest corner of the view from us, in tiles.
+                        let vw = lay.view_w() as f64;
+                        let far = [(0.0, 0.0), (vw, 0.0), (0.0, h as f64), (vw, h as f64)]
                             .iter()
                             .map(|(x, y)| (x - camera.cx).hypot(y - camera.cy) / scale)
                             .fold(0.0, f64::max);
@@ -359,13 +389,19 @@ impl App {
                             fire = match (scripted_fire, script_aim) {
                                 (true, Some(screen_angle)) => Some(game.camera_angle + screen_angle),
                                 (true, None) => nearest_enemy_angle(world, data),
+                                _ if lay.on_panel(mouse.0, mouse.1) => None,
                                 _ => Some(game.camera_angle + (mouse.1 - camera.cy).atan2(mouse.0 - camera.cx)),
                             };
                         }
                         let scene = view::Scene { sprites, data, world, camera, time: now, damage_texts: &game.damage_texts };
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
                     }
+                    let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+                    hud::draw_panel(&mut ui, &lay, world, game.camera_angle, &mut self.map_colors);
                 }
+                let me = game.world.as_ref().and_then(|w| w.player()).and_then(|p| p.name()).unwrap_or("").to_owned();
+                let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+                hud::draw_chat(&mut ui, &lay, &game.chat, &me, self.chat_input.as_deref(), now);
             }
         }
         if let (Some(far), Phase::Playing(game)) = (view_radius, &mut self.phase) {
@@ -376,13 +412,13 @@ impl App {
         }
         if !status.is_empty() {
             let style = text::Style { size: 18.0, bold: true, color: 0xFFFFFF };
-            text.draw_centered(fonts, renderer, &status, w as f32 / 2.0, h as f32 / 2.0 + 40.0, style);
+            text.draw_centered(fonts, renderer, &status, lay.view_w() / 2.0, h as f32 / 2.0 + 40.0, style);
         }
         if let Phase::Playing(game) = &self.phase {
             if let Some((_, name)) = game.nearest_portal(data) {
-                let style = text::Style { size: 18.0, bold: true, color: 0xFFFFFF };
+                let style = text::Style { size: lay.font(18.0), bold: true, color: 0xFFFFFF };
                 let hint = format!("{name}  (0 to enter)");
-                text.draw_centered(fonts, renderer, &hint, w as f32 / 2.0, h as f32 - 60.0, style);
+                text.draw_centered(fonts, renderer, &hint, lay.view_w() / 2.0, h as f32 * 0.82, style);
             }
         }
         if let Some((_, after)) = &self.shot {
@@ -432,7 +468,18 @@ impl ApplicationHandler<UserEvent> for App {
         }
         let attributes = Window::default_attributes().with_title(TITLE);
         #[cfg(not(target_arch = "wasm32"))]
-        let attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0));
+        let attributes = {
+            // `--size WxH` (tests): the window's size in physical pixels.
+            let args: Vec<String> = std::env::args().collect();
+            let size = args.iter().position(|a| a == "--size").and_then(|i| args.get(i + 1)).and_then(|v| {
+                let (w, h) = v.split_once('x')?;
+                Some((w.parse::<u32>().ok()?, h.parse::<u32>().ok()?))
+            });
+            match size {
+                Some((w, h)) => attributes.with_inner_size(winit::dpi::PhysicalSize::new(w, h)),
+                None => attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0)),
+            }
+        };
         // In a browser the page's CSS sizes the canvas.
         #[cfg(target_arch = "wasm32")]
         let attributes = {
@@ -487,8 +534,60 @@ impl ApplicationHandler<UserEvent> for App {
                     loaded.renderer.resize(size.width, size.height);
                 }
             }
+            WindowEvent::ModifiersChanged(m) => self.alt_held = m.state().alt_key(),
             WindowEvent::KeyboardInput { event, .. } => {
-                if let PhysicalKey::Code(code) = event.physical_key {
+                let PhysicalKey::Code(code) = event.physical_key else { return };
+                let pressed = event.state == ElementState::Pressed;
+                // F11 or Alt+Enter: fullscreen (borderless) and back.
+                if pressed && !event.repeat && (code == KeyCode::F11 || (self.alt_held && code == KeyCode::Enter)) {
+                    if let Some(window) = &self.window {
+                        let full = window.fullscreen().is_some();
+                        window.set_fullscreen((!full).then_some(winit::window::Fullscreen::Borderless(None)));
+                    }
+                    return;
+                }
+                // Typing a chat line: keys go to the text, not the game.
+                if let Some(input) = &mut self.chat_input {
+                    if pressed {
+                        match code {
+                            KeyCode::Enter | KeyCode::NumpadEnter => {
+                                let line = std::mem::take(input);
+                                if !line.trim().is_empty() {
+                                    self.chat_send.push(line);
+                                }
+                                self.chat_input = None;
+                            }
+                            KeyCode::Escape => self.chat_input = None,
+                            KeyCode::Backspace => {
+                                input.pop();
+                            }
+                            _ => {
+                                if let Some(t) = &event.text {
+                                    input.extend(t.chars().filter(|c| !c.is_control()));
+                                    // TextBox's limit.
+                                    while input.chars().count() > 128 {
+                                        input.pop();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
+                if pressed && !event.repeat && matches!(self.phase, Phase::Playing(_)) {
+                    let open = match code {
+                        KeyCode::Enter | KeyCode::NumpadEnter => Some(String::new()),
+                        KeyCode::Slash => Some("/".to_owned()),
+                        _ => None,
+                    };
+                    if open.is_some() {
+                        self.chat_input = open;
+                        self.keys.clear();
+                        self.mouse_down = false;
+                        return;
+                    }
+                }
+                {
                     match event.state {
                         ElementState::Pressed => {
                             if !event.repeat {
@@ -559,6 +658,11 @@ fn main() {
         holds_from: None,
         last_scripted: None,
         pressed: Vec::new(),
+        chat_input: None,
+        chat_send: Vec::new(),
+        say: say_arg(),
+        alt_held: false,
+        map_colors: Default::default(),
         walk_to: walk_to_arg(),
         mouse: (0.0, 0.0),
         mouse_down: false,
