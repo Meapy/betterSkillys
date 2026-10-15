@@ -1214,7 +1214,7 @@ fn draw_portrait(ui: &mut Ui, lay: &Layout, me: &GameObj) {
 /// A status bar: a rounded dark track, a shaded fill, the label at the left and the numbers at
 /// the right.
 #[allow(clippy::too_many_arguments)]
-/// `boost` is what items add to the maximum, shown after it in green (red if negative);
+/// `boost` is what items add to the maximum, shown after it in dark green (red if negative);
 /// `maxed` turns the numbers gold.
 #[allow(clippy::too_many_arguments)]
 fn status_bar(ui: &mut Ui, lay: &Layout, x: f32, y: f32, label: &str, value: i32, max: i32, c: u32, boost: i32, maxed: bool) {
@@ -1241,10 +1241,8 @@ fn status_bar(ui: &mut Ui, lay: &Layout, x: f32, y: f32, label: &str, value: i32
     ui.label(&m, tx, ty, size, true, if maxed { 0xFFD24A } else { color::TEXT });
     tx += mw;
     if boost != 0 {
-        // On a dark tag, so it reads over the bar's colour.
-        let tag = [tx + 2.0 * s, y + 3.0 * s, bw + 2.0 * s, h - 6.0 * s];
-        theme::fill(ui.renderer, tag, tag[3] / 2.0, 0x000000, 0.55);
-        ui.label(b.trim_start(), tx + 4.0 * s, y + (h - small * 1.22) / 2.0, small, true, if boost > 0 { 0x8CFFA4 } else { 0xFF8C8C });
+        // Dark, so it reads over the bar's colour.
+        ui.label(&b, tx, y + (h - small * 1.22) / 2.0, small, true, if boost > 0 { 0x0F5A22 } else { 0x6A0F0F });
     }
 }
 
