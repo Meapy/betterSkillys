@@ -34,6 +34,12 @@ namespace WorldServer.core.worlds.impl
         public RealmPortalMonitor PortalMonitor { get; private set; }
         public bool MarketEnabled { get; set; } = true;
 
+        // The fountains heal whoever stands by them: Healing, renewed while they stay.
+        private const string FOUNTAIN = "White Fountain";
+        private const float FOUNTAIN_RANGE = 3.5f;
+        private List<(float X, float Y)> _fountains;
+        private float _fountainCheck;
+
         public NexusWorld(GameServer gameServer, int id, WorldResource resource) 
             : base(gameServer, id, resource)
         {
@@ -56,9 +62,31 @@ namespace WorldServer.core.worlds.impl
 
         protected override void UpdateLogic(ref TickTime time)
         {
+            HealByFountains(ref time);
             HandleMerchants(ref time);
             PortalMonitor.Update(ref time);
             base.UpdateLogic(ref time);
+        }
+
+        private void HealByFountains(ref TickTime time)
+        {
+            _fountainCheck -= time.DeltaTime;
+            if (_fountainCheck > 0)
+                return;
+            _fountainCheck = 0.5f;
+
+            // Found once the map's objects are in (the first ticks can come before).
+            if (_fountains == null || _fountains.Count == 0)
+                _fountains = StaticObjects.Values.Where(o => o.ObjectDesc.IdName == FOUNTAIN).Select(o => (o.X, o.Y)).ToList();
+            if (_fountains.Count == 0)
+                return;
+
+            foreach (var player in Players.Values)
+            {
+                var near = _fountains.Any(f => (player.X - f.X) * (player.X - f.X) + (player.Y - f.Y) * (player.Y - f.Y) <= FOUNTAIN_RANGE * FOUNTAIN_RANGE);
+                if (near)
+                    player.ApplyConditionEffect(ConditionEffectIndex.Healing, 1000);
+            }
         }
 
         public void SendOutMerchant(MerchantData merchantData)

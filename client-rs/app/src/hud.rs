@@ -142,7 +142,8 @@ impl Ui<'_> {
         let Some(src) = self.src(&desc.texture) else { return };
         let size = if src.h == 16 { size / 2 } else { size };
         let size = ((size as f32 * scale).round() as i32).max(1);
-        let Some(icon) = self.redrawer.get(self.sprites, self.renderer, src, false, size, None) else { return };
+        let dye = crate::redraw::item_dye(self.sprites, desc);
+        let Some(icon) = self.redrawer.get(self.sprites, self.renderer, src, false, size, dye) else { return };
         let (w, h) = (icon.w as f32, icon.h as f32);
         let lift = (crate::redraw::PAD as f32 - 1.0) / 2.0;
         self.renderer.sprite(icon.rect, Quad::rect((cx - w / 2.0).round(), (cy - h / 2.0 - lift).round(), w, h), Tint::NONE);
@@ -546,7 +547,9 @@ pub fn interact_target(world: &World, data: &GameData) -> Option<Interact> {
             id: o.id,
             // Bags and shops by their type's name (or the item's), portals by their name.
             name: match kind {
-                InteractKind::Container | InteractKind::Npc { .. } => d.display_id.clone(),
+                // Bags by kind: "Loot Bag", not "Loot Bag 0" (the tier the id carries).
+                InteractKind::Container => d.display_id.trim_end_matches(|c: char| c.is_ascii_digit()).trim_end().to_owned(),
+                InteractKind::Npc { .. } => d.display_id.clone(),
                 InteractKind::Shop { item, .. } if item > 0 => {
                     data.objects.get(&(item as u16)).map_or_else(|| d.display_id.clone(), |i| i.display_id.clone())
                 }
@@ -581,6 +584,10 @@ pub struct HudState {
     menu: Option<(i32, (f32, f32))>,
     /// Which of the minimap's zoom levels (`MiniMap.zoomIndex`): 0 is the closest.
     pub minimap_zoom: usize,
+    /// The key bound to the Nexus, for its button.
+    pub nexus_key: String,
+    /// The keys bound to the health and magic potions, for their stacks.
+    pub potion_keys: [String; 2],
 }
 
 /// The minimap's design size (HUD units).
@@ -640,6 +647,8 @@ pub enum Action {
     Drop(Slot),
     /// Dragged from a bag onto the panel: into the first free slot.
     Take(Slot),
+    /// A health or magic potion into its stack (`addToPotionStack`).
+    Stack(Slot),
     Button(Button),
 }
 
@@ -871,7 +880,8 @@ impl Panel {
                 if shift {
                     actions.push(Action::Use(slot));
                 } else if state.last_click.is_some_and(|(o, i, t)| o == slot.owner && i == slot.index && now - t < DOUBLE_CLICK_MS) {
-                    actions.push(Action::EquipOrUse(slot));
+                    let stackable = POTIONS.iter().any(|p| p.0 == slot.item) && !matches!(slot.kind, SlotKind::Potion(_) | SlotKind::Shop);
+                    actions.push(if stackable { Action::Stack(slot) } else { Action::EquipOrUse(slot) });
                     state.last_click = None;
                 } else {
                     state.last_click = Some((slot.owner, slot.index, now));
@@ -908,6 +918,12 @@ impl Panel {
             if to.is(&from) {
                 return;
             }
+            if let SlotKind::Potion(_) = to.kind {
+                if from.item == to.item && !matches!(from.kind, SlotKind::Potion(_) | SlotKind::Shop) {
+                    actions.push(Action::Stack(from));
+                }
+                return;
+            }
             let fits = can_hold(data, to.kind, from.item) && can_hold(data, from.kind, to.item);
             if fits && !matches!(from.kind, SlotKind::Potion(_)) {
                 actions.push(Action::Swap(from, to));
@@ -938,6 +954,12 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
     let Some(me) = world.player() else { return };
     let mini = panel.minimap.unwrap_or_else(|| MiniView::new(lay, world, me, state.minimap_zoom));
     draw_minimap(ui, lay, world, me, camera_angle, colors, &mini);
+    // Where we are, at the minimap's foot: the realm's (or map's) name.
+    if !world.name.is_empty() {
+        let size = lay.font(11.0);
+        let [mx, my, _, mh] = mini.rect;
+        ui.label(&world.name, mx + 5.0 * s, my + mh - size * 1.3 - 2.0 * s, size, true, color::TEXT);
+    }
     // Zoom in and out, in the corner.
     let levels = minimap_levels(world).len();
     for (button, r) in &panel.buttons {
@@ -1006,11 +1028,16 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
         ui.label(label, r[0] + (r[2] - w) / 2.0, r[1] + (r[3] - size * 1.22) / 2.0, size, true, if on { color::ACCENT_TEXT } else { color::TEXT_DIM });
     }
 
+    // The interact area's box goes under its slots (a bag's).
+    if panel.interact.is_some() {
+        let r = lay.rect(8.0, 588.0, 184.0, 108.0);
+        theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::ACCENT, 0.55), ((0x231E16, 0.92), (0x17150F, 0.92)));
+    }
     let hover_target = if state.drag.is_some() { panel.slot_at(mouse) } else { None };
     for slot in &panel.slots {
         let dragged = state.drag.is_some_and(|d| d.is(slot));
         let target = hover_target.is_some_and(|h| h.is(slot));
-        draw_slot(ui, lay, slot, dragged, target, inside(slot.rect, mouse));
+        draw_slot(ui, lay, slot, dragged, target, inside(slot.rect, mouse), &state.potion_keys);
     }
 
     // Stats, two columns of three: gold at the class maximum, the boost beside in green.
@@ -1087,8 +1114,6 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
 
     // The interact area's title: what we stand by.
     if let Some(target) = &panel.interact {
-        let r = lay.rect(8.0, 588.0, 184.0, 108.0);
-        theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::ACCENT, 0.55), ((0x231E16, 0.92), (0x17150F, 0.92)));
         let size = lay.font(13.0);
         let w = ui.measure(&target.name, size, true);
         ui.label(&target.name, lay.panel_x + (PANEL_W * s - w) / 2.0, 592.0 * s, size, true, color::ACCENT_HI);
@@ -1118,7 +1143,7 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
     // Buttons: Nexus, and Enter for a portal.
     for (button, r) in &panel.buttons {
         let (label, kind) = match button {
-            Button::Nexus => ("Nexus  R".to_owned(), Kind::Secondary),
+            Button::Nexus => (format!("Nexus  {}", state.nexus_key), Kind::Secondary),
             Button::Enter(_) => ("Enter  0".to_owned(), Kind::Primary),
             Button::Buy(_) => match panel.interact.as_ref().map(|i| i.kind) {
                 Some(InteractKind::Shop { price, currency, .. }) => (format!("Buy  ·  {}", price_text(price, currency)), Kind::Primary),
@@ -1139,7 +1164,7 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
     }
 }
 
-fn draw_slot(ui: &mut Ui, lay: &Layout, slot: &Slot, dragged: bool, target: bool, hover: bool) {
+fn draw_slot(ui: &mut Ui, lay: &Layout, slot: &Slot, dragged: bool, target: bool, hover: bool, potion_keys: &[String; 2]) {
     let s = lay.s;
     let [x, y, w, h] = slot.rect;
     let empty = slot.item <= 0 || dragged || matches!(slot.kind, SlotKind::Potion(0));
@@ -1174,7 +1199,7 @@ fn draw_slot(ui: &mut Ui, lay: &Layout, slot: &Slot, dragged: bool, target: bool
         // The number key, small in the corner.
         SlotKind::Inventory(key) => ui.label(&key.to_string(), x + 4.0 * s, y + 2.0 * s, small, true, color::TEXT_MUTED),
         SlotKind::Potion(count) => {
-            let key = if slot.index == POTIONS[0].1 { "F" } else { "V" };
+            let key = &potion_keys[if slot.index == POTIONS[0].1 { 0 } else { 1 }];
             ui.label(key, x + 4.0 * s, y + 2.0 * s, small, true, color::TEXT_MUTED);
             let c = count.to_string();
             let bw = ui.measure(&c, small, true) + 8.0 * s;
@@ -1216,7 +1241,6 @@ fn draw_portrait(ui: &mut Ui, lay: &Layout, me: &GameObj) {
 
 /// A status bar: a rounded dark track, a shaded fill, the label at the left and the numbers at
 /// the right.
-#[allow(clippy::too_many_arguments)]
 /// `boost` is what items add to the maximum, shown after it in dark green (red if negative);
 /// `maxed` turns the numbers gold.
 #[allow(clippy::too_many_arguments)]
@@ -1330,8 +1354,23 @@ pub fn draw_overlay(ui: &mut Ui, lay: &Layout, world: &World, panel: &Panel, sta
         ui.item_icon(drag.item, 80, mx, my, lay.s);
         return;
     }
-    // Players under the mouse on the minimap (`PlayerGroupToolTip`).
+    // A nearby player in the list: who they are, their health, magic and gear (PlayerToolTip).
+    let member = panel.buttons.iter().find_map(|(b, r)| match b {
+        Button::Member(id) if inside(*r, mouse) => Some(*id),
+        _ => None,
+    });
+    if let Some(p) = member.and_then(|id| world.objects.get(&id)) {
+        draw_player_card(ui, lay, p, mouse);
+        return;
+    }
+    // Players under the mouse on the minimap (`PlayerGroupToolTip`): one is shown in full.
     let near = panel.minimap_players_at(mouse, lay.s);
+    if let [(id, _, _)] = near.as_slice() {
+        if let Some(p) = world.objects.get(id) {
+            draw_player_card(ui, lay, p, mouse);
+            return;
+        }
+    }
     if !near.is_empty() {
         let mut lines = vec![Line::new("Players", 12.0, true, color::TEXT_DIM)];
         lines.extend(near.iter().map(|(_, name, _)| Line::new(name, 14.0, true, 0xFFFF00)));
@@ -1359,6 +1398,63 @@ pub fn draw_overlay(ui: &mut Ui, lay: &Layout, world: &World, panel: &Panel, sta
     };
     let accent = if slot.item > 0 { crate::screens::tier_edge(ui.data, slot.item) } else { None };
     draw_tooltip(ui, lay, &lines, if slot.item > 0 { Some(slot.item) } else { None }, accent, mouse);
+}
+
+/// `PlayerToolTip`: a player's name, guild, level and class, health and magic, and the four
+/// items they wear, in a box beside the mouse.
+fn draw_player_card(ui: &mut Ui, lay: &Layout, p: &GameObj, mouse: (f64, f64)) {
+    let s = lay.s;
+    let (w, h) = (230.0 * s, 150.0 * s);
+    let pad = 10.0 * s;
+    let (mut x0, mut y0) = (mouse.0 as f32 + 16.0 * s, mouse.1 as f32 + 8.0 * s);
+    if x0 + w > lay.w {
+        x0 = mouse.0 as f32 - w - 8.0 * s;
+    }
+    if y0 + h > lay.h {
+        y0 = (lay.h - h).max(0.0);
+    }
+    let r = [x0.max(0.0), y0, w, h];
+    theme::shadow(ui.renderer, r, 8.0 * s, 12.0 * s, 0.5);
+    theme::frame(ui.renderer, r, 8.0 * s, s.max(1.0), (color::BORDER_HI, 0.9), ((color::PANEL_TOP, 0.97), (color::PANEL_BOTTOM, 0.98)));
+    let (x, y) = (r[0] + pad, r[1] + pad);
+    let stat = |id: u8| p.stat_int(id).unwrap_or(0);
+    let name = p.name().unwrap_or("?");
+    let chosen = stat(56) != 0;
+    ui.label(name, x, y, lay.font(15.0), true, if chosen { 0xFCDF00 } else { 0xFFFFFF });
+    let class = ui.data.objects.get(&p.object_type).map_or("", |d| d.display_id.as_str()).to_owned();
+    let info = format!("Level {} {class}", stat(stat::LEVEL));
+    ui.label(&info, x, y + 20.0 * s, lay.font(11.5), false, color::TEXT_DIM);
+    let mut by = y + 36.0 * s;
+    if let Some(guild) = p.stat_str(62).filter(|g| !g.is_empty()) {
+        ui.label(guild, x, by, lay.font(11.0), true, 0xA6FF5D);
+        by += 15.0 * s;
+    }
+    let bar = |ui: &mut Ui, y: f32, label: &str, value: i32, max: i32, c: u32| {
+        let br = [x, y, w - 2.0 * pad, 14.0 * s];
+        theme::fill(ui.renderer, br, 4.0 * s, color::TRACK, 1.0);
+        let frac = if max > 0 { (value as f32 / max as f32).clamp(0.0, 1.0) } else { 0.0 };
+        if frac > 0.0 {
+            theme::fill(ui.renderer, [br[0], br[1], br[2] * frac, br[3]], 4.0 * s, c, 1.0);
+        }
+        let size = lay.font(10.0);
+        let ty = y + (br[3] - size * 1.22) / 2.0;
+        ui.label(label, br[0] + 5.0 * s, ty, size, true, color::TEXT);
+        let t = format!("{value} / {max}");
+        let tw = ui.measure(&t, size, true);
+        ui.label(&t, br[0] + br[2] - tw - 5.0 * s, ty, size, true, color::TEXT);
+    };
+    bar(ui, by, "HP", stat(stat::HP), stat(stat::MAX_HP), 0xE03434);
+    bar(ui, by + 18.0 * s, "MP", stat(stat::MP), stat(stat::MAX_MP), 0x3A6FE0);
+    // The equipment, in slots.
+    let sy = by + 40.0 * s;
+    for i in 0..4u8 {
+        let sr = [x + i as f32 * 44.0 * s, sy, 40.0 * s, 40.0 * s];
+        let item = p.stat_int(slot_stat(i)).unwrap_or(-1);
+        ui.slot_box(sr, if item > 0 { crate::screens::tier_edge(ui.data, item) } else { None }, false, s);
+        if item > 0 {
+            ui.item_icon(item, 80, sr[0] + sr[2] / 2.0, sr[1] + sr[3] / 2.0, s);
+        }
+    }
 }
 
 /// One line of a tooltip.

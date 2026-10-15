@@ -98,6 +98,43 @@ impl Tint {
     }
 }
 
+/// A colour filter applied to a sprite's texels before its tint (Flash's ColorMatrixFilters).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Filter {
+    None,
+    /// `MoreColorUtil.greyscaleFilterMatrix`: paused, stasis, petrified.
+    Grey,
+    /// `MoreColorUtil.redFilterMatrix`: cursed.
+    Red,
+}
+
+/// A filter over the whole world (the AIR client's Stage3D post effects).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ScreenFilter {
+    /// Paused: grey.
+    Grey,
+    /// Blind: nearly black.
+    Blind,
+    /// Drunk: blurred by this many pixels.
+    Blur(f32),
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct PostParams {
+    mode: f32,
+    radius: f32,
+    texel: [f32; 2],
+}
+
+/// The texture the world is drawn into when a screen filter is on.
+struct Offscreen {
+    width: u32,
+    height: u32,
+    view: wgpu::TextureView,
+    bind_group: wgpu::BindGroup,
+}
+
 pub fn rgb_f32(rgb: u32) -> [f32; 3] {
     [((rgb >> 16) & 255) as f32 / 255.0, ((rgb >> 8) & 255) as f32 / 255.0, (rgb & 255) as f32 / 255.0]
 }
@@ -127,6 +164,14 @@ pub struct Renderer {
     can_capture: bool,
     capture_next: bool,
     captured: Option<image::RgbaImage>,
+    post_pipeline: wgpu::RenderPipeline,
+    post_layout: wgpu::BindGroupLayout,
+    post_sampler: wgpu::Sampler,
+    post_params: wgpu::Buffer,
+    offscreen: Option<Offscreen>,
+    /// Where the world's runs end, and the filter it's drawn through, this frame.
+    split: Option<usize>,
+    screen_filter: Option<ScreenFilter>,
 }
 
 impl Renderer {
@@ -288,6 +333,77 @@ impl Renderer {
             multiview: None,
             cache: None,
         });
+        let post_shader = device.create_shader_module(wgpu::include_wgsl!("post.wgsl"));
+        let post_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("post"),
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+            ],
+        });
+        let post_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("post"),
+            bind_group_layouts: &[&post_layout],
+            push_constant_ranges: &[],
+        });
+        let post_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("post"),
+            layout: Some(&post_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &post_shader,
+                entry_point: Some("vs_main"),
+                compilation_options: Default::default(),
+                buffers: &[],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &post_shader,
+                entry_point: Some("fs_main"),
+                compilation_options: Default::default(),
+                targets: &[Some(wgpu::ColorTargetState { format, blend: None, write_mask: wgpu::ColorWrites::ALL })],
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
+        let post_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("post"),
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            ..Default::default()
+        });
+        let post_params = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("post"),
+            size: std::mem::size_of::<PostParams>() as u64,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
         let tri_capacity = 3 * 1024;
         let tri_buffer = Self::make_buffer(&device, "triangles", tri_capacity * std::mem::size_of::<TriVertex>());
 
@@ -337,6 +453,13 @@ impl Renderer {
             can_capture,
             capture_next: false,
             captured: None,
+            post_pipeline,
+            post_layout,
+            post_sampler,
+            post_params,
+            offscreen: None,
+            split: None,
+            screen_filter: None,
         };
         let white = image::RgbaImage::from_pixel(4, 4, image::Rgba([255; 4]));
         renderer.white = renderer.add_image(&white).expect("4×4 fits").sub(1, 1, 2, 2);
@@ -426,11 +549,21 @@ impl Renderer {
         self.instances.clear();
         self.tri_vertices.clear();
         self.runs.clear();
+        self.split = None;
+        self.screen_filter = None;
+    }
+
+    /// Everything drawn so far this frame is the world: draw it through `filter` (if any). What
+    /// comes after (the HUD) is drawn plainly.
+    pub fn world_done(&mut self, filter: Option<ScreenFilter>) {
+        self.split = Some(self.runs.len());
+        self.screen_filter = filter;
     }
 
     fn extend_run(&mut self, kind: Kind, page: u16, start: u32, end: u32) {
+        let at_split = self.split == Some(self.runs.len());
         match self.runs.last_mut() {
-            Some(run) if run.kind == kind && run.page == page && run.end == start => run.end = end,
+            Some(run) if !at_split && run.kind == kind && run.page == page && run.end == start => run.end = end,
             _ => self.runs.push(Run { kind, page, start, end }),
         }
     }
@@ -472,6 +605,11 @@ impl Renderer {
 
     /// Draw part of `src` onto `dst`: `part` is (u0, v0, u1, v1) within the rectangle, 0..1.
     pub fn sprite_part(&mut self, src: AtlasRect, part: [f32; 4], dst: Quad, tint: Tint) {
+        self.sprite_filtered(src, part, dst, tint, Filter::None);
+    }
+
+    /// `sprite_part` through a colour filter.
+    pub fn sprite_filtered(&mut self, src: AtlasRect, part: [f32; 4], dst: Quad, tint: Tint, filter: Filter) {
         let inv = 1.0 / self.atlas.size as f32;
         let (x, y, w, h) = (src.x as f32, src.y as f32, src.w as f32, src.h as f32);
         let uv = [
@@ -485,7 +623,11 @@ impl Renderer {
             origin: dst.origin,
             uv,
             mul: tint.mul,
-            add: [tint.add[0], tint.add[1], tint.add[2], 0.0],
+            add: [tint.add[0], tint.add[1], tint.add[2], match filter {
+                Filter::None => 0.0,
+                Filter::Grey => 1.0,
+                Filter::Red => 2.0,
+            }],
         });
         let end = self.instances.len() as u32;
         self.extend_run(Kind::Quads, src.page, end - 1, end);
@@ -527,44 +669,35 @@ impl Renderer {
         }
 
         let mut encoder = self.device.create_command_encoder(&Default::default());
-        {
-            let [r, g, b] = rgb_f32(clear_rgb);
-            let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("frame"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color { r: r as f64, g: g as f64, b: b as f64, a: 1.0 }),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
-            pass.set_bind_group(0, &self.globals_group, &[]);
-            let mut bound: Option<Kind> = None;
-            for run in &self.runs {
-                if bound != Some(run.kind) {
-                    match run.kind {
-                        Kind::Quads => {
-                            pass.set_pipeline(&self.pipeline);
-                            pass.set_vertex_buffer(0, self.instance_buffer.slice(..));
-                        }
-                        Kind::Triangles => {
-                            pass.set_pipeline(&self.tri_pipeline);
-                            pass.set_vertex_buffer(0, self.tri_buffer.slice(..));
-                        }
-                    }
-                    bound = Some(run.kind);
-                }
-                pass.set_bind_group(1, &self.atlas.pages[run.page as usize].bind_group, &[]);
-                match run.kind {
-                    Kind::Quads => pass.draw(0..6, run.start..run.end),
-                    Kind::Triangles => pass.draw(run.start..run.end, 0..1),
-                }
+        let [r, g, b] = rgb_f32(clear_rgb);
+        let clear = wgpu::Color { r: r as f64, g: g as f64, b: b as f64, a: 1.0 };
+        let filtered = match (self.split, self.screen_filter) {
+            (Some(split), Some(filter)) => Some((split.min(self.runs.len()), filter)),
+            _ => None,
+        };
+        if let Some((split, filter)) = filtered {
+            self.prepare_offscreen();
+            let (mode, radius) = match filter {
+                ScreenFilter::Grey => (1.0, 0.0),
+                ScreenFilter::Blind => (2.0, 0.0),
+                ScreenFilter::Blur(r) => (3.0, r),
+            };
+            let (w, h) = (self.config.width as f32, self.config.height as f32);
+            let params = PostParams { mode, radius, texel: [1.0 / w, 1.0 / h] };
+            self.queue.write_buffer(&self.post_params, 0, bytemuck::bytes_of(&params));
+            let off = self.offscreen.as_ref().expect("prepared");
+            {
+                let mut pass = begin_pass(&mut encoder, &off.view, wgpu::LoadOp::Clear(clear));
+                self.draw_runs(&mut pass, &self.runs[..split]);
             }
+            let mut pass = begin_pass(&mut encoder, &view, wgpu::LoadOp::Clear(clear));
+            pass.set_pipeline(&self.post_pipeline);
+            pass.set_bind_group(0, &off.bind_group, &[]);
+            pass.draw(0..3, 0..1);
+            self.draw_runs(&mut pass, &self.runs[split..]);
+        } else {
+            let mut pass = begin_pass(&mut encoder, &view, wgpu::LoadOp::Clear(clear));
+            self.draw_runs(&mut pass, &self.runs);
         }
         let readback = (self.capture_next && self.can_capture).then(|| self.copy_out(&mut encoder, &frame.texture));
         self.queue.submit([encoder.finish()]);
@@ -575,6 +708,60 @@ impl Renderer {
         frame.present();
         self.last_draws = self.runs.len() as u32;
         Ok(())
+    }
+
+    fn draw_runs(&self, pass: &mut wgpu::RenderPass, runs: &[Run]) {
+        pass.set_bind_group(0, &self.globals_group, &[]);
+        let mut bound: Option<Kind> = None;
+        for run in runs {
+            if bound != Some(run.kind) {
+                match run.kind {
+                    Kind::Quads => {
+                        pass.set_pipeline(&self.pipeline);
+                        pass.set_vertex_buffer(0, self.instance_buffer.slice(..));
+                    }
+                    Kind::Triangles => {
+                        pass.set_pipeline(&self.tri_pipeline);
+                        pass.set_vertex_buffer(0, self.tri_buffer.slice(..));
+                    }
+                }
+                bound = Some(run.kind);
+            }
+            pass.set_bind_group(1, &self.atlas.pages[run.page as usize].bind_group, &[]);
+            match run.kind {
+                Kind::Quads => pass.draw(0..6, run.start..run.end),
+                Kind::Triangles => pass.draw(run.start..run.end, 0..1),
+            }
+        }
+    }
+
+    /// The texture the world is drawn into for a screen filter, the window's size.
+    fn prepare_offscreen(&mut self) {
+        let (width, height) = (self.config.width, self.config.height);
+        if self.offscreen.as_ref().is_some_and(|o| o.width == width && o.height == height) {
+            return;
+        }
+        let texture = self.device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("world"),
+            size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: self.config.format,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[],
+        });
+        let view = texture.create_view(&Default::default());
+        let bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("world"),
+            layout: &self.post_layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&view) },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(&self.post_sampler) },
+                wgpu::BindGroupEntry { binding: 2, resource: self.post_params.as_entire_binding() },
+            ],
+        });
+        self.offscreen = Some(Offscreen { width, height, view, bind_group });
     }
 
     /// Ask for the next frame's pixels (desktop only); `take_capture` returns them after
@@ -626,6 +813,20 @@ impl Renderer {
         }
         Some(out)
     }
+}
+
+fn begin_pass<'a>(encoder: &'a mut wgpu::CommandEncoder, view: &'a wgpu::TextureView, load: wgpu::LoadOp<wgpu::Color>) -> wgpu::RenderPass<'a> {
+    encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        label: Some("frame"),
+        color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+            view,
+            resolve_target: None,
+            ops: wgpu::Operations { load, store: wgpu::StoreOp::Store },
+        })],
+        depth_stencil_attachment: None,
+        timestamp_writes: None,
+        occlusion_query_set: None,
+    })
 }
 
 fn new_page(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, sampler: &wgpu::Sampler, size: u32) -> Page {

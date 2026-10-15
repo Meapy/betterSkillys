@@ -68,6 +68,46 @@ fn retexture(src: &RgbaImage, mask: &RgbaImage, tex1: Option<&RgbaImage>, tex2: 
     })
 }
 
+/// An item's own dye (`getRedrawnTextureFromType`): its Tex1 and Tex2 over its mask, as cloth
+/// and dyes show in slots, shops and bags.
+pub fn item_dye(sprites: &Sprites, desc: &bsk_data::ObjectDesc) -> Option<Dye> {
+    let (set, index) = desc.texture.mask.as_ref()?;
+    let mask = sprites.tile_src(set, *index)?;
+    let tex = |tag: &str| desc.xml.text_of(tag).map_or(0, |v| bsk_data::xml::as3_int(v.trim()));
+    Some(Dye { mask, tex1: tex("Tex1"), tex2: tex("Tex2") })
+}
+
+/// A condition effect's icon (`ConditionEffect.getIconsFromBit`): the tile at ×`scale`, with a
+/// white outline and a faint dark glow.
+fn effect_icon(src: &RgbaImage, scale: u32) -> RgbaImage {
+    let (w, h) = src.dimensions();
+    let pad = 2 * scale.max(1);
+    let (cw, ch) = (w * scale + 2 * pad, h * scale + 2 * pad);
+    let solid = |x: i64, y: i64| -> bool {
+        if x < pad as i64 || y < pad as i64 {
+            return false;
+        }
+        let (sx, sy) = ((x - pad as i64) / scale as i64, (y - pad as i64) / scale as i64);
+        sx < w as i64 && sy < h as i64 && src.get_pixel(sx as u32, sy as u32)[3] > 0
+    };
+    let edge = (scale / 2).max(1) as i64;
+    RgbaImage::from_fn(cw, ch, |x, y| {
+        let (x, y) = (x as i64, y as i64);
+        if solid(x, y) {
+            let p = src.get_pixel(((x - pad as i64) / scale as i64) as u32, ((y - pad as i64) / scale as i64) as u32);
+            return *p;
+        }
+        let near = |r: i64| (-r..=r).any(|dy| (-r..=r).any(|dx| solid(x + dx, y + dy)));
+        if near(edge) {
+            Rgba([255, 255, 255, 255])
+        } else if near(edge + scale as i64) {
+            Rgba([0, 0, 0, 70])
+        } else {
+            Rgba([0, 0, 0, 0])
+        }
+    })
+}
+
 fn mirrored(img: &RgbaImage) -> RgbaImage {
     image::imageops::flip_horizontal(img)
 }
@@ -83,6 +123,7 @@ pub struct Redrawn {
 #[derive(Default)]
 pub struct Redrawer {
     cache: HashMap<Key, Option<Redrawn>>,
+    icons: HashMap<(SrcRect, u32), Option<Redrawn>>,
     shadow: Option<AtlasRect>,
 }
 
@@ -100,6 +141,15 @@ impl Redrawer {
             self.shadow = renderer.add_image(&img);
         }
         self.shadow
+    }
+
+    /// A condition effect's icon from `src`, at ×`scale`.
+    pub fn icon(&mut self, sprites: &Sprites, renderer: &mut Renderer, src: SrcRect, scale: u32) -> Option<Redrawn> {
+        *self.icons.entry((src, scale)).or_insert_with(|| {
+            let image = effect_icon(&sprites.pixels(src), scale);
+            let (w, h) = image.dimensions();
+            renderer.add_image(&image).map(|rect| Redrawn { rect, w, h })
+        })
     }
 
     /// `src` scaled for `size` (100 = normal), mirrored left-right if asked, dyed if given, with

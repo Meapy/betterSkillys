@@ -54,7 +54,7 @@ The client itself can be scripted for tests (desktop only):
 
 | Flag | What |
 |---|---|
-| `--credentials <file>` | Sign in with the file's `email:` and `password:` and play the first character |
+| `--credentials <file>` | Sign in with the file's `email:` and `password:` and play the first character (a new Wizard if there is none) |
 | `--stay` | With `--credentials`: stop at the character list instead |
 | `--shot <png> --shot-after <seconds>` | Save one frame, then quit (logs the position and what it sent) |
 | `--walk-to x,y[;x,y...]` | Walk to world positions in turn (in the first world joined, or the one `--say` moves to) |

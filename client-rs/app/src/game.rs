@@ -687,6 +687,28 @@ impl Game {
         self.sounds.push(("inventory_move_item".into(), 1.0, false));
     }
 
+    /// `ItemGridMediator.addToPotionStack`: a health or magic potion from a slot into its stack
+    /// (slot 254 or 255 of the player).
+    pub fn add_to_stack(&mut self, now: i32, from: (i32, u8, i32)) {
+        let Some((k, (_, stack_slot))) = crate::hud::POTIONS.iter().enumerate().find(|(_, p)| p.0 == from.2) else { return };
+        let Some(me) = self.world.as_ref().and_then(|w| w.player()) else { return };
+        let (id, position) = (me.id, WorldPos { x: me.x as f32, y: me.y as f32 });
+        let count_stat = if k == 0 { crate::hud::stat::HEALTH_POTION_STACK } else { crate::hud::stat::MAGIC_POTION_STACK };
+        let count = me.stat_int(count_stat).unwrap_or(0);
+        let msg = InvSwap {
+            time: now,
+            position,
+            slot_object1: SlotObject { object_id: from.0, slot_id: from.1, object_type: from.2 },
+            slot_object2: SlotObject { object_id: id, slot_id: *stack_slot, object_type: -1 },
+        };
+        self.send(msg.into());
+        self.predict(from.0, from.1, -1);
+        if let Some(p) = self.world.as_mut().and_then(|w| w.objects.get_mut(&id)) {
+            p.stats.insert(count_stat, bsk_proto::StatValue::Int(count + 1));
+        }
+        self.sounds.push(("inventory_move_item".into(), 1.0, false));
+    }
+
     /// `useItem_new`: use a consumable (or InvUse item) in a slot. False if it can't be used.
     pub fn use_item(&mut self, now: i32, owner: i32, slot: u8, item: i32, data: &GameData) -> bool {
         let Some(xml) = data.objects.get(&(item as u16)).map(|d| &d.xml) else { return false };

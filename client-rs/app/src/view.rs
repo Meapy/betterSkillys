@@ -12,7 +12,8 @@ use crate::sprites::{SrcRect, Sprites};
 use crate::text::{Fonts, Style, Text};
 use bsk_assets::Facing;
 use bsk_data::{GameData, Model, ObjectClass, ObjectDesc, TextureData, TextureRef};
-use bsk_render::{Quad, Renderer, Tint};
+use bsk_render::{Filter, Quad, Renderer, Tint};
+use bsk_world::condition::{self, has};
 use bsk_world::{GameObj, Projectile, World};
 
 /// Pixels per tile at map scale 1, as in the AIR client.
@@ -118,6 +119,8 @@ pub struct Scene<'a> {
     pub bubbles: &'a [Bubble],
     pub particles: &'a crate::particles::Particles,
     pub show: Show,
+    /// We're hallucinating: everything shows as a random character (`Camera.isHallucinating_`).
+    pub hallucinating: bool,
 }
 
 /// What the options let the player hide.
@@ -140,6 +143,8 @@ struct Look {
     /// Two frames wide (the second attack frame with its sword bit); the body is the first
     /// half (or the second, mirrored).
     wide: bool,
+    /// Dyes for the mask other than the object's own (an item a merchant shows).
+    tex: Option<(i32, i32)>,
 }
 
 const SEC_TO_DIRS: [[Dir; 3]; 8] = {
@@ -178,7 +183,15 @@ impl Scene<'_> {
         // Merchant.getTexture: a merchant shows what it sells.
         if desc.class == bsk_data::ObjectClass::Merchant {
             if let Some(item) = obj.stat_int(crate::hud::merch::TYPE).filter(|&t| t > 0).and_then(|t| self.data.objects.get(&(t as u16))) {
-                return self.texture_src(&item.texture, obj.id).map(|src| Look { src, mirror: false, mask: None, wide: false });
+                // Cloth and dyes in their own colours (getRedrawnTextureFromType).
+                let dye = crate::redraw::item_dye(self.sprites, item);
+                return self.texture_src(&item.texture, obj.id).map(|src| Look {
+                    src,
+                    mirror: false,
+                    mask: dye.map(|d| d.mask),
+                    wide: false,
+                    tex: dye.map(|d| (d.tex1, d.tex2)),
+                });
             }
         }
         let TextureRef::Animated { set, index } = &tex.main else {
@@ -187,7 +200,7 @@ impl Scene<'_> {
                 .anim_frame
                 .and_then(|(a, f)| desc.animations.get(a)?.frames.get(f))
                 .map_or(tex, |frame| frame.texture.pick(obj.id));
-            return self.texture_src(tex, obj.id).map(|src| Look { src, mirror: false, mask: None, wide: false });
+            return self.texture_src(tex, obj.id).map(|src| Look { src, mirror: false, mask: None, wide: false, tex: None });
         };
         let sheet = self.sprites.char_sheet(set)?;
         let rows = sheet.rows();
@@ -229,7 +242,7 @@ impl Scene<'_> {
                 // walk1 mirrored stands in for a blank walk2.
                 let src = self.sprites.char_src(set, *index, row, 1)?;
                 let mask = self.sprites.char_mask_src(set, *index, row, 1);
-                return Some(Look { src, mirror: !mirror, mask, wide: false });
+                return Some(Look { src, mirror: !mirror, mask, wide: false, tex: None });
             } else {
                 0
             }
@@ -238,7 +251,7 @@ impl Scene<'_> {
         };
         let src = self.sprites.char_src(set, *index, row, frame)?;
         let mask = self.sprites.char_mask_src(set, *index, row, frame);
-        Some(Look { src, mirror, mask, wide: false })
+        Some(Look { src, mirror, mask, wide: false, tex: None })
     }
 
     /// `AnimatedChar.loadDir`'s attack frames: frame 4, then frame 5 (two frames wide with frame 6,
@@ -265,7 +278,7 @@ impl Scene<'_> {
                 wide = true;
             }
         }
-        Some(Look { src, mirror, mask, wide })
+        Some(Look { src, mirror, mask, wide, tex: None })
     }
 }
 
@@ -349,9 +362,13 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
 
     // Map.draw: DrawUnder objects first, then the shadows, then everything else.
     let under = |item: &Item| matches!(item, Item::Sprite { desc, .. } if desc.draw_under);
+    // Where each sprite's top is drawn (x, y), for its condition icons.
+    let mut tops: Vec<(&GameObj, [f32; 2])> = Vec::new();
     for (_, item) in items.iter().filter(|(_, i)| under(i)) {
         if let Item::Sprite { obj, desc } = item {
-            draw_sprite(scene, renderer, redrawer, ground, obj, desc);
+            if let Some(top) = draw_sprite(scene, renderer, redrawer, ground, obj, desc) {
+                tops.push((obj, top));
+            }
         }
     }
     let k = (cam.scale / TILE_PX) as f32;
@@ -375,10 +392,36 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
             Item::Connected { obj, desc } => draw_connected(scene, renderer, obj, desc),
             Item::Model { obj, desc, model } => draw_model(scene, renderer, obj, desc, model),
             Item::Projectile(p) => draw_projectile(scene, renderer, redrawer, p),
-            Item::Sprite { obj, desc } => draw_sprite(scene, renderer, redrawer, ground, obj, desc),
+            Item::Sprite { obj, desc } => {
+                if let Some(top) = draw_sprite(scene, renderer, redrawer, ground, obj, desc) {
+                    tops.push((obj, top));
+                }
+            }
         }
     }
     scene.particles.draw(&cam, renderer);
+
+    // Condition icons (`GameObject.drawConditionIcons`): in a row centred on the sprite's top,
+    // each taking turns through its icons; none while paused.
+    let icon_scale = ((2.0 * k).round() as u32).max(1);
+    for (obj, [x, y]) in &tops {
+        let c = obj.conditions();
+        if c == [0, 0] || has(c, condition::PAUSED) {
+            continue;
+        }
+        let icons: Vec<_> = condition::icons(c, scene.time)
+            .into_iter()
+            .filter_map(|(big, index)| scene.sprites.tile_src(if big { "lofiInterfaceBig" } else { "lofiInterface2" }, index))
+            .filter_map(|src| redrawer.icon(scene.sprites, renderer, src, icon_scale))
+            .collect();
+        let step = 8.0 * icon_scale as f32 + 2.0 * k;
+        let left = x - step * icons.len() as f32 / 2.0;
+        for (i, icon) in icons.iter().enumerate() {
+            let cx = left + step * (i as f32 + 0.5);
+            let (w, h) = (icon.w as f32, icon.h as f32);
+            renderer.sprite(icon.rect, Quad::rect((cx - w / 2.0).round(), (y - h / 2.0).round(), w, h), Tint::NONE);
+        }
+    }
 
     // HP bars (`GameObject.drawHpBar`) under monsters and players.
     for (_, item) in items.iter().filter(|_| scene.show.hp_bars) {
@@ -454,34 +497,106 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         }
     }
 
-    // Names (`GameObject.drawName`): bold 16 px white, centred under the object.
-    let style = Style { size: 16.0, bold: true, color: 0xFFFFFF };
+    // Names (`GameObject.drawName`): bold 16 px, centred under the object. Other players' are
+    // coloured for party, guild or a chosen name, with their rank star before.
+    let me = world.player();
+    let my_guild = me.and_then(|m| m.stat_str(62)).filter(|g| !g.is_empty());
+    let my_party = me.and_then(|m| m.stat_int(121)).filter(|&p| p != 0);
+    let mut classes = None;
     for (_, item) in &items {
         let Item::Sprite { obj, desc } = item else { continue };
-        if !desc.show_name {
+        let player = desc.player && Some(obj.id) != world.me;
+        // Portal.draw: the Nexus's realm portals show their name and player count.
+        let realm_portal = desc.class == ObjectClass::Portal && desc.xml.has("NexusPortal");
+        if !(desc.show_name || player || realm_portal) {
             continue;
         }
         let Some(name) = obj.name() else { continue };
+        let color = if !player {
+            0xFFFFFF
+        } else if my_party.is_some() && obj.stat_int(121) == my_party {
+            0xFFC0CB
+        } else if my_guild.is_some() && obj.stat_str(62) == my_guild {
+            0xA6FF5D
+        } else if obj.stat_int(56).unwrap_or(0) != 0 {
+            0xFCDF00
+        } else {
+            0xFFFFFF
+        };
+        let style = Style { size: (16.0 * k).round().max(9.0), bold: true, color };
         let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
-        text.draw_centered(fonts, renderer, name, px, py, style);
+        if !player {
+            text.draw_centered(fonts, renderer, name, px, py, style);
+            continue;
+        }
+        // The rank star sits in the first 20 px; the text after it.
+        let w = text.measure(fonts, renderer, name, style);
+        let left = px - (w + 20.0 * k) / 2.0;
+        let classes = *classes.get_or_insert_with(|| scene.data.objects.values().filter(|d| d.player).count() as i32);
+        draw_star(renderer, left + 10.0 * k, py + 12.0 * k, k, star_color(obj.stat_int(30).unwrap_or(0), classes));
+        text.draw_centered(fonts, renderer, name, left + 20.0 * k + w / 2.0, py, style);
     }
     let _ = PAD;
 }
 
-/// `GameObject.draw` for sprite objects.
-fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, ground: &mut Ground, obj: &GameObj, desc: &ObjectDesc) {
+/// `FameUtil.numStarsToColorTransform`: light blue, dark blue, red, orange, then yellow as the
+/// stars reach each multiple of the number of classes; green for staff.
+fn star_color(stars: i32, classes: i32) -> u32 {
+    let n = classes.max(1);
+    match stars {
+        s if s >= 100 => 0x00FF50,
+        s if s < n => 0x8A98DE,
+        s if s < 2 * n => 0x314DDB,
+        s if s < 3 * n => 0xC1272D,
+        s if s < 4 * n => 0xF7931E,
+        _ => 0xFFFF00,
+    }
+}
+
+/// `FameUtil.numStarsToIcon`: a five-pointed star on a faint dark disc, centred on (x, y).
+fn draw_star(renderer: &mut Renderer, x: f32, y: f32, k: f32, color: u32) {
+    let white = renderer.white();
+    let disc = Tint::color(0x000000, 0.4);
+    let r = 8.0 * k;
+    for i in 0..16 {
+        let (a0, a1) = (i as f32 / 16.0 * std::f32::consts::TAU, (i + 1) as f32 / 16.0 * std::f32::consts::TAU);
+        renderer.triangle(white, [[x, y], [x + r * a0.cos(), y + r * a0.sin()], [x + r * a1.cos(), y + r * a1.sin()]], [[0.5, 0.5]; 3], disc);
+    }
+    let (outer, inner) = (6.5 * k, 2.6 * k);
+    let point = |i: i32| {
+        let a = -std::f32::consts::FRAC_PI_2 + i as f32 * std::f32::consts::PI / 5.0;
+        let r = if i % 2 == 0 { outer } else { inner };
+        [x + r * a.cos(), y + r * a.sin()]
+    };
+    let tint = Tint::color(color, 1.0);
+    for i in 0..10 {
+        renderer.triangle(white, [[x, y], point(i), point(i + 1)], [[0.5, 0.5]; 3], tint);
+    }
+}
+
+/// `GameObject.draw` for sprite objects. Returns where the sprite's top centre is drawn.
+fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, ground: &mut Ground, obj: &GameObj, desc: &ObjectDesc) -> Option<[f32; 2]> {
     let cam = scene.camera;
-    let Some(look) = scene.look(obj, desc) else { return };
+    let mut look = scene.look(obj, desc)?;
     if desc.draw_on_ground {
         // Flat on its square, like a tile.
-        let Some(rect) = scene.sprites.atlas(look.src) else { return };
+        let rect = scene.sprites.atlas(look.src)?;
         let (x, y) = (obj.x.floor(), obj.y.floor());
         renderer.sprite(rect, cam.quad([x, y, 0.0], [x + 1.0, y, 0.0], [x, y + 1.0, 0.0]), Tint::NONE);
-        return;
+        return None;
     }
-    let size = obj.stat_int(2).unwrap_or(desc.min_size);
-    let dye = look.mask.map(|mask| Dye { mask, tex1: obj.stat_int(32).unwrap_or(0), tex2: obj.stat_int(33).unwrap_or(0) });
-    let Some(sprite) = redrawer.get(scene.sprites, renderer, look.src, look.mirror, size, dye) else { return };
+    let mut size = obj.stat_int(2).unwrap_or(desc.min_size);
+    // Hallucinating: a random character instead (getHallucinatingTexture), one per object.
+    if scene.hallucinating {
+        let pick = ((obj.id as u32).wrapping_mul(2_654_435_761) >> 8) % 239;
+        if let Some(src) = scene.sprites.tile_src("lofiChar8x8", pick) {
+            size = (size as f32 * (look.src.w as f32 / src.w as f32).min(1.5)) as i32;
+            look = Look { src, mirror: false, mask: None, wide: false, tex: None };
+        }
+    }
+    let (tex1, tex2) = look.tex.unwrap_or((obj.stat_int(32).unwrap_or(0), obj.stat_int(33).unwrap_or(0)));
+    let dye = look.mask.map(|mask| Dye { mask, tex1, tex2 });
+    let sprite = redrawer.get(scene.sprites, renderer, look.src, look.mirror, size, dye)?;
     // The canvas's bottom centre stands on the object (raised by its z); sprites scale with the
     // map. On sinking ground (water) the sprite is drawn lower with its bottom cut off, unless it
     // flies.
@@ -503,8 +618,33 @@ fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, 
         0.0
     };
     let quad = Quad::rect(px - sw / 2.0 + shift, py - sh + sink * k, sw, sh * cut);
-    let tint = scene.particles.flash_tint(obj.id, scene.time).unwrap_or(Tint::NONE);
-    renderer.sprite_part(sprite.rect, [0.0, 0.0, 1.0, cut], quad, tint);
+    let mut tint = scene.particles.flash_tint(obj.id, scene.time).unwrap_or(Tint::NONE);
+    // Conditions (Player.getTexture, GameObject.getTexture): grey in stasis (and, for players,
+    // paused or petrified), red when cursed, faint when invisible; a player low on health
+    // pulses red.
+    let c = obj.conditions();
+    let mut filter = Filter::None;
+    if desc.player {
+        if let (Some(hp), Some(max)) = (obj.stat_int(1), obj.stat_int(0)) {
+            if (hp as f32) < max as f32 * 0.2 {
+                let rv = ((scene.time as f32 / 200.0).sin().abs() * 10.0).floor() / 10.0;
+                let o = rv * 128.0 / 255.0;
+                tint.add = [tint.add[0] + o, tint.add[1] - o, tint.add[2] - o];
+            }
+        }
+        if has(c, condition::CURSE) {
+            filter = Filter::Red;
+        }
+        if has(c, condition::PAUSED) || has(c, condition::STASIS) || has(c, condition::PETRIFIED) {
+            filter = Filter::Grey;
+        } else if has(c, condition::INVISIBLE) {
+            tint.mul[3] *= 0.4;
+        }
+    } else if has(c, condition::STASIS) {
+        filter = Filter::Grey;
+    }
+    renderer.sprite_filtered(sprite.rect, [0.0, 0.0, 1.0, cut], quad, tint, filter);
+    Some([px + shift, py - sh + sink * k])
 }
 
 /// `Projectile.draw` with projOutline (the AIR client's default): the outlined texture centred

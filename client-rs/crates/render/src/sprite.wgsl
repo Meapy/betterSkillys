@@ -1,6 +1,6 @@
 // One instanced quad per sprite. The quad is the unit square mapped to the screen by an affine
 // transform; colour is `texel * mul + add * texel.a` (premultiplied alpha, like Flash's
-// ColorTransform with the offset scaled by coverage).
+// ColorTransform with the offset scaled by coverage), after an optional colour filter.
 
 struct Globals {
     screen: vec2<f32>,
@@ -46,7 +46,15 @@ fn vs_main(@builtin(vertex_index) vi: u32, inst: Instance) -> VertexOut {
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4<f32> {
     let t = textureSample(page, page_sampler, in.uv);
-    let rgb = t.rgb * in.mul.rgb + in.add.rgb * t.a;
+    // add.w picks a colour filter first: 1 grey (greyscaleFilterMatrix), 2 red (redFilterMatrix).
+    let l = dot(t.rgb, vec3<f32>(0.3, 0.59, 0.11));
+    var c = t.rgb;
+    if (in.add.w > 1.5) {
+        c = vec3<f32>(l, 0.0, 0.0);
+    } else if (in.add.w > 0.5) {
+        c = vec3<f32>(l, l, l);
+    }
+    let rgb = c * in.mul.rgb + in.add.rgb * t.a;
     let a = t.a * in.mul.a;
     return vec4<f32>(rgb * in.mul.a, a);
 }

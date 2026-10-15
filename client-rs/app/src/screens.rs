@@ -1150,9 +1150,10 @@ pub fn portrait(ui: &mut Ui, desc: &ObjectDesc, tex1: i32, tex2: i32, cx: f32, c
 pub enum MenuChoice {
     Resume,
     /// Back to the Nexus.
-    Home,
+    Nexus,
     Options,
-    CharSelect,
+    /// Out of the game, to the main menu (the character list).
+    Home,
     Logout,
 }
 
@@ -1172,9 +1173,9 @@ pub fn draw_game_menu(ui: &mut Ui, w: f32, h: f32, mouse: (f64, f64)) -> Vec<(Me
     let mut out = Vec::new();
     for (i, (choice, label, kind)) in [
         (MenuChoice::Resume, "Back to the game", Kind::Primary),
-        (MenuChoice::Home, "Return home", Kind::Secondary),
+        (MenuChoice::Nexus, "Nexus", Kind::Secondary),
         (MenuChoice::Options, "Options", Kind::Secondary),
-        (MenuChoice::CharSelect, "Character select", Kind::Secondary),
+        (MenuChoice::Home, "Return home", Kind::Secondary),
         (MenuChoice::Logout, "Log out", Kind::Danger),
     ]
     .into_iter()

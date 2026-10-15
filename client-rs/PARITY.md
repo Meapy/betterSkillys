@@ -36,12 +36,15 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | World, walls, objects, ground, 3D | `Map`, `Square`, objects | Done |
 | Particles and effects (`ShowEffect`, hit sparks, death bursts, flashes, camera shake) | `particles/*` | Done |
 | Objects' own effects (`<Effect>`: custom particles, XML particles, circles, explosions, fountains, vents, vortexes, sky beams, hearts, snowflakes) | `ParticleEffect.fromProps` | Done |
+| Condition effects: icons over players and monsters; grey (paused, stasis, petrified), red (cursed), faint (invisible), low-health pulse; the world blurred (drunk), dark (blind) or grey (paused); hallucinating, confused, unstable, paralyzed | `ConditionEffect`, `Map.getFilterIndex`, `Player.getTexture` | Done |
+| Other players' names (party, guild and chosen-name colours, rank star); realm portals' names and player counts | `Player.drawName`, `Portal.draw` | Done |
 | Area attacks (`Aoe`) | `onAoe` | Done (the server applies the damage; the client draws the blast) |
 | Shooting, abilities, hits | `Player`, `Projectile` | Done |
 | HUD: minimap, bars, equipment, inventory, backpack, stats, potions | `HUDView` | Done |
-| Minimap zoom (buttons, - and =), player tooltips and menus on the minimap | `MiniMap` | Done |
+| Minimap zoom (buttons, - and =, the mouse wheel), player tooltips and menus on the minimap; the map's name | `MiniMap` | Done |
+| Nearby players' details on hover: health, magic, gear | `PlayerToolTip` | Done |
 | Item tooltips | `EquipmentToolTip` | Done |
-| Items: swap, drop, use, equip, bags; Ctrl+click to the other page, Ctrl+right-click to break down | `ItemGridMediator`, `BreakdownSlot` | Done |
+| Items: swap, drop, use, equip, bags; Ctrl+click to the other page, Ctrl+right-click to break down; health and magic potions into their stacks (drag or double-click); cloth and dyes in their colours | `ItemGridMediator`, `BreakdownSlot` | Done |
 | Chat, slash commands, speech balloons | `TextBox`, `onText` | Done |
 | Tells: Tab cycles who to whisper; G guild and P party chat; Page Up/Down history | `TextBox` | Done |
 | Notifications over objects, global notifications (keys) | `onNotification`, `onGlobalNotification` | Done |

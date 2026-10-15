@@ -101,6 +101,8 @@ struct App {
     fps_shown: f32,
     /// When the last frame started (the max frame rate).
     frame_start: Instant,
+    /// Wheel movement not yet a whole notch (the minimap's zoom).
+    wheel: f32,
     last_title: String,
     /// `--shot <file> --shot-after <seconds>`: save one frame as PNG, then quit (desktop).
     shot: Option<(String, f32)>,
@@ -322,6 +324,7 @@ fn apply_action(game: &mut Game, panel: &hud::Panel, action: hud::Action, now: i
                 game.inv_swap(now, slot_of(&s), to);
             }
         }
+        Action::Stack(s) => game.add_to_stack(now, slot_of(&s)),
         Action::Button(Button::Nexus) => game.escape(),
         Action::Button(Button::Enter(id)) => game.use_portal(id),
         Action::Button(Button::Buy(id)) => game.buy(id),
@@ -834,8 +837,11 @@ impl App {
                         if self.front.screen == Screen::Busy || self.front.screen == Screen::Login {
                             self.front.show(Screen::Chars);
                         }
-                        if let (true, Some(id)) = (auto_play, first) {
-                            self.play(Join::Load { char_id: id });
+                        match (auto_play, first) {
+                            (true, Some(id)) => self.play(Join::Load { char_id: id }),
+                            // A test account with no one living: a new Wizard.
+                            (true, None) => self.play(Join::Create { class_type: 0x030e, skin_type: 0 }),
+                            _ => {}
                         }
                     }
                 }
@@ -1122,7 +1128,7 @@ impl App {
             self.mouse_down = false;
             match choice {
                 Some(screens::MenuChoice::Resume) => self.game_menu = false,
-                Some(screens::MenuChoice::Home) => {
+                Some(screens::MenuChoice::Nexus) => {
                     self.game_menu = false;
                     if let Phase::Playing(game) = &mut self.phase {
                         game.escape();
@@ -1132,7 +1138,7 @@ impl App {
                     self.game_menu = false;
                     self.options_ui.show();
                 }
-                Some(screens::MenuChoice::CharSelect) => {
+                Some(screens::MenuChoice::Home) => {
                     self.leave_game(None);
                     return;
                 }
@@ -1252,9 +1258,10 @@ impl App {
                 self.mouse_down = false;
             }
             game.particles.disabled = !self.settings.particles;
-            // Options' "Return home".
+            // Options' "Return home": out to the main menu.
             if std::mem::take(&mut self.options_ui.go_home) {
-                game.escape();
+                self.leave_game(None);
+                return;
             }
             // The market window: its clicks, and the server's answers.
             let mut market_acts = Vec::new();
@@ -1451,13 +1458,43 @@ impl App {
                                 _ => Some(game.camera_angle + (mouse.1 - camera.cy).atan2(mouse.0 - camera.cx)),
                             };
                         }
+                        let conditions = world.player().map_or([0, 0], |p| p.conditions());
+                        let has = |e| bsk_world::condition::has(conditions, e);
+                        // Unstable (MapUserInput): shots and abilities go anywhere.
+                        let wild = |n: u32| {
+                            let h = (now as u32).wrapping_mul(2_654_435_761) ^ n.wrapping_mul(40_503);
+                            (h.wrapping_mul(2_246_822_519) >> 8) as f64 / (1u32 << 24) as f64
+                        };
+                        let unstable = has(bsk_world::condition::UNSTABLE);
+                        if unstable && fire.is_some() {
+                            fire = Some(wild(1) * std::f64::consts::TAU);
+                        }
                         if ability {
-                            let (x, y) = camera.to_world(mouse.0, mouse.1);
-                            let angle = game.camera_angle + (mouse.1 - camera.cy).atan2(mouse.0 - camera.cx);
+                            let (mx, my) = if unstable {
+                                (camera.cx + wild(2) * 600.0 - 300.0, camera.cy + wild(3) * 600.0 - 325.0)
+                            } else {
+                                mouse
+                            };
+                            let (x, y) = camera.to_world(mx, my);
+                            let angle = game.camera_angle + (my - camera.cy).atan2(mx - camera.cx);
                             ability_at = Some((x, y, angle));
                         }
-                        let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters, bubbles: &game.bubbles, particles: &game.particles, show };
+                        let hallucinating = has(bsk_world::condition::HALLUCINATING);
+                        let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters, bubbles: &game.bubbles, particles: &game.particles, show, hallucinating };
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
+                        // The world through a filter (Map.getFilterIndex): paused, else blind, else
+                        // drunk (a swaying blur).
+                        let filter = if has(bsk_world::condition::PAUSED) {
+                            Some(bsk_render::ScreenFilter::Grey)
+                        } else if has(bsk_world::condition::BLIND) {
+                            Some(bsk_render::ScreenFilter::Blind)
+                        } else if has(bsk_world::condition::DRUNK) {
+                            let d = 20.0 + 10.0 * (now as f32 / 1000.0).sin();
+                            Some(bsk_render::ScreenFilter::Blur(d / 4.0 * (scale / view::TILE_PX) as f32))
+                        } else {
+                            None
+                        };
+                        renderer.world_done(filter);
                         let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
                         hud::draw_quest(&mut ui, &lay, world, &camera, game.quest, &game.keys, &game.dealt);
                     }
@@ -1470,6 +1507,11 @@ impl App {
                             ignored: &game.ignored,
                             now,
                         };
+                        self.hud.nexus_key = options::key_label(self.settings.key(options::Bind::Nexus));
+                        self.hud.potion_keys = [
+                            options::key_label(self.settings.key(options::Bind::HealthPotion)),
+                            options::key_label(self.settings.key(options::Bind::MagicPotion)),
+                        ];
                         hud::draw_panel(&mut ui, &lay, world, game.camera_angle, &mut self.map_colors, p, &self.hud, &social, mouse);
                     }
                 }
@@ -1797,23 +1839,23 @@ impl ApplicationHandler<UserEvent> for App {
             }
             // A --mouse test position stays put whatever the real cursor does.
             WindowEvent::CursorMoved { position, .. } if !self.mouse_fixed => self.mouse = (position.x, position.y),
-            // The mouse wheel over the world zooms it, when no window is open.
+            // The mouse wheel zooms the minimap, a level a notch, when no window is open.
             WindowEvent::MouseWheel { delta, .. } => {
                 let free = matches!(self.phase, Phase::Playing(_))
                     && !(self.game_menu || self.options_ui.open || self.market.open || self.npcs.window.is_some());
-                let on_panel = self.loaded.as_ref().is_some_and(|l| {
-                    let (w, h) = l.renderer.size();
-                    hud::Layout::new(w, h).on_panel(self.mouse.0, self.mouse.1)
-                });
-                if free && !on_panel {
+                if free {
                     let lines = match delta {
                         winit::event::MouseScrollDelta::LineDelta(_, y) => y,
                         winit::event::MouseScrollDelta::PixelDelta(p) => (p.y / 40.0) as f32,
                     };
-                    let zoom = (self.settings.zoom + lines * 0.05).clamp(options::ZOOM_MIN, options::ZOOM_MAX);
-                    if zoom != self.settings.zoom {
-                        self.settings.zoom = (zoom * 100.0).round() / 100.0;
-                        self.settings.save();
+                    self.wheel += lines;
+                    while self.wheel >= 1.0 {
+                        self.wheel -= 1.0;
+                        self.hud.minimap_zoom = self.hud.minimap_zoom.saturating_sub(1);
+                    }
+                    while self.wheel <= -1.0 {
+                        self.wheel += 1.0;
+                        self.hud.minimap_zoom += 1;
                     }
                 }
             }
@@ -1871,6 +1913,7 @@ fn main() {
         fps_since: Instant::now(),
         fps_shown: 0.0,
         frame_start: Instant::now(),
+        wheel: 0.0,
         last_title: String::new(),
         shot: shot_args(),
         quit: false,
