@@ -1093,6 +1093,12 @@ impl App {
             self.mouse_down = false;
             match choice {
                 Some(screens::MenuChoice::Resume) => self.game_menu = false,
+                Some(screens::MenuChoice::Home) => {
+                    self.game_menu = false;
+                    if let Phase::Playing(game) = &mut self.phase {
+                        game.escape();
+                    }
+                }
                 Some(screens::MenuChoice::Options) => {
                     self.game_menu = false;
                     self.options_ui.show();
@@ -1217,6 +1223,10 @@ impl App {
                 self.mouse_down = false;
             }
             game.particles.disabled = !self.settings.particles;
+            // Options' "Return home".
+            if std::mem::take(&mut self.options_ui.go_home) {
+                game.escape();
+            }
             // The market window: its clicks, and the server's answers.
             let mut market_acts = Vec::new();
             if self.market.open {
@@ -1380,8 +1390,8 @@ impl App {
                         // Freer layout than the AIR client's 600×600 view beside its HUD: the
                         // world fills the window left of the panel, the player centred in it a
                         // little below the middle, the map scaled to the space (hud::Layout).
-                        let scale = lay.map_scale();
-                        let (cx, cy) = if self.settings.centered { (lay.view_w() as f64 / 2.0, lay.h as f64 / 2.0) } else { lay.camera_point() };
+                        let scale = lay.map_scale(self.settings.zoom);
+                        let (cx, cy) = lay.camera_point(self.settings.centered);
                         let camera = view::Camera {
                             x: me.x + jitter.0,
                             y: me.y + jitter.1,
@@ -1753,6 +1763,26 @@ impl ApplicationHandler<UserEvent> for App {
             }
             // A --mouse test position stays put whatever the real cursor does.
             WindowEvent::CursorMoved { position, .. } if !self.mouse_fixed => self.mouse = (position.x, position.y),
+            // The mouse wheel over the world zooms it, when no window is open.
+            WindowEvent::MouseWheel { delta, .. } => {
+                let free = matches!(self.phase, Phase::Playing(_))
+                    && !(self.game_menu || self.options_ui.open || self.market.open || self.npcs.window.is_some());
+                let on_panel = self.loaded.as_ref().is_some_and(|l| {
+                    let (w, h) = l.renderer.size();
+                    hud::Layout::new(w, h).on_panel(self.mouse.0, self.mouse.1)
+                });
+                if free && !on_panel {
+                    let lines = match delta {
+                        winit::event::MouseScrollDelta::LineDelta(_, y) => y,
+                        winit::event::MouseScrollDelta::PixelDelta(p) => (p.y / 40.0) as f32,
+                    };
+                    let zoom = (self.settings.zoom + lines * 0.05).clamp(options::ZOOM_MIN, options::ZOOM_MAX);
+                    if zoom != self.settings.zoom {
+                        self.settings.zoom = (zoom * 100.0).round() / 100.0;
+                        self.settings.save();
+                    }
+                }
+            }
             WindowEvent::MouseInput { state: ElementState::Pressed, button: winit::event::MouseButton::Right, .. } => {
                 self.right_clicks.push(self.mouse);
             }

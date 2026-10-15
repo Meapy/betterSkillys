@@ -46,15 +46,18 @@ impl Layout {
         self.panel_x
     }
 
-    /// Pixels per tile: about 50 (the AIR client's) for a 750-pixel view, more or less with the
-    /// view's smaller side.
-    pub fn map_scale(&self) -> f64 {
-        50.0 * (self.view_w().min(self.h) as f64 / 750.0).clamp(0.6, 4.0)
+    /// Pixels per tile: the AIR client's 50, so a bigger window shows more of the world (as
+    /// the AIR client does), times the player's zoom; only very tall windows (over 1440
+    /// pixels, like 4K) draw it bigger, so it doesn't turn tiny.
+    pub fn map_scale(&self, zoom: f32) -> f64 {
+        50.0 * zoom as f64 * (self.h as f64 / 1440.0).max(1.0)
     }
 
-    /// Where the player stands: centred across the view, a little below the middle.
-    pub fn camera_point(&self) -> (f64, f64) {
-        (self.view_w() as f64 / 2.0, self.h as f64 * 13.0 / 24.0)
+    /// Where the player stands (`Camera`'s screen rects): centred across the view, a little
+    /// below the middle (`centered`) or three quarters of the way down.
+    pub fn camera_point(&self, centered: bool) -> (f64, f64) {
+        let down = if centered { 13.0 / 24.0 } else { 3.0 / 4.0 };
+        (self.view_w() as f64 / 2.0, self.h as f64 * down)
     }
 
     /// A point on the panel, from HUD units.

@@ -194,11 +194,18 @@ pub struct Settings {
     pub ally_shots: bool,
     pub damage_numbers: bool,
     pub rotation: bool,
-    /// The camera centred on the player (`centerOnPlayer`).
+    /// `centerOnPlayer`: the player a little below the middle of the view (on), or three
+    /// quarters of the way down so more of what's ahead shows (off).
     pub centered: bool,
     /// The frame rate on screen.
     pub show_fps: bool,
+    /// How big the world is drawn: 1 is the AIR client's 50 pixels a tile; less shows more.
+    pub zoom: f32,
 }
+
+/// The world zoom's range (`Settings::zoom`).
+pub const ZOOM_MIN: f32 = 0.5;
+pub const ZOOM_MAX: f32 = 1.5;
 
 impl Default for Settings {
     fn default() -> Self {
@@ -212,8 +219,9 @@ impl Default for Settings {
             ally_shots: true,
             damage_numbers: true,
             rotation: true,
-            centered: false,
+            centered: true,
             show_fps: false,
+            zoom: 1.0,
         }
     }
 }
@@ -274,12 +282,13 @@ impl Settings {
         flag("allyShots", self.ally_shots);
         flag("damageNumbers", self.damage_numbers);
         flag("allowRotation", self.rotation);
-        flag("centerOnPlayer", self.centered);
+        flag("cameraCentered", self.centered);
         flag("showStatistics", self.show_fps);
         flag("playSFX", self.sound.sfx);
         flag("playPewPew", self.sound.shots);
         flag("playMusic", self.sound.music);
         out += &format!("sfxVolume={}\nmusicVolume={}\n", self.sound.sfx_volume, self.sound.music_volume);
+        out += &format!("worldZoom={}\n", self.zoom);
         out
     }
 
@@ -302,13 +311,14 @@ impl Settings {
                 "allyShots" => s.ally_shots = on,
                 "damageNumbers" => s.damage_numbers = on,
                 "allowRotation" => s.rotation = on,
-                "centerOnPlayer" => s.centered = on,
+                "cameraCentered" => s.centered = on,
                 "showStatistics" => s.show_fps = on,
                 "playSFX" => s.sound.sfx = on,
                 "playPewPew" => s.sound.shots = on,
                 "playMusic" => s.sound.music = on,
                 "sfxVolume" => s.sound.sfx_volume = vol().unwrap_or(s.sound.sfx_volume),
                 "musicVolume" => s.sound.music_volume = vol().unwrap_or(s.sound.music_volume),
+                "worldZoom" => s.zoom = value.parse::<f32>().map_or(1.0, |z| z.clamp(ZOOM_MIN, ZOOM_MAX)),
                 _ => {}
             }
         }
@@ -332,15 +342,24 @@ pub enum Tab {
     Sound,
 }
 
+/// A slider on the Sound or Graphics tab.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Slider {
+    Sfx,
+    Music,
+    Zoom,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Hit {
     Tab(Tab),
     Bind(Bind),
     Toggle(Toggle),
     /// A volume slider (sound effects, music) and its track.
-    Volume(bool, [f32; 4]),
+    Slider(Slider, [f32; 4]),
     Defaults,
     Close,
+    Home,
 }
 
 /// The Options window.
@@ -352,6 +371,8 @@ pub struct OptionsUi {
     listening: Option<Bind>,
     rect: Option<[f32; 4]>,
     hits: Vec<(Hit, [f32; 4])>,
+    /// "Return home" was pressed: back to the Nexus.
+    pub go_home: bool,
 }
 
 fn inside(r: [f32; 4], (x, y): (f64, f64)) -> bool {
@@ -382,13 +403,13 @@ impl OptionsUi {
                 *v = !*v;
                 return true;
             }
-            Hit::Volume(music, track) => {
+            Hit::Slider(slider, track) => {
                 let v = ((pos.0 as f32 - track[0]) / track[2]).clamp(0.0, 1.0);
                 let v = (v * 20.0).round() / 20.0;
-                if music {
-                    settings.sound.music_volume = v;
-                } else {
-                    settings.sound.sfx_volume = v;
+                match slider {
+                    Slider::Music => settings.sound.music_volume = v,
+                    Slider::Sfx => settings.sound.sfx_volume = v,
+                    Slider::Zoom => settings.zoom = ZOOM_MIN + v * (ZOOM_MAX - ZOOM_MIN),
                 }
                 return true;
             }
@@ -400,12 +421,17 @@ impl OptionsUi {
                         for (t, _) in GRAPHICS {
                             *settings.toggle(t) = *d.clone().toggle(t);
                         }
+                        settings.zoom = d.zoom;
                     }
                     Tab::Sound => settings.sound = d.sound,
                 }
                 return true;
             }
             Hit::Close => self.open = false,
+            Hit::Home => {
+                self.open = false;
+                self.go_home = true;
+            }
         }
         false
     }
@@ -446,7 +472,7 @@ impl OptionsUi {
         }
         let (w, h) = (lay.w, lay.h);
         let rows = BINDS.len().div_ceil(2) as f32;
-        let (dw, dh) = (620.0, 150.0 + rows * 30.0);
+        let (dw, dh) = (620.0, 176.0 + rows * 30.0);
         let s = (lay.s * (w * 0.94 / (dw * lay.s)).min(h * 0.94 / (dh * lay.s)).min(1.0)).max(0.4);
         ui.rect(0.0, 0.0, w, h, 0x000000, 0.45);
         let r = [((w - dw * s) / 2.0).round(), ((h - dh * s) / 2.0).round(), dw * s, dh * s];
@@ -507,25 +533,35 @@ impl OptionsUi {
                     self.hits.push((Hit::Toggle(*t), row));
                     y += 38.0 * s;
                 }
-                if self.tab == Tab::Sound {
+                let sliders: Vec<(Slider, &str, f32, String)> = if self.tab == Tab::Sound {
+                    let (sv, mv) = (settings.sound.sfx_volume, settings.sound.music_volume);
+                    vec![
+                        (Slider::Sfx, "Effects volume", sv, format!("{}%", (sv * 100.0).round() as i32)),
+                        (Slider::Music, "Music volume", mv, format!("{}%", (mv * 100.0).round() as i32)),
+                    ]
+                } else {
+                    // Lower shows more of the world (the mouse wheel over the world does it too).
+                    let v = (settings.zoom - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN);
+                    vec![(Slider::Zoom, "World zoom", v, format!("{}%", (settings.zoom * 100.0).round() as i32))]
+                };
+                if !sliders.is_empty() {
                     y += 10.0 * s;
-                    for (music, label, v) in [(false, "Effects volume", settings.sound.sfx_volume), (true, "Music volume", settings.sound.music_volume)] {
+                    for (slider, label, v, value) in sliders {
                         ui.label(label, body[0] + 10.0 * s, y + 4.0 * s, font(14.0), false, color::TEXT);
                         let track = [body[0] + 200.0 * s, y + 9.0 * s, body[2] - 280.0 * s, 8.0 * s];
                         theme::fill(ui.renderer, track, 4.0 * s, color::TRACK, 1.0);
                         theme::fill(ui.renderer, [track[0], track[1], track[2] * v, track[3]], 4.0 * s, color::ACCENT, 1.0);
                         let knob = 16.0 * s;
                         theme::fill(ui.renderer, [track[0] + track[2] * v - knob / 2.0, track[1] - 4.0 * s, knob, knob], knob / 2.0, 0xFFFFFF, 1.0);
-                        let pct = format!("{}%", (v * 100.0).round() as i32);
-                        ui.label(&pct, track[0] + track[2] + 16.0 * s, y + 4.0 * s, font(13.0), true, color::TEXT_DIM);
-                        self.hits.push((Hit::Volume(music, track), [track[0] - 8.0 * s, y, track[2] + 16.0 * s, 26.0 * s]));
+                        ui.label(&value, track[0] + track[2] + 16.0 * s, y + 4.0 * s, font(13.0), true, color::TEXT_DIM);
+                        self.hits.push((Hit::Slider(slider, track), [track[0] - 8.0 * s, y, track[2] + 16.0 * s, 26.0 * s]));
                         y += 40.0 * s;
                     }
                 }
             }
         }
         let hint = if self.tab == Tab::Controls { "Click a key, then press the new one. Backspace clears it." } else { "Changes apply at once." };
-        ui.label(hint, r[0] + 22.0 * s, r[1] + r[3] - 46.0 * s, font(12.0), false, color::TEXT_MUTED);
+        ui.label(hint, r[0] + 22.0 * s, r[1] + r[3] - 80.0 * s, font(12.0), false, color::TEXT_MUTED);
         let bw = 120.0 * s;
         let done = [r[0] + r[2] - 22.0 * s - bw, r[1] + r[3] - 56.0 * s, bw, 38.0 * s];
         ui.button(done, "Done", Kind::Primary, inside(done, mouse), s);
@@ -533,6 +569,10 @@ impl OptionsUi {
         let reset = [done[0] - 10.0 * s - 150.0 * s, done[1], 150.0 * s, 38.0 * s];
         ui.button(reset, "Defaults", Kind::Secondary, inside(reset, mouse), s);
         self.hits.push((Hit::Defaults, reset));
+        // Home: back to the Nexus.
+        let home = [r[0] + 22.0 * s, done[1], 150.0 * s, 38.0 * s];
+        ui.button(home, "Return home", Kind::Secondary, inside(home, mouse), s);
+        self.hits.push((Hit::Home, home));
     }
 }
 
@@ -550,6 +590,7 @@ mod tests {
         assert_eq!(s.key(Bind::MoveUp), None);
         s.particles = false;
         s.sound.music_volume = 0.25;
+        s.zoom = 0.75;
         let back = Settings::from_text(&s.to_text());
         assert_eq!(back, s);
         assert_eq!(key_label(Some(KeyCode::KeyW)), "W");
