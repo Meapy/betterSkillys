@@ -188,7 +188,9 @@ pub mod store {
                 if let Some(dir) = path.parent() {
                     let _ = std::fs::create_dir_all(dir);
                 }
-                if let Err(e) = std::fs::write(&path, t) {
+                // Written beside it and moved over it, so a crash never leaves half a file.
+                let tmp = path.with_extension("tmp");
+                if let Err(e) = std::fs::write(&tmp, t).and_then(|_| std::fs::rename(&tmp, &path)) {
                     log::warn!("{}: {e}", path.display());
                 }
             }

@@ -99,6 +99,8 @@ struct App {
     fps_since: Instant,
     /// The frame rate last measured, for the on-screen display.
     fps_shown: f32,
+    /// When the last frame started (the max frame rate).
+    frame_start: Instant,
     last_title: String,
     /// `--shot <file> --shot-after <seconds>`: save one frame as PNG, then quit (desktop).
     shot: Option<(String, f32)>,
@@ -706,7 +708,12 @@ impl App {
             key_time: -1,
             key: vec![],
         };
-        self.phase = Phase::Playing(Game::start(endpoint.target(&server.host, server.port), hello, join));
+        let mut game = Game::start(endpoint.target(&server.host, server.port), hello, join);
+        // The camera as it was left (Parameters' cameraAngle).
+        if let Some(a) = self.settings.camera_angle {
+            game.camera_angle = a;
+        }
+        self.phase = Phase::Playing(game);
         self.hud = Default::default();
         self.chat_input = None;
         self.game_menu = false;
@@ -814,7 +821,13 @@ impl App {
                     if let Some((email, password)) = &self.account {
                         login::remember(self.front.remember.then_some((email.as_str(), password.as_str())));
                     }
-                    self.front.server = self.front.server.min(list.servers.len().saturating_sub(1));
+                    // The server chosen last time (preferredServer), else the one showing.
+                    self.front.server = list
+                        .servers
+                        .iter()
+                        .position(|s| s.name == self.settings.preferred_server)
+                        .unwrap_or(self.front.server)
+                        .min(list.servers.len().saturating_sub(1));
                     let first = list.chars.iter().find(|c| !c.dead).map(|c| c.id);
                     self.front.list = Some(list);
                     if matches!(self.phase, Phase::Menu) {
@@ -1050,6 +1063,16 @@ impl App {
         let (mouse, script_aim) = (self.mouse, self.script_aim);
         let Some(loaded) = self.loaded.as_mut() else { return };
         let Loaded { renderer, sprites, data, redrawer, fonts, text, title, .. } = &mut **loaded;
+        renderer.set_vsync(!self.settings.unlock_fps);
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.settings.max_fps > 0 {
+            let frame = std::time::Duration::from_secs_f64(1.0 / self.settings.max_fps as f64);
+            let spent = self.frame_start.elapsed();
+            if spent < frame {
+                std::thread::sleep(frame - spent);
+            }
+            self.frame_start = Instant::now();
+        }
         let lay = hud::Layout::new(renderer.size().0, renderer.size().1);
         let mut ability = false;
         let mut panel = None;
@@ -1079,6 +1102,12 @@ impl App {
             self.finish_frame(now);
             for action in actions {
                 self.front_action(action);
+            }
+            // Keep the server chosen (preferredServer).
+            let chosen = self.front.list.as_ref().and_then(|l| l.servers.get(self.front.server)).map(|s| s.name.clone());
+            if let Some(name) = chosen.filter(|n| *n != self.settings.preferred_server) {
+                self.settings.preferred_server = name;
+                self.settings.save();
             }
             return;
         }
@@ -1358,6 +1387,11 @@ impl App {
                 game.camera_angle = game::DEFAULT_CAMERA_ANGLE;
             }
             game.update(now, dt, keys, rotate, data);
+            // Keep the camera's turn once it stops turning (cameraAngle).
+            if rotate == 0.0 && self.settings.camera_angle != Some(game.camera_angle) {
+                self.settings.camera_angle = Some(game.camera_angle);
+                self.settings.save();
+            }
             if let (Some((kind, last)), Some(world)) = (&mut self.effect_test, &game.world) {
                 if now - *last >= 500 {
                     *last = now;
@@ -1836,6 +1870,7 @@ fn main() {
         fps_frames: 0,
         fps_since: Instant::now(),
         fps_shown: 0.0,
+        frame_start: Instant::now(),
         last_title: String::new(),
         shot: shot_args(),
         quit: false,

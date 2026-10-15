@@ -365,6 +365,16 @@ impl Renderer {
         self.surface.configure(&self.device, &self.config);
     }
 
+    /// Wait for the display's refresh (vsync), or draw as fast as possible (where the system
+    /// can; otherwise it stays in step with the display).
+    pub fn set_vsync(&mut self, on: bool) {
+        let mode = if on { wgpu::PresentMode::AutoVsync } else { wgpu::PresentMode::AutoNoVsync };
+        if self.config.present_mode != mode {
+            self.config.present_mode = mode;
+            self.surface.configure(&self.device, &self.config);
+        }
+    }
+
     pub fn size(&self) -> (u32, u32) {
         (self.config.width, self.config.height)
     }

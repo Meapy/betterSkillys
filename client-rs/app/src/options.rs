@@ -164,12 +164,13 @@ pub enum Toggle {
     Rotation,
     Centered,
     ShowFps,
+    UnlockFps,
     Sfx,
     Shots,
     Music,
 }
 
-const GRAPHICS: [(Toggle, &str); 9] = [
+const GRAPHICS: [(Toggle, &str); 10] = [
     (Toggle::Particles, "Particles and effects"),
     (Toggle::Shadows, "Shadows"),
     (Toggle::HpBars, "Health bars"),
@@ -179,6 +180,7 @@ const GRAPHICS: [(Toggle, &str); 9] = [
     (Toggle::Rotation, "Camera rotation"),
     (Toggle::Centered, "Center on player"),
     (Toggle::ShowFps, "Show frame rate"),
+    (Toggle::UnlockFps, "Unlock frame rate (no vsync)"),
 ];
 
 const SOUNDS: [(Toggle, &str); 3] = [(Toggle::Sfx, "Sound effects"), (Toggle::Shots, "Weapon sounds"), (Toggle::Music, "Music")];
@@ -199,9 +201,24 @@ pub struct Settings {
     pub centered: bool,
     /// The frame rate on screen.
     pub show_fps: bool,
+    /// Draw as many frames as the computer can, not waiting for the display (vsync off).
+    pub unlock_fps: bool,
     /// How big the world is drawn: 1 is the AIR client's 50 pixels a tile; less shows more.
     pub zoom: f32,
+    /// The most frames a second (0: no limit).
+    pub max_fps: u32,
+    /// State kept as the AIR client keeps it in its options (`cameraAngle`,
+    /// `preferredServer`): the camera's turn, and the server last chosen.
+    pub camera_angle: Option<f64>,
+    pub preferred_server: String,
+    /// Lines this version doesn't know (from a newer or older one), kept as they were, and
+    /// keys it couldn't read, kept as written.
+    extra: Vec<String>,
+    raw_keys: Vec<Option<String>>,
 }
+
+/// The frame rate limits offered (0: none).
+pub const MAX_FPS: [u32; 8] = [0, 30, 60, 120, 144, 165, 240, 360];
 
 /// The world zoom's range (`Settings::zoom`).
 pub const ZOOM_MIN: f32 = 0.5;
@@ -222,6 +239,12 @@ impl Default for Settings {
             centered: true,
             show_fps: false,
             zoom: 1.0,
+            unlock_fps: false,
+            max_fps: 0,
+            camera_angle: None,
+            preferred_server: String::new(),
+            extra: Vec::new(),
+            raw_keys: vec![None; BINDS.len()],
         }
     }
 }
@@ -248,6 +271,7 @@ impl Settings {
         }
         if let Some(i) = BINDS.iter().position(|x| x.0 == b) {
             self.keys[i] = code;
+            self.raw_keys[i] = None;
         }
     }
 
@@ -262,6 +286,7 @@ impl Settings {
             Toggle::Rotation => &mut self.rotation,
             Toggle::Centered => &mut self.centered,
             Toggle::ShowFps => &mut self.show_fps,
+            Toggle::UnlockFps => &mut self.unlock_fps,
             Toggle::Sfx => &mut self.sound.sfx,
             Toggle::Shots => &mut self.sound.shots,
             Toggle::Music => &mut self.sound.music,
@@ -271,8 +296,14 @@ impl Settings {
     /// As kept: `name=value` lines.
     pub fn to_text(&self) -> String {
         let mut out = String::new();
+        out += "version=1\n";
         for (i, (_, _, name, _)) in BINDS.iter().enumerate() {
-            out += &format!("{name}={}\n", self.keys[i].map_or(String::new(), key_name));
+            let value = match (self.keys[i], &self.raw_keys[i]) {
+                (Some(k), _) => key_name(k),
+                (None, Some(raw)) => raw.clone(),
+                (None, None) => String::new(),
+            };
+            out += &format!("{name}={value}\n");
         }
         let mut flag = |n: &str, v: bool| out += &format!("{n}={}\n", v as u8);
         flag("particles", self.particles);
@@ -284,21 +315,40 @@ impl Settings {
         flag("allowRotation", self.rotation);
         flag("cameraCentered", self.centered);
         flag("showStatistics", self.show_fps);
+        flag("unlockFps", self.unlock_fps);
         flag("playSFX", self.sound.sfx);
         flag("playPewPew", self.sound.shots);
         flag("playMusic", self.sound.music);
         out += &format!("sfxVolume={}\nmusicVolume={}\n", self.sound.sfx_volume, self.sound.music_volume);
         out += &format!("worldZoom={}\n", self.zoom);
+        out += &format!("maxFps={}\n", self.max_fps);
+        if let Some(a) = self.camera_angle {
+            out += &format!("cameraAngle={a}\n");
+        }
+        if !self.preferred_server.is_empty() {
+            out += &format!("preferredServer={}\n", self.preferred_server);
+        }
+        for line in &self.extra {
+            out += line;
+            out += "\n";
+        }
         out
     }
 
     pub fn from_text(text: &str) -> Self {
         let mut s = Settings::default();
+        // Bindings the file sets; the others keep their defaults unless the file gave
+        // their key to something else.
+        let mut set = vec![false; BINDS.len()];
         for line in text.lines() {
             let Some((name, value)) = line.split_once('=') else { continue };
             let (name, value) = (name.trim(), value.trim());
             if let Some(i) = BINDS.iter().position(|b| b.2 == name) {
+                set[i] = true;
                 s.keys[i] = parse_key(value);
+                if s.keys[i].is_none() && !value.is_empty() {
+                    s.raw_keys[i] = Some(value.to_owned());
+                }
                 continue;
             }
             let on = value == "1";
@@ -313,13 +363,25 @@ impl Settings {
                 "allowRotation" => s.rotation = on,
                 "cameraCentered" => s.centered = on,
                 "showStatistics" => s.show_fps = on,
+                "unlockFps" => s.unlock_fps = on,
                 "playSFX" => s.sound.sfx = on,
                 "playPewPew" => s.sound.shots = on,
                 "playMusic" => s.sound.music = on,
                 "sfxVolume" => s.sound.sfx_volume = vol().unwrap_or(s.sound.sfx_volume),
                 "musicVolume" => s.sound.music_volume = vol().unwrap_or(s.sound.music_volume),
                 "worldZoom" => s.zoom = value.parse::<f32>().map_or(1.0, |z| z.clamp(ZOOM_MIN, ZOOM_MAX)),
-                _ => {}
+                "maxFps" => s.max_fps = value.parse().unwrap_or(0),
+                "cameraAngle" => s.camera_angle = value.parse().ok().filter(|a: &f64| a.is_finite()),
+                "preferredServer" => s.preferred_server = value.to_owned(),
+                "version" => {}
+                // Not this version's: kept for the version that wrote it.
+                _ => s.extra.push(line.to_owned()),
+            }
+        }
+        let taken: Vec<KeyCode> = (0..BINDS.len()).filter(|&i| set[i]).filter_map(|i| s.keys[i]).collect();
+        for i in 0..BINDS.len() {
+            if !set[i] && s.keys[i].is_some_and(|k| taken.contains(&k)) {
+                s.keys[i] = None;
             }
         }
         s
@@ -348,6 +410,7 @@ enum Slider {
     Sfx,
     Music,
     Zoom,
+    MaxFps,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -410,6 +473,10 @@ impl OptionsUi {
                     Slider::Music => settings.sound.music_volume = v,
                     Slider::Sfx => settings.sound.sfx_volume = v,
                     Slider::Zoom => settings.zoom = ZOOM_MIN + v * (ZOOM_MAX - ZOOM_MIN),
+                    Slider::MaxFps => {
+                        let i = (((pos.0 as f32 - track[0]) / track[2]).clamp(0.0, 1.0) * (MAX_FPS.len() - 1) as f32).round() as usize;
+                        settings.max_fps = MAX_FPS[i];
+                    }
                 }
                 return true;
             }
@@ -422,6 +489,7 @@ impl OptionsUi {
                             *settings.toggle(t) = *d.clone().toggle(t);
                         }
                         settings.zoom = d.zoom;
+                        settings.max_fps = d.max_fps;
                     }
                     Tab::Sound => settings.sound = d.sound,
                 }
@@ -542,7 +610,13 @@ impl OptionsUi {
                 } else {
                     // Lower shows more of the world (the mouse wheel over the world does it too).
                     let v = (settings.zoom - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN);
-                    vec![(Slider::Zoom, "World zoom", v, format!("{}%", (settings.zoom * 100.0).round() as i32))]
+                    let i = MAX_FPS.iter().position(|&f| f == settings.max_fps).unwrap_or(0);
+                    let fv = i as f32 / (MAX_FPS.len() - 1) as f32;
+                    let fps = if settings.max_fps == 0 { "No limit".to_owned() } else { settings.max_fps.to_string() };
+                    vec![
+                        (Slider::Zoom, "World zoom", v, format!("{}%", (settings.zoom * 100.0).round() as i32)),
+                        (Slider::MaxFps, "Max frame rate", fv, fps),
+                    ]
                 };
                 if !sliders.is_empty() {
                     y += 10.0 * s;
@@ -591,8 +665,17 @@ mod tests {
         s.particles = false;
         s.sound.music_volume = 0.25;
         s.zoom = 0.75;
+        s.max_fps = 144;
+        s.camera_angle = Some(1.5);
+        s.preferred_server = "Localhost".into();
         let back = Settings::from_text(&s.to_text());
         assert_eq!(back, s);
+        // Lines another version wrote stay, and its keys don't take a key this one gives.
+        let text = "someFutureOption=7\nmoveUp=KeyQ\nlater=KeySomethingNew\nnexus=\n";
+        let t = Settings::from_text(text);
+        assert_eq!(t.key(Bind::MoveUp), Some(KeyCode::KeyQ));
+        assert_eq!(t.key(Bind::RotateLeft), None, "Q went to moving up");
+        assert!(t.to_text().contains("someFutureOption=7\n"));
         assert_eq!(key_label(Some(KeyCode::KeyW)), "W");
         assert_eq!(key_label(Some(KeyCode::Digit0)), "0");
         assert_eq!(key_label(Some(KeyCode::PageUp)), "Page Up");
