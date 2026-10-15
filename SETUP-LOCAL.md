@@ -29,7 +29,7 @@ The account server address is compiled into `LocalhostSetup.as`, so the script c
 The Rust rewrite of the client (`client-rs/`, see its AGENTS.md) does everything the AIR client does and also runs in a browser. Its package is built the same way:
 
 ```
-python toolsuild_client_rs.py --account http://188.141.12.3:8080 --package   # distetterSkillys-rs-windows.zip
+python tools\build_client_rs.py --account http://188.141.12.3:8080 --package   # dist\betterSkillys-rs-windows.zip
 ```
 
 ## Letting other people play

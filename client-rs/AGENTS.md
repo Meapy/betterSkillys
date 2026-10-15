@@ -13,6 +13,7 @@ python tools\gen_rs_manifest.py              # after the AIR client's asset list
 cd client-rs; cargo run                      # desktop, development layout
 python tools\build_client_rs.py              # build\client-rs\native: exe + assets\
 python tools\build_client_rs.py --web        # build\client-rs\web: index.html + wasm + assets/
+python tools\build_client_rs.py --account http://<ip>:8080 --package   # dist\betterSkillys-rs-<os>.zip for players
 ```
 
 - **Web:** needs `rustup target add wasm32-unknown-unknown` and `wasm-bindgen-cli` at the
@@ -128,6 +129,7 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
 5. Front-end screens: sign in, register, character select and delete, new character, servers.
    **Done.**
 6. Party, trading, guild and the NPC windows (`npc.rs`): **Done.** Market, emotes, sound to do.
-7. Packaging.
+7. Packaging: `build_client_rs.py --account <url> --package` (the address built in, release
+   builds without a console window on Windows, the AIR client's icon). **Done.**
 
 Not planned: the map editor, the tutorial, Kabam's payment, offer and news screens.
