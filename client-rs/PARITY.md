@@ -64,6 +64,8 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Stat NPC, bounty board, money changer | `StatNPCPanel`, `BountyBoardPanel`, `MoneyChangerPanel` | Dropped: no map places them |
 | Arena wave and clock | `onImminentArenaWave`, `ArenaMenu` | Done |
 | Pictures from the server (`Pic`) | `onPic` | Dropped: the server never sends `Pic` |
+| Platform stats and file downloads (`ClientStat`, `File`) | `onClientStat`, `onFile` | Dropped: Kongregate/Steam stats only, and the server never sends `File` |
+| Keys: switch inventory tabs (B), center on player (X), frame rate (L), vault, realm, guild hall and world-party shortcuts | `MapUserInput` | Done |
 | Options: key bindings, graphics (particles, shadows, bars, balloons, others' shots, damage numbers, rotation), sound | `Options`, `Parameters` | Done (kept in `settings.txt` or the browser's storage) |
 | Sound effects and music (shots, hits, deaths, loot, level up, potions, items, errors, buttons, `PlaySound`, map music) | `SoundEffectLibrary`, `Music` | Done |
 | Emotes (in chat and speech balloons, animated ones too) | `Emotes`, `EmoteGraphicHelper` | Done |

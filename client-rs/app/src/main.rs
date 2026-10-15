@@ -94,6 +94,8 @@ struct App {
     keys: HashSet<KeyCode>,
     fps_frames: u32,
     fps_since: Instant,
+    /// The frame rate last measured, for the on-screen display.
+    fps_shown: f32,
     last_title: String,
     /// `--shot <file> --shot-after <seconds>`: save one frame as PNG, then quit (desktop).
     shot: Option<(String, f32)>,
@@ -1133,7 +1135,39 @@ impl App {
                             }
                         }
                     },
-                    Some(Bind::Nexus) => game.escape(),
+                    Some(Bind::Nexus) => {
+                        if game.map_name() == "Nexus" {
+                            game.add_chat("*Error*", "", "You're already in the Nexus.", 0, 0, now);
+                        } else {
+                            game.escape();
+                        }
+                    }
+                    Some(Bind::SwitchTabs) => {
+                        self.hud.page = if self.hud.page == hud::Page::Inventory { hud::Page::Backpack } else { hud::Page::Inventory };
+                    }
+                    Some(Bind::Center) => {
+                        self.settings.centered = !self.settings.centered;
+                        self.settings.save();
+                    }
+                    Some(Bind::Stats) => {
+                        self.settings.show_fps = !self.settings.show_fps;
+                        self.settings.save();
+                    }
+                    // MapUserInput's shortcuts for chat commands.
+                    Some(b @ (Bind::Vault | Bind::Realm | Bind::GuildHall | Bind::PartyInviteWorld | Bind::PartyJoinWorld)) => {
+                        let (command, here) = match b {
+                            Bind::Vault => ("/vault", "Vault"),
+                            Bind::Realm => ("/realm", "Realm"),
+                            Bind::GuildHall => ("/ghall", "GuildHall"),
+                            Bind::PartyInviteWorld => ("/pinviteworld", ""),
+                            _ => ("/pjoin", ""),
+                        };
+                        if !here.is_empty() && game.map_name() == here {
+                            game.add_chat("*Error*", "", &format!("You're already in the {}.", if here == "GuildHall" { "Guild Hall" } else { here }), 0, 0, now);
+                        } else {
+                            game.say(command);
+                        }
+                    }
                     Some(Bind::Autofire) => self.autofire = !self.autofire,
                     Some(Bind::ZoomOut) => self.hud.minimap_zoom += 1,
                     Some(Bind::ZoomIn) => self.hud.minimap_zoom = self.hud.minimap_zoom.saturating_sub(1),
@@ -1336,7 +1370,7 @@ impl App {
                         // world fills the window left of the panel, the player centred in it a
                         // little below the middle, the map scaled to the space (hud::Layout).
                         let scale = lay.map_scale();
-                        let (cx, cy) = lay.camera_point();
+                        let (cx, cy) = if self.settings.centered { (lay.view_w() as f64 / 2.0, lay.h as f64 / 2.0) } else { lay.camera_point() };
                         let camera = view::Camera {
                             x: me.x + jitter.0,
                             y: me.y + jitter.1,
@@ -1400,6 +1434,13 @@ impl App {
             if let Some((x, y, angle)) = ability_at {
                 game.use_ability(now, x, y, angle, data);
             }
+        }
+        // The frame rate, top right of the view (L).
+        if self.settings.show_fps && matches!(self.phase, Phase::Playing(_)) {
+            let t = format!("{:.0} fps", self.fps_shown);
+            let style = text::Style { size: (13.0 * lay.s).round().max(10.0), bold: true, color: 0xB0FFB0 };
+            let w = text.measure(fonts, renderer, &t, style);
+            text.draw(fonts, renderer, &t, lay.view_w() - w - 10.0 * lay.s, 8.0 * lay.s, style);
         }
         if !status.is_empty() {
             let style = text::Style { size: 18.0, bold: true, color: 0xFFFFFF };
@@ -1466,7 +1507,8 @@ impl App {
         self.fps_frames += 1;
         let elapsed = self.fps_since.elapsed().as_secs_f32();
         if elapsed >= 0.5 {
-            let mut title = format!("{TITLE} - {:.0} fps, {} draws", self.fps_frames as f32 / elapsed, renderer.last_draws);
+            self.fps_shown = self.fps_frames as f32 / elapsed;
+            let mut title = format!("{TITLE} - {:.0} fps, {} draws", self.fps_shown, renderer.last_draws);
             if !status.is_empty() {
                 title += &format!(" - {status}");
             }
@@ -1750,6 +1792,7 @@ fn main() {
         keys: HashSet::new(),
         fps_frames: 0,
         fps_since: Instant::now(),
+        fps_shown: 0.0,
         last_title: String::new(),
         shot: shot_args(),
         quit: false,

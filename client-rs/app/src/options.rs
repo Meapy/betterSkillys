@@ -37,41 +37,61 @@ pub enum Bind {
     ZoomIn,
     ZoomOut,
     Options,
+    /// `switchTabs`: the inventory or the backpack.
+    SwitchTabs,
+    /// `toggleCentering`: the player in the middle of the view, or a little below.
+    Center,
+    /// `togglePerformanceStats`: the frame rate on screen.
+    Stats,
+    /// Chat commands: `/vault`, `/realm`, `/ghall`, `/pinviteworld`, `/pjoin`.
+    Vault,
+    Realm,
+    GuildHall,
+    PartyInviteWorld,
+    PartyJoinWorld,
 }
 
 /// Every binding: what, its label, its name in the file, its default key.
-pub const BINDS: [(Bind, &str, &str, KeyCode); 31] = [
-    (Bind::MoveUp, "Move up", "moveUp", KeyCode::KeyW),
-    (Bind::MoveLeft, "Move left", "moveLeft", KeyCode::KeyA),
-    (Bind::MoveDown, "Move down", "moveDown", KeyCode::KeyS),
-    (Bind::MoveRight, "Move right", "moveRight", KeyCode::KeyD),
-    (Bind::RotateLeft, "Rotate left", "rotateLeft", KeyCode::KeyQ),
-    (Bind::RotateRight, "Rotate right", "rotateRight", KeyCode::KeyE),
-    (Bind::ResetCamera, "Reset camera", "resetCamera", KeyCode::KeyZ),
-    (Bind::Ability, "Use ability", "useSpecial", KeyCode::Space),
-    (Bind::Interact, "Interact", "interact", KeyCode::Digit0),
-    (Bind::Nexus, "Nexus", "escapeToNexus", KeyCode::KeyR),
-    (Bind::Autofire, "Autofire", "autofireToggle", KeyCode::KeyI),
-    (Bind::HealthPotion, "Health potion", "useHealthPotion", KeyCode::KeyF),
-    (Bind::MagicPotion, "Magic potion", "useMagicPotion", KeyCode::KeyV),
-    (Bind::Slot(1), "Item 1", "useInvSlot1", KeyCode::Digit1),
-    (Bind::Slot(2), "Item 2", "useInvSlot2", KeyCode::Digit2),
-    (Bind::Slot(3), "Item 3", "useInvSlot3", KeyCode::Digit3),
-    (Bind::Slot(4), "Item 4", "useInvSlot4", KeyCode::Digit4),
-    (Bind::Slot(5), "Item 5", "useInvSlot5", KeyCode::Digit5),
-    (Bind::Slot(6), "Item 6", "useInvSlot6", KeyCode::Digit6),
-    (Bind::Slot(7), "Item 7", "useInvSlot7", KeyCode::Digit7),
-    (Bind::Slot(8), "Item 8", "useInvSlot8", KeyCode::Digit8),
-    (Bind::Chat, "Chat", "chat", KeyCode::Enter),
-    (Bind::Command, "Command", "chatCommand", KeyCode::Slash),
-    (Bind::Tell, "Whisper", "tell", KeyCode::Tab),
-    (Bind::GuildChat, "Guild chat", "guildChat", KeyCode::KeyG),
-    (Bind::PartyChat, "Party chat", "partyChat", KeyCode::KeyP),
-    (Bind::ChatUp, "Chat history up", "scrollChatUp", KeyCode::PageUp),
-    (Bind::ChatDown, "Chat history down", "scrollChatDown", KeyCode::PageDown),
-    (Bind::ZoomIn, "Minimap zoom in", "miniMapZoomIn", KeyCode::Equal),
-    (Bind::ZoomOut, "Minimap zoom out", "miniMapZoomOut", KeyCode::Minus),
-    (Bind::Options, "Options", "options", KeyCode::KeyO),
+pub const BINDS: [(Bind, &str, &str, Option<KeyCode>); 39] = [
+    (Bind::MoveUp, "Move up", "moveUp", Some(KeyCode::KeyW)),
+    (Bind::MoveLeft, "Move left", "moveLeft", Some(KeyCode::KeyA)),
+    (Bind::MoveDown, "Move down", "moveDown", Some(KeyCode::KeyS)),
+    (Bind::MoveRight, "Move right", "moveRight", Some(KeyCode::KeyD)),
+    (Bind::RotateLeft, "Rotate left", "rotateLeft", Some(KeyCode::KeyQ)),
+    (Bind::RotateRight, "Rotate right", "rotateRight", Some(KeyCode::KeyE)),
+    (Bind::ResetCamera, "Reset camera", "resetCamera", Some(KeyCode::KeyZ)),
+    (Bind::Ability, "Use ability", "useSpecial", Some(KeyCode::Space)),
+    (Bind::Interact, "Interact", "interact", Some(KeyCode::Digit0)),
+    (Bind::Nexus, "Nexus", "escapeToNexus", Some(KeyCode::KeyR)),
+    (Bind::Autofire, "Autofire", "autofireToggle", Some(KeyCode::KeyI)),
+    (Bind::HealthPotion, "Health potion", "useHealthPotion", Some(KeyCode::KeyF)),
+    (Bind::MagicPotion, "Magic potion", "useMagicPotion", Some(KeyCode::KeyV)),
+    (Bind::Slot(1), "Item 1", "useInvSlot1", Some(KeyCode::Digit1)),
+    (Bind::Slot(2), "Item 2", "useInvSlot2", Some(KeyCode::Digit2)),
+    (Bind::Slot(3), "Item 3", "useInvSlot3", Some(KeyCode::Digit3)),
+    (Bind::Slot(4), "Item 4", "useInvSlot4", Some(KeyCode::Digit4)),
+    (Bind::Slot(5), "Item 5", "useInvSlot5", Some(KeyCode::Digit5)),
+    (Bind::Slot(6), "Item 6", "useInvSlot6", Some(KeyCode::Digit6)),
+    (Bind::Slot(7), "Item 7", "useInvSlot7", Some(KeyCode::Digit7)),
+    (Bind::Slot(8), "Item 8", "useInvSlot8", Some(KeyCode::Digit8)),
+    (Bind::Chat, "Chat", "chat", Some(KeyCode::Enter)),
+    (Bind::Command, "Command", "chatCommand", Some(KeyCode::Slash)),
+    (Bind::Tell, "Whisper", "tell", Some(KeyCode::Tab)),
+    (Bind::GuildChat, "Guild chat", "guildChat", Some(KeyCode::KeyG)),
+    (Bind::PartyChat, "Party chat", "partyChat", Some(KeyCode::KeyP)),
+    (Bind::ChatUp, "Chat history up", "scrollChatUp", Some(KeyCode::PageUp)),
+    (Bind::ChatDown, "Chat history down", "scrollChatDown", Some(KeyCode::PageDown)),
+    (Bind::ZoomIn, "Minimap zoom in", "miniMapZoomIn", Some(KeyCode::Equal)),
+    (Bind::ZoomOut, "Minimap zoom out", "miniMapZoomOut", Some(KeyCode::Minus)),
+    (Bind::Options, "Options", "options", Some(KeyCode::KeyO)),
+    (Bind::SwitchTabs, "Inventory / backpack", "switchTabs", Some(KeyCode::KeyB)),
+    (Bind::Center, "Center on player", "toggleCentering", Some(KeyCode::KeyX)),
+    (Bind::Stats, "Show frame rate", "togglePerformanceStats", Some(KeyCode::KeyL)),
+    (Bind::Vault, "Go to the vault", "reconVault", None),
+    (Bind::Realm, "Go to a realm", "reconRealm", None),
+    (Bind::GuildHall, "Go to the guild hall", "reconGuildHall", None),
+    (Bind::PartyInviteWorld, "Invite the world to party", "partyInviteWorld", None),
+    (Bind::PartyJoinWorld, "Join a world party", "partyJoinWorld", None),
 ];
 
 /// The keys that can be bound, for reading the file back.
@@ -105,7 +125,7 @@ fn parse_key(name: &str) -> Option<KeyCode> {
 
 /// A key as the player knows it: "W", "1", "Space", "Page Up".
 pub fn key_label(k: Option<KeyCode>) -> String {
-    let Some(k) = k else { return "-".into() };
+    let Some(k) = k else { return "None".into() };
     let name = key_name(k);
     if let Some(c) = name.strip_prefix("Key").or_else(|| name.strip_prefix("Digit")) {
         return c.to_owned();
@@ -142,12 +162,14 @@ pub enum Toggle {
     AllyShots,
     DamageNumbers,
     Rotation,
+    Centered,
+    ShowFps,
     Sfx,
     Shots,
     Music,
 }
 
-const GRAPHICS: [(Toggle, &str); 7] = [
+const GRAPHICS: [(Toggle, &str); 9] = [
     (Toggle::Particles, "Particles and effects"),
     (Toggle::Shadows, "Shadows"),
     (Toggle::HpBars, "Health bars"),
@@ -155,6 +177,8 @@ const GRAPHICS: [(Toggle, &str); 7] = [
     (Toggle::AllyShots, "Other players' shots"),
     (Toggle::DamageNumbers, "Damage numbers"),
     (Toggle::Rotation, "Camera rotation"),
+    (Toggle::Centered, "Center on player"),
+    (Toggle::ShowFps, "Show frame rate"),
 ];
 
 const SOUNDS: [(Toggle, &str); 3] = [(Toggle::Sfx, "Sound effects"), (Toggle::Shots, "Weapon sounds"), (Toggle::Music, "Music")];
@@ -170,12 +194,16 @@ pub struct Settings {
     pub ally_shots: bool,
     pub damage_numbers: bool,
     pub rotation: bool,
+    /// The camera centred on the player (`centerOnPlayer`).
+    pub centered: bool,
+    /// The frame rate on screen.
+    pub show_fps: bool,
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Settings {
-            keys: BINDS.iter().map(|b| Some(b.3)).collect(),
+            keys: BINDS.iter().map(|b| b.3).collect(),
             sound: SoundSettings::default(),
             particles: true,
             shadows: true,
@@ -184,6 +212,8 @@ impl Default for Settings {
             ally_shots: true,
             damage_numbers: true,
             rotation: true,
+            centered: false,
+            show_fps: false,
         }
     }
 }
@@ -222,6 +252,8 @@ impl Settings {
             Toggle::AllyShots => &mut self.ally_shots,
             Toggle::DamageNumbers => &mut self.damage_numbers,
             Toggle::Rotation => &mut self.rotation,
+            Toggle::Centered => &mut self.centered,
+            Toggle::ShowFps => &mut self.show_fps,
             Toggle::Sfx => &mut self.sound.sfx,
             Toggle::Shots => &mut self.sound.shots,
             Toggle::Music => &mut self.sound.music,
@@ -242,6 +274,8 @@ impl Settings {
         flag("allyShots", self.ally_shots);
         flag("damageNumbers", self.damage_numbers);
         flag("allowRotation", self.rotation);
+        flag("centerOnPlayer", self.centered);
+        flag("showStatistics", self.show_fps);
         flag("playSFX", self.sound.sfx);
         flag("playPewPew", self.sound.shots);
         flag("playMusic", self.sound.music);
@@ -268,6 +302,8 @@ impl Settings {
                 "allyShots" => s.ally_shots = on,
                 "damageNumbers" => s.damage_numbers = on,
                 "allowRotation" => s.rotation = on,
+                "centerOnPlayer" => s.centered = on,
+                "showStatistics" => s.show_fps = on,
                 "playSFX" => s.sound.sfx = on,
                 "playPewPew" => s.sound.shots = on,
                 "playMusic" => s.sound.music = on,

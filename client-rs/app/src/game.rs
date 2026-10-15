@@ -881,6 +881,11 @@ impl Game {
         }
     }
 
+    /// The map's name (`Map.name_`): "Nexus", "Vault"...
+    pub fn map_name(&self) -> &str {
+        self.session.map.as_ref().map_or("", |m| m.name.as_str())
+    }
+
     /// Ask the market (`marketSearch`, `marketBuy`, `marketAdd`, `marketRemove`,
     /// `marketMyOffers`).
     pub fn market(&mut self, act: crate::market::Act) {
