@@ -8,11 +8,9 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
-## Unreleased
+## 1.1.3 (2026-10-15)
 - Walking onto a square you can't stand on (it happened in the Sprite World) no longer
   disconnects you: the server puts you back where you were.
-
-## 1.1.3 (2026-10-15)
 - A Servers screen again: the Servers button on the character screen (or the "Server:" pill under
   your characters) lists the world servers and how full each is. Click one to play on it.
 
