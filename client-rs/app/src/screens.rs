@@ -6,6 +6,7 @@
 
 use crate::hud::Ui;
 use crate::redraw::Dye;
+use crate::stars;
 use crate::theme::{self, color, Kind};
 use bsk_data::{ObjectClass, ObjectDesc, TextureRef};
 use bsk_net::account::{CharList, CharSummary, FameSummary, Legend};
@@ -555,6 +556,16 @@ impl Front {
             ui.label(&v, x, 42.0 * s, size, true, c);
             x += ui.measure(&v, size, true) + 18.0 * s;
         }
+        // The rank (`AccountScreen.rankText`): the class quests done, and its star.
+        let classes = stars::class_count(ui.data);
+        let rank = stars::account_stars(&list);
+        ui.label("Rank", x, 42.0 * s, size, false, color::TEXT_DIM);
+        let rx = x + ui.measure("Rank", size, false) + 6.0 * s;
+        let v = rank.to_string();
+        ui.label(&v, rx, 42.0 * s, size, true, color::TEXT);
+        let vw = ui.measure(&v, size, true);
+        stars::icon(ui.renderer, rx + vw + 11.0 * s, 42.0 * s + size * 0.55, s, stars::color(rank, classes));
+        let rank_r = [x, 38.0 * s, rx + vw + 20.0 * s - x, size * 1.6];
         let bw = 110.0 * s;
         self.button(ui, Target::Logout, [w - pad - bw, 16.0 * s, bw, 36.0 * s], "Log out", Kind::Secondary, s, mouse);
         self.button(ui, Target::ToAccount, [w - pad - 2.0 * bw - 10.0 * s, 16.0 * s, bw, 36.0 * s], "Account", Kind::Secondary, s, mouse);
@@ -562,7 +573,7 @@ impl Front {
         self.button(ui, Target::ToGraveyard, [w - pad - 4.0 * bw - 30.0 * s, 16.0 * s, bw, 36.0 * s], "Graveyard", Kind::Secondary, s, mouse);
 
         // Characters, then a card for a new one while there's room, else one to buy a slot.
-        let (cw, ch, gap) = (440.0 * s, 96.0 * s, 14.0 * s);
+        let (cw, ch, gap) = (440.0 * s, 116.0 * s, 14.0 * s);
         let room = (list.chars.len() as i32) < list.max_num_chars;
         let count = list.chars.len() + 1;
         let cols = (((w - 2.0 * pad + gap) / (cw + gap)).floor() as usize).clamp(1, 3).min(count.max(1));
@@ -576,7 +587,8 @@ impl Front {
         ui.label(title, (w - tw) / 2.0, y0 - 46.0 * s, ts, true, color::TEXT);
         let cell = |i: usize| [x0 + (i % cols) as f32 * (cw + gap), y0 + (i / cols) as f32 * (ch + gap), cw, ch];
         for (i, c) in list.chars.iter().enumerate() {
-            self.char_card(ui, c, cell(i), s, mouse);
+            let best = list.class_stats.get(&c.object_type).map_or(0, |cs| cs.1);
+            self.char_card(ui, c, best, cell(i), s, mouse);
         }
         if !room {
             let r = cell(list.chars.len());
@@ -636,9 +648,13 @@ impl Front {
         let hs = (13.0 * s).round();
         let hw = ui.measure(hint, hs, false);
         ui.label(hint, (w - hw) / 2.0, h - hs * 2.2, hs, false, color::TEXT_MUTED);
+        if inside(rank_r, mouse) && self.confirm.is_none() {
+            rank_tooltip(ui, rank, classes, (rank_r[0], rank_r[1] + rank_r[3] + 6.0 * s), s);
+        }
     }
 
-    fn char_card(&mut self, ui: &mut Ui, c: &CharSummary, r: [f32; 4], s: f32, mouse: (f64, f64)) {
+    /// `CurrentCharacterRect`. `best` is the best fame reached with the character's class.
+    fn char_card(&mut self, ui: &mut Ui, c: &CharSummary, best: i32, r: [f32; 4], s: f32, mouse: (f64, f64)) {
         let over = inside(r, mouse) && self.confirm.is_none();
         let r = if over { [r[0], r[1] - 2.0 * s, r[2], r[3]] } else { r };
         theme::shadow(ui.renderer, r, 10.0 * s, if over { 16.0 * s } else { 9.0 * s }, if over { 0.55 } else { 0.4 });
@@ -669,13 +685,22 @@ impl Front {
         let side = 38.0 * s;
         for (k, &item) in c.equipment.iter().take(4).enumerate() {
             let sx = r[0] + r[2] - 14.0 * s - (4 - k) as f32 * (side + 6.0 * s) + 6.0 * s;
-            let sr = [sx, r[1] + r[3] - side - 12.0 * s, side, side];
+            let sr = [sx, r[1] + 40.0 * s, side, side];
             let edge = if item > 0 { tier_edge(ui.data, item) } else { None };
             ui.slot_box(sr, edge, false, s);
             if item > 0 {
                 ui.item_icon(item, 80, sr[0] + side / 2.0, sr[1] + side / 2.0, s * 0.8);
             }
         }
+        // The class quest it's working on (`makeTagline`): its fame of the next one's.
+        let size = (13.0 * s).round();
+        let qy = r[1] + r[3] - 28.0 * s;
+        let quest = match stars::next_star_fame(best, c.fame) {
+            Some(next) => format!("Class Quest: {} of {next} Fame", c.fame),
+            None => "Class Quests completed".to_owned(),
+        };
+        theme::star(ui.renderer, tx + 7.0 * s, qy + size * 0.6, 7.0 * s, stars::GREY);
+        ui.label(&quest, tx + 18.0 * s, qy, size, false, stars::GREY);
         // Delete, top right, only under the mouse.
         let d = [r[0] + r[2] - 30.0 * s, r[1] + 6.0 * s, 24.0 * s, 24.0 * s];
         if over || inside(d, mouse) {
@@ -694,6 +719,12 @@ impl Front {
         let ts = (26.0 * s).round();
         let tw = ui.measure(title, ts, true);
         ui.label(title, (w - tw) / 2.0, pad, ts, true, color::TEXT);
+        // `CreateNewCharacterRect`'s tagline: the class quests still to do.
+        let left = stars::max_stars(classes.len() as i32) - stars::account_stars(&list);
+        let sub = if left > 0 { format!("{left} class quests not yet completed") } else { "Every class quest completed".to_owned() };
+        let subs = (13.0 * s).round();
+        let sw = ui.measure(&sub, subs, false);
+        ui.label(&sub, (w - sw) / 2.0, pad + 34.0 * s, subs, false, color::TEXT_DIM);
         // Tiles shrink until every class fits between the title and the Back button.
         let top = pad + 56.0 * s;
         let room = h - top - 70.0 * s;
@@ -722,6 +753,12 @@ impl Front {
             let well = [r[0] + 14.0 * k, r[1] + 12.0 * k, r[2] - 28.0 * k, r[2] - 28.0 * k];
             theme::rounded(ui.renderer, well, 8.0 * k, (0x0E1015, 0.85), (0x1A1E26, 0.85));
             portrait(ui, d, 0, 0, well[0] + well[2] / 2.0, well[1] + well[3] / 2.0, k * 1.15);
+            // Its class quests, along the bottom of the well.
+            if need.is_none() {
+                let done = stars::num_stars(list.class_stats.get(&d.object_type).map_or(0, |cs| cs.1));
+                let sk = k * 0.8;
+                stars::row(ui.renderer, well[0] + (well[2] - stars::row_width(sk)) / 2.0, well[1] + well[3] - 9.0 * k, sk, done);
+            }
             if need.is_some() {
                 theme::fill(ui.renderer, r, 10.0 * k, 0x000000, 0.45);
             }
@@ -811,9 +848,22 @@ impl Front {
         let ss = (16.0 * s).round();
         let sw = ui.measure(&skin_name, ss, true);
         ui.label(&skin_name, well[0] + (well[2] - sw) / 2.0, well[1] + well[3] + 10.0 * s, ss, true, color::ACCENT);
+        // The class quests (`ClassToolTip`): those done, the bests, and the next goal.
+        let (best_level, best_fame) = list.class_stats.get(&class).copied().unwrap_or((0, 0));
+        let done = stars::num_stars(best_fame);
+        let qy = well[1] + well[3] + 42.0 * s;
+        stars::row(ui.renderer, left[0] + 22.0 * s, qy + 8.0 * s, s, done);
+        let size = (13.0 * s).round();
+        let qx = left[0] + 22.0 * s + stars::row_width(s) + 10.0 * s;
+        ui.label(&format!("{done} of {} Class Quests", stars::STARS.len()), qx, qy, size, true, color::TEXT);
+        ui.label(&format!("Best level {best_level}, best fame {best_fame}"), left[0] + 22.0 * s, qy + 22.0 * s, size, false, 0x5EB531);
+        let mut dy = qy + 40.0 * s;
+        if let Some(next) = stars::next_star_fame(best_fame, 0) {
+            ui.label(&format!("Next goal: earn {next} fame with a {}", desc.display_id), left[0] + 22.0 * s, dy, size, false, 0xFC8642);
+            dy += 18.0 * s;
+        }
         if let Some(d) = desc.xml.text_of("Description") {
-            let size = (13.0 * s).round();
-            let mut y = well[1] + well[3] + 40.0 * s;
+            let mut y = dy + 12.0 * s;
             let mut line = String::new();
             for word in d.split_whitespace() {
                 let next = if line.is_empty() { word.to_owned() } else { format!("{line} {word}") };
@@ -1126,6 +1176,39 @@ fn spinner(ui: &mut Ui, cx: f32, cy: f32, radius: f32, now: i32, s: f32) {
         let d = 5.0 * s;
         let (x, y) = (cx + radius * a.cos(), cy + radius * a.sin());
         theme::fill(ui.renderer, [x - d / 2.0, y - d / 2.0, d, d], d / 2.0, color::ACCENT, 1.0 - age * 0.85);
+    }
+}
+
+/// `RankToolTip`: the stars earned, how to earn more, and which colour each range of stars
+/// shows, in a box with its top left at `at` (kept inside the window).
+pub fn rank_tooltip(ui: &mut Ui, rank: i32, classes: i32, at: (f32, f32), s: f32) {
+    let size = (13.0 * s).round();
+    let line_h = 20.0 * s;
+    let (w, h) = (230.0 * s, 64.0 * s + line_h * (stars::COLORS.len() + 1) as f32);
+    let (sw, sh) = ui.renderer.size();
+    let r = [at.0.min(sw as f32 - w - 4.0).max(0.0), at.1.min(sh as f32 - h - 4.0).max(0.0), w, h];
+    theme::shadow(ui.renderer, r, 8.0 * s, 12.0 * s, 0.5);
+    theme::frame(ui.renderer, r, 8.0 * s, s.max(1.0), (color::BORDER_HI, 0.9), ((color::PANEL_TOP, 0.97), (color::PANEL_BOTTOM, 0.98)));
+    let (x, y) = (r[0] + 10.0 * s, r[1] + 8.0 * s);
+    let earned = format!("You have earned {rank}");
+    ui.label(&earned, x, y, size, true, stars::GREY);
+    let ew = ui.measure(&earned, size, true);
+    theme::star(ui.renderer, x + ew + 10.0 * s, y + size * 0.62, 6.5 * s, stars::GREY);
+    ui.label("You can earn more by completing Class Quests.", x, y + 22.0 * s, (11.5 * s).round(), false, color::TEXT_DIM);
+    let ly = y + 46.0 * s;
+    theme::fill(ui.renderer, [x, ly - 4.0 * s, w - 20.0 * s, s.max(1.0)], 0.0, color::BORDER, 1.0);
+    // LegendLine: a coloured star, the range, then a grey star.
+    let mut ranges: Vec<(u32, String)> = (0..stars::COLORS.len() as i32)
+        .map(|i| (stars::COLORS[i as usize], format!(": {} - {}", i * classes, (i + 1) * classes - 1)))
+        .collect();
+    let max = stars::max_stars(classes);
+    ranges.push((0xFFFFFF, format!(": {max}")));
+    for (i, (c, text)) in ranges.iter().enumerate() {
+        let ry = ly + 4.0 * s + i as f32 * line_h;
+        theme::star(ui.renderer, x + 7.0 * s, ry + size * 0.62, 6.5 * s, *c);
+        ui.label(text, x + 15.0 * s, ry, size, true, stars::GREY);
+        let tw = ui.measure(text, size, true);
+        theme::star(ui.renderer, x + 24.0 * s + tw, ry + size * 0.62, 6.5 * s, stars::GREY);
     }
 }
 

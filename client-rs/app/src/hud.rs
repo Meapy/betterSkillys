@@ -1463,6 +1463,16 @@ fn draw_player_card(ui: &mut Ui, lay: &Layout, p: &GameObj, mouse: (f64, f64)) {
     let name = p.name().unwrap_or("?");
     let chosen = stat(56) != 0;
     ui.label(name, x, y, lay.font(15.0), true, if chosen { 0xFCDF00 } else { 0xFFFFFF });
+    // Their rank (`RankText`), at the top right.
+    let stars = stat(30);
+    if stars >= 0 {
+        let t = stars.to_string();
+        let size = lay.font(13.0);
+        let tw = ui.measure(&t, size, true);
+        let sx = r[0] + w - pad - 8.0 * s;
+        crate::stars::icon(ui.renderer, sx, y + 9.0 * s, s, crate::stars::color(stars, crate::stars::class_count(ui.data)));
+        ui.label(&t, sx - 12.0 * s - tw, y + 1.0 * s, size, true, crate::stars::GREY);
+    }
     let class = ui.data.objects.get(&p.object_type).map_or("", |d| d.display_id.as_str()).to_owned();
     let info = format!("Level {} {class}", stat(stat::LEVEL));
     ui.label(&info, x, y + 20.0 * s, lay.font(11.5), false, color::TEXT_DIM);
@@ -1742,7 +1752,7 @@ fn draw_tooltip(ui: &mut Ui, lay: &Layout, lines: &[Line], icon: Option<i32>, ac
         if i == 2 {
             y = y.max(icon_w) + 4.0 * s;
         }
-        for part in wrap(ui, &[(line.text.clone(), line.color)], size, inner - indent) {
+        for part in wrap(ui, &[(line.text.clone(), line.color)], size, inner - indent, 0.0) {
             let text: String = part.into_iter().map(|(t, _)| t).collect();
             rows.push((text, size, line.bold, line.color, y));
             y += size * 1.25;
@@ -1993,6 +2003,8 @@ pub struct ChatLine {
     pub text: String,
     pub name_color: i32,
     pub text_color: i32,
+    /// The speaker's rank (`TextBoxLine.rankIcon_`), or -1 for none.
+    pub stars: i32,
     /// When it arrived, ms.
     pub at: i32,
 }
@@ -2081,6 +2093,9 @@ pub fn draw_line_edit(ui: &mut Ui, e: &crate::textedit::LineEdit, r: [f32; 4], s
     }
 }
 
+/// A wrapped chat row: the rank star leading it (a line's first row only), and its pieces.
+type ChatRow = (Option<i32>, Vec<(String, u32)>);
+
 /// How long a chat line stays up while the input is closed, ms.
 const CHAT_SHOW_MS: i32 = 30_000;
 
@@ -2109,15 +2124,20 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
         draw_line_edit(ui, input, [r[0] + 8.0 * s, r[1], max_w, r[3]], size, "Say something, or /help", now);
         bottom = r[1] - 6.0 * s;
     }
-    // Wrap the newest lines into rows, newest at the bottom.
-    let mut rows: Vec<Vec<(String, u32)>> = Vec::new();
+    // Wrap the newest lines into rows, newest at the bottom. A speaker's rank star leads the
+    // line's first row.
+    let classes = crate::stars::class_count(ui.data);
+    let star_k = size / 15.0;
+    let star_w = 19.0 * star_k;
+    let mut rows: Vec<ChatRow> = Vec::new();
     for line in lines.iter().rev() {
         if input.is_none() && scroll.is_none() && now - line.at > CHAT_SHOW_MS {
             break;
         }
-        let mut wrapped = wrap(ui, &line.pieces(me), size, max_w);
-        while let Some(row) = wrapped.pop() {
-            rows.push(row);
+        let star = (line.stars >= 0).then_some(line.stars);
+        let wrapped = wrap(ui, &line.pieces(me), size, max_w, if star.is_some() { star_w } else { 0.0 });
+        for (i, row) in wrapped.into_iter().enumerate().rev() {
+            rows.push((if i == 0 { star } else { None }, row));
         }
         if rows.len() >= max_rows + scroll.unwrap_or(0) {
             break;
@@ -2130,7 +2150,10 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
         return names;
     }
     // A dark glass behind the lines, so they read over any ground.
-    let widest = rows.iter().map(|row| row.iter().map(|(p, _)| ui.measure_rich(p, size)).sum::<f32>()).fold(0.0, f32::max);
+    let widest = rows
+        .iter()
+        .map(|(star, row)| row.iter().map(|(p, _)| ui.measure_rich(p, size)).sum::<f32>() + if star.is_some() { star_w } else { 0.0 })
+        .fold(0.0, f32::max);
     let back_h = rows.len() as f32 * line_h + 10.0 * s;
     let strong = input.is_some() || scroll.is_some();
     theme::fill(ui.renderer, [margin, bottom - back_h, widest + 16.0 * s, back_h], 6.0 * s, 0x000000, if strong { 0.55 } else { 0.32 });
@@ -2139,9 +2162,13 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
         let small = lay.font(11.0);
         ui.label(&t, margin + 8.0 * s, bottom - back_h - small * 1.4, small, true, color::TEXT_DIM);
     }
-    for (i, row) in rows.iter().enumerate() {
+    for (i, (star, row)) in rows.iter().enumerate() {
         let y = bottom - 5.0 * s - line_h * (i as f32 + 1.0);
         let mut x = margin + 8.0 * s;
+        if let Some(stars) = *star {
+            crate::stars::icon(ui.renderer, x + 8.0 * star_k, y + line_h / 2.0, star_k, crate::stars::color(stars, classes));
+            x += star_w;
+        }
         for (piece, c) in row {
             let w = ui.measure_rich(piece, size);
             // A player's name ("<Name> "; not NPCs' or announcements'): clickable.
@@ -2155,6 +2182,25 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
         }
     }
     names
+}
+
+/// `GameSprite.rankText_` (`RankText`, large): your rank and its star on a dark plate, at the
+/// top left of the view in maps that show it.
+pub fn draw_rank(ui: &mut Ui, lay: &Layout, stars: i32) {
+    if stars < 0 {
+        return;
+    }
+    let s = lay.s;
+    let size = lay.font(18.0);
+    let t = stars.to_string();
+    let tw = ui.measure(&t, size, true);
+    let k = s * 1.5;
+    let (x, y) = (8.0 * s, 8.0 * s);
+    let plate = [x, y, 6.0 * s + tw + 4.0 * s + 16.0 * k + 6.0 * s, size * 1.3 + 8.0 * s];
+    theme::fill(ui.renderer, plate, 6.0 * s, 0x000000, 0.45);
+    ui.label(&t, x + 6.0 * s, y + 4.0 * s, size, true, crate::stars::GREY);
+    let classes = crate::stars::class_count(ui.data);
+    crate::theme::star(ui.renderer, x + 10.0 * s + tw + 8.0 * k, y + plate[3] / 2.0, 6.5 * k, crate::stars::color(stars, classes));
 }
 
 /// `ArenaMenu`: the wave and the time, at the top left of the view.
@@ -2176,10 +2222,11 @@ pub fn draw_arena(ui: &mut Ui, lay: &Layout, arena: (i32, i32, i32, bool), now: 
     }
 }
 
-/// Break coloured pieces into rows no wider than `max_w`, at spaces where possible.
-fn wrap(ui: &mut Ui, pieces: &[(String, u32)], size: f32, max_w: f32) -> Vec<Vec<(String, u32)>> {
+/// Break coloured pieces into rows no wider than `max_w`, at spaces where possible; the first
+/// row starts `indent` in.
+fn wrap(ui: &mut Ui, pieces: &[(String, u32)], size: f32, max_w: f32, indent: f32) -> Vec<Vec<(String, u32)>> {
     let mut rows = vec![Vec::new()];
-    let mut x = 0.0;
+    let mut x = indent;
     for (piece, color) in pieces {
         for word in piece.split_inclusive(' ') {
             let w = ui.measure_rich(word, size);
@@ -2235,6 +2282,7 @@ mod tests {
             text: "hi".into(),
             name_color: 0,
             text_color: 0,
+            stars: -1,
             at: 0,
         };
         assert_eq!(line("Bob", "").pieces("Me"), vec![("<Bob> ".into(), 0x00FF00), ("hi".into(), 0xFFFFFF)]);

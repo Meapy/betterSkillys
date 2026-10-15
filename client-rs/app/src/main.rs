@@ -19,6 +19,7 @@ mod redraw;
 mod screens;
 #[allow(dead_code)] // lookups the game screens will use
 mod sprites;
+mod stars;
 mod text;
 mod textedit;
 mod theme;
@@ -1225,7 +1226,7 @@ impl App {
                     },
                     Some(Bind::Nexus) => {
                         if game.map_name() == "Nexus" {
-                            game.add_chat("*Error*", "", "You're already in the Nexus.", 0, 0, now);
+                            game.add_chat("*Error*", "", "You're already in the Nexus.", 0, 0, -1, now);
                         } else {
                             game.escape();
                         }
@@ -1251,7 +1252,7 @@ impl App {
                             _ => ("/pjoin", ""),
                         };
                         if !here.is_empty() && game.map_name() == here {
-                            game.add_chat("*Error*", "", &format!("You're already in the {}.", if here == "GuildHall" { "Guild Hall" } else { here }), 0, 0, now);
+                            game.add_chat("*Error*", "", &format!("You're already in the {}.", if here == "GuildHall" { "Guild Hall" } else { here }), 0, 0, -1, now);
                         } else {
                             game.say(command);
                         }
@@ -1558,6 +1559,10 @@ impl App {
                 self.chat_names = hud::draw_chat(&mut ui, &lay, &game.chat, &me, self.chat_input.as_ref(), self.chat_scroll, now);
                 if let Some(arena) = game.arena {
                     hud::draw_arena(&mut ui, &lay, arena, now);
+                } else if game.show_displays {
+                    if let Some(stars) = game.world.as_ref().and_then(|w| w.player()).and_then(|p| p.stat_int(30)) {
+                        hud::draw_rank(&mut ui, &lay, stars);
+                    }
                 }
             }
         }

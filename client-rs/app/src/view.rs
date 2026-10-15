@@ -591,47 +591,12 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         // The rank star sits in the first 20 px; the text after it.
         let w = text.measure(fonts, renderer, name, style);
         let left = px - (w + 20.0 * k) / 2.0;
-        let classes = *classes.get_or_insert_with(|| scene.data.objects.values().filter(|d| d.player).count() as i32);
-        draw_star(renderer, left + 10.0 * k, py + 12.0 * k, k, star_color(obj.stat_int(30).unwrap_or(0), classes));
+        let classes = *classes.get_or_insert_with(|| crate::stars::class_count(scene.data));
+        crate::stars::icon(renderer, left + 10.0 * k, py + 12.0 * k, k, crate::stars::color(obj.stat_int(30).unwrap_or(0), classes));
         text.draw_centered(fonts, renderer, name, left + 20.0 * k + w / 2.0, py, style);
     }
     crate::prof::mark("v.text");
     let _ = PAD;
-}
-
-/// `FameUtil.numStarsToColorTransform`: light blue, dark blue, red, orange, then yellow as the
-/// stars reach each multiple of the number of classes; green for staff.
-fn star_color(stars: i32, classes: i32) -> u32 {
-    let n = classes.max(1);
-    match stars {
-        s if s >= 100 => 0x00FF50,
-        s if s < n => 0x8A98DE,
-        s if s < 2 * n => 0x314DDB,
-        s if s < 3 * n => 0xC1272D,
-        s if s < 4 * n => 0xF7931E,
-        _ => 0xFFFF00,
-    }
-}
-
-/// `FameUtil.numStarsToIcon`: a five-pointed star on a faint dark disc, centred on (x, y).
-fn draw_star(renderer: &mut Renderer, x: f32, y: f32, k: f32, color: u32) {
-    let white = renderer.white();
-    let disc = Tint::color(0x000000, 0.4);
-    let r = 8.0 * k;
-    for i in 0..16 {
-        let (a0, a1) = (i as f32 / 16.0 * std::f32::consts::TAU, (i + 1) as f32 / 16.0 * std::f32::consts::TAU);
-        renderer.triangle(white, [[x, y], [x + r * a0.cos(), y + r * a0.sin()], [x + r * a1.cos(), y + r * a1.sin()]], [[0.5, 0.5]; 3], disc);
-    }
-    let (outer, inner) = (6.5 * k, 2.6 * k);
-    let point = |i: i32| {
-        let a = -std::f32::consts::FRAC_PI_2 + i as f32 * std::f32::consts::PI / 5.0;
-        let r = if i % 2 == 0 { outer } else { inner };
-        [x + r * a.cos(), y + r * a.sin()]
-    };
-    let tint = Tint::color(color, 1.0);
-    for i in 0..10 {
-        renderer.triangle(white, [[x, y], point(i), point(i + 1)], [[0.5, 0.5]; 3], tint);
-    }
 }
 
 /// `GameObject.draw` for sprite objects. Returns where the sprite's top centre is drawn.

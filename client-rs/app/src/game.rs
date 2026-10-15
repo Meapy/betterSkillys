@@ -64,6 +64,8 @@ pub struct Game {
     pub tellers: Vec<String>,
     /// The arena's wave and clock (`ArenaMenu`): wave, seconds, since when, running.
     pub arena: Option<(i32, i32, i32, bool)>,
+    /// `MapInfo.showDisplays`: the map shows your rank at the top left (the Nexus, the Vault...).
+    pub show_displays: bool,
     /// Sparks, effects and area attacks.
     pub particles: crate::particles::Particles,
     /// The quest's object (`QuestObjId`), for the arrow and the boss bar.
@@ -177,6 +179,7 @@ impl Game {
             dealt: Default::default(),
             quest_damage: None,
             arena: None,
+            show_displays: false,
             particles: Default::default(),
             quest: None,
             name_result: None,
@@ -267,6 +270,7 @@ impl Game {
                 self.world = Some(World::new(info.width as i32, info.height as i32, &info.display_name, info.seed));
                 self.particles.clear();
                 self.arena = None;
+                self.show_displays = info.show_displays;
                 self.music = Some(info.music.clone());
                 self.last_level = 0;
                 self.dealt.clear();
@@ -298,7 +302,7 @@ impl Game {
             }
             ServerMessage::TradeRequested(t) => {
                 self.invite = Some((Invite::Trade { name: t.name.clone() }, now));
-                self.add_chat("", "", &format!("{} wants to trade with you.", t.name), 0, 0, now);
+                self.add_chat("", "", &format!("{} wants to trade with you.", t.name), 0, 0, -1, now);
             }
             ServerMessage::TradeStart(t) => {
                 self.invite = None;
@@ -327,7 +331,7 @@ impl Game {
             ServerMessage::TradeDone(d) => {
                 self.trade = None;
                 // GameServerConnection.onTradeDone: a server line, whatever the code.
-                self.add_chat("", "", &d.description, 0, 0, now);
+                self.add_chat("", "", &d.description, 0, 0, -1, now);
             }
             ServerMessage::InvitedToParty(p) => self.invite = Some((Invite::Party { name: p.name.clone(), party_id: p.party_id }, now)),
             ServerMessage::InvitedToGuild(g) => {
@@ -335,14 +339,14 @@ impl Game {
             }
             ServerMessage::NameResult(n) => {
                 if n.success {
-                    self.add_chat("", "", "Your name has been changed.", 0, 0, now);
+                    self.add_chat("", "", "Your name has been changed.", 0, 0, -1, now);
                 }
                 self.name_result = Some((n.success, n.error_text.clone()));
             }
             ServerMessage::GuildResult(g) => {
                 self.guild_result = Some((g.success, g.error_text.clone()));
                 if !g.error_text.is_empty() {
-                    self.add_chat(if g.success { "" } else { "*Error*" }, "", &g.error_text, 0, 0, now);
+                    self.add_chat(if g.success { "" } else { "*Error*" }, "", &g.error_text, 0, 0, -1, now);
                 }
             }
             ServerMessage::AccountList(l) => {
@@ -355,7 +359,7 @@ impl Game {
             }
             ServerMessage::BuyResult(b) => {
                 let name = if b.result == 0 { "" } else { "*Error*" };
-                self.add_chat(name, "", &b.result_string, 0, 0, now);
+                self.add_chat(name, "", &b.result_string, 0, 0, -1, now);
             }
             ServerMessage::GlobalNotification(n) => {
                 let key = match n.text.as_str() {
@@ -385,7 +389,7 @@ impl Game {
             if self.is_ignored(t.object_id) {
                 return;
             }
-            self.add_chat(&t.name, &t.recipient, &t.text, t.name_color, t.text_color, now);
+            self.add_chat(&t.name, &t.recipient, &t.text, t.name_color, t.text_color, t.num_stars, now);
             // GameServerConnection.onText: a balloon over the speaker, coloured by who it is.
             let speaker = self.world.as_ref().and_then(|w| w.objects.get(&t.object_id));
             if let (Some(o), true) = (speaker, t.object_id >= 0 && t.bubble_time > 0) {
@@ -522,7 +526,9 @@ impl Game {
         }
     }
 
-    pub fn add_chat(&mut self, name: &str, recipient: &str, text: &str, name_color: i32, text_color: i32, now: i32) {
+    /// `stars` is the speaker's rank, or -1 for none (the server's own lines).
+    #[allow(clippy::too_many_arguments)]
+    pub fn add_chat(&mut self, name: &str, recipient: &str, text: &str, name_color: i32, text_color: i32, stars: i32, now: i32) {
         // TextBox.tellers_: who we last whispered with, newest last.
         let me = self.world.as_ref().and_then(|w| w.player()).and_then(|p| p.name()).unwrap_or("").to_owned();
         let other = if !recipient.is_empty() && recipient == me {
@@ -543,6 +549,7 @@ impl Game {
             text: text.to_owned(),
             name_color,
             text_color,
+            stars,
             at: now,
         });
         if self.chat.len() > CHAT_KEEP {
@@ -911,7 +918,7 @@ impl Game {
     pub fn teleport(&mut self, object_id: i32, now: i32) {
         if now < self.next_teleport {
             let secs = (self.next_teleport - now + 999) / 1000;
-            self.add_chat("*Error*", "", &format!("You can't teleport for {secs} more seconds."), 0, 0, now);
+            self.add_chat("*Error*", "", &format!("You can't teleport for {secs} more seconds."), 0, 0, -1, now);
             return;
         }
         self.next_teleport = now + TELEPORT_COOLDOWN;

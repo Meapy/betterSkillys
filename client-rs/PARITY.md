@@ -25,6 +25,7 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Legends (fame list: week, month, all time) | `LegendsView`, `/fame/list` | Done |
 | Death summary (fame breakdown) | `FameView`, `/char/fame` | Done |
 | Graveyard (an account's dead characters, each opening its fame summary) | `Graveyard`, `<News>` | Done |
+| Rank stars: the account's rank and its legend, each character's class quest, each class's five quests and next goal, the quests left | `FameUtil`, `RankText`, `RankToolTip`, `CurrentCharacterRect`, `CharacterBox`, `ClassToolTip` | Done |
 | Choose a name (accounts without one) | `ChooseNameRegisterDialog`, `/account/setName` | Dropped: the server answers "Unknown Error"; names come from registering |
 | Credits screen, news | `CreditsScreen`, `/app/globalNews` | Dropped |
 | Map editor | `NewEditorScreen` | Dropped |
@@ -42,7 +43,8 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Shooting, abilities, hits | `Player`, `Projectile` | Done |
 | HUD: minimap, bars, equipment, inventory, backpack, stats, potions | `HUDView` | Done |
 | Minimap zoom (buttons, - and =, the mouse wheel), player tooltips and menus on the minimap; the map's name | `MiniMap` | Done |
-| Nearby players' details on hover: health, magic, gear | `PlayerToolTip` | Done |
+| Nearby players' details on hover: rank, health, magic, gear | `PlayerToolTip` | Done |
+| Your rank at the top left (maps that show it), speakers' rank stars in the chat | `GameSprite.rankText_`, `TextBoxLine` | Done |
 | Item tooltips, compared with what's worn in that slot (better green, worse red) | `EquipmentToolTip` | Done |
 | Items: swap, drop, use, equip, bags; Ctrl+click to the other page, Ctrl+right-click to break down; health and magic potions into their stacks (drag or double-click); cloth and dyes in their colours | `ItemGridMediator`, `BreakdownSlot` | Done |
 | Chat, slash commands, speech balloons; editing the line (cursor, selection, words, copy, cut, paste, undo) | `TextBox`, `onText` | Done |
