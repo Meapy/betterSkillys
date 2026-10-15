@@ -8,7 +8,7 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
-## Unreleased
+## 1.1.4 (2026-10-15)
 - Assassin poisons work properly: they ignore the monster's defense, deal their full damage over
   the time they list, and can finish a monster off. Before, a poisoned monster could be left
   alive on 0 health. Other abilities that deal damage can now finish monsters off too.
