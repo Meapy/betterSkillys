@@ -2232,6 +2232,17 @@ impl ApplicationHandler<UserEvent> for App {
                 };
                 self.changelog.wheel(lines.round() as i32);
             }
+            // On the character list it scrolls the characters.
+            WindowEvent::MouseWheel { delta, .. } if matches!(self.phase, Phase::Menu) => {
+                let lines = match delta {
+                    winit::event::MouseScrollDelta::LineDelta(_, y) => y,
+                    winit::event::MouseScrollDelta::PixelDelta(p) => (p.y / 40.0) as f32,
+                };
+                self.wheel += lines;
+                let notches = self.wheel.trunc();
+                self.wheel -= notches;
+                self.front.wheel(notches as i32);
+            }
             WindowEvent::MouseWheel { delta, .. } => {
                 let free = matches!(self.phase, Phase::Playing(_))
                     && !(self.game_menu || self.options_ui.open || self.market.open || self.npcs.window.is_some());

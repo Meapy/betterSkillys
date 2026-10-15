@@ -137,6 +137,8 @@ pub struct Front {
     pub clicked: bool,
     /// The version (and any update in progress), bottom right; a click opens the changelog.
     pub version_line: String,
+    /// The character list's first row shown, when it's longer than the window.
+    chars_row: usize,
 }
 
 impl Default for Front {
@@ -160,6 +162,7 @@ impl Default for Front {
             targets: Vec::new(),
             endpoint_label: String::new(),
             version_line: String::new(),
+            chars_row: 0,
         }
     }
 }
@@ -278,6 +281,13 @@ impl Front {
     }
 
     /// Show a screen, focusing its first field.
+    /// The mouse wheel, `notches` up (positive) or down: scrolls the character list a row a notch.
+    pub fn wheel(&mut self, notches: i32) {
+        if self.screen == Screen::Chars && self.confirm.is_none() {
+            self.chars_row = (self.chars_row as i32 - notches).max(0) as usize;
+        }
+    }
+
     pub fn show(&mut self, screen: Screen) {
         self.screen = screen;
         self.confirm = None;
@@ -570,21 +580,14 @@ impl Front {
 
     fn draw_chars(&mut self, ui: &mut Ui, w: f32, h: f32, s: f32, mouse: (f64, f64)) {
         let Some(list) = self.list.clone() else { return };
-        // The top bar: who, their fame and gold, and Log out.
+        // The top bar: who and their rank, the buttons, then their fame and gold at the right.
         let bar = [0.0, 0.0, w, 68.0 * s];
         theme::rounded(ui.renderer, bar, 0.0, (color::PANEL_TOP, 0.92), (color::PANEL_BOTTOM, 0.92));
         theme::fill(ui.renderer, [0.0, bar[3] - s.max(1.0), w, s.max(1.0)], 0.0, color::BORDER, 1.0);
         let pad = 24.0 * s;
         ui.label(&list.name, pad, 12.0 * s, (24.0 * s).round(), true, color::TEXT);
         let size = (14.0 * s).round();
-        let mut x = pad;
-        for (label, value, c) in [("Fame", list.fame, color::ACCENT), ("Gold", list.credits, 0xFFE27A)] {
-            ui.label(label, x, 42.0 * s, size, false, color::TEXT_DIM);
-            x += ui.measure(label, size, false) + 6.0 * s;
-            let v = value.to_string();
-            ui.label(&v, x, 42.0 * s, size, true, c);
-            x += ui.measure(&v, size, true) + 18.0 * s;
-        }
+        let x = pad;
         // The rank (`AccountScreen.rankText`): the class quests done, and its star.
         let classes = stars::class_count(ui.data);
         let rank = stars::account_stars(&list);
@@ -595,33 +598,68 @@ impl Front {
         let vw = ui.measure(&v, size, true);
         stars::icon(ui.renderer, rx + vw + 11.0 * s, 42.0 * s + size * 0.55, s, stars::color(rank, classes));
         let rank_r = [x, 38.0 * s, rx + vw + 20.0 * s - x, size * 1.6];
-        let bw = 110.0 * s;
-        self.button(ui, Target::Logout, [w - pad - bw, 16.0 * s, bw, 36.0 * s], "Log out", Kind::Secondary, s, mouse);
-        self.button(ui, Target::ToAccount, [w - pad - 2.0 * bw - 10.0 * s, 16.0 * s, bw, 36.0 * s], "Account", Kind::Secondary, s, mouse);
-        self.button(ui, Target::ToLegends, [w - pad - 3.0 * bw - 20.0 * s, 16.0 * s, bw, 36.0 * s], "Legends", Kind::Secondary, s, mouse);
-        self.button(ui, Target::ToGraveyard, [w - pad - 4.0 * bw - 30.0 * s, 16.0 * s, bw, 36.0 * s], "Graveyard", Kind::Secondary, s, mouse);
-        self.button(ui, Target::Changelog, [w - pad - 5.0 * bw - 40.0 * s, 16.0 * s, bw, 36.0 * s], "Changelog", Kind::Secondary, s, mouse);
+        // Fame and gold (`CreditDisplay`), one above the other, right-aligned in the corner.
+        let money = (16.0 * s).round();
+        let mut money_w: f32 = 0.0;
+        for (i, (label, value, c)) in [("Fame", list.fame, color::ACCENT), ("Gold", list.credits, 0xFFE27A)].into_iter().enumerate() {
+            let v = value.to_string();
+            let vw = ui.measure(&v, money, true);
+            let lw = ui.measure(label, size, false);
+            let y = 10.0 * s + i as f32 * 25.0 * s;
+            ui.label(&v, w - pad - vw, y, money, true, c);
+            ui.label(label, w - pad - vw - 6.0 * s - lw, y + (money - size) * 0.6, size, false, color::TEXT_DIM);
+            money_w = money_w.max(vw + 6.0 * s + lw);
+        }
+        let bw = 104.0 * s;
+        let right = w - pad - money_w - 22.0 * s;
+        let buttons = [
+            (Target::Logout, "Log out"),
+            (Target::ToAccount, "Account"),
+            (Target::ToLegends, "Legends"),
+            (Target::ToGraveyard, "Graveyard"),
+            (Target::Changelog, "Changelog"),
+        ];
+        for (i, (target, label)) in buttons.into_iter().enumerate() {
+            let bx = right - (i + 1) as f32 * bw - i as f32 * 8.0 * s;
+            self.button(ui, target, [bx, 16.0 * s, bw, 36.0 * s], label, Kind::Secondary, s, mouse);
+        }
 
-        // Characters, then a card for a new one while there's room, else one to buy a slot.
-        let (cw, ch, gap) = (440.0 * s, 116.0 * s, 14.0 * s);
+        // Characters, then a card for a new one while there's room, else one to buy a slot. Rows
+        // that don't fit scroll, a row a wheel notch.
+        let (cw, ch, gap) = (380.0 * s, 88.0 * s, 10.0 * s);
         let room = (list.chars.len() as i32) < list.max_num_chars;
         let count = list.chars.len() + 1;
-        let cols = (((w - 2.0 * pad + gap) / (cw + gap)).floor() as usize).clamp(1, 3).min(count.max(1));
+        let cols = (((w - 2.0 * pad - 20.0 * s + gap) / (cw + gap)).floor() as usize).clamp(1, 4).min(count.max(1));
         let rows = count.div_ceil(cols);
         let total_w = cols as f32 * (cw + gap) - gap;
         let x0 = (w - total_w) / 2.0;
-        let y0 = (bar[3] + 70.0 * s).max((h - rows as f32 * (ch + gap)) / 2.0);
+        let area_top = bar[3] + 60.0 * s;
+        let area_h = (h - 120.0 * s - area_top).max(ch);
+        let visible = (((area_h + gap) / (ch + gap)).floor() as usize).clamp(1, rows);
+        self.chars_row = self.chars_row.min(rows - visible);
+        let first = self.chars_row;
+        let y0 = area_top.max(area_top + (area_h - visible as f32 * (ch + gap) + gap) / 2.0);
         let title = "Choose your character";
-        let ts = (24.0 * s).round();
+        let ts = (22.0 * s).round();
         let tw = ui.measure(title, ts, true);
-        ui.label(title, (w - tw) / 2.0, y0 - 46.0 * s, ts, true, color::TEXT);
-        let cell = |i: usize| [x0 + (i % cols) as f32 * (cw + gap), y0 + (i / cols) as f32 * (ch + gap), cw, ch];
-        for (i, c) in list.chars.iter().enumerate() {
+        ui.label(title, (w - tw) / 2.0, y0 - 40.0 * s, ts, true, color::TEXT);
+        let shown = |i: usize| (first..first + visible).contains(&(i / cols));
+        let cell = |i: usize| [x0 + (i % cols) as f32 * (cw + gap), y0 + (i / cols - first) as f32 * (ch + gap), cw, ch];
+        for (i, c) in list.chars.iter().enumerate().filter(|(i, _)| shown(*i)) {
             let best = list.class_stats.get(&c.object_type).map_or(0, |cs| cs.1);
             self.char_card(ui, c, best, cell(i), s, mouse);
         }
-        if !room {
-            let r = cell(list.chars.len());
+        // A scrollbar beside the cards when some are out of sight.
+        if visible < rows {
+            let track = [x0 + total_w + 10.0 * s, y0, 5.0 * s, visible as f32 * (ch + gap) - gap];
+            theme::fill(ui.renderer, track, 2.5 * s, color::TRACK, 0.9);
+            let thumb_h = track[3] * visible as f32 / rows as f32;
+            let thumb_y = track[1] + (track[3] - thumb_h) * first as f32 / (rows - visible) as f32;
+            theme::fill(ui.renderer, [track[0], thumb_y, track[2], thumb_h], 2.5 * s, color::ACCENT, 0.9);
+        }
+        let last = list.chars.len();
+        if !room && shown(last) {
+            let r = cell(last);
             let over = inside(r, mouse) && self.confirm.is_none();
             let edge = if over { color::ACCENT } else { color::BORDER };
             theme::frame(ui.renderer, r, 10.0 * s, s.max(1.0), (edge, 0.9), ((0x1A1D24, 0.6), (0x14161B, 0.6)));
@@ -637,14 +675,14 @@ impl Front {
             ui.label(&cost, r[0] + (r[2] - cw) / 2.0, r[1] + r[3] / 2.0 + 4.0 * s, cs, true, if afford { color::ACCENT } else { color::DANGER });
             self.targets.push((Target::BuySlot, r));
         }
-        if room {
-            let r = cell(list.chars.len());
+        if room && shown(last) {
+            let r = cell(last);
             let over = inside(r, mouse) && self.confirm.is_none();
             let edge = if over { color::ACCENT } else { color::BORDER };
             theme::frame(ui.renderer, r, 10.0 * s, s.max(1.0), (edge, 0.9), ((0x1A1D24, 0.6), (0x14161B, 0.6)));
-            let plus = (34.0 * s).round();
+            let plus = (30.0 * s).round();
             let label = "New character";
-            let size = (18.0 * s).round();
+            let size = (17.0 * s).round();
             let lw = ui.measure(label, size, true);
             let pw = ui.measure("+", plus, true);
             let total = pw + 12.0 * s + lw;
@@ -654,7 +692,7 @@ impl Front {
             ui.label(label, cx + pw + 12.0 * s, r[1] + (r[3] - size * 1.22) / 2.0, size, true, c);
             self.targets.push((Target::NewChar, r));
         }
-        let bottom = y0 + rows as f32 * (ch + gap);
+        let bottom = y0 + visible as f32 * (ch + gap);
         // The server: arrows to switch when there's a choice.
         if let Some(server) = list.servers.get(self.server.min(list.servers.len().saturating_sub(1))) {
             let size = (15.0 * s).round();
@@ -674,7 +712,7 @@ impl Front {
             }
         }
         self.message_line(ui, w / 2.0, bottom + 60.0 * s, w * 0.8, s);
-        let hint = "Click a character to play";
+        let hint = if visible < rows { "Click a character to play; scroll for more" } else { "Click a character to play" };
         let hs = (13.0 * s).round();
         let hw = ui.measure(hint, hs, false);
         ui.label(hint, (w - hw) / 2.0, h - hs * 2.2, hs, false, color::TEXT_MUTED);
@@ -692,39 +730,39 @@ impl Front {
         theme::frame(ui.renderer, r, 10.0 * s, s.max(1.0), (edge, 1.0), ((color::PANEL_TOP, 0.95), (color::PANEL_BOTTOM, 0.97)));
         self.targets.push((Target::Char(c.id), r));
         // The portrait in a dark well.
-        let well = [r[0] + 12.0 * s, r[1] + 12.0 * s, r[3] - 24.0 * s, r[3] - 24.0 * s];
+        let well = [r[0] + 10.0 * s, r[1] + 10.0 * s, r[3] - 20.0 * s, r[3] - 20.0 * s];
         theme::rounded(ui.renderer, well, 8.0 * s, (0x0E1015, 0.9), (0x1A1E26, 0.9));
         let class = ui.data.objects.get(&c.object_type);
         let skin = (c.skin != 0).then(|| ui.data.objects.get(&(c.skin as u16))).flatten();
         if let Some(d) = skin.or(class) {
-            portrait(ui, d, c.tex1, c.tex2, well[0] + well[2] / 2.0, well[1] + well[3] / 2.0, s * 0.95);
+            portrait(ui, d, c.tex1, c.tex2, well[0] + well[2] / 2.0, well[1] + well[3] / 2.0, s * 0.85);
         }
-        let tx = well[0] + well[2] + 14.0 * s;
+        let tx = well[0] + well[2] + 12.0 * s;
         let name = class.map_or("Unknown", |d| d.display_id.as_str());
-        ui.label(name, tx, r[1] + 16.0 * s, (20.0 * s).round(), true, color::TEXT);
-        let size = (14.0 * s).round();
+        ui.label(name, tx, r[1] + 9.0 * s, (18.0 * s).round(), true, color::TEXT);
+        let size = (13.0 * s).round();
         let mut x = tx;
         for (label, value, col) in [("Level", c.level, color::TEXT), ("Fame", c.fame, color::ACCENT)] {
-            ui.label(label, x, r[1] + 50.0 * s, size, false, color::TEXT_DIM);
+            ui.label(label, x, r[1] + 35.0 * s, size, false, color::TEXT_DIM);
             x += ui.measure(label, size, false) + 5.0 * s;
             let v = value.to_string();
-            ui.label(&v, x, r[1] + 50.0 * s, size, true, col);
-            x += ui.measure(&v, size, true) + 14.0 * s;
+            ui.label(&v, x, r[1] + 35.0 * s, size, true, col);
+            x += ui.measure(&v, size, true) + 12.0 * s;
         }
         // What it wears, edged by tier.
-        let side = 38.0 * s;
+        let side = 30.0 * s;
         for (k, &item) in c.equipment.iter().take(4).enumerate() {
-            let sx = r[0] + r[2] - 14.0 * s - (4 - k) as f32 * (side + 6.0 * s) + 6.0 * s;
-            let sr = [sx, r[1] + 40.0 * s, side, side];
+            let sx = r[0] + r[2] - 12.0 * s - (4 - k) as f32 * (side + 4.0 * s) + 4.0 * s;
+            let sr = [sx, r[1] + 26.0 * s, side, side];
             let edge = if item > 0 { tier_edge(ui.data, item) } else { None };
             ui.slot_box(sr, edge, false, s);
             if item > 0 {
-                ui.item_icon(item, 80, sr[0] + side / 2.0, sr[1] + side / 2.0, s * 0.8);
+                ui.item_icon(item, 80, sr[0] + side / 2.0, sr[1] + side / 2.0, s * 0.64);
             }
         }
         // The class quest it's working on (`makeTagline`): its fame of the next one's.
-        let size = (13.0 * s).round();
-        let qy = r[1] + r[3] - 28.0 * s;
+        let size = (12.0 * s).round();
+        let qy = r[1] + r[3] - 24.0 * s;
         let quest = match stars::next_star_fame(best, c.fame) {
             Some(next) => format!("Class Quest: {} of {next} Fame", c.fame),
             None => "Class Quests completed".to_owned(),
