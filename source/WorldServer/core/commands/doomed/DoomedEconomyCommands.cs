@@ -423,7 +423,9 @@ namespace WorldServer.core.commands.doomed
 
     #region Supporter
 
-    // best gear of the player's class: the highest tier item of each equipment slot
+    // starter gear of the player's class: a mid tier item of each equipment slot, about half way up
+    // its regular tiers (T7 weapon, T8 armor, T4 ability and ring). The regular tiers are the run of
+    // consecutive tiers from the lowest, so special items with odd tiers (20, 22, 53) don't count.
     internal class GearCommand : Command
     {
         public override RankingType RankRequirement => RankingType.Supporter;
@@ -436,7 +438,15 @@ namespace WorldServer.core.commands.doomed
             for (var i = 0; i < 4; i++)
             {
                 var slotType = player.SlotTypes[i];
-                var best = items.Where(it => it.SlotType == slotType && it.Tier >= 0 && !it.Consumable)
+                var candidates = items.Where(it => it.SlotType == slotType && it.Tier >= 0 && !it.Consumable).ToList();
+                if (candidates.Count == 0)
+                    continue;
+                var tiers = candidates.Select(it => it.Tier).ToHashSet();
+                var top = tiers.Min();
+                while (tiers.Contains(top + 1))
+                    top++;
+                var target = top / 2;
+                var best = candidates.Where(it => it.Tier <= target)
                     .OrderByDescending(it => it.Tier).ThenBy(it => it.ObjectType).FirstOrDefault();
                 if (best == null)
                     continue;
