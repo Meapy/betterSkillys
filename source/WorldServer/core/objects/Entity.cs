@@ -43,6 +43,8 @@ namespace WorldServer.core.objects
 
         public bool GivesNoXp { get; set; }
         public float? SavedAngle { get; set; }
+        // set by a world-specific BossStats so the general one steps aside
+        public bool StatsTunedForWorld { get; set; }
         public bool Spawned { get; set; }
         public bool SpawnedByBehavior { get; set; }
 

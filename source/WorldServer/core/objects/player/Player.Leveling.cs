@@ -205,10 +205,13 @@ namespace WorldServer.core.objects
 
                 if (Level >= minVisibleLevel && Level <= maxVisibleLevel || force)
                 {
-                    var priority = quest.ObjectDesc.Encounter ? 3 : quest.ObjectDesc.Hero ? 2 : 1;
+                    // Oryx himself (<Oryx/>) always comes first: the Doomed Cellar's Skull Shrine, an
+                    // Encounter, outscored Oryx 5, and Oryx 3's XML level is 1
+                    var priority = quest.ObjectDesc.Oryx ? 4 : quest.ObjectDesc.Encounter ? 3 : quest.ObjectDesc.Hero ? 2 : 1;
+                    var levelFit = quest.ObjectDesc.Oryx ? 20 : 20 - Math.Abs(quest.ObjectDesc.Level - Level);
                     var score =
                         //priority * level diff
-                        (20 - Math.Abs(quest.ObjectDesc.Level - Level)) * priority -
+                        levelFit * priority -
                         //minus 1 for every 100 tile distance
                         this.DistTo(quest) / 100;
 

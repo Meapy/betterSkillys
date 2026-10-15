@@ -320,6 +320,14 @@
 		<VisibilityType>1</VisibilityType>
 		<Dungeon/>
 	</World>
+	<!-- Oryx 3; built by tools/build_oryx_sanctuary.py -->
+	<World id="Oryx's Sanctuary">
+		<Width>80</Width>
+		<Height>136</Height>
+		<MapJM>Dungeons/Oryx's Sanctuary/Oryx's Sanctuary.jm</MapJM>
+		<VisibilityType>1</VisibilityType>
+		<Dungeon/>
+	</World>
 	<World id="Toxic Sewers">
 		<Width>256</Width>
 		<Height>256</Height>

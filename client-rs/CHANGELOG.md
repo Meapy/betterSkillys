@@ -8,6 +8,24 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
+## Unreleased
+- The fight against Oryx now goes all the way: when a realm closes you can follow him from his
+  Castle through his Chamber (Oryx 1), his Wine Cellar (Oryx 2), the new Oryx's Sanctuary
+  (Oryx 3), the Hash Cellar (Oryx 4) and finally the Doomed Cellar (Oryx 5). Each Oryx drops the
+  portal to the next, and each kill is announced to the whole server.
+- Oryx's Sanctuary is a new dungeon: fight through his nobles and his court until the Sanctum's
+  gate opens, then face Oryx 3. Get far away when he shouts "KNEEL!", and kill his three
+  Protectors at half health.
+- Every stage is harder than the one before, with more health, defense and damage, and better
+  loot: Oryx 4 and 5 can drop the Oryx set (Ring of Oryx, the Oryx armours, Oryx Tooth Sword
+  and more).
+- Oryx 1 no longer gets stuck in his second dance, Oryx 2 calls his guards at half health, and
+  Oryx 4 and 5 have new fights. Oryx 5 can't be hurt until his Trees of Doom are cut down.
+- The Stone Guardians in Oryx's Castle now use their ring attacks (they never fired before), but
+  have less health and defense.
+- In Oryx's dungeons the quest arrow points at Oryx, and the portals he drops sit beside his loot
+  instead of under it. The Realm Portal after each Oryx stays open for two minutes.
+
 ## 1.1.4 (2026-10-15)
 - Assassin poisons work properly: they ignore the monster's defense, deal their full damage over
   the time they list, and can finish a monster off. Before, a poisoned monster could be left

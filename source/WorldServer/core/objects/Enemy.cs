@@ -35,6 +35,8 @@ namespace WorldServer.core.objects
         public bool IsEpic { get; set; }
         public bool IsLegendary { get; set; }
         public bool IsRare { get; set; }
+        // multiplies the XML damage of this enemy's Shoot behaviours (set by BossStats)
+        public float DamageScale { get; set; } = 1f;
         
         public Enemy(GameServer manager, ushort objType)
             : base(manager, objType)

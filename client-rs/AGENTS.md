@@ -76,7 +76,7 @@ The client itself can be scripted for tests (desktop only):
 | `--walk-to x,y[;x,y...]` | Walk to world positions in turn (in the first world joined, or the one `--say` moves to) |
 | `--hold <key>:<ms>` | Hold keys one after another: `w a s d q e r 0 1`-`8 space hp mp`, `f` fires, `-` waits |
 | `--aim <degrees>` / `--aim auto` | Where `f` fires on the screen, or at the nearest enemy |
-| `--say <text>` | Send a chat line or command once in the game |
+| `--say <text>` | Send a chat line or command once in the game; several lines split by `;;` go out in turn, each once another world is joined or 3 s after the last (`"/dungeon Oryx's Sanctuary;;/god"`) |
 | `--npc <class>` | Open that NPC's window once in the game (`GuildBoard`, `PotionStorage`...), wherever you stand |
 | `--effect <type>` | Show that `ShowEffect` type on you every half second (0: an area attack beside you), to check particles |
 | `--type <text>` | Type into the first NPC prompt that opens (then Enter), or onto the guild board being edited |

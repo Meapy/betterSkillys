@@ -144,8 +144,10 @@ struct App {
     teller: usize,
     /// Players' names in the chat as last drawn, and where (a click opens their menu).
     chat_names: Vec<(String, [f32; 4])>,
-    /// `--say <text>` (desktop tests): sent once we're in the game.
-    say: Option<String>,
+    /// `--say <text>` (desktop tests): lines still to send, one per world we join (see `say_arg`).
+    say: Vec<String>,
+    /// The join (`reconnects`) the last --say line went out in, and when.
+    say_sent_in: Option<(u32, i32)>,
     /// Whether --say was given (walking waits for the world it may move us to).
     say_given: Option<()>,
     alt_held: bool,
@@ -463,9 +465,11 @@ fn window_icon() -> Option<winit::window::Icon> {
     winit::window::Icon::from_rgba(img.into_raw(), w, h).ok()
 }
 
-/// `--say <text>` (desktop tests): a chat line or command to send once in the game.
-fn say_arg() -> Option<String> {
-    text_arg("--say")
+/// `--say <text>` (desktop tests): chat lines or commands to send once in the game. Lines are
+/// split on `;;`; each goes out once we join another world or 3 s after the one before, so
+/// `--say "/dungeon X;;/god"` opens a dungeon and then turns on god mode inside it.
+fn say_arg() -> Vec<String> {
+    text_arg("--say").map_or_else(Vec::new, |s| s.split(";;").map(|l| l.trim().to_string()).filter(|l| !l.is_empty()).collect())
 }
 
 /// A flag's text argument (desktop tests).
@@ -1355,8 +1359,11 @@ impl App {
         let reset_angle = self.held(&reset);
 
         // Scripted walking (--walk-to), then the --hold script.
-        // With --say (a command that may move us, like /shop), walk once we've arrived.
-        let walk_ready = self.say_given.is_none_or(|_| matches!(&self.phase, Phase::Playing(g) if g.reconnects > 0 && g.world.is_some()));
+        // With --say (a command that may move us, like /shop), walk once we've arrived and every
+        // line has gone out.
+        let walk_ready = self.say_given.is_none_or(|_| {
+            self.say.is_empty() && matches!(&self.phase, Phase::Playing(g) if g.reconnects > 0 && g.world.is_some())
+        });
         if let (Some((tx, ty)), Phase::Playing(game), true) = (self.walk_to, &self.phase, walk_ready) {
             if let Some(me) = game.world.as_ref().and_then(|w| w.player()) {
                 let (dx, dy) = (tx - me.x, ty - me.y);
@@ -1727,10 +1734,12 @@ impl App {
             for line in self.chat_send.drain(..) {
                 game.say(&line);
             }
-            if game.world.as_ref().is_some_and(|w| w.player().is_some()) {
-                if let Some(line) = self.say.take() {
-                    game.say(&line);
-                }
+            if !self.say.is_empty()
+                && self.say_sent_in.is_none_or(|(join, at)| join != game.reconnects || now - at >= 3000)
+                && game.world.as_ref().is_some_and(|w| w.player().is_some())
+            {
+                game.say(&self.say.remove(0));
+                self.say_sent_in = Some((game.reconnects, now));
             }
             prof::mark("pre");
             game.poll(now, data);
@@ -2341,7 +2350,8 @@ fn main() {
         chat_names: Vec::new(),
         chat_send: Vec::new(),
         say: say_arg(),
-        say_given: say_arg().map(|_| ()),
+        say_sent_in: None,
+        say_given: (!say_arg().is_empty()).then_some(()),
         alt_held: false,
         shift_held: false,
         ctrl_held: false,

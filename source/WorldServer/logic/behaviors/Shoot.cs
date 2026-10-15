@@ -109,6 +109,9 @@ namespace WorldServer.logic.behaviors
 
                 var dmg = (double)Random.Next(desc.MinDamage, desc.MaxDamage);
 
+                if (host is Enemy enemy)
+                    dmg *= enemy.DamageScale;
+
                 if (host.HasConditionEffect(ConditionEffectIndex.Weak))
                     dmg /= 2;
 

@@ -8,11 +8,15 @@ namespace WorldServer.logic
     partial class BehaviorDb
     {
         private _ Oryx = () => Behav()
+            // Stage 4 of the Oryx chain (castle guardians, Janus, Oryx 1, 2, 3, 4 and 5). BossStats puts
+            // every stage on one difficulty curve; SETUP-LOCAL.md has the table.
             .Init("Oryx the Mad God 2",
                 new State(
-                    new DropPortalOnDeath("Realm Portal", 1.0, xAdjustment: -2),
-                    new ScaleHP2(30),
-                    new DropPortalOnDeath("Lost Halls Portal", 0.1, timeout: 120),
+                    new BossStats(130000, 40, 1.0, 0.3),
+                    new DropPortalOnDeath("Realm Portal", 1.0, timeout: 120, xAdjustment: -2),
+                    new DropPortalOnDeath("Oryx's Sanctuary Portal", 1.0, timeout: 300, xAdjustment: 2),
+                    new DropPortalOnDeath("Lost Halls Portal", 0.1, timeout: 120, yAdjustment: 2),
+                    new AnnounceOnDeath("{PL_LIST} drove Oryx the Mad God out of his Wine Cellar! He flees to his Sanctuary..."),
                     new State("Attack",
                         new Wander(.05),
                         new Shoot(25, projectileIndex: 0, count: 8, shootAngle: 45, coolDown: 1500, coolDownOffset: 1500),
@@ -28,6 +32,30 @@ namespace WorldServer.logic
                         new Shoot(25, projectileIndex: 6, count: 3, shootAngle: 10, predictive: 1, coolDown: 1000,
                             coolDownOffset: 1000),
                         new Taunt(1, 6000, "Puny mortals! My {HP} HP will annihilate you!"),
+                        new Spawn("Henchman of Oryx", 5, coolDown: 5000),
+                        new HpLessTransition(.55, "Guards")
+                    ),
+                    // halfway: a short invulnerable call for help, under rings of silencing and weakening spinners
+                    new State("Guards",
+                        new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                        new Flash(0xFF7F00FF, 0.4, 10),
+                        new Taunt("Guards! GUARDS! Rid my cellar of these vermin!"),
+                        new ReturnToSpawn(1),
+                        new Spawn("Henchman of Oryx", 3, initialSpawn: 1, coolDown: 1000),
+                        new Spawn("Vintner of Oryx", 3, initialSpawn: 1, coolDown: 1000),
+                        new Shoot(0, 8, fixedAngle: 0, rotateAngle: 7, projectileIndex: 13, coolDown: 600),
+                        new Shoot(0, 8, fixedAngle: 22, rotateAngle: -7, projectileIndex: 14, coolDown: 600, coolDownOffset: 300),
+                        new TimedTransition(6000, "Attack2")
+                    ),
+                    new State("Attack2",
+                        new Wander(.08),
+                        new Shoot(25, projectileIndex: 0, count: 8, shootAngle: 45, coolDown: 1300, coolDownOffset: 500),
+                        new Shoot(25, projectileIndex: 1, count: 3, shootAngle: 10, coolDown: 900),
+                        new Shoot(25, projectileIndex: 2, count: 3, shootAngle: 10, predictive: 0.5, coolDown: 900),
+                        new Shoot(25, projectileIndex: 4, count: 3, shootAngle: 10, predictive: 0.6, coolDown: 900),
+                        new Shoot(25, projectileIndex: 6, count: 3, shootAngle: 10, predictive: 1, coolDown: 900),
+                        new Shoot(10, projectileIndex: 2, count: 5, shootAngle: 18, coolDown: 1800),
+                        new Taunt(1, 8000, "You will drown in my wine, {PLAYER}!"),
                         new Spawn("Henchman of Oryx", 5, coolDown: 5000),
                         new HpLessTransition(.2, "prepareRage")
                     ),
@@ -59,135 +87,120 @@ namespace WorldServer.logic
                         new Taunt(1, 6000, "Puny mortals! My {HP} HP will annihilate you!")
                     )
                 ),
-                new Threshold(0.29,
-                    new ItemLoot("Potion of Vitality", 1)
+                new Threshold(0.01,
+                    new ItemLoot("Potion of Life", 1),
+                    new ItemLoot("Potion of Mana", 0.5)
                 ),
                 new Threshold(0.05,
-                    new ItemLoot("Potion of Attack", 0.3),
-                    new ItemLoot("Potion of Defense", 0.3),
-                    new ItemLoot("Potion of Wisdom", 0.3)
+                    new ItemLoot("Potion of Vitality", 0.5),
+                    new ItemLoot("Potion of Attack", 0.4),
+                    new ItemLoot("Potion of Defense", 0.4),
+                    new ItemLoot("Potion of Wisdom", 0.4),
+                    new ItemLoot("Wine Cellar Incantation", 0.05),
+                    new ItemLoot("Seal of Blasphemous Prayer", 0.008)
                 ),
                 new Threshold(0.1,
-                    new TierLoot(10, ItemType.Weapon, 0.07),
-                    new TierLoot(11, ItemType.Weapon, 0.06),
-                    new TierLoot(12, ItemType.Weapon, 0.05),
-                    new TierLoot(5, ItemType.Ability, 0.07),
+                    new TierLoot(11, ItemType.Weapon, 0.08),
+                    new TierLoot(12, ItemType.Weapon, 0.06),
+                    new TierLoot(5, ItemType.Ability, 0.08),
                     new TierLoot(6, ItemType.Ability, 0.05),
-                    new TierLoot(11, ItemType.Armor, 0.07),
-                    new TierLoot(12, ItemType.Armor, 0.06),
+                    new TierLoot(12, ItemType.Armor, 0.08),
                     new TierLoot(13, ItemType.Armor, 0.05),
-                    new TierLoot(5, ItemType.Ring, 0.06)
+                    new TierLoot(5, ItemType.Ring, 0.07)
                 )
             )
+            // Stage 3: cycles through five phases; below 20% he grows and chases.
             .Init("Oryx the Mad God 1",
                 new State(
-                    new DropPortalOnDeath("Wine Cellar Portal", 100, timeout: 120),
-                    new HpLessTransition(.2, "rage"),
-                    new State("Slow",
-                        new Taunt("Fools! I still have {HP} hitpoints!"),
-                        new Spawn("Minion of Oryx", 5, 0, 350000),
-                        new Reproduce("Minion of Oryx", 10, 5, 1500),
-                        new Shoot(25, 4, 10, 4, coolDown: 1000),
-                        new TimedTransition(20000, "Dance 1")
-                        ),
-                    new State("Dance 1",
-                        new Flash(0xf389E13, 0.5, 60),
-                        new Taunt("BE SILENT!!!"),
+                    new BossStats(100000, 35, 1.0, 0.3),
+                    new DropPortalOnDeath("Wine Cellar Portal", 1.0, timeout: 300, xAdjustment: 2),
+                    new AnnounceOnDeath("{PL_LIST} defeated Oryx the Mad God in his Chamber! He retreats to his Wine Cellar..."),
+                    new State("Wait",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                        new Shoot(50, 8, projectileIndex: 6, coolDown: 700, coolDownOffset: 200),
-                        new TossObject("Ring Element", 9, 24, 320000),
-                        new TossObject("Ring Element", 9, 48, 320000),
-                        new TossObject("Ring Element", 9, 72, 320000),
-                        new TossObject("Ring Element", 9, 96, 320000),
-                        new TossObject("Ring Element", 9, 120, 320000),
-                        new TossObject("Ring Element", 9, 144, 320000),
-                        new TossObject("Ring Element", 9, 168, 320000),
-                        new TossObject("Ring Element", 9, 192, 320000),
-                        new TossObject("Ring Element", 9, 216, 320000),
-                        new TossObject("Ring Element", 9, 240, 320000),
-                        new TossObject("Ring Element", 9, 264, 320000),
-                        new TossObject("Ring Element", 9, 288, 320000),
-                        new TossObject("Ring Element", 9, 312, 320000),
-                        new TossObject("Ring Element", 9, 336, 320000),
-                        new TossObject("Ring Element", 9, 360, 320000),
+                        new PlayerWithinTransition(12, "Intro")
+                    ),
+                    new State("Intro",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                        //new Grenade(radius: 4, damage: 150, fixedAngle: new Random().Next(0, 359), range: 5, coolDown: 2000),
-                        //new Grenade(radius: 4, damage: 150, fixedAngle: new Random().Next(0, 359), range: 5, coolDown: 2000),
-                        //new Grenade(radius: 4, damage: 150, fixedAngle: new Random().Next(0, 359), range: 5, coolDown: 2000),
-                        new TimedTransition(25000, "artifacts")
+                        new Flash(0xFF389E13, 0.5, 5),
+                        new Taunt("You dare enter my Chamber? Fools! I still have {HP} hitpoints!"),
+                        new TimedTransition(3000, "Slow")
+                    ),
+                    new State("Fight",
+                        new HpLessTransition(.2, "rage"),
+                        new State("Slow",
+                            new Taunt("Minions! Take them!"),
+                            new Wander(0.1),
+                            new StayCloseToSpawn(0.3, 6),
+                            new Spawn("Minion of Oryx", 5, 0.6, 15000),
+                            new Reproduce("Minion of Oryx", 10, 5, 3000),
+                            new Shoot(25, 4, 10, 4, coolDown: 1200),
+                            new Shoot(12, 3, 15, 2, predictive: 0.5, coolDown: 900),
+                            new TimedTransition(14000, "Dance 1")
                         ),
-                    new State("artifacts",
-                        new Taunt("My Artifacts will protect me!"),
-                        new Flash(0xf389E13, 0.5, 60),
-                        new Shoot(50, 3, projectileIndex: 9, coolDown: 1500, coolDownOffset: 200),
-                        new Shoot(50, 10, projectileIndex: 8, coolDown: 2000, coolDownOffset: 200),
-                        new Shoot(50, 10, projectileIndex: 7, coolDown: 500, coolDownOffset: 200),
-
-                        //Inner Elements
-                        new TossObject("Guardian Element 1", 1, 0, 90000001, 1000),
-                        new TossObject("Guardian Element 1", 1, 90, 90000001, 1000),
-                        new TossObject("Guardian Element 1", 1, 180, 90000001, 1000),
-                        new TossObject("Guardian Element 1", 1, 270, 90000001, 1000),
-                        new TossObject("Guardian Element 2", 9, 0, 90000001, 1000),
-                        new TossObject("Guardian Element 2", 9, 90, 90000001, 1000),
-                        new TossObject("Guardian Element 2", 9, 180, 90000001, 1000),
-                        new TossObject("Guardian Element 2", 9, 270, 90000001, 1000),
-                        new TimedTransition(25000, "gaze")
+                        // invulnerable: a ring of silencing elements and a slow four-arm spiral to weave through
+                        new State("Dance 1",
+                            new Flash(0xFF389E13, 0.5, 20),
+                            new Taunt("BE SILENT!!!"),
+                            new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
+                            new ReturnToSpawn(1.5),
+                            new Shoot(0, 4, fixedAngle: 0, rotateAngle: 12, projectileIndex: 17, coolDown: 320),
+                            new TossObject("Ring Element", 9, 24, 320000),
+                            new TossObject("Ring Element", 9, 48, 320000),
+                            new TossObject("Ring Element", 9, 72, 320000),
+                            new TossObject("Ring Element", 9, 96, 320000),
+                            new TossObject("Ring Element", 9, 120, 320000),
+                            new TossObject("Ring Element", 9, 144, 320000),
+                            new TossObject("Ring Element", 9, 168, 320000),
+                            new TossObject("Ring Element", 9, 192, 320000),
+                            new TossObject("Ring Element", 9, 216, 320000),
+                            new TossObject("Ring Element", 9, 240, 320000),
+                            new TossObject("Ring Element", 9, 264, 320000),
+                            new TossObject("Ring Element", 9, 288, 320000),
+                            new TossObject("Ring Element", 9, 312, 320000),
+                            new TossObject("Ring Element", 9, 336, 320000),
+                            new TossObject("Ring Element", 9, 360, 320000),
+                            new TimedTransition(10000, "artifacts")
                         ),
-
-        #region gaze
-                    new State("gaze",
-                        new Taunt("All who looks upon my face shall die."),
-                        new Shoot(count: 2, coolDown: 1000, projectileIndex: 1, radius: 7, shootAngle: 10,
-                            coolDownOffset: 800),
-                        new TimedTransition(10000, "Dance 2")
-        #endregion gaze
-
+                        new State("artifacts",
+                            new Taunt("My Artifacts will protect me!"),
+                            new Flash(0xFF389E13, 0.5, 6),
+                            new Shoot(25, 3, 20, projectileIndex: 16, coolDown: 2000, coolDownOffset: 500),
+                            new Shoot(0, 10, fixedAngle: 0, rotateAngle: 18, projectileIndex: 8, coolDown: 2500),
+                            new Shoot(3, 10, projectileIndex: 7, coolDown: 800),
+                            new TossObject("Guardian Element 1", 1, 0, 90000001, 1000),
+                            new TossObject("Guardian Element 1", 1, 90, 90000001, 1000),
+                            new TossObject("Guardian Element 1", 1, 180, 90000001, 1000),
+                            new TossObject("Guardian Element 1", 1, 270, 90000001, 1000),
+                            new TossObject("Guardian Element 2", 9, 0, 90000001, 1000),
+                            new TossObject("Guardian Element 2", 9, 90, 90000001, 1000),
+                            new TossObject("Guardian Element 2", 9, 180, 90000001, 1000),
+                            new TossObject("Guardian Element 2", 9, 270, 90000001, 1000),
+                            new TimedTransition(14000, "gaze")
                         ),
-
-        #region Dance 2
-                    new State("Dance 2",
-                        new Flash(0xf389E13, 0.5, 60),
-                        new Taunt("Time for more dancing!"),
-                        new Shoot(50, 8, projectileIndex: 6, coolDown: 700, coolDownOffset: 200),
-                        new TossObject("Ring Element", 9, 24, 320000),
-                        new TossObject("Ring Element", 9, 48, 320000),
-                        new TossObject("Ring Element", 9, 72, 320000),
-                        new TossObject("Ring Element", 9, 96, 320000),
-                        new TossObject("Ring Element", 9, 120, 320000),
-                        new TossObject("Ring Element", 9, 144, 320000),
-                        new TossObject("Ring Element", 9, 168, 320000),
-                        new TossObject("Ring Element", 9, 192, 320000),
-                        new TossObject("Ring Element", 9, 216, 320000),
-                        new TossObject("Ring Element", 9, 240, 320000),
-                        new TossObject("Ring Element", 9, 264, 320000),
-                        new TossObject("Ring Element", 9, 288, 320000),
-                        new TossObject("Ring Element", 9, 312, 320000),
-                        new TossObject("Ring Element", 9, 336, 320000),
-                        new TossObject("Ring Element", 9, 360, 320000),
-                        new TimedTransition(1000, "Dance2, 1")
+                        // stay out of his face: his flames reach eight tiles
+                        new State("gaze",
+                            new Taunt("All who look upon my face shall die."),
+                            new Follow(0.4, 12, 4),
+                            new Shoot(8, 3, 12, projectileIndex: 1, coolDown: 700),
+                            new Shoot(25, 2, 10, 2, predictive: 0.7, coolDown: 1100),
+                            new TimedTransition(8000, "Dance 2")
                         ),
-                    new State("Dance2, 1",
-                        new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                        new Shoot(0, projectileIndex: 8, count: 4, shootAngle: 90, fixedAngle: 0, coolDown: 170),
-                        new TimedTransition(200, "Dance2, 2")
-                        ),
-                    new State("Dance2, 2",
-                        new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                        new Shoot(0, projectileIndex: 8, count: 4, shootAngle: 90, fixedAngle: 30, coolDown: 170),
-                        new TimedTransition(200, "Dance2, 3")
-                        ),
-                    new State("Dance2, 3",
-                        new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                        new Shoot(0, projectileIndex: 8, count: 4, shootAngle: 90, fixedAngle: 15, coolDown: 170),
-                        new TimedTransition(200, "Dance2, 4")
-                        ),
-                    new State("Dance2, 4",
-                        new Shoot(0, projectileIndex: 8, count: 4, shootAngle: 90, fixedAngle: 45, coolDown: 170),
-                        new TimedTransition(200, "Dance2, 1")
-                        ),
-
-        #endregion Dance 2
+                        new State("Dance 2",
+                            new Flash(0xFF389E13, 0.5, 18),
+                            new Taunt("Time for more dancing!"),
+                            new ReturnToSpawn(1.5),
+                            new Shoot(0, 4, 90, projectileIndex: 8, fixedAngle: 0, rotateAngle: 22.5, coolDown: 200),
+                            new TossObject("Ring Element", 9, 24, 320000),
+                            new TossObject("Ring Element", 9, 72, 320000),
+                            new TossObject("Ring Element", 9, 120, 320000),
+                            new TossObject("Ring Element", 9, 168, 320000),
+                            new TossObject("Ring Element", 9, 216, 320000),
+                            new TossObject("Ring Element", 9, 264, 320000),
+                            new TossObject("Ring Element", 9, 312, 320000),
+                            new TossObject("Ring Element", 9, 360, 320000),
+                            new TimedTransition(9000, "Slow")
+                        )
+                    ),
                     new State("rage",
                         new ChangeSize(10, 200),
                         new Taunt(.3, "I HAVE HAD ENOUGH OF YOU!!!",
@@ -195,23 +208,28 @@ namespace WorldServer.logic
                             "DIE!!!"),
                         new Spawn("Minion of Oryx", 10, 0, 350000),
                         new Reproduce("Minion of Oryx", 10, 5, 1500),
-                        new Shoot(count: 2, coolDown: 1500, projectileIndex: 1, radius: 7, shootAngle: 10,
-                            coolDownOffset: 2000),
-                        new Shoot(count: 5, coolDown: 1500, projectileIndex: 16, radius: 7, shootAngle: 10,
-                            coolDownOffset: 2000),
-                        new Follow(0.85, range: 1, coolDown: 0),
-                        new Flash(0xfFF0000, 0.5, 9000001)
-                        )
-                    ),
+                        new Shoot(7, count: 2, coolDown: 1500, projectileIndex: 1, shootAngle: 10, coolDownOffset: 2000),
+                        new Shoot(25, count: 5, coolDown: 1500, projectileIndex: 16, shootAngle: 10, coolDownOffset: 2000),
+                        new Shoot(0, 6, fixedAngle: 0, rotateAngle: 9, projectileIndex: 14, coolDown: 1200),
+                        new Follow(0.6, range: 1, coolDown: 0),
+                        new Flash(0xFFFF0000, 0.5, 9000001)
+                    )
+                ),
+                new Threshold(0.01,
+                    new ItemLoot("Potion of Attack", 0.6),
+                    new ItemLoot("Potion of Defense", 0.6)
+                ),
                 new Threshold(0.05,
-                    new ItemLoot("Potion of Attack", 0.3),
-                    new ItemLoot("Potion of Defense", 0.3)
+                    new ItemLoot("Potion of Dexterity", 0.4),
+                    new ItemLoot("Potion of Speed", 0.3),
+                    new ItemLoot("Potion of Life", 0.1)
                 ),
                 new Threshold(0.1,
-                    new TierLoot(10, ItemType.Weapon, 0.07),
+                    new TierLoot(10, ItemType.Weapon, 0.08),
                     new TierLoot(11, ItemType.Weapon, 0.06),
                     new TierLoot(5, ItemType.Ability, 0.07),
                     new TierLoot(11, ItemType.Armor, 0.07),
+                    new TierLoot(12, ItemType.Armor, 0.04),
                     new TierLoot(5, ItemType.Ring, 0.06)
                 )
             )
@@ -239,7 +257,7 @@ namespace WorldServer.logic
             .Init("Guardian Element 1",
                 new State(
                     new State(
-                        new Orbit(1, 1, target: "Oryx the Mad God 1", radiusVariance: 0),
+                        new Prioritize(new Orbit(1, 1, target: "Oryx the Mad God 1", radiusVariance: 0), new Orbit(1, 2, target: "Oryx the Mad God 4", radiusVariance: 0)),
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new Shoot(25, 3, 10, 0, coolDown: 1000),
                         new TimedTransition(10000, "Grow")
@@ -247,13 +265,13 @@ namespace WorldServer.logic
                     new State("Grow",
                         new ChangeSize(100, 200),
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                        new Orbit(1, 1, target: "Oryx the Mad God 1", radiusVariance: 0),
+                        new Prioritize(new Orbit(1, 1, target: "Oryx the Mad God 1", radiusVariance: 0), new Orbit(1, 2, target: "Oryx the Mad God 4", radiusVariance: 0)),
                         new Shoot(3, 1, 10, 0, coolDown: 700),
                         new TimedTransition(10000, "Despawn")
                         ),
                     new State("Despawn",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
-                        new Orbit(1, 1, target: "Oryx the Mad God 1", radiusVariance: 0),
+                        new Prioritize(new Orbit(1, 1, target: "Oryx the Mad God 1", radiusVariance: 0), new Orbit(1, 2, target: "Oryx the Mad God 4", radiusVariance: 0)),
                         new ChangeSize(100, 100),
                         new Suicide()
                         )
@@ -262,7 +280,7 @@ namespace WorldServer.logic
             .Init("Guardian Element 2",
                 new State(
                     new State(
-                        new Orbit(1.3, 9, target: "Oryx the Mad God 1", radiusVariance: 0),
+                        new Prioritize(new Orbit(1.3, 9, target: "Oryx the Mad God 1", radiusVariance: 0), new Orbit(1.3, 9, target: "Oryx the Mad God 4", radiusVariance: 0)),
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new Shoot(25, 3, 10, 0, coolDown: 1000),
                         new TimedTransition(20000, "Despawn")
