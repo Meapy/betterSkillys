@@ -5,6 +5,14 @@ this in its Changelog window. Newest first; publishing a version needs its secti
 (`python tools/build_client_rs.py --publish`), and the version number itself is in
 `client-rs/Cargo.toml`.
 
+## 1.1.1 (2026-10-15)
+- Rank stars are back. The character screen shows your rank (hover over it to see which colour
+  each range of stars earns) and, on each character, its progress toward the next class quest.
+- Choosing a class shows its five class quests and how many you have left in total; a class's
+  page shows your best level and fame with it and the fame for its next quest.
+- In the Nexus and other safe maps your rank shows at the top left, chat messages show the
+  speaker's star, and hovering over a nearby player shows their rank.
+
 ## 1.1.0 (2026-10-15)
 - The game now keeps itself up to date: new versions download in the background while you play and
   switch over the next time you take a portal. No more zips to download.
