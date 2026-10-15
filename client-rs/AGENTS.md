@@ -56,10 +56,12 @@ The client itself can be scripted for tests (desktop only):
 | `--credentials <file>` | Sign in with the file's `email:` and `password:` and play the first character |
 | `--stay` | With `--credentials`: stop at the character list instead |
 | `--shot <png> --shot-after <seconds>` | Save one frame, then quit (logs the position and what it sent) |
-| `--walk-to x,y` | Walk to a world position (in the first world joined) |
+| `--walk-to x,y[;x,y...]` | Walk to world positions in turn (in the first world joined, or the one `--say` moves to) |
 | `--hold <key>:<ms>` | Hold keys one after another: `w a s d q e r 0 1`-`8 space hp mp`, `f` fires, `-` waits |
 | `--aim <degrees>` / `--aim auto` | Where `f` fires on the screen, or at the nearest enemy |
 | `--say <text>` | Send a chat line or command once in the game |
+| `--npc <class>` | Open that NPC's window once in the game (`GuildBoard`, `PotionStorage`...), wherever you stand |
+| `--type <text>` | Type into the first NPC prompt that opens (then Enter), or onto the guild board being edited |
 | `--size WxH` | Open the window at this size (physical pixels), to check the layout |
 | `--mouse x,y` | Put the mouse there (window pixels) and ignore the real one: tooltips, aiming |
 | `--mouse-script "down@ms:x,y;move@ms:x,y;up@ms:x,y"` | Left-button steps after joining: drags and clicks on the HUD |
@@ -97,7 +99,7 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
   buttons, fields, slots edged by item tier); the HUD and the screens draw with it.
 - **Controls:** WASD move, Q/E turn, Z resets the view, mouse fires (I toggles autofire), Space
   uses the ability at the mouse, 1-8 equip or use an inventory slot, F/V drink a stacked potion,
-  0 enters a portal, R goes to the Nexus, Enter or / chats, Escape opens the menu (character select,
+  0 enters a portal (or opens the NPC beside you), R goes to the Nexus, Enter or / chats, Escape opens the menu (character select,
   log out). Items drag between slots, onto the
   world to drop; double-click equips, uses or takes from a bag; shift-click uses.
 - **Layout:** `hud::Layout` works everything out from the window size each frame: one scale for
@@ -121,6 +123,7 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
    menu. **Done**, except trading, options and player menus.
 5. Front-end screens: sign in, register, character select and delete, new character, servers.
    **Done.**
-6. Market, guild, party, emotes, sound. 7. Packaging.
+6. Party, trading, guild and the NPC windows (`npc.rs`): **Done.** Market, emotes, sound to do.
+7. Packaging.
 
 Not planned: the map editor, the tutorial, Kabam's payment, offer and news screens.

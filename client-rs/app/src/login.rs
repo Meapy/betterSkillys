@@ -71,6 +71,22 @@ impl Endpoint {
         http::post_form(&format!("{}/char/fame", self.account), &[("accountId", &a), ("charId", &c)])
     }
 
+    pub fn guild_board(&self, email: &str, password: &str) -> Pending<http::Response> {
+        http::post_form(&format!("{}/guild/getBoard", self.account), &[("guid", email), ("password", password)])
+    }
+
+    pub fn set_guild_board(&self, email: &str, password: &str, board: &str) -> Pending<http::Response> {
+        http::post_form(&format!("{}/guild/setBoard", self.account), &[("guid", email), ("password", password), ("board", board)])
+    }
+
+    pub fn guild_members(&self, email: &str, password: &str) -> Pending<http::Response> {
+        http::post_form(&format!("{}/guild/listMembers", self.account), &[("guid", email), ("password", password)])
+    }
+
+    pub fn potions(&self, email: &str, password: &str) -> Pending<http::Response> {
+        http::post_form(&format!("{}/account/grabPotions", self.account), &[("guid", email), ("password", password)])
+    }
+
     pub fn target(&self, host: &str, port: u16) -> Target {
         Target { host: host.to_owned(), port, gateway: self.gateway.clone() }
     }
@@ -103,7 +119,7 @@ pub fn startup() -> Result<Startup, String> {
             "--stay" => {}
             "--credentials" => credentials = it.next(),
             // Read by main (screenshots, scripted input).
-            "--shot" | "--shot-after" | "--hold" | "--walk-to" | "--aim" | "--say" | "--size" | "--mouse" | "--mouse-script" => {
+            "--shot" | "--shot-after" | "--hold" | "--walk-to" | "--aim" | "--say" | "--type" | "--npc" | "--size" | "--mouse" | "--mouse-script" => {
                 it.next();
             }
             _ => return Err(format!("unknown argument {a}")),

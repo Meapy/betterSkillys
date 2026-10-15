@@ -5,6 +5,7 @@ mod game;
 mod ground;
 mod hud;
 mod login;
+mod npc;
 mod redraw;
 mod screens;
 #[allow(dead_code)] // lookups the game screens will use
@@ -70,6 +71,14 @@ enum Request {
     Fame,
 }
 
+/// What an NPC's window asked the account server.
+enum NpcRequest {
+    Board,
+    SetBoard,
+    Members,
+    Potions,
+}
+
 struct App {
     proxy: EventLoopProxy<UserEvent>,
     window: Option<Arc<Window>>,
@@ -89,6 +98,8 @@ struct App {
     holds_from: Option<i32>,
     last_scripted: Option<KeyCode>,
     walk_to: Option<(f64, f64)>,
+    /// The points after it (`--walk-to x,y;x,y`).
+    walk_more: Vec<(f64, f64)>,
     /// The mouse on the window, and whether the left button is down.
     mouse: (f64, f64),
     mouse_down: bool,
@@ -127,6 +138,81 @@ struct App {
     /// The Escape menu in the game, and its buttons last frame.
     game_menu: bool,
     menu_buttons: Vec<(screens::MenuChoice, [f32; 4])>,
+    /// The NPC window open in the game, what it asked the account server, and keys typed
+    /// into it.
+    npcs: npc::Npcs,
+    npc_request: Option<(NpcRequest, Pending<bsk_net::http::Response>)>,
+    npc_keys: Vec<(KeyCode, Option<String>)>,
+    /// `--type <text>` (tests): typed into the first NPC prompt that opens, then Enter.
+    type_text: Option<String>,
+    /// `--npc <class>` (tests): open that NPC's window once in the game, wherever we stand.
+    npc_test: Option<String>,
+}
+
+/// Open the window of the NPC we stand by. True for the character changer: back to the
+/// character list.
+fn npc_open(kind: npc::NpcKind, game: &Game, npcs: &mut npc::Npcs, list: Option<&bsk_net::account::CharList>, data: &bsk_data::GameData) -> bool {
+    use npc::{NpcKind, Prompt, Window};
+    let Some(me) = game.world.as_ref().and_then(|w| w.player()) else { return false };
+    let window = match kind {
+        NpcKind::CharacterChanger => return true,
+        NpcKind::Reskin => {
+            let class = me.object_type;
+            let mut skins = vec![0];
+            if let Some(list) = list {
+                skins.extend(screens::class_skins(data, class, list).iter().filter(|k| k.owned).map(|k| k.desc.object_type));
+            }
+            Window::Skins { class, skins }
+        }
+        NpcKind::NameChanger => Window::Prompt { prompt: Prompt::Name, input: String::new(), error: None, busy: false },
+        NpcKind::GuildRegister => {
+            if me.stat_str(npc::stat::GUILD_NAME).unwrap_or("").is_empty() {
+                Window::Prompt { prompt: Prompt::Guild, input: String::new(), error: None, busy: false }
+            } else {
+                Window::Renounce
+            }
+        }
+        NpcKind::GuildBoard => Window::Board { text: None, edit: None, error: None },
+        NpcKind::GuildChronicle => Window::Members { list: None, page: 0, error: None },
+        NpcKind::PotionStorage => Window::Potions { counts: None, error: None },
+    };
+    let fetch = matches!(window, Window::Board { .. } | Window::Members { .. } | Window::Potions { .. });
+    npcs.open(window);
+    if fetch {
+        npcs.reload_at = Some(0);
+    }
+    false
+}
+
+/// Carry out what the player did in an NPC's window. Returns a board to save, if any.
+fn npc_act(act: npc::Act, game: &mut Game, npcs: &mut npc::Npcs, now: i32) -> Option<String> {
+    use npc::Act;
+    let me = game.world.as_ref().and_then(|w| w.player()).and_then(|p| p.name()).unwrap_or("").to_owned();
+    log::info!("npc: {act:?}");
+    match act {
+        Act::Reskin(skin) => {
+            game.reskin(skin);
+            npcs.close();
+        }
+        Act::ChooseName(name) => game.choose_name(&name),
+        Act::CreateGuild(name) => game.create_guild(&name),
+        Act::Renounce => game.guild_remove(&me),
+        Act::SaveBoard(board) => return Some(board),
+        Act::ChangeRank(name, rank) => {
+            game.change_guild_rank(&name, rank);
+            npcs.reload_at = Some(now + 600);
+        }
+        Act::Remove(name) => {
+            game.guild_remove(&name);
+            npcs.reload_at = Some(now + 600);
+        }
+        Act::Storage(kind, action) => {
+            game.use_storage(kind, action);
+            // PotionsPanel fetches the counts again a moment later.
+            npcs.reload_at = Some(now + 800);
+        }
+    }
+    None
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -226,7 +312,7 @@ fn apply_action(game: &mut Game, panel: &hud::Panel, action: hud::Action, now: i
         Action::Button(Button::TradeAccept) => game.trade_accept(now),
         Action::Button(Button::TradeCancel) => game.trade_cancel(),
         Action::Button(Button::Member(_)) => {}
-        Action::Button(Button::Page(_)) => {}
+        Action::Button(Button::Page(_) | Button::Npc(_)) => {}
     }
     None
 }
@@ -284,26 +370,31 @@ fn mouse_arg() -> Option<(f64, f64)> {
 
 /// `--say <text>` (desktop tests): a chat line or command to send once in the game.
 fn say_arg() -> Option<String> {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        let args: Vec<String> = std::env::args().collect();
-        args.iter().position(|a| a == "--say").and_then(|i| args.get(i + 1)).cloned()
-    }
-    #[cfg(target_arch = "wasm32")]
-    None
+    text_arg("--say")
 }
 
-/// `--walk-to <x>,<y>`: walk straight to a world point once in the game (desktop tests).
-fn walk_to_arg() -> Option<(f64, f64)> {
+/// A flag's text argument (desktop tests).
+fn text_arg(name: &str) -> Option<String> {
     #[cfg(not(target_arch = "wasm32"))]
     {
         let args: Vec<String> = std::env::args().collect();
-        let v = args.iter().position(|a| a == "--walk-to").and_then(|i| args.get(i + 1))?;
-        let (x, y) = v.split_once(',')?;
-        Some((x.trim().parse().ok()?, y.trim().parse().ok()?))
+        args.iter().position(|a| a == name).and_then(|i| args.get(i + 1)).cloned()
     }
     #[cfg(target_arch = "wasm32")]
-    None
+    {
+        let _ = name;
+        None
+    }
+}
+
+/// `--walk-to <x>,<y>[;<x>,<y>...]`: walk straight to each world point in turn once in the
+/// game (desktop tests).
+fn walk_to_arg() -> Vec<(f64, f64)> {
+    let point = |p: &str| -> Option<(f64, f64)> {
+        let (x, y) = p.split_once(',')?;
+        Some((x.trim().parse().ok()?, y.trim().parse().ok()?))
+    };
+    text_arg("--walk-to").map_or_else(Vec::new, |v| v.split(';').filter_map(point).collect())
 }
 
 /// `--aim <degrees>` (desktop tests): the screen direction scripted fire aims at, or `auto` for
@@ -568,6 +659,8 @@ impl App {
         self.hud = Default::default();
         self.chat_input = None;
         self.game_menu = false;
+        self.npcs.close();
+        self.npc_request = None;
         self.keys.clear();
     }
 
@@ -582,6 +675,8 @@ impl App {
         }
         self.phase = Phase::Menu;
         self.game_menu = false;
+        self.npcs.close();
+        self.npc_request = None;
         self.mouse_down = false;
         self.front.message = why.map(|w| (w, true));
         self.front.show(screens::Screen::Chars);
@@ -597,8 +692,59 @@ impl App {
         }
     }
 
+    /// The NPC window's side of things: the server's answers to names and guilds, fetching
+    /// what the window shows, and what the account server sent back.
+    fn advance_npcs(&mut self) {
+        let now = self.now();
+        let Phase::Playing(game) = &mut self.phase else { return };
+        if let Some((ok, why)) = game.name_result.take() {
+            self.npcs.answer(npc::Prompt::Name, ok, &why);
+        }
+        if let Some((ok, why)) = game.guild_result.take() {
+            self.npcs.answer(npc::Prompt::Guild, ok, &why);
+        }
+        let (Some(endpoint), Some((email, password))) = (&self.endpoint, &self.account) else { return };
+        if self.npcs.reload_at.is_some_and(|t| now >= t) && self.npc_request.is_none() {
+            self.npcs.reload_at = None;
+            self.npc_request = match self.npcs.window {
+                Some(npc::Window::Board { .. }) => Some((NpcRequest::Board, endpoint.guild_board(email, password))),
+                Some(npc::Window::Members { .. }) => Some((NpcRequest::Members, endpoint.guild_members(email, password))),
+                Some(npc::Window::Potions { .. }) => Some((NpcRequest::Potions, endpoint.potions(email, password))),
+                _ => None,
+            };
+        }
+        let Some((_, pending)) = &self.npc_request else { return };
+        let Some(response) = pending.take() else { return };
+        let Some((kind, _)) = self.npc_request.take() else { return };
+        use bsk_net::account as acc;
+        match (kind, &mut self.npcs.window) {
+            (NpcRequest::Board, Some(npc::Window::Board { text, error, .. })) => match response.and_then(|b| acc::text_answer(&b)) {
+                Ok(b) => *text = Some(b),
+                Err(e) => *error = Some(e),
+            },
+            (NpcRequest::SetBoard, Some(npc::Window::Board { error, .. })) => {
+                if let Err(e) = response.and_then(|b| acc::text_answer(&b)) {
+                    *error = Some(e);
+                }
+            }
+            (NpcRequest::Members, Some(npc::Window::Members { list, error, page })) => match response.and_then(|x| acc::parse_guild(&x)) {
+                Ok(l) => {
+                    *page = (*page).min(l.1.len().saturating_sub(1) / 10);
+                    (*list, *error) = (Some(l), None);
+                }
+                Err(e) => *error = Some(e),
+            },
+            (NpcRequest::Potions, Some(npc::Window::Potions { counts, error })) => match response.and_then(|x| acc::parse_potions(&x)) {
+                Ok(c) => (*counts, *error) = (Some(c), None),
+                Err(e) => *error = Some(e),
+            },
+            _ => {}
+        }
+    }
+
     /// Move through the sign-in steps as their answers arrive.
     fn advance(&mut self) {
+        self.advance_npcs();
         // A game that ended (death, disconnect) goes back to the character list.
         if let Phase::Playing(game) = &self.phase {
             if game.ended && self.shot.is_none() {
@@ -747,7 +893,7 @@ impl App {
             if let Some(me) = game.world.as_ref().and_then(|w| w.player()) {
                 let (dx, dy) = (tx - me.x, ty - me.y);
                 if dx.hypot(dy) < 0.15 {
-                    self.walk_to = None;
+                    self.walk_to = (!self.walk_more.is_empty()).then(|| self.walk_more.remove(0));
                 } else {
                     let rel = dy.atan2(dx) - game.camera_angle;
                     keys = (rel.cos(), rel.sin());
@@ -794,6 +940,7 @@ impl App {
         let lay = hud::Layout::new(renderer.size().0, renderer.size().1);
         let mut ability = false;
         let mut panel = None;
+        let mut to_chars = false;
         if matches!(self.phase, Phase::Menu) {
             let mut actions = Vec::new();
             for (code, text) in std::mem::take(&mut self.front_keys) {
@@ -856,6 +1003,10 @@ impl App {
                     KeyCode::Digit0 | KeyCode::Numpad0 => match built.as_ref().and_then(|p| p.interact.clone()) {
                         Some(hud::Interact { id, kind: hud::InteractKind::Portal, .. }) => game.use_portal(id),
                         Some(hud::Interact { id, kind: hud::InteractKind::Shop { .. }, .. }) => game.buy(id),
+                        Some(hud::Interact { kind: hud::InteractKind::Npc { kind, .. }, .. }) => {
+                            to_chars |= npc_open(kind, game, &mut self.npcs, self.front.list.as_ref(), data);
+                            self.keys.clear();
+                        }
                         _ => {
                             if let Some((id, _)) = game.nearest_portal(data) {
                                 game.use_portal(id);
@@ -882,6 +1033,47 @@ impl App {
                     }
                 }
             }
+            if game.world.as_ref().is_some_and(|w| w.player().is_some()) {
+                if let Some(kind) = self.npc_test.take().and_then(|c| npc::NpcKind::of_class(&c)) {
+                    to_chars |= npc_open(kind, game, &mut self.npcs, self.front.list.as_ref(), data);
+                }
+            }
+            // An NPC's window takes the keyboard and the mouse while it's open.
+            // --type: into a prompt (and Enter), or onto the board being edited.
+            match &self.npcs.window {
+                Some(npc::Window::Prompt { .. }) => {
+                    if let Some(t) = self.type_text.take() {
+                        self.npc_keys.push((KeyCode::KeyA, Some(t)));
+                        self.npc_keys.push((KeyCode::Enter, None));
+                    }
+                }
+                Some(npc::Window::Board { edit: Some(_), .. }) => {
+                    if let Some(t) = self.type_text.take() {
+                        self.npc_keys.push((KeyCode::KeyA, Some(t)));
+                    }
+                }
+                _ => {}
+            }
+            let mut npc_acts = Vec::new();
+            for (code, text) in std::mem::take(&mut self.npc_keys) {
+                npc_acts.extend(self.npcs.key(code, text.as_deref()));
+            }
+            if self.npcs.window.is_some() {
+                let me = game.world.as_ref().and_then(|w| w.player());
+                for (down, pos) in std::mem::take(&mut self.clicks) {
+                    if down {
+                        npc_acts.extend(self.npcs.click(pos, me));
+                    }
+                }
+                self.mouse_down = false;
+            }
+            for act in npc_acts {
+                if let Some(board) = npc_act(act, game, &mut self.npcs, now) {
+                    if let (Some(endpoint), Some((email, password))) = (&self.endpoint, &self.account) {
+                        self.npc_request = Some((NpcRequest::SetBoard, endpoint.set_guild_board(email, password, &board)));
+                    }
+                }
+            }
             if let Some(p) = &built {
                 p.moved(&mut self.hud, self.mouse);
                 for (down, pos) in std::mem::take(&mut self.clicks) {
@@ -894,6 +1086,11 @@ impl App {
                     }
                 }
                 for action in actions {
+                    if let hud::Action::Button(hud::Button::Npc(kind)) = action {
+                        to_chars |= npc_open(kind, game, &mut self.npcs, self.front.list.as_ref(), data);
+                        self.keys.clear();
+                        continue;
+                    }
                     if let Some(line) = apply_action(game, p, action, now, data) {
                         self.chat_input = Some(line);
                     }
@@ -1017,6 +1214,7 @@ impl App {
                     now,
                 };
                 hud::draw_windows(&mut ui, &lay, world, p, &social, mouse);
+                self.npcs.draw(&mut ui, &lay, world.player(), mouse, now);
                 hud::draw_overlay(&mut ui, &lay, world, p, &self.hud, mouse);
             }
         }
@@ -1026,6 +1224,9 @@ impl App {
             self.menu_buttons = screens::draw_game_menu(&mut ui, w as f32, h as f32, mouse);
         }
         self.finish_frame(now);
+        if to_chars {
+            self.leave_game(None);
+        }
     }
 
     /// Present the frame: the --shot capture, and the title's frame rate.
@@ -1198,6 +1399,13 @@ impl ApplicationHandler<UserEvent> for App {
                     }
                     return;
                 }
+                if self.npcs.window.is_some() && matches!(self.phase, Phase::Playing(_)) {
+                    if pressed {
+                        self.npc_keys.push((code, event.text.as_ref().map(|t| t.to_string())));
+                    }
+                    self.keys.remove(&code);
+                    return;
+                }
                 if pressed && !event.repeat && code == KeyCode::Escape {
                     if let Phase::Playing(game) = &mut self.phase {
                         if game.trade.is_some() {
@@ -1304,7 +1512,8 @@ fn main() {
         hud: Default::default(),
         clicks: Vec::new(),
         map_colors: Default::default(),
-        walk_to: walk_to_arg(),
+        walk_to: walk_to_arg().first().copied(),
+        walk_more: walk_to_arg().into_iter().skip(1).collect(),
         mouse: mouse_arg().unwrap_or((0.0, 0.0)),
         mouse_fixed: mouse_arg().is_some() || !mouse_script_arg().is_empty(),
         mouse_script: mouse_script_arg(),
@@ -1318,6 +1527,11 @@ fn main() {
         front_keys: Vec::new(),
         game_menu: false,
         menu_buttons: Vec::new(),
+        npcs: Default::default(),
+        npc_request: None,
+        npc_keys: Vec::new(),
+        type_text: text_arg("--type"),
+        npc_test: text_arg("--npc"),
     };
     #[cfg(not(target_arch = "wasm32"))]
     {

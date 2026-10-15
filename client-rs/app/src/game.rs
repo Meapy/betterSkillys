@@ -7,7 +7,8 @@ use bsk_net::{GameSocket, SocketEvent, Target};
 use bsk_proto::{
     AcceptTrade, Buy, CancelTrade, ChangeTrade, ClientMessage, EditAccountList, EnemyHit, Escape, GroundDamage, GuildInvite,
     InvDrop, JoinGuild, JoinParty, List16, PartyInvite, RequestTrade, Teleport, TradeItem, InvSwap, OtherHit, PlayerHit, PlayerShoot, PlayerText,
-    Reconnect, ServerMessage, SlotObject, SquareHit, UseItem, UsePortal, ViewRadius, WorldPos,
+    Reconnect, ServerMessage, SlotObject, SquareHit, UseItem, UsePortal, ViewRadius, WorldPos, ChangeGuildRank, ChooseName,
+    CreateGuild, GuildRemove, Reskin, UseStorage,
 };
 use bsk_session::{Event, HelloParams, Join, Session};
 use bsk_world::{Hit, MoveInput, Projectile, World};
@@ -46,6 +47,9 @@ pub struct Game {
     pub bubbles: Vec<crate::view::Bubble>,
     /// The quest's object (`QuestObjId`), for the arrow and the boss bar.
     pub quest: Option<i32>,
+    /// The latest `NameResult` and `GuildResult`, for the window that asked.
+    pub name_result: Option<(bool, String)>,
+    pub guild_result: Option<(bool, String)>,
     pub trade: Option<Trade>,
     /// The latest invitation, and when it came.
     pub invite: Option<(Invite, i32)>,
@@ -134,6 +138,8 @@ impl Game {
             floaters: Vec::new(),
             bubbles: Vec::new(),
             quest: None,
+            name_result: None,
+            guild_result: None,
             trade: None,
             invite: None,
             locked: Default::default(),
@@ -274,7 +280,14 @@ impl Game {
             ServerMessage::InvitedToGuild(g) => {
                 self.invite = Some((Invite::Guild { name: g.name.clone(), guild: g.guild_name.clone() }, now));
             }
+            ServerMessage::NameResult(n) => {
+                if n.success {
+                    self.add_chat("", "", "Your name has been changed.", 0, 0, now);
+                }
+                self.name_result = Some((n.success, n.error_text.clone()));
+            }
             ServerMessage::GuildResult(g) => {
+                self.guild_result = Some((g.success, g.error_text.clone()));
                 if !g.error_text.is_empty() {
                     self.add_chat(if g.success { "" } else { "*Error*" }, "", &g.error_text, 0, 0, now);
                 }
@@ -713,6 +726,34 @@ impl Game {
                 set.remove(&id);
             }
         }
+    }
+
+    /// The Armoire: wear this skin (0: the class's own look).
+    pub fn reskin(&mut self, skin_id: i32) {
+        self.send(Reskin { skin_id }.into());
+    }
+
+    pub fn choose_name(&mut self, name: &str) {
+        self.send(ChooseName { name: name.to_owned() }.into());
+    }
+
+    pub fn create_guild(&mut self, name: &str) {
+        self.send(CreateGuild { name: name.to_owned() }.into());
+    }
+
+    /// Remove someone from the guild (ourselves: leave it).
+    pub fn guild_remove(&mut self, name: &str) {
+        self.send(GuildRemove { name: name.to_owned() }.into());
+    }
+
+    pub fn change_guild_rank(&mut self, name: &str, guild_rank: i32) {
+        self.send(ChangeGuildRank { name: name.to_owned(), guild_rank }.into());
+    }
+
+    /// Potion storage: kind 0-7, action 0 store, 1 take, 2 drink, 3 drink to the maximum, 4
+    /// upgrade.
+    pub fn use_storage(&mut self, kind: u8, action: u8) {
+        self.send(UseStorage { kind, action }.into());
     }
 
     /// `Buy`: buy what the shop sells.

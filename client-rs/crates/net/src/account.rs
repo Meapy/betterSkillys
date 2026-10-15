@@ -226,6 +226,58 @@ pub fn parse_char_fame(xml: &str) -> Result<FameSummary, String> {
     Ok(out)
 }
 
+/// One member of `/guild/listMembers`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GuildMember {
+    pub name: String,
+    /// 0 initiate, 10 member, 20 officer, 30 leader, 40 founder.
+    pub rank: i32,
+    pub fame: i32,
+    /// Unix time.
+    pub last_seen: i64,
+}
+
+/// `/guild/listMembers`: the guild's name and members.
+pub fn parse_guild(xml: &str) -> Result<(String, Vec<GuildMember>), String> {
+    if let Some(e) = error_text(xml) {
+        return Err(e);
+    }
+    let doc = roxmltree::Document::parse(xml).map_err(|e| e.to_string())?;
+    let root = doc.root_element();
+    let members = root
+        .children()
+        .filter(|c| c.has_tag_name("Member"))
+        .map(|m| GuildMember {
+            name: child_text(m, "Name").unwrap_or("").to_owned(),
+            rank: child_text(m, "Rank").and_then(parse_int).unwrap_or(0) as i32,
+            fame: child_text(m, "Fame").and_then(parse_int).unwrap_or(0) as i32,
+            last_seen: child_text(m, "LastSeen").and_then(parse_int).unwrap_or(0),
+        })
+        .collect();
+    Ok((root.attribute("name").unwrap_or("").to_owned(), members))
+}
+
+/// `/account/grabPotions`: the stored count of each of the eight stat potions, and how many
+/// of each the storage holds.
+pub fn parse_potions(xml: &str) -> Result<(Vec<i32>, i32), String> {
+    if let Some(e) = error_text(xml) {
+        return Err(e);
+    }
+    let doc = roxmltree::Document::parse(xml).map_err(|e| e.to_string())?;
+    let text = doc.root_element().text().unwrap_or("");
+    let nums: Vec<i32> = text.split(',').map(|n| parse_int(n).unwrap_or(0) as i32).collect();
+    let capacity = nums.get(8).copied().unwrap_or(50);
+    Ok((nums.into_iter().take(8).collect(), capacity))
+}
+
+/// A plain-text answer (the guild board), or the `<Error>`'s text.
+pub fn text_answer(body: &str) -> Result<String, String> {
+    match error_text(body) {
+        Some(e) => Err(e),
+        None => Ok(body.to_owned()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -290,6 +342,20 @@ mod tests {
         assert_eq!(fame.bonuses, vec![("First born".to_owned(), 30)]);
         assert_eq!(fame.stats, vec![("Shots".to_owned(), 50)]);
         assert_eq!(fame.killed_by, "Pirate");
+    }
+
+    #[test]
+    fn guild_and_potions() {
+        let (name, members) = parse_guild(
+            r#"<Guild id="3" name="Knights"><TotalFame>9</TotalFame><Member><Name>Bob</Name><Rank>40</Rank>
+            <Fame>12</Fame><LastSeen>100</LastSeen></Member></Guild>"#,
+        )
+        .unwrap();
+        assert_eq!(name, "Knights");
+        assert_eq!(members[0], GuildMember { name: "Bob".into(), rank: 40, fame: 12, last_seen: 100 });
+        let (counts, cap) = parse_potions("<StoredPotions>1,2,3,4,5,6,7,8,100</StoredPotions>").unwrap();
+        assert_eq!((counts, cap), (vec![1, 2, 3, 4, 5, 6, 7, 8], 100));
+        assert_eq!(text_answer("Hello guild"), Ok("Hello guild".into()));
     }
 
     #[test]

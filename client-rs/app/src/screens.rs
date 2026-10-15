@@ -1065,7 +1065,7 @@ fn spinner(ui: &mut Ui, cx: f32, cy: f32, radius: f32, now: i32, s: f32) {
 }
 
 /// A class's standing frame, dyed, centred at (cx, cy).
-fn portrait(ui: &mut Ui, desc: &ObjectDesc, tex1: i32, tex2: i32, cx: f32, cy: f32, s: f32) {
+pub fn portrait(ui: &mut Ui, desc: &ObjectDesc, tex1: i32, tex2: i32, cx: f32, cy: f32, s: f32) {
     let TextureRef::Animated { set, index } = &desc.texture.pick(0).main else { return };
     let Some(src) = ui.sprites.char_src(set, *index, 0, 0) else { return };
     let dye = ui.sprites.char_mask_src(set, *index, 0, 0).map(|mask| Dye { mask, tex1, tex2 });

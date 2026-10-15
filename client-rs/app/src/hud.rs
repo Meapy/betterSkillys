@@ -377,6 +377,8 @@ pub enum Button {
     Enter(i32),
     /// Buy from the shop.
     Buy(i32),
+    /// The NPC's button (open its window, or go to the character list).
+    Npc(crate::npc::NpcKind),
     /// A nearby player in the party list: opens the player menu.
     Member(i32),
     /// An option of the player menu, for that player.
@@ -467,6 +469,8 @@ pub enum InteractKind {
     /// when it sells itself), the price and currency (0 gold, 1 fame, 2 guild fame), the rank
     /// it needs.
     Shop { item: i32, price: i32, currency: i32, rank_req: i32 },
+    /// An NPC with a panel (the Armoire, the guild register...), and the rank it asks for.
+    Npc { kind: crate::npc::NpcKind, rank_req: i32 },
 }
 
 /// Merchandise stats (`StatData`).
@@ -501,6 +505,11 @@ pub fn interact_target(world: &World, data: &GameData) -> Option<Interact> {
                 let stat = |id: u8| o.stat_int(id).unwrap_or(0);
                 let item = if d.class == ObjectClass::Merchant { o.stat_int(merch::TYPE).unwrap_or(-1) } else { -1 };
                 InteractKind::Shop { item, price: stat(merch::PRICE), currency: stat(merch::CURRENCY), rank_req: stat(merch::RANK_REQ) }
+            } else if let Some(kind) = match &d.class {
+                ObjectClass::Other(c) => crate::npc::NpcKind::of_class(c),
+                _ => None,
+            } {
+                InteractKind::Npc { kind, rank_req: o.stat_int(merch::RANK_REQ).unwrap_or(0) }
             } else {
                 return None;
             };
@@ -512,7 +521,7 @@ pub fn interact_target(world: &World, data: &GameData) -> Option<Interact> {
             id: o.id,
             // Bags and shops by their type's name (or the item's), portals by their name.
             name: match kind {
-                InteractKind::Container => d.display_id.clone(),
+                InteractKind::Container | InteractKind::Npc { .. } => d.display_id.clone(),
                 InteractKind::Shop { item, .. } if item > 0 => {
                     data.objects.get(&(item as u16)).map_or_else(|| d.display_id.clone(), |i| i.display_id.clone())
                 }
@@ -648,6 +657,10 @@ impl Panel {
                 }
             } else if target.kind == InteractKind::Portal {
                 panel.buttons.push((Button::Enter(target.id), lay.rect(40.0, 624.0, 120.0, 34.0)));
+            } else if let InteractKind::Npc { kind, rank_req } = target.kind {
+                if crate::npc::interact_text(kind, me, rank_req).1.is_some() {
+                    panel.buttons.push((Button::Npc(kind), lay.rect(16.0, 650.0, 168.0, 34.0)));
+                }
             } else {
                 panel.buttons.push((Button::Buy(target.id), lay.rect(16.0, 656.0, 168.0, 32.0)));
                 if let InteractKind::Shop { item, .. } = target.kind {
@@ -914,9 +927,9 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
         if let Some(invite) = social.invite {
             theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::ACCENT, 0.7), ((0x231E16, 0.92), (0x17150F, 0.92)));
             let (title, detail) = match invite {
-                crate::game::Invite::Trade { name } => (format!("{name}"), "wants to trade with you".to_owned()),
-                crate::game::Invite::Party { name, .. } => (format!("{name}"), "invites you to a party".to_owned()),
-                crate::game::Invite::Guild { name, guild } => (format!("{name}"), format!("invites you to {guild}")),
+                crate::game::Invite::Trade { name } => (name.clone(), "wants to trade with you".to_owned()),
+                crate::game::Invite::Party { name, .. } => (name.clone(), "invites you to a party".to_owned()),
+                crate::game::Invite::Guild { name, guild } => (name.clone(), format!("invites you to {guild}")),
             };
             let size = lay.font(14.0);
             let tw = ui.measure(&title, size, true);
@@ -950,6 +963,13 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
         let size = lay.font(13.0);
         let w = ui.measure(&target.name, size, true);
         ui.label(&target.name, lay.panel_x + (PANEL_W * s - w) / 2.0, 592.0 * s, size, true, color::ACCENT_HI);
+        // An NPC: what it does (or who we are to it).
+        if let InteractKind::Npc { kind, rank_req } = target.kind {
+            let (line, _) = crate::npc::interact_text(kind, me, rank_req);
+            let small = lay.font(11.5);
+            let lw = ui.measure(&line, small, false);
+            ui.label(&line, lay.panel_x + (PANEL_W * s - lw) / 2.0, 618.0 * s, small, false, color::TEXT_DIM);
+        }
         // A shop: what it sells, and the rank it asks for.
         if let InteractKind::Shop { rank_req, .. } = target.kind {
             if let Some((r, item)) = panel.shop_icon {
@@ -973,6 +993,13 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
             Button::Enter(_) => ("Enter  0".to_owned(), Kind::Primary),
             Button::Buy(_) => match panel.interact.as_ref().map(|i| i.kind) {
                 Some(InteractKind::Shop { price, currency, .. }) => (format!("Buy  ·  {}", price_text(price, currency)), Kind::Primary),
+                _ => continue,
+            },
+            Button::Npc(_) => match panel.interact.as_ref().map(|i| i.kind) {
+                Some(InteractKind::Npc { kind, rank_req }) => match crate::npc::interact_text(kind, me, rank_req).1 {
+                    Some(b) => b,
+                    None => continue,
+                },
                 _ => continue,
             },
             Button::InviteYes => (if matches!(social.invite, Some(crate::game::Invite::Trade { .. })) { "Trade" } else { "Join" }.to_owned(), Kind::Primary),

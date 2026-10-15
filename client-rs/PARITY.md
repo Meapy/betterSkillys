@@ -53,14 +53,14 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Trading | `TradePanel`, `onTrade*` | Done |
 | Party: invite, join | `PartyPanel`, `onInvitedToParty` | Done |
 | Guild: invite and join | `GuildInvitePanel`, `onInvitedToGuild` | Done |
-| Guild: register, board, chronicle, hall portal | `Guild*Panel`, `/guild/*` | To do |
+| Guild: create, renounce, board (read and write), member list (promote, demote, remove), hall portal | `Guild*Panel`, `/guild/*` | Done |
 | Merchants and shops (and their balloons) | `SellableObjectPanel`, `Merchant`, `onBuyResult` | Done |
 | Market | `MarketPanel`, `onMarket*Result` | To do |
-| Forge | `ForgePanel` | To do |
-| Potion storage | `PotionsPanel`, `/account/grabPotions` | To do |
-| Skin changer, reskin vendor | `CharacterChangerPanel`, `ReskinPanel` | To do |
-| Name changer | `NameChangerPanel`, `onNameResult` | To do |
-| Stat NPC, bounty board, money changer | `StatNPCPanel`, `BountyBoardPanel`, `MoneyChangerPanel` | To do |
+| Forge | `ForgePanel` | Dropped: no map places a Forge (the server's `/forge` works from chat) |
+| Potion storage: store, take, drink, drink to the maximum, upgrade | `PotionsPanel`, `/account/grabPotions` | Done |
+| Character changer, the Armoire (skins) | `CharacterChangerPanel`, `ReskinPanel` | Done |
+| Name changer | `NameChangerPanel`, `onNameResult` | Done |
+| Stat NPC, bounty board, money changer | `StatNPCPanel`, `BountyBoardPanel`, `MoneyChangerPanel` | Dropped: no map places them |
 | Arena wave warning | `onImminentArenaWave` | To do |
 | Pictures from the server (`Pic`) | `onPic` | To do |
 | Options: graphics, sound, controls, key bindings | `Options` | To do |
