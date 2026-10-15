@@ -30,6 +30,8 @@ pub enum Screen {
     Account,
     /// How a dead character's fame was counted.
     Death,
+    /// The world servers to play on (`ServersScreen`).
+    Servers,
 }
 
 /// The text fields, by index.
@@ -79,6 +81,9 @@ enum Target {
     Back,
     ServerPrev,
     ServerNext,
+    ToServers,
+    /// A row of the Servers screen: play on that server.
+    Server(usize),
     Logout,
     /// The Changelog window.
     Changelog,
@@ -329,7 +334,7 @@ impl Front {
             KeyCode::Escape => match self.screen {
                 Screen::Register => self.show(Screen::Login),
                 Screen::Death if self.death_from_graveyard => self.show(Screen::Graveyard),
-                Screen::NewChar | Screen::Legends | Screen::Graveyard | Screen::Account | Screen::Death => self.show(Screen::Chars),
+                Screen::NewChar | Screen::Legends | Screen::Graveyard | Screen::Account | Screen::Death | Screen::Servers => self.show(Screen::Chars),
                 Screen::Class(_) => self.show(Screen::NewChar),
                 _ => {}
             },
@@ -414,6 +419,11 @@ impl Front {
             Target::ServerPrev if servers > 0 => self.server = (self.server + servers - 1) % servers,
             Target::ServerNext if servers > 0 => self.server = (self.server + 1) % servers,
             Target::ServerPrev | Target::ServerNext => {}
+            Target::ToServers => self.show(Screen::Servers),
+            Target::Server(i) => {
+                self.server = i.min(servers.saturating_sub(1));
+                self.show(Screen::Chars);
+            }
             Target::Logout => return Some(Action::Logout),
             Target::Changelog => return Some(Action::Changelog),
         }
@@ -451,6 +461,7 @@ impl Front {
             Screen::Graveyard => self.draw_graveyard(ui, w, h, s, mouse),
             Screen::Account => self.draw_account(ui, w, h, s, mouse, now),
             Screen::Death => self.draw_death(ui, w, h, s, mouse),
+            Screen::Servers => self.draw_servers(ui, w, h, s, mouse),
         }
         // The version, bottom right: opens the changelog.
         if !self.version_line.is_empty() && self.screen != Screen::Busy {
@@ -615,6 +626,7 @@ impl Front {
         let buttons = [
             (Target::Logout, "Log out"),
             (Target::ToAccount, "Account"),
+            (Target::ToServers, "Servers"),
             (Target::ToLegends, "Legends"),
             (Target::ToGraveyard, "Graveyard"),
             (Target::Changelog, "Changelog"),
@@ -693,15 +705,17 @@ impl Front {
             self.targets.push((Target::NewChar, r));
         }
         let bottom = y0 + visible as f32 * (ch + gap);
-        // The server: arrows to switch when there's a choice.
+        // The server: arrows to switch when there's a choice; the pill opens the Servers screen.
         if let Some(server) = list.servers.get(self.server.min(list.servers.len().saturating_sub(1))) {
             let size = (15.0 * s).round();
             let label = format!("Server: {}", server.name);
             let lw = ui.measure(&label, size, true);
             let pill_w = lw + if list.servers.len() > 1 { 90.0 * s } else { 36.0 * s };
             let pill = [(w - pill_w) / 2.0, bottom + 10.0 * s, pill_w, 34.0 * s];
-            theme::frame(ui.renderer, pill, pill[3] / 2.0, s.max(1.0), (color::BORDER, 1.0), ((color::PANEL_TOP, 0.9), (color::PANEL_BOTTOM, 0.9)));
+            let over = inside(pill, mouse) && self.confirm.is_none();
+            theme::frame(ui.renderer, pill, pill[3] / 2.0, s.max(1.0), (if over { color::ACCENT } else { color::BORDER }, 1.0), ((color::PANEL_TOP, 0.9), (color::PANEL_BOTTOM, 0.9)));
             ui.label(&label, pill[0] + (pill[2] - lw) / 2.0, pill[1] + (pill[3] - size * 1.22) / 2.0, size, true, color::TEXT);
+            self.targets.push((Target::ToServers, pill));
             if list.servers.len() > 1 {
                 for (t, arrow, ax) in [(Target::ServerPrev, "‹", pill[0] + 10.0 * s), (Target::ServerNext, "›", pill[0] + pill[2] - 26.0 * s)] {
                     let r = [ax - 6.0 * s, pill[1], 28.0 * s, pill[3]];
@@ -1117,6 +1131,50 @@ impl Front {
             if let Some(id) = g.death_char_id() {
                 self.targets.push((Target::Grave(id), r));
             }
+        }
+        self.button(ui, Target::Back, [(w - 140.0 * s) / 2.0, h - 66.0 * s, 140.0 * s, 40.0 * s], "Back", Kind::Secondary, s, mouse);
+    }
+
+    /// `ServersScreen`: the world servers with how full each is; a click picks one and goes back
+    /// to the characters.
+    fn draw_servers(&mut self, ui: &mut Ui, w: f32, h: f32, s: f32, mouse: (f64, f64)) {
+        let pad = 24.0 * s;
+        let ts = (26.0 * s).round();
+        let tw = ui.measure("Servers", ts, true);
+        ui.label("Servers", (w - tw) / 2.0, pad, ts, true, color::TEXT);
+        let servers = self.list.as_ref().map_or_else(Vec::new, |l| l.servers.clone());
+        let list_r = [(w - 640.0 * s).max(16.0) / 2.0, pad + 56.0 * s, (640.0 * s).min(w - 32.0), h - pad * 2.0 - 124.0 * s];
+        theme::panel(ui.renderer, list_r, s);
+        if servers.is_empty() {
+            let t = "The account server lists no world servers.";
+            let size = (16.0 * s).round();
+            let tw = ui.measure(t, size, true);
+            ui.label(t, list_r[0] + (list_r[2] - tw) / 2.0, list_r[1] + list_r[3] / 2.0, size, true, color::TEXT_DIM);
+        }
+        let chosen = self.server.min(servers.len().saturating_sub(1));
+        let row_h = 58.0 * s;
+        let fit = ((list_r[3] - 16.0 * s) / row_h).floor().max(1.0) as usize;
+        for (i, server) in servers.iter().take(fit).enumerate() {
+            let r = [list_r[0] + 8.0 * s, list_r[1] + 8.0 * s + i as f32 * row_h, list_r[2] - 16.0 * s, row_h - 6.0 * s];
+            let over = inside(r, mouse);
+            let edge = if i == chosen { color::ACCENT } else if over { color::BORDER_HI } else { color::BORDER };
+            theme::frame(ui.renderer, r, 8.0 * s, s.max(1.0), (edge, 1.0), ((color::SLOT_TOP, if over { 0.95 } else { 0.8 }), (color::SLOT_BOTTOM, 0.9)));
+            let ns = (18.0 * s).round();
+            let name = if server.admin_only { format!("{} (admin)", server.name) } else { server.name.clone() };
+            ui.label(&name, r[0] + 18.0 * s, r[1] + (r[3] - ns * 1.22) / 2.0, ns, true, color::TEXT);
+            // As `ServerBox`: Full at 100%, Crowded from 66%, with the player count.
+            let (status, c) = if server.usage >= 1.0 {
+                ("Full", color::DANGER)
+            } else if server.usage >= 0.66 {
+                ("Crowded", 0xFC8642)
+            } else {
+                ("Normal", color::GOOD)
+            };
+            let status = if server.usage_text.is_empty() { status.to_owned() } else { format!("{status} {}", server.usage_text) };
+            let ss = (16.0 * s).round();
+            let sw = ui.measure(&status, ss, true);
+            ui.label(&status, r[0] + r[2] - sw - 18.0 * s, r[1] + (r[3] - ss * 1.22) / 2.0, ss, true, c);
+            self.targets.push((Target::Server(i), r));
         }
         self.button(ui, Target::Back, [(w - 140.0 * s) / 2.0, h - 66.0 * s, 140.0 * s, 40.0 * s], "Back", Kind::Secondary, s, mouse);
     }

@@ -21,7 +21,7 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | New character, locked classes | `NewCharacterScreen` | Done |
 | Skins: pick one for a new character, buy skins | `CharacterSkinView`, `/account/purchaseSkin` | Done |
 | Class unlock purchase | `/char/purchaseClassUnlock` | Dropped: the server answers "Invalid Endpoint" |
-| Server choice | `ServersScreen` | Done |
+| Server choice | `ServersScreen` | Done: a Servers screen (button or the "Server:" pill on the character list) with each server's load, and arrows on the pill |
 | Legends (fame list: week, month, all time) | `LegendsView`, `/fame/list` | Done |
 | Death summary (fame breakdown) | `FameView`, `/char/fame` | Done |
 | Graveyard (an account's dead characters, each opening its fame summary) | `Graveyard`, `<News>` | Done |
