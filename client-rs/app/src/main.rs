@@ -9,6 +9,7 @@ mod hud;
 mod login;
 mod particles;
 mod npc;
+mod options;
 mod redraw;
 mod screens;
 #[allow(dead_code)] // lookups the game screens will use
@@ -154,6 +155,9 @@ struct App {
     npc_keys: Vec<(KeyCode, Option<String>)>,
     /// Sound effects and music, once we know the account server.
     audio: Option<audio::Audio>,
+    /// Key bindings, graphics and sound settings, and their window.
+    settings: options::Settings,
+    options_ui: options::OptionsUi,
     /// `--type <text>` (tests): typed into the first NPC prompt that opens, then Enter.
     type_text: Option<String>,
     /// `--npc <class>` (tests): open that NPC's window once in the game, wherever we stand.
@@ -468,6 +472,7 @@ fn hold_args() -> Vec<(KeyCode, i32)> {
                     "space" => KeyCode::Space,
                     "hp" => KeyCode::KeyF,
                     "mp" => KeyCode::KeyV,
+                    "o" => KeyCode::KeyO,
                     "-" => KeyCode::F24, // a pause: holds nothing
                     _ => return None,
                 };
@@ -879,6 +884,7 @@ impl App {
     /// Play what the game and the screens asked for; follow the map's music.
     fn update_audio(&mut self, now: i32) {
         let Some(audio) = &mut self.audio else { return };
+        audio.settings = self.settings.sound;
         // Scripted input (tests) counts as the player doing something.
         if self.holds_from.is_some() {
             audio.wake();
@@ -947,20 +953,28 @@ impl App {
         self.update_audio(now);
 
         let mut keys = (0.0, 0.0);
-        if self.held(&[KeyCode::KeyA, KeyCode::ArrowLeft]) {
+        let bound = |b: options::Bind, alt: Option<KeyCode>| -> Vec<KeyCode> { self.settings.key(b).into_iter().chain(alt).collect() };
+        let (left, right, up, down) = (
+            bound(options::Bind::MoveLeft, Some(KeyCode::ArrowLeft)),
+            bound(options::Bind::MoveRight, Some(KeyCode::ArrowRight)),
+            bound(options::Bind::MoveUp, Some(KeyCode::ArrowUp)),
+            bound(options::Bind::MoveDown, Some(KeyCode::ArrowDown)),
+        );
+        let (rot_l, rot_r, reset) = (bound(options::Bind::RotateLeft, None), bound(options::Bind::RotateRight, None), bound(options::Bind::ResetCamera, None));
+        if self.held(&left) {
             keys.0 -= 1.0;
         }
-        if self.held(&[KeyCode::KeyD, KeyCode::ArrowRight]) {
+        if self.held(&right) {
             keys.0 += 1.0;
         }
-        if self.held(&[KeyCode::KeyW, KeyCode::ArrowUp]) {
+        if self.held(&up) {
             keys.1 -= 1.0;
         }
-        if self.held(&[KeyCode::KeyS, KeyCode::ArrowDown]) {
+        if self.held(&down) {
             keys.1 += 1.0;
         }
-        let rotate = self.held(&[KeyCode::KeyE]) as i32 as f64 - self.held(&[KeyCode::KeyQ]) as i32 as f64;
-        let reset_angle = self.held(&[KeyCode::KeyZ]);
+        let rotate = if self.settings.rotation { self.held(&rot_r) as i32 as f64 - self.held(&rot_l) as i32 as f64 } else { 0.0 };
+        let reset_angle = self.held(&reset);
 
         // Scripted walking (--walk-to), then the --hold script.
         // With --say (a command that may move us, like /shop), walk once we've arrived.
@@ -1018,6 +1032,13 @@ impl App {
         let mut panel = None;
         let mut to_chars = false;
         let mut jitter = (0.0, 0.0);
+        let show = view::Show {
+            shadows: self.settings.shadows,
+            hp_bars: self.settings.hp_bars,
+            bubbles: self.settings.bubbles,
+            ally_shots: self.settings.ally_shots,
+            damage_numbers: self.settings.damage_numbers,
+        };
         if matches!(self.phase, Phase::Menu) {
             let mut actions = Vec::new();
             for (code, text) in std::mem::take(&mut self.front_keys) {
@@ -1049,6 +1070,10 @@ impl App {
             self.mouse_down = false;
             match choice {
                 Some(screens::MenuChoice::Resume) => self.game_menu = false,
+                Some(screens::MenuChoice::Options) => {
+                    self.game_menu = false;
+                    self.options_ui.show();
+                }
                 Some(screens::MenuChoice::CharSelect) => {
                     self.leave_game(None);
                     return;
@@ -1074,10 +1099,18 @@ impl App {
             };
             let built = game.world.as_ref().map(|w| hud::Panel::new(&lay, w, data, &self.hud, &social));
             let mut actions = Vec::new();
+            use options::Bind;
             for key in pressed {
-                match key {
-                    // 0: interact with what we stand by (enter the portal, buy from the shop).
-                    KeyCode::Digit0 | KeyCode::Numpad0 => match built.as_ref().and_then(|p| p.interact.clone()) {
+                // The bound key, or a few fixed extras (numpad 0, + and -).
+                let bind = self.settings.bind_of(key).or(match key {
+                    KeyCode::Numpad0 => Some(Bind::Interact),
+                    KeyCode::NumpadAdd => Some(Bind::ZoomIn),
+                    KeyCode::NumpadSubtract => Some(Bind::ZoomOut),
+                    _ => None,
+                });
+                match bind {
+                    // Interact with what we stand by (enter the portal, buy from the shop).
+                    Some(Bind::Interact) => match built.as_ref().and_then(|p| p.interact.clone()) {
                         Some(hud::Interact { id, kind: hud::InteractKind::Portal, .. }) => game.use_portal(id),
                         Some(hud::Interact { id, kind: hud::InteractKind::Shop { .. }, .. }) => game.buy(id),
                         Some(hud::Interact { kind: hud::InteractKind::Npc { kind, .. }, .. }) => {
@@ -1090,27 +1123,28 @@ impl App {
                             }
                         }
                     },
-                    KeyCode::KeyR => game.escape(),
-                    KeyCode::KeyI => self.autofire = !self.autofire,
-                    // MiniMap zoom: - out, = in.
-                    KeyCode::Minus | KeyCode::NumpadSubtract => self.hud.minimap_zoom += 1,
-                    KeyCode::Equal | KeyCode::NumpadAdd => self.hud.minimap_zoom = self.hud.minimap_zoom.saturating_sub(1),
-                    KeyCode::Space => ability = true,
-                    KeyCode::KeyF => game.use_potion(now, 0),
-                    KeyCode::KeyV => game.use_potion(now, 1),
-                    // 1-8: equip or use what's in that inventory slot (MapUserInput.useItem).
-                    _ => {
-                        let n = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8]
-                            .iter()
-                            .position(|&k| k == key);
-                        if let (Some(n), Some(p)) = (n, &built) {
-                            if let Some(slot) = p.slots.iter().find(|s| s.kind == hud::SlotKind::Inventory(n as u8 + 1)) {
+                    Some(Bind::Nexus) => game.escape(),
+                    Some(Bind::Autofire) => self.autofire = !self.autofire,
+                    Some(Bind::ZoomOut) => self.hud.minimap_zoom += 1,
+                    Some(Bind::ZoomIn) => self.hud.minimap_zoom = self.hud.minimap_zoom.saturating_sub(1),
+                    Some(Bind::Ability) => ability = true,
+                    Some(Bind::HealthPotion) => game.use_potion(now, 0),
+                    Some(Bind::MagicPotion) => game.use_potion(now, 1),
+                    Some(Bind::Options) => {
+                        self.options_ui.show();
+                        self.keys.clear();
+                    }
+                    // Equip or use what's in that inventory slot (MapUserInput.useItem).
+                    Some(Bind::Slot(n)) => {
+                        if let Some(p) = &built {
+                            if let Some(slot) = p.slots.iter().find(|s| s.kind == hud::SlotKind::Inventory(n)) {
                                 if slot.item > 0 {
                                     actions.push(hud::Action::EquipOrUse(*slot));
                                 }
                             }
                         }
                     }
+                    _ => {}
                 }
             }
             if game.world.as_ref().is_some_and(|w| w.player().is_some()) {
@@ -1118,6 +1152,16 @@ impl App {
                     to_chars |= npc_open(kind, game, &mut self.npcs, self.front.list.as_ref(), data);
                 }
             }
+            // The options window takes the mouse while it's open.
+            if self.options_ui.open {
+                for (down, pos) in std::mem::take(&mut self.clicks) {
+                    if down && self.options_ui.click(pos, &mut self.settings) {
+                        self.settings.save();
+                    }
+                }
+                self.mouse_down = false;
+            }
+            game.particles.disabled = !self.settings.particles;
             // An NPC's window takes the keyboard and the mouse while it's open.
             // --type: into a prompt (and Enter), or onto the board being edited.
             match &self.npcs.window {
@@ -1272,7 +1316,7 @@ impl App {
                             let angle = game.camera_angle + (mouse.1 - camera.cy).atan2(mouse.0 - camera.cx);
                             ability_at = Some((x, y, angle));
                         }
-                        let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters, bubbles: &game.bubbles, particles: &game.particles };
+                        let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters, bubbles: &game.bubbles, particles: &game.particles, show };
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
                         let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
                         hud::draw_quest(&mut ui, &lay, world, &camera, game.quest, &game.keys, &game.dealt);
@@ -1330,6 +1374,10 @@ impl App {
             let (w, h) = renderer.size();
             let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
             self.menu_buttons = screens::draw_game_menu(&mut ui, w as f32, h as f32, mouse);
+        }
+        if self.options_ui.open {
+            let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+            self.options_ui.draw(&mut ui, &lay, &self.settings, mouse);
         }
         self.finish_frame(now);
         if to_chars {
@@ -1515,6 +1563,13 @@ impl ApplicationHandler<UserEvent> for App {
                     }
                     return;
                 }
+                if self.options_ui.open && matches!(self.phase, Phase::Playing(_)) {
+                    if pressed && self.options_ui.key(code, &mut self.settings) {
+                        self.settings.save();
+                    }
+                    self.keys.remove(&code);
+                    return;
+                }
                 if self.npcs.window.is_some() && matches!(self.phase, Phase::Playing(_)) {
                     if pressed {
                         self.npc_keys.push((code, event.text.as_ref().map(|t| t.to_string())));
@@ -1534,22 +1589,24 @@ impl ApplicationHandler<UserEvent> for App {
                     return;
                 }
                 if pressed && !event.repeat && matches!(self.phase, Phase::Playing(_)) {
-                    if matches!(code, KeyCode::PageUp | KeyCode::PageDown) {
-                        self.scroll_chat(code == KeyCode::PageUp);
+                    use options::Bind;
+                    let bind = self.settings.bind_of(code).or((code == KeyCode::NumpadEnter).then_some(Bind::Chat));
+                    if matches!(bind, Some(Bind::ChatUp | Bind::ChatDown)) {
+                        self.scroll_chat(bind == Some(Bind::ChatUp));
                         return;
                     }
-                    if code != KeyCode::Tab {
+                    if bind != Some(Bind::Tell) {
                         if let Phase::Playing(game) = &self.phase {
                             self.teller = game.tellers.len();
                         }
                     }
                     // TextBox's keys: chat, a command, a tell (Tab cycles who to), guild and party.
-                    let open = match code {
-                        KeyCode::Enter | KeyCode::NumpadEnter => Some(String::new()),
-                        KeyCode::Slash => Some("/".to_owned()),
-                        KeyCode::Tab => Some(self.tell_prefix()),
-                        KeyCode::KeyG => Some("/g ".to_owned()),
-                        KeyCode::KeyP => Some("/p ".to_owned()),
+                    let open = match bind {
+                        Some(Bind::Chat) => Some(String::new()),
+                        Some(Bind::Command) => Some("/".to_owned()),
+                        Some(Bind::Tell) => Some(self.tell_prefix()),
+                        Some(Bind::GuildChat) => Some("/g ".to_owned()),
+                        Some(Bind::PartyChat) => Some("/p ".to_owned()),
                         _ => None,
                     };
                     if open.is_some() {
@@ -1666,6 +1723,8 @@ fn main() {
         npc_request: None,
         npc_keys: Vec::new(),
         audio: None,
+        settings: options::Settings::load(),
+        options_ui: Default::default(),
         type_text: text_arg("--type"),
         npc_test: text_arg("--npc"),
         effect_test: text_arg("--effect").and_then(|t| t.parse().ok()).map(|t| (t, i32::MIN / 2)),

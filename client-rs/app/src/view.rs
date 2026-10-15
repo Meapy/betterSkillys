@@ -117,6 +117,18 @@ pub struct Scene<'a> {
     pub floaters: &'a [Floater],
     pub bubbles: &'a [Bubble],
     pub particles: &'a crate::particles::Particles,
+    pub show: Show,
+}
+
+/// What the options let the player hide.
+#[derive(Clone, Copy, Debug)]
+pub struct Show {
+    pub shadows: bool,
+    pub hp_bars: bool,
+    pub bubbles: bool,
+    /// Other players' projectiles (`allyShots`).
+    pub ally_shots: bool,
+    pub damage_numbers: bool,
 }
 
 /// The image an object shows now, before redrawing.
@@ -325,6 +337,10 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         }
     }
     for p in &world.projectiles {
+        let ally = !p.damages_players && Some(p.owner_id) != world.me;
+        if ally && !scene.show.ally_shots {
+            continue;
+        }
         if (p.x - cam.x).abs() <= radius && (p.y - cam.y).abs() <= radius {
             items.push((cam.to_screen(p.x, p.y, 0.0)[1], Item::Projectile(p)));
         }
@@ -339,7 +355,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         }
     }
     let k = (cam.scale / TILE_PX) as f32;
-    if let Some(shadow) = redrawer.shadow(renderer) {
+    if let Some(shadow) = redrawer.shadow(renderer).filter(|_| scene.show.shadows) {
         for (_, item) in items.iter().filter(|(_, i)| !under(i)) {
             let Item::Sprite { obj, desc } = item else { continue };
             if desc.shadow_size <= 0 {
@@ -365,7 +381,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
     scene.particles.draw(&cam, renderer);
 
     // HP bars (`GameObject.drawHpBar`) under monsters and players.
-    for (_, item) in &items {
+    for (_, item) in items.iter().filter(|_| scene.show.hp_bars) {
         let Item::Sprite { obj, desc } = item else { continue };
         if !(desc.enemy || desc.player) || desc.no_mini_map {
             continue;
@@ -392,7 +408,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
 
     // Damage numbers and notifications, rising above the object.
     let style = Style { size: (18.0 * k).round().max(10.0), bold: true, color: 0xFF0000 };
-    for f in scene.floaters {
+    for f in scene.floaters.iter().filter(|f| scene.show.damage_numbers || !(f.color == 0xFF0000 && f.text.starts_with('-'))) {
         let Some(obj) = world.objects.get(&f.object_id) else { continue };
         let age = (scene.time - f.at) as f32 / 1000.0;
         let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
@@ -402,7 +418,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
 
     // Speech balloons: the text wrapped to 150 px, in a cut-corner box with a tail, above the
     // speaker.
-    for b in scene.bubbles {
+    for b in scene.bubbles.iter().filter(|_| scene.show.bubbles) {
         let Some(obj) = world.objects.get(&b.object_id) else { continue };
         let size = (14.0 * k).round().max(9.0);
         let style = Style { size, bold: false, color: b.colors[2] };

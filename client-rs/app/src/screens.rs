@@ -1147,6 +1147,7 @@ pub fn portrait(ui: &mut Ui, desc: &ObjectDesc, tex1: i32, tex2: i32, cx: f32, c
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MenuChoice {
     Resume,
+    Options,
     CharSelect,
     Logout,
 }
@@ -1155,7 +1156,7 @@ pub enum MenuChoice {
 pub fn draw_game_menu(ui: &mut Ui, w: f32, h: f32, mouse: (f64, f64)) -> Vec<(MenuChoice, [f32; 4])> {
     let s = scale(w, h);
     ui.rect(0.0, 0.0, w, h, 0x000000, 0.5);
-    let r = [(w - 320.0 * s) / 2.0, (h - 258.0 * s) / 2.0, 320.0 * s, 258.0 * s];
+    let r = [(w - 320.0 * s) / 2.0, (h - 312.0 * s) / 2.0, 320.0 * s, 312.0 * s];
     theme::panel(ui.renderer, r, s);
     let size = (22.0 * s).round();
     let tw = ui.measure("Paused", size, true);
@@ -1167,6 +1168,7 @@ pub fn draw_game_menu(ui: &mut Ui, w: f32, h: f32, mouse: (f64, f64)) -> Vec<(Me
     let mut out = Vec::new();
     for (i, (choice, label, kind)) in [
         (MenuChoice::Resume, "Back to the game", Kind::Primary),
+        (MenuChoice::Options, "Options", Kind::Secondary),
         (MenuChoice::CharSelect, "Character select", Kind::Secondary),
         (MenuChoice::Logout, "Log out", Kind::Danger),
     ]

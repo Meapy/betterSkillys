@@ -89,6 +89,8 @@ pub struct Particles {
     /// `Camera.startJitter`: when the shaking started.
     jitter_since: Option<i32>,
     rng: u64,
+    /// Options: particles off.
+    pub disabled: bool,
 }
 
 /// At most this many particles at once, so a busy fight stays smooth.
@@ -112,7 +114,7 @@ impl Particles {
     }
 
     fn add(&mut self, p: Particle) {
-        if self.list.len() < MAX_PARTICLES {
+        if !self.disabled && self.list.len() < MAX_PARTICLES {
             self.list.push(p);
         }
     }

@@ -158,13 +158,13 @@ pub fn startup() -> Result<Startup, String> {
     Ok(Startup { endpoint: Endpoint { account: "api".into(), gateway: Some(format!("{ws}://{host}/ws")) }, login })
 }
 
-/// "Remember me": the login kept on this computer (or in this browser), as the AIR client
-/// keeps it in its shared object.
+/// What's kept on this computer (or in this browser) between runs, by name: the login
+/// ("Remember me") and the settings, as the AIR client keeps them in its shared object.
 #[cfg(not(target_arch = "wasm32"))]
-mod store {
+pub mod store {
     use std::path::PathBuf;
 
-    fn path() -> Option<PathBuf> {
+    fn path(name: &str) -> Option<PathBuf> {
         let base = if cfg!(windows) {
             std::env::var_os("APPDATA").map(PathBuf::from)
         } else if cfg!(target_os = "macos") {
@@ -174,15 +174,15 @@ mod store {
                 .map(PathBuf::from)
                 .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))
         };
-        base.map(|b| b.join("betterSkillys-rs").join("login.txt"))
+        base.map(|b| b.join("betterSkillys-rs").join(format!("{name}.txt")))
     }
 
-    pub fn load() -> Option<String> {
-        std::fs::read_to_string(path()?).ok()
+    pub fn load(name: &str) -> Option<String> {
+        std::fs::read_to_string(path(name)?).ok()
     }
 
-    pub fn save(text: Option<&str>) {
-        let Some(path) = path() else { return };
+    pub fn save(name: &str, text: Option<&str>) {
+        let Some(path) = path(name) else { return };
         match text {
             Some(t) => {
                 if let Some(dir) = path.parent() {
@@ -200,29 +200,28 @@ mod store {
 }
 
 #[cfg(target_arch = "wasm32")]
-mod store {
-    const KEY: &str = "betterSkillys-rs.login";
-
+pub mod store {
     fn storage() -> Option<web_sys::Storage> {
         web_sys::window()?.local_storage().ok()?
     }
 
-    pub fn load() -> Option<String> {
-        storage()?.get_item(KEY).ok()?
+    pub fn load(name: &str) -> Option<String> {
+        storage()?.get_item(&format!("betterSkillys-rs.{name}")).ok()?
     }
 
-    pub fn save(text: Option<&str>) {
+    pub fn save(name: &str, text: Option<&str>) {
         let Some(s) = storage() else { return };
+        let key = format!("betterSkillys-rs.{name}");
         let _ = match text {
-            Some(t) => s.set_item(KEY, t),
-            None => s.remove_item(KEY),
+            Some(t) => s.set_item(&key, t),
+            None => s.remove_item(&key),
         };
     }
 }
 
 /// The remembered (email, password), if any.
 pub fn remembered() -> Option<(String, String)> {
-    let text = store::load()?;
+    let text = store::load("login")?;
     let mut lines = text.lines();
     let email = lines.next()?.to_owned();
     let password = lines.next().unwrap_or("").to_owned();
@@ -232,7 +231,7 @@ pub fn remembered() -> Option<(String, String)> {
 /// Keep this login for next time, or forget it (`None`).
 pub fn remember(login: Option<(&str, &str)>) {
     match login {
-        Some((email, password)) => store::save(Some(&format!("{email}\n{password}\n"))),
-        None => store::save(None),
+        Some((email, password)) => store::save("login", Some(&format!("{email}\n{password}\n"))),
+        None => store::save("login", None),
     }
 }

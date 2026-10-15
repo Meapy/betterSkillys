@@ -1,0 +1,539 @@
+//! Options (`Options`, `Parameters`): key bindings, graphics and sound, kept between runs (in
+//! `settings.txt` beside the remembered login, or the browser's storage).
+//!
+//! The window opens from the Escape menu or its key (O). On the Controls tab, click a binding
+//! and press the key to use instead (Escape cancels, Backspace clears it).
+
+use crate::audio::SoundSettings;
+use crate::hud::{Layout, Ui};
+use crate::theme::{self, color, Kind};
+use winit::keyboard::KeyCode;
+
+/// Something a key does (`Parameters.setDefaultKey`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Bind {
+    MoveUp,
+    MoveLeft,
+    MoveDown,
+    MoveRight,
+    RotateLeft,
+    RotateRight,
+    ResetCamera,
+    Ability,
+    Interact,
+    Nexus,
+    Autofire,
+    HealthPotion,
+    MagicPotion,
+    /// Inventory slots 1-8.
+    Slot(u8),
+    Chat,
+    Command,
+    Tell,
+    GuildChat,
+    PartyChat,
+    ChatUp,
+    ChatDown,
+    ZoomIn,
+    ZoomOut,
+    Options,
+}
+
+/// Every binding: what, its label, its name in the file, its default key.
+pub const BINDS: [(Bind, &str, &str, KeyCode); 31] = [
+    (Bind::MoveUp, "Move up", "moveUp", KeyCode::KeyW),
+    (Bind::MoveLeft, "Move left", "moveLeft", KeyCode::KeyA),
+    (Bind::MoveDown, "Move down", "moveDown", KeyCode::KeyS),
+    (Bind::MoveRight, "Move right", "moveRight", KeyCode::KeyD),
+    (Bind::RotateLeft, "Rotate left", "rotateLeft", KeyCode::KeyQ),
+    (Bind::RotateRight, "Rotate right", "rotateRight", KeyCode::KeyE),
+    (Bind::ResetCamera, "Reset camera", "resetCamera", KeyCode::KeyZ),
+    (Bind::Ability, "Use ability", "useSpecial", KeyCode::Space),
+    (Bind::Interact, "Interact", "interact", KeyCode::Digit0),
+    (Bind::Nexus, "Nexus", "escapeToNexus", KeyCode::KeyR),
+    (Bind::Autofire, "Autofire", "autofireToggle", KeyCode::KeyI),
+    (Bind::HealthPotion, "Health potion", "useHealthPotion", KeyCode::KeyF),
+    (Bind::MagicPotion, "Magic potion", "useMagicPotion", KeyCode::KeyV),
+    (Bind::Slot(1), "Item 1", "useInvSlot1", KeyCode::Digit1),
+    (Bind::Slot(2), "Item 2", "useInvSlot2", KeyCode::Digit2),
+    (Bind::Slot(3), "Item 3", "useInvSlot3", KeyCode::Digit3),
+    (Bind::Slot(4), "Item 4", "useInvSlot4", KeyCode::Digit4),
+    (Bind::Slot(5), "Item 5", "useInvSlot5", KeyCode::Digit5),
+    (Bind::Slot(6), "Item 6", "useInvSlot6", KeyCode::Digit6),
+    (Bind::Slot(7), "Item 7", "useInvSlot7", KeyCode::Digit7),
+    (Bind::Slot(8), "Item 8", "useInvSlot8", KeyCode::Digit8),
+    (Bind::Chat, "Chat", "chat", KeyCode::Enter),
+    (Bind::Command, "Command", "chatCommand", KeyCode::Slash),
+    (Bind::Tell, "Whisper", "tell", KeyCode::Tab),
+    (Bind::GuildChat, "Guild chat", "guildChat", KeyCode::KeyG),
+    (Bind::PartyChat, "Party chat", "partyChat", KeyCode::KeyP),
+    (Bind::ChatUp, "Chat history up", "scrollChatUp", KeyCode::PageUp),
+    (Bind::ChatDown, "Chat history down", "scrollChatDown", KeyCode::PageDown),
+    (Bind::ZoomIn, "Minimap zoom in", "miniMapZoomIn", KeyCode::Equal),
+    (Bind::ZoomOut, "Minimap zoom out", "miniMapZoomOut", KeyCode::Minus),
+    (Bind::Options, "Options", "options", KeyCode::KeyO),
+];
+
+/// The keys that can be bound, for reading the file back.
+const KEYS: &[KeyCode] = &[
+    KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC, KeyCode::KeyD, KeyCode::KeyE, KeyCode::KeyF, KeyCode::KeyG,
+    KeyCode::KeyH, KeyCode::KeyI, KeyCode::KeyJ, KeyCode::KeyK, KeyCode::KeyL, KeyCode::KeyM, KeyCode::KeyN,
+    KeyCode::KeyO, KeyCode::KeyP, KeyCode::KeyQ, KeyCode::KeyR, KeyCode::KeyS, KeyCode::KeyT, KeyCode::KeyU,
+    KeyCode::KeyV, KeyCode::KeyW, KeyCode::KeyX, KeyCode::KeyY, KeyCode::KeyZ,
+    KeyCode::Digit0, KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5,
+    KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8, KeyCode::Digit9,
+    KeyCode::Numpad0, KeyCode::Numpad1, KeyCode::Numpad2, KeyCode::Numpad3, KeyCode::Numpad4, KeyCode::Numpad5,
+    KeyCode::Numpad6, KeyCode::Numpad7, KeyCode::Numpad8, KeyCode::Numpad9, KeyCode::NumpadAdd,
+    KeyCode::NumpadSubtract, KeyCode::NumpadMultiply, KeyCode::NumpadDivide, KeyCode::NumpadDecimal, KeyCode::NumpadEnter,
+    KeyCode::F1, KeyCode::F2, KeyCode::F3, KeyCode::F4, KeyCode::F5, KeyCode::F6, KeyCode::F7, KeyCode::F8,
+    KeyCode::F9, KeyCode::F10, KeyCode::F12,
+    KeyCode::ArrowUp, KeyCode::ArrowDown, KeyCode::ArrowLeft, KeyCode::ArrowRight,
+    KeyCode::Space, KeyCode::Tab, KeyCode::Enter, KeyCode::Backquote, KeyCode::Minus, KeyCode::Equal,
+    KeyCode::BracketLeft, KeyCode::BracketRight, KeyCode::Backslash, KeyCode::Semicolon, KeyCode::Quote,
+    KeyCode::Comma, KeyCode::Period, KeyCode::Slash, KeyCode::ShiftLeft, KeyCode::ShiftRight,
+    KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::AltLeft, KeyCode::AltRight, KeyCode::CapsLock,
+    KeyCode::PageUp, KeyCode::PageDown, KeyCode::Home, KeyCode::End, KeyCode::Insert, KeyCode::Delete,
+];
+
+fn key_name(k: KeyCode) -> String {
+    format!("{k:?}")
+}
+
+fn parse_key(name: &str) -> Option<KeyCode> {
+    KEYS.iter().copied().find(|k| key_name(*k) == name)
+}
+
+/// A key as the player knows it: "W", "1", "Space", "Page Up".
+pub fn key_label(k: Option<KeyCode>) -> String {
+    let Some(k) = k else { return "-".into() };
+    let name = key_name(k);
+    if let Some(c) = name.strip_prefix("Key").or_else(|| name.strip_prefix("Digit")) {
+        return c.to_owned();
+    }
+    match k {
+        KeyCode::ArrowUp => "Up".into(),
+        KeyCode::ArrowDown => "Down".into(),
+        KeyCode::ArrowLeft => "Left".into(),
+        KeyCode::ArrowRight => "Right".into(),
+        KeyCode::PageUp => "Page Up".into(),
+        KeyCode::PageDown => "Page Down".into(),
+        KeyCode::Minus => "-".into(),
+        KeyCode::Equal => "=".into(),
+        KeyCode::Slash => "/".into(),
+        KeyCode::Backquote => "`".into(),
+        KeyCode::Comma => ",".into(),
+        KeyCode::Period => ".".into(),
+        KeyCode::Semicolon => ";".into(),
+        KeyCode::Quote => "'".into(),
+        KeyCode::BracketLeft => "[".into(),
+        KeyCode::BracketRight => "]".into(),
+        KeyCode::Backslash => "\\".into(),
+        _ => name.replace("Numpad", "Num ").replace("Left", " L").replace("Right", " R"),
+    }
+}
+
+/// What can be switched on and off on the Graphics tab, by name in the file.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Toggle {
+    Particles,
+    Shadows,
+    HpBars,
+    Bubbles,
+    AllyShots,
+    DamageNumbers,
+    Rotation,
+    Sfx,
+    Shots,
+    Music,
+}
+
+const GRAPHICS: [(Toggle, &str); 7] = [
+    (Toggle::Particles, "Particles and effects"),
+    (Toggle::Shadows, "Shadows"),
+    (Toggle::HpBars, "Health bars"),
+    (Toggle::Bubbles, "Speech balloons"),
+    (Toggle::AllyShots, "Other players' shots"),
+    (Toggle::DamageNumbers, "Damage numbers"),
+    (Toggle::Rotation, "Camera rotation"),
+];
+
+const SOUNDS: [(Toggle, &str); 3] = [(Toggle::Sfx, "Sound effects"), (Toggle::Shots, "Weapon sounds"), (Toggle::Music, "Music")];
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Settings {
+    keys: Vec<Option<KeyCode>>,
+    pub sound: SoundSettings,
+    pub particles: bool,
+    pub shadows: bool,
+    pub hp_bars: bool,
+    pub bubbles: bool,
+    pub ally_shots: bool,
+    pub damage_numbers: bool,
+    pub rotation: bool,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Settings {
+            keys: BINDS.iter().map(|b| Some(b.3)).collect(),
+            sound: SoundSettings::default(),
+            particles: true,
+            shadows: true,
+            hp_bars: true,
+            bubbles: true,
+            ally_shots: true,
+            damage_numbers: true,
+            rotation: true,
+        }
+    }
+}
+
+impl Settings {
+    /// The key for `b`, if it has one.
+    pub fn key(&self, b: Bind) -> Option<KeyCode> {
+        BINDS.iter().position(|x| x.0 == b).and_then(|i| self.keys[i])
+    }
+
+    /// What `code` does, if anything.
+    pub fn bind_of(&self, code: KeyCode) -> Option<Bind> {
+        self.keys.iter().position(|k| *k == Some(code)).map(|i| BINDS[i].0)
+    }
+
+    fn set_key(&mut self, b: Bind, code: Option<KeyCode>) {
+        // A key does one thing: it leaves whatever had it.
+        if let Some(c) = code {
+            for k in &mut self.keys {
+                if *k == Some(c) {
+                    *k = None;
+                }
+            }
+        }
+        if let Some(i) = BINDS.iter().position(|x| x.0 == b) {
+            self.keys[i] = code;
+        }
+    }
+
+    fn toggle(&mut self, t: Toggle) -> &mut bool {
+        match t {
+            Toggle::Particles => &mut self.particles,
+            Toggle::Shadows => &mut self.shadows,
+            Toggle::HpBars => &mut self.hp_bars,
+            Toggle::Bubbles => &mut self.bubbles,
+            Toggle::AllyShots => &mut self.ally_shots,
+            Toggle::DamageNumbers => &mut self.damage_numbers,
+            Toggle::Rotation => &mut self.rotation,
+            Toggle::Sfx => &mut self.sound.sfx,
+            Toggle::Shots => &mut self.sound.shots,
+            Toggle::Music => &mut self.sound.music,
+        }
+    }
+
+    /// As kept: `name=value` lines.
+    pub fn to_text(&self) -> String {
+        let mut out = String::new();
+        for (i, (_, _, name, _)) in BINDS.iter().enumerate() {
+            out += &format!("{name}={}\n", self.keys[i].map_or(String::new(), key_name));
+        }
+        let mut flag = |n: &str, v: bool| out += &format!("{n}={}\n", v as u8);
+        flag("particles", self.particles);
+        flag("shadows", self.shadows);
+        flag("hpBars", self.hp_bars);
+        flag("textBubbles", self.bubbles);
+        flag("allyShots", self.ally_shots);
+        flag("damageNumbers", self.damage_numbers);
+        flag("allowRotation", self.rotation);
+        flag("playSFX", self.sound.sfx);
+        flag("playPewPew", self.sound.shots);
+        flag("playMusic", self.sound.music);
+        out += &format!("sfxVolume={}\nmusicVolume={}\n", self.sound.sfx_volume, self.sound.music_volume);
+        out
+    }
+
+    pub fn from_text(text: &str) -> Self {
+        let mut s = Settings::default();
+        for line in text.lines() {
+            let Some((name, value)) = line.split_once('=') else { continue };
+            let (name, value) = (name.trim(), value.trim());
+            if let Some(i) = BINDS.iter().position(|b| b.2 == name) {
+                s.keys[i] = parse_key(value);
+                continue;
+            }
+            let on = value == "1";
+            let vol = || value.parse::<f32>().ok().map(|v| v.clamp(0.0, 1.0));
+            match name {
+                "particles" => s.particles = on,
+                "shadows" => s.shadows = on,
+                "hpBars" => s.hp_bars = on,
+                "textBubbles" => s.bubbles = on,
+                "allyShots" => s.ally_shots = on,
+                "damageNumbers" => s.damage_numbers = on,
+                "allowRotation" => s.rotation = on,
+                "playSFX" => s.sound.sfx = on,
+                "playPewPew" => s.sound.shots = on,
+                "playMusic" => s.sound.music = on,
+                "sfxVolume" => s.sound.sfx_volume = vol().unwrap_or(s.sound.sfx_volume),
+                "musicVolume" => s.sound.music_volume = vol().unwrap_or(s.sound.music_volume),
+                _ => {}
+            }
+        }
+        s
+    }
+
+    pub fn load() -> Self {
+        crate::login::store::load("settings").map_or_else(Settings::default, |t| Settings::from_text(&t))
+    }
+
+    pub fn save(&self) {
+        crate::login::store::save("settings", Some(&self.to_text()));
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum Tab {
+    #[default]
+    Controls,
+    Graphics,
+    Sound,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Hit {
+    Tab(Tab),
+    Bind(Bind),
+    Toggle(Toggle),
+    /// A volume slider (sound effects, music) and its track.
+    Volume(bool, [f32; 4]),
+    Defaults,
+    Close,
+}
+
+/// The Options window.
+#[derive(Default)]
+pub struct OptionsUi {
+    pub open: bool,
+    tab: Tab,
+    /// The binding waiting for its new key.
+    listening: Option<Bind>,
+    rect: Option<[f32; 4]>,
+    hits: Vec<(Hit, [f32; 4])>,
+}
+
+fn inside(r: [f32; 4], (x, y): (f64, f64)) -> bool {
+    let (x, y) = (x as f32, y as f32);
+    x >= r[0] && y >= r[1] && x < r[0] + r[2] && y < r[1] + r[3]
+}
+
+impl OptionsUi {
+    pub fn show(&mut self) {
+        self.open = true;
+        self.listening = None;
+    }
+
+    /// A click. True if the settings changed (save them).
+    pub fn click(&mut self, pos: (f64, f64), settings: &mut Settings) -> bool {
+        if self.rect.is_some_and(|r| !inside(r, pos)) {
+            self.open = false;
+            self.listening = None;
+            return false;
+        }
+        let Some((hit, _)) = self.hits.iter().find(|(_, r)| inside(*r, pos)).copied() else { return false };
+        self.listening = None;
+        match hit {
+            Hit::Tab(t) => self.tab = t,
+            Hit::Bind(b) => self.listening = Some(b),
+            Hit::Toggle(t) => {
+                let v = settings.toggle(t);
+                *v = !*v;
+                return true;
+            }
+            Hit::Volume(music, track) => {
+                let v = ((pos.0 as f32 - track[0]) / track[2]).clamp(0.0, 1.0);
+                let v = (v * 20.0).round() / 20.0;
+                if music {
+                    settings.sound.music_volume = v;
+                } else {
+                    settings.sound.sfx_volume = v;
+                }
+                return true;
+            }
+            Hit::Defaults => {
+                let d = Settings::default();
+                match self.tab {
+                    Tab::Controls => settings.keys = d.keys,
+                    Tab::Graphics => {
+                        for (t, _) in GRAPHICS {
+                            *settings.toggle(t) = *d.clone().toggle(t);
+                        }
+                    }
+                    Tab::Sound => settings.sound = d.sound,
+                }
+                return true;
+            }
+            Hit::Close => self.open = false,
+        }
+        false
+    }
+
+    /// A key while the window is open. True if the settings changed.
+    pub fn key(&mut self, code: KeyCode, settings: &mut Settings) -> bool {
+        match (self.listening.take(), code) {
+            (Some(_), KeyCode::Escape) => false,
+            (Some(b), KeyCode::Backspace) => {
+                settings.set_key(b, None);
+                true
+            }
+            (Some(b), c) if KEYS.contains(&c) => {
+                settings.set_key(b, Some(c));
+                true
+            }
+            (Some(b), _) => {
+                self.listening = Some(b);
+                false
+            }
+            (None, KeyCode::Escape) => {
+                self.open = false;
+                false
+            }
+            (None, c) if Some(c) == settings.key(Bind::Options) => {
+                self.open = false;
+                false
+            }
+            _ => false,
+        }
+    }
+
+    pub fn draw(&mut self, ui: &mut Ui, lay: &Layout, settings: &Settings, mouse: (f64, f64)) {
+        self.hits.clear();
+        if !self.open {
+            self.rect = None;
+            return;
+        }
+        let (w, h) = (lay.w, lay.h);
+        let rows = BINDS.len().div_ceil(2) as f32;
+        let (dw, dh) = (620.0, 150.0 + rows * 30.0);
+        let s = (lay.s * (w * 0.94 / (dw * lay.s)).min(h * 0.94 / (dh * lay.s)).min(1.0)).max(0.4);
+        ui.rect(0.0, 0.0, w, h, 0x000000, 0.45);
+        let r = [((w - dw * s) / 2.0).round(), ((h - dh * s) / 2.0).round(), dw * s, dh * s];
+        self.rect = Some(r);
+        theme::panel(ui.renderer, r, s);
+        let font = |size: f32| (size * s).round().max(9.0);
+        ui.label("Options", r[0] + 22.0 * s, r[1] + 16.0 * s, font(22.0), true, color::TEXT);
+        // Tabs, as pills.
+        let mut x = r[0] + 150.0 * s;
+        for (tab, label) in [(Tab::Controls, "Controls"), (Tab::Graphics, "Graphics"), (Tab::Sound, "Sound")] {
+            let tr = [x, r[1] + 18.0 * s, 104.0 * s, 28.0 * s];
+            let on = tab == self.tab;
+            let bg = if on { color::ACCENT } else if inside(tr, mouse) { 0x3A4050 } else { 0x262A33 };
+            theme::fill(ui.renderer, tr, tr[3] / 2.0, bg, 1.0);
+            let ts = font(13.0);
+            let lw = ui.measure(label, ts, true);
+            ui.label(label, tr[0] + (tr[2] - lw) / 2.0, tr[1] + (tr[3] - ts * 1.22) / 2.0, ts, true, if on { color::ACCENT_TEXT } else { color::TEXT_DIM });
+            self.hits.push((Hit::Tab(tab), tr));
+            x += tr[2] + 8.0 * s;
+        }
+        let body = [r[0] + 22.0 * s, r[1] + 66.0 * s, r[2] - 44.0 * s, r[3] - 130.0 * s];
+        match self.tab {
+            Tab::Controls => {
+                let colw = (body[2] - 20.0 * s) / 2.0;
+                let half = BINDS.len().div_ceil(2);
+                for (i, (b, label, _, _)) in BINDS.iter().enumerate() {
+                    let (col, row) = (i / half, i % half);
+                    let y = body[1] + row as f32 * 30.0 * s;
+                    let x = body[0] + col as f32 * (colw + 20.0 * s);
+                    ui.label(label, x, y + 5.0 * s, font(13.0), false, color::TEXT_DIM);
+                    let kr = [x + colw - 110.0 * s, y, 110.0 * s, 26.0 * s];
+                    let listening = self.listening == Some(*b);
+                    let edge = if listening { color::ACCENT } else if inside(kr, mouse) { color::BORDER_HI } else { color::BORDER };
+                    theme::frame(ui.renderer, kr, 5.0 * s, s.max(1.0), (edge, 1.0), ((color::FIELD, 1.0), (color::FIELD, 1.0)));
+                    let text = if listening { "Press a key…".to_owned() } else { key_label(settings.key(*b)) };
+                    let ks = font(12.5);
+                    let kw = ui.measure(&text, ks, true);
+                    ui.label(&text, kr[0] + (kr[2] - kw) / 2.0, kr[1] + (kr[3] - ks * 1.22) / 2.0, ks, true, if listening { color::ACCENT_HI } else { color::TEXT });
+                    self.hits.push((Hit::Bind(*b), kr));
+                }
+            }
+            Tab::Graphics | Tab::Sound => {
+                let list: &[(Toggle, &str)] = if self.tab == Tab::Graphics { &GRAPHICS } else { &SOUNDS };
+                let mut y = body[1];
+                for (t, label) in list {
+                    let row = [body[0], y, body[2], 34.0 * s];
+                    if inside(row, mouse) {
+                        theme::fill(ui.renderer, row, 6.0 * s, 0xFFFFFF, 0.05);
+                    }
+                    ui.label(label, row[0] + 10.0 * s, row[1] + 8.0 * s, font(14.0), false, color::TEXT);
+                    let on = *settings.clone().toggle(*t);
+                    // A switch.
+                    let sw = [row[0] + row[2] - 56.0 * s, row[1] + 7.0 * s, 44.0 * s, 20.0 * s];
+                    theme::fill(ui.renderer, sw, sw[3] / 2.0, if on { color::ACCENT } else { 0x3A4050 }, 1.0);
+                    let knob = sw[3] - 4.0 * s;
+                    let kx = if on { sw[0] + sw[2] - knob - 2.0 * s } else { sw[0] + 2.0 * s };
+                    theme::fill(ui.renderer, [kx, sw[1] + 2.0 * s, knob, knob], knob / 2.0, 0xFFFFFF, 1.0);
+                    self.hits.push((Hit::Toggle(*t), row));
+                    y += 38.0 * s;
+                }
+                if self.tab == Tab::Sound {
+                    y += 10.0 * s;
+                    for (music, label, v) in [(false, "Effects volume", settings.sound.sfx_volume), (true, "Music volume", settings.sound.music_volume)] {
+                        ui.label(label, body[0] + 10.0 * s, y + 4.0 * s, font(14.0), false, color::TEXT);
+                        let track = [body[0] + 200.0 * s, y + 9.0 * s, body[2] - 280.0 * s, 8.0 * s];
+                        theme::fill(ui.renderer, track, 4.0 * s, color::TRACK, 1.0);
+                        theme::fill(ui.renderer, [track[0], track[1], track[2] * v, track[3]], 4.0 * s, color::ACCENT, 1.0);
+                        let knob = 16.0 * s;
+                        theme::fill(ui.renderer, [track[0] + track[2] * v - knob / 2.0, track[1] - 4.0 * s, knob, knob], knob / 2.0, 0xFFFFFF, 1.0);
+                        let pct = format!("{}%", (v * 100.0).round() as i32);
+                        ui.label(&pct, track[0] + track[2] + 16.0 * s, y + 4.0 * s, font(13.0), true, color::TEXT_DIM);
+                        self.hits.push((Hit::Volume(music, track), [track[0] - 8.0 * s, y, track[2] + 16.0 * s, 26.0 * s]));
+                        y += 40.0 * s;
+                    }
+                }
+            }
+        }
+        let hint = if self.tab == Tab::Controls { "Click a key, then press the new one. Backspace clears it." } else { "Changes apply at once." };
+        ui.label(hint, r[0] + 22.0 * s, r[1] + r[3] - 46.0 * s, font(12.0), false, color::TEXT_MUTED);
+        let bw = 120.0 * s;
+        let done = [r[0] + r[2] - 22.0 * s - bw, r[1] + r[3] - 56.0 * s, bw, 38.0 * s];
+        ui.button(done, "Done", Kind::Primary, inside(done, mouse), s);
+        self.hits.push((Hit::Close, done));
+        let reset = [done[0] - 10.0 * s - 150.0 * s, done[1], 150.0 * s, 38.0 * s];
+        ui.button(reset, "Defaults", Kind::Secondary, inside(reset, mouse), s);
+        self.hits.push((Hit::Defaults, reset));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn settings_round_trip() {
+        let mut s = Settings::default();
+        assert_eq!(s.key(Bind::MoveUp), Some(KeyCode::KeyW));
+        assert_eq!(s.bind_of(KeyCode::Digit3), Some(Bind::Slot(3)));
+        // Binding W to the ability takes it from moving up.
+        s.set_key(Bind::Ability, Some(KeyCode::KeyW));
+        assert_eq!(s.key(Bind::MoveUp), None);
+        s.particles = false;
+        s.sound.music_volume = 0.25;
+        let back = Settings::from_text(&s.to_text());
+        assert_eq!(back, s);
+        assert_eq!(key_label(Some(KeyCode::KeyW)), "W");
+        assert_eq!(key_label(Some(KeyCode::Digit0)), "0");
+        assert_eq!(key_label(Some(KeyCode::PageUp)), "Page Up");
+    }
+
+    #[test]
+    fn listening_for_a_key() {
+        let mut ui = OptionsUi::default();
+        let mut s = Settings::default();
+        ui.show();
+        ui.listening = Some(Bind::Nexus);
+        assert!(ui.key(KeyCode::KeyN, &mut s));
+        assert_eq!(s.key(Bind::Nexus), Some(KeyCode::KeyN));
+        ui.listening = Some(Bind::Nexus);
+        assert!(!ui.key(KeyCode::Escape, &mut s));
+        assert_eq!(s.key(Bind::Nexus), Some(KeyCode::KeyN));
+        assert!(ui.open);
+        ui.key(KeyCode::Escape, &mut s);
+        assert!(!ui.open);
+    }
+}

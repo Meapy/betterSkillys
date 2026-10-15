@@ -102,7 +102,7 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
   uses the ability at the mouse, 1-8 equip or use an inventory slot, F/V drink a stacked potion,
   0 enters a portal (or opens the NPC beside you), R goes to the Nexus, Enter or / chats, Tab
   whispers (again to cycle who to), G and P guild and party chat, Page Up/Down the chat history,
-  - and = zoom the minimap, Escape opens the menu (character select,
+  - and = zoom the minimap, O opens the options (all of these can be rebound there), Escape opens the menu (character select,
   log out). Items drag between slots, onto the
   world to drop; double-click equips, uses or takes from a bag; shift-click uses.
 - **Layout:** `hud::Layout` works everything out from the window size each frame: one scale for

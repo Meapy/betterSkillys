@@ -63,7 +63,7 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Stat NPC, bounty board, money changer | `StatNPCPanel`, `BountyBoardPanel`, `MoneyChangerPanel` | Dropped: no map places them |
 | Arena wave and clock | `onImminentArenaWave`, `ArenaMenu` | Done |
 | Pictures from the server (`Pic`) | `onPic` | Dropped: the server never sends `Pic` |
-| Options: graphics, sound, controls, key bindings | `Options` | To do |
+| Options: key bindings, graphics (particles, shadows, bars, balloons, others' shots, damage numbers, rotation), sound | `Options`, `Parameters` | Done (kept in `settings.txt` or the browser's storage) |
 | Sound effects and music (shots, hits, deaths, loot, level up, potions, items, errors, buttons, `PlaySound`, map music) | `SoundEffectLibrary`, `Music` | Done |
 | Emotes (in chat and speech balloons, animated ones too) | `Emotes`, `EmoteGraphicHelper` | Done |
 | Death: back to the character list with the summary | `onDeath` | Done |
