@@ -14,6 +14,12 @@ version number itself is in `client-rs/Cargo.toml`.
   alive on 0 health. Other abilities that deal damage can now finish monsters off too.
 - Poison tooltips show how much damage the poison does, over how long, how wide it spreads and
   what it deals on impact.
+- Pets that fired projectiles in Doomed Realms (Kythal, Cookiee, Bess, Nutt, Sphinx, Twilight
+  Sparkle and others) shoot their real projectiles again, with their own spreads and rings,
+  instead of a thin red line. Their hits count as yours for loot, experience and quests.
+- Pet generator tooltips show what the pet does: its damage per second on one enemy and how
+  much HP and MP it restores and how often.
+- The shared vault chests in the nexus keep what's in them when the server restarts.
 
 ## 1.1.3.1 (2026-10-15)
 - In the game, your gold and fame show at the top right of the screen again, with the frame

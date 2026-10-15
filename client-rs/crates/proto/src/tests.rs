@@ -154,6 +154,16 @@ fn enemy_shoot_spread_is_optional() {
 }
 
 #[test]
+fn server_player_shoot_bullet_type_is_optional() {
+    let short = B::default().i32(1).i32(2).i32(3).f32(4.0).f32(5.0).f32(0.5).i32(60);
+    let ServerMessage::ServerPlayerShoot(s) = ServerMessage::decode(7, &short.0).unwrap() else { panic!() };
+    assert_eq!(s.bullet_type, None);
+    let full = B::default().i32(1).i32(2).i32(3).f32(4.0).f32(5.0).f32(0.5).i32(60).u8(2);
+    let ServerMessage::ServerPlayerShoot(s) = ServerMessage::decode(7, &full.0).unwrap() else { panic!() };
+    assert_eq!((s.bullet_type, s.damage, s.container_type), (Some(2), 60, 3));
+}
+
+#[test]
 fn damage_has_a_byte_counted_effect_list() {
     let body = B::default().i32(5).u8(2).u8(3).u8(9).i32(120).u8(1).i32(4).i32(6).u8(0).0;
     let ServerMessage::Damage(d) = ServerMessage::decode(8, &body).unwrap() else { panic!() };

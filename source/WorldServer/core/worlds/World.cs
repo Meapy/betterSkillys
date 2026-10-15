@@ -64,6 +64,8 @@ namespace WorldServer.core.worlds
         public Dictionary<int, SellableObject> SellableObjects { get; private set; } = new Dictionary<int, SellableObject>();
 
         private readonly List<Entity> EntitiesToAdd = new List<Entity>();
+        // the map's objects between loading and the first tick, for a world's Init to adjust
+        protected IReadOnlyList<Entity> PendingEntities => EntitiesToAdd;
         private readonly List<Entity> EntitiesToRemove = new List<Entity>();
 
         private readonly List<WorldTimer> Timers = new List<WorldTimer>();

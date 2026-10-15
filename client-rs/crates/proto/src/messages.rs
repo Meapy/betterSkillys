@@ -103,6 +103,8 @@ messages! {
         },
         7 => ServerPlayerShoot {
             bullet_id: i32, owner_id: i32, container_type: i32, starting_pos: WorldPos, angle: f32, damage: i32,
+            // Which of the container's projectiles; older servers leave it out (projectile 0).
+            bullet_type: Option<u8>,
         },
         8 => Damage {
             target_id: i32, effects: List8<u8>, damage_amount: i32, kill: bool, bullet_id: i32, object_id: i32,
