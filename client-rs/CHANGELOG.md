@@ -8,6 +8,10 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
+## Unreleased
+- In the game, your gold and fame show at the top right of the screen again, with the frame
+  rate under them.
+
 ## 1.1.3 (2026-10-15)
 - Walking onto a square you can't stand on (it happened in the Sprite World) no longer
   disconnects you: the server puts you back where you were.
