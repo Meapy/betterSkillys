@@ -61,6 +61,7 @@ The client itself can be scripted for tests (desktop only):
 | `--aim <degrees>` / `--aim auto` | Where `f` fires on the screen, or at the nearest enemy |
 | `--say <text>` | Send a chat line or command once in the game |
 | `--npc <class>` | Open that NPC's window once in the game (`GuildBoard`, `PotionStorage`...), wherever you stand |
+| `--effect <type>` | Show that `ShowEffect` type on you every half second (0: an area attack beside you), to check particles |
 | `--type <text>` | Type into the first NPC prompt that opens (then Enter), or onto the guild board being edited |
 | `--size WxH` | Open the window at this size (physical pixels), to check the layout |
 | `--mouse x,y` | Put the mouse there (window pixels) and ignore the real one: tooltips, aiming |

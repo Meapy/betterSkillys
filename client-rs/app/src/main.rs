@@ -5,6 +5,7 @@ mod game;
 mod ground;
 mod hud;
 mod login;
+mod particles;
 mod npc;
 mod redraw;
 mod screens;
@@ -147,6 +148,8 @@ struct App {
     type_text: Option<String>,
     /// `--npc <class>` (tests): open that NPC's window once in the game, wherever we stand.
     npc_test: Option<String>,
+    /// `--effect <type>` (tests): show that effect on us every half second, and when it last did.
+    effect_test: Option<(u8, i32)>,
 }
 
 /// Open the window of the NPC we stand by. True for the character changer: back to the
@@ -941,6 +944,7 @@ impl App {
         let mut ability = false;
         let mut panel = None;
         let mut to_chars = false;
+        let mut jitter = (0.0, 0.0);
         if matches!(self.phase, Phase::Menu) {
             let mut actions = Vec::new();
             for (code, text) in std::mem::take(&mut self.front_keys) {
@@ -1114,6 +1118,14 @@ impl App {
                 game.camera_angle = game::DEFAULT_CAMERA_ANGLE;
             }
             game.update(now, dt, keys, rotate, data);
+            if let (Some((kind, last)), Some(world)) = (&mut self.effect_test, &game.world) {
+                if now - *last >= 500 {
+                    *last = now;
+                    game.particles.test_effect(*kind, world, now);
+                }
+            }
+            game.particles.realize(sprites, data);
+            jitter = game.particles.jitter(now);
             game.merchant_balloons(now, data);
         }
 
@@ -1138,8 +1150,8 @@ impl App {
                         let scale = lay.map_scale();
                         let (cx, cy) = lay.camera_point();
                         let camera = view::Camera {
-                            x: me.x,
-                            y: me.y,
+                            x: me.x + jitter.0,
+                            y: me.y + jitter.1,
                             angle: game.camera_angle,
                             scale,
                             cx,
@@ -1167,7 +1179,7 @@ impl App {
                             let angle = game.camera_angle + (mouse.1 - camera.cy).atan2(mouse.0 - camera.cx);
                             ability_at = Some((x, y, angle));
                         }
-                        let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters, bubbles: &game.bubbles };
+                        let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters, bubbles: &game.bubbles, particles: &game.particles };
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
                         let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
                         hud::draw_quest(&mut ui, &lay, world, &camera, game.quest, &game.keys);
@@ -1532,6 +1544,7 @@ fn main() {
         npc_keys: Vec::new(),
         type_text: text_arg("--type"),
         npc_test: text_arg("--npc"),
+        effect_test: text_arg("--effect").and_then(|t| t.parse().ok()).map(|t| (t, i32::MIN / 2)),
     };
     #[cfg(not(target_arch = "wasm32"))]
     {

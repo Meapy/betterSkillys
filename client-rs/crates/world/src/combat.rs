@@ -56,6 +56,21 @@ pub enum Hit {
     Ground { time: i32, x: f64, y: f64, damage: i32 },
 }
 
+/// Where a projectile struck, for the sparks it throws (`HitEffect`, `ExplosionEffect`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Impact {
+    pub x: f64,
+    pub y: f64,
+    /// The object struck (sparks in its colours, an explosion if it died of it); `None` for an
+    /// obstacle, sparks in the projectile's colours.
+    pub target: Option<i32>,
+    pub kill: bool,
+    /// The object (by id) the projectile looks like, its direction and speed.
+    pub look: String,
+    pub angle: f64,
+    pub speed: i32,
+}
+
 /// `Trig.boundToPI`.
 pub fn bound_to_pi(a: f64) -> f64 {
     let mut a = a;
@@ -286,6 +301,8 @@ impl World {
                 if (!od.enemy || !damages_enemies) && (od.enemy_occupy_square || (!desc.passes_cover && od.occupy_square)) {
                     if p.damages_players {
                         hits.push(Hit::Other { time, bullet_id: p.bullet_id, owner_id: p.owner_id, target_id: obstacle.id });
+                    } else {
+                        self.impacts.push(Impact { x, y, target: None, kill: false, look: desc.object_id.clone(), angle: p.angle, speed: desc.speed });
                     }
                     return false;
                 }
@@ -297,6 +314,8 @@ impl World {
         let tdesc = data.objects.get(&target.object_type);
         let target_is_enemy = tdesc.is_some_and(|d| d.enemy);
         let send = (me.is_some() && p.damages_players) || (target_is_enemy && Some(p.owner_id) == me);
+        let impact = Impact { x, y, target: Some(target_id), kill: false, look: desc.object_id.clone(), angle: p.angle, speed: desc.speed };
+        self.impacts.push(impact);
         if send {
             let defense = target.stat_int(STAT_DEFENSE).unwrap_or_else(|| tdesc.map_or(0, |d| d.xml.int("Defense", 0)));
             let dmg = damage_with_defense(p.damage, defense, desc.armor_piercing, target.conditions());
@@ -305,6 +324,9 @@ impl World {
                 hits.push(Hit::Player { bullet_id: p.bullet_id, owner_id: p.owner_id, damage: dmg });
             } else if target_is_enemy {
                 hits.push(Hit::Enemy { time, bullet_id: p.bullet_id, target_id, kill: dead, damage: dmg });
+                if let Some(i) = self.impacts.last_mut() {
+                    i.kill = dead;
+                }
                 if dead {
                     if let Some(t) = self.objects.get_mut(&target_id) {
                         t.dead = true;

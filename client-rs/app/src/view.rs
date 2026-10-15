@@ -116,6 +116,7 @@ pub struct Scene<'a> {
     /// (object id, amount, colour, when) of the damage numbers to show.
     pub floaters: &'a [Floater],
     pub bubbles: &'a [Bubble],
+    pub particles: &'a crate::particles::Particles,
 }
 
 /// The image an object shows now, before redrawing.
@@ -361,6 +362,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
             Item::Sprite { obj, desc } => draw_sprite(scene, renderer, redrawer, ground, obj, desc),
         }
     }
+    scene.particles.draw(&cam, renderer);
 
     // HP bars (`GameObject.drawHpBar`) under monsters and players.
     for (_, item) in &items {
@@ -485,7 +487,8 @@ fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, 
         0.0
     };
     let quad = Quad::rect(px - sw / 2.0 + shift, py - sh + sink * k, sw, sh * cut);
-    renderer.sprite_part(sprite.rect, [0.0, 0.0, 1.0, cut], quad, Tint::NONE);
+    let tint = scene.particles.flash_tint(obj.id, scene.time).unwrap_or(Tint::NONE);
+    renderer.sprite_part(sprite.rect, [0.0, 0.0, 1.0, cut], quad, tint);
 }
 
 /// `Projectile.draw` with projOutline (the AIR client's default): the outlined texture centred

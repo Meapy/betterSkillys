@@ -13,7 +13,7 @@ use bsk_data::GameData;
 use bsk_proto::{stat, NewTick, ObjectData, StatData, StatValue, Update};
 use std::collections::HashMap;
 
-pub use combat::{Hit, Projectile};
+pub use combat::{Hit, Impact, Projectile};
 pub use movement::{move_speed, MoveInput};
 pub use random::Random;
 
@@ -97,6 +97,8 @@ pub struct World {
     move_multiplier: f64,
     sink_level: i32,
     pub projectiles: Vec<Projectile>,
+    /// Where projectiles struck since the app last took them (for the sparks).
+    pub impacts: Vec<combat::Impact>,
     /// Seeded with the map's seed: shot and ground damage rolls, in step with the server's.
     pub random: Random,
     /// Our next shot's bullet id (`GameObject.getBulletId`, from 1).
@@ -121,6 +123,7 @@ impl World {
             move_multiplier: 1.0,
             sink_level: 0,
             projectiles: Vec::new(),
+            impacts: Vec::new(),
             random: Random::new(seed),
             next_bullet_id: 1,
             anim_seed: 0x9E37_79B9,

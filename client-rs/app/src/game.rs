@@ -45,6 +45,8 @@ pub struct Game {
     pub floaters: Vec<crate::view::Floater>,
     /// Speech balloons, one per speaker.
     pub bubbles: Vec<crate::view::Bubble>,
+    /// Sparks, effects and area attacks.
+    pub particles: crate::particles::Particles,
     /// The quest's object (`QuestObjId`), for the arrow and the boss bar.
     pub quest: Option<i32>,
     /// The latest `NameResult` and `GuildResult`, for the window that asked.
@@ -137,6 +139,7 @@ impl Game {
             view_radius_sent_at: i32::MIN / 2,
             floaters: Vec::new(),
             bubbles: Vec::new(),
+            particles: Default::default(),
             quest: None,
             name_result: None,
             guild_result: None,
@@ -224,6 +227,7 @@ impl Game {
         match event {
             Some(Event::MapInfo(info)) => {
                 self.world = Some(World::new(info.width as i32, info.height as i32, &info.display_name, info.seed));
+                self.particles.clear();
                 self.status = format!("Entering {}…", info.display_name);
             }
             Some(Event::Joined { object_id, char_id }) => {
@@ -403,7 +407,13 @@ impl Game {
                     life: 2000,
                 });
             }
+            ServerMessage::Aoe(a) => self.particles.aoe(a.pos.x as f64, a.pos.y as f64, a.radius as f64, a.color),
+            ServerMessage::ShowEffect(e) => self.particles.show_effect(&e, world, now),
             ServerMessage::Damage(d) => {
+                // Our own shots throw their sparks where they strike.
+                if Some(d.object_id) != world.me {
+                    self.particles.damaged(world, d.target_id, d.kill);
+                }
                 // Someone was hit (not by our shots): show the number.
                 if Some(d.object_id) != world.me {
                     self.floaters.push(crate::view::Floater::damage(d.target_id, d.damage_amount, now));
@@ -497,6 +507,10 @@ impl Game {
             self.session.set_position(WorldPos { x: x as f32, y: y as f32 }, now);
         }
         self.update_projectiles(now, data);
+        if let Some(world) = &mut self.world {
+            self.particles.impacts(world);
+            self.particles.update(world, now, dt);
+        }
     }
 
     /// `GameSprite`'s VIEW_RADIUS: ask the server to send as far as the screen reaches
