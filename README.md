@@ -1,95 +1,201 @@
-# **betterSkillys.**
-&emsp; This is a project meant to be a better version of **NR-CORE/Skilly's 7.0**. betterSkillys uses TK-Reborn from Slendergo as a base, with the goal being to use the 7.0 client provided to fix any bugs, add QoL features, and have content more up-to-date compared to any other source out there. Even though this is technically TK-Reborn, all custom content *(asides from Potion Storage and Marketplace)* have been removed. **All XMLs are from #RotMG 1.0.4.0**, with some exceptions to make sure dungeons I've ripped from other sources work.
+# betterSkillys
 
-&emsp; My original goal was to get the source up-to-date with **#RotMG X18.0.0**, but recently I have gotten access to maps such as Cursed Library, Ancient Ruins, and many others. With this, I have decided to ignore my initial goal, and instead just get as much content from base RotMG as possible. *If you are interested in helping with behaviors, dm me* **@shilohdynasty7142** *on Discord, and I will offer to pay you for any work done and provide map files.*
+A Realm of the Mad God private server (C#, .NET 8) with two clients: the original Adobe AIR client
+(ActionScript 3) and a rewrite in Rust that runs on the desktop and in the browser. It is run on
+one PC for a small group of players.
 
-***Please refer to the Content/Dungeon & Bosses to-do to have an idea of what has been done so far.*** <br />
+This copy started from [runes02/betterSkillys](https://github.com/runes02/betterSkillys) (a better
+NR-CORE/Skilly's 7.0, built on TK-Reborn, with the XMLs of RotMG 1.0.4.0). On top of that it has:
 
-## Content to-do.
-- [x] Removed TK-Reborn bloat. ***[me + Slendergo]***
-- [x] Renaming many TK-Reborn files. ***[ex: KingdomManager -> RealmManager, etc..]***
-- [x] XMLs up to date with 1.0.4.0. ***[Slendergo]***
-- [x] Client/Server asset sorting. ***[Slendergo]***
-- [x] Fixed things that broke upon importing XMLs. *(Hermit, Treasure Cave, Davy, Shatters, etc..)*
-- [x] Redone Damage Counter from TK-Reborn.
-- [x] Parallax on TitleView.
-- [x] Bugs with hardware acceleration.
-- [x] Support for OnPlayerHit/OnPlayerAbility/OnPlayerShoot Activate effects.
-- [ ] Get EVERY equipment item from *#RotMG 1.0.4.0* working.
-- [x] All screens scale with window.
-- [x] Wis-mod on EquipmentTooltips. ***[Zolmex]***
-- [x] Split up Player.cs into more partial classes. ***[Slendergo]***
-- [x] Labeling for entities/worlds. ***[Slendergo]***
-- [x] Redone how setpieces are called. ***[Slendergo]***
-- [ ] Client memory leak.
-- [x] Redone Potion Storage.
-- [x] Redone Marketplace.
-- [x] Seasonal Drop-tables.
-- [x] Item Breakdowns. ***[Slendergo]***
-- [x] Animated emotes. ***[Zolmex]***
-- [x] Add Samurai.
-- [x] Add Bard.
+- [Aurusenth/betterSkillys](https://github.com/Aurusenth/betterSkillys) merged in: item tiers and
+  glow, an admin class, the Admin Arena and Shaitan dungeons, Battle for the Nexus, a new nexus
+  and vault, and more.
+- The content of Doomed Realms, another private server: its items, pets, classes, dungeons,
+  minigames, commands and economy.
+- Many dungeons made playable, random dungeon layouts, rebuilt Elder dungeons and a Nexus Bazaar.
+- Server networking and AIR client rendering made much faster.
+- The Rust client.
 
-## Dungeons & Bosses to-do.
-**[✧] unfinished, but has map..** <br />
-**[✮] finished, but scuffed.**
-- [x] Garnet/Jade Statues. *(setpiece/behavior from: Evil)*
-- [x] Killer Bee Nest.
-- [x] Mountain Temple.
-- [x] Toxic Sewers.
-- [x] Hive.
-- [x] Magic Woods.
-- [x] Lair of Draconis. **[✮]**
-- [x] Ivory Wyvern. **[✮]**
-- [x] Ice Cave/Inner Sanctum. **[✮]**
-- [x] Ice Tomb. 
-- [x] Battle of the Nexus. **[✧]**
-- [x] Nest. **[✧]**
-- [x] Lost Halls. **[✧]**
-- [x] Cultist Hideout. **[✧]**
-- [x] The Void. **[✧]**
-- [x] Ancient Ruins. **[✧]**
-- [x] Cursed Library. **[✧]**
-- [x] Parasite Chambers. **[✧]**
-- [x] Fungal Cavern. **[✧]**
-- [x] Secluded Thicket. **[✧]**
-- [ ] Abyss Idol.
-- [ ] Horrific Creation.
-- [x] Court of Oryx. **[✧]**
-- [x] Oryx's Sanctuary. **[✧]**
+[SETUP-LOCAL.md](SETUP-LOCAL.md) lists every change in detail.
 
-## Prerequisites.
-- Visual Studio,
-- .NET Core 8,
-- Intelij IDEA Ultimate,
-- AIR SDK 32 (later versions work as well),
-- Redis (included).
+## Play
 
-## Credits.
-- **Runes.** <br />
-*Made by your's truly. :)*
-- **Slendergo.** <br />
-*Created TK-Reborn, which this is based off.
-He also helped with updating XMLs to RotMG 1.0.4.0 alongside other things.*
-- **Zolmex.** <br />
-*Helped with animated emotes, wismod, and has a plethora
-of GitHub repositories that have been used to make betterSkillys.*
-- **MIKEEEEEEEEEE.** <br />
-*Provided maps for Mountain Temple, Toxic Sewers, The Nest, and Hive.*
-- **Evil.** <br />
-*Provided behaviors for Garnet/Jade statues, 
-has also informed me of sources that had behaviors I wasn't aware of.*
-- **MoonMan.** <br />
-*Provided behaviors for Magic Woods and other entities.*
-- **animus.** <br />
-*Provided a proxy tool that allowed me to rip maps from RotMG Exalt.*
-- **Boftheb.** <br />
-*Helped me rip maps for Fungal Cavern, Secluded Thicket, Lost Halls,
-Cultist, and many others.*
-- **Gummy** <br />
-*Let me use his Lair of Draconis map. :)*
-- **nekoT** <br />
-*Added 'betterAssets' to the client. He also did something else but both me and him forgot what.*
-- **Orb, GlassBBQ.** <br />
-*Were accredited on TK-Reborn, I don't know what they did exactly. :P*
-- . . . .
+| Script | What it does |
+|---|---|
+| `Run Server.bat` | Builds and starts Redis, the account server and the world server, each in its own window (close them to stop). It also builds the Rust client's package for players. |
+| `Play Client.bat` | Runs the AIR client on this PC. |
+| `Allow Remote Players.bat` | Run once as administrator: opens the firewall for players from outside. |
+
+The servers use these ports. Doomed Realms runs on the same PC with 8888, 2050 and 843.
+
+| Part | Port |
+|---|---|
+| Redis | 6379, this PC only |
+| Account server (`source/App`) | 8080 |
+| World server (`source/WorldServer`) | 2051 |
+
+To let friends play, forward TCP 8080 and 2051 on the router and give them a package:
+
+```
+python tools\build_client_rs.py --account http://188.141.12.3:8080 --package   # dist\betterSkillys-rs-windows.zip
+python tools\build_client.py 188.141.12.3 --package                           # dist\betterSkillys-Client.zip (AIR)
+```
+
+On this PC, play with the local client rather than a package: a package goes out through the
+router and back in, which makes the game lag for everyone.
+
+## The Rust client
+
+`client-rs/` is a complete rewrite of the AIR client. It uses the same art and the same server
+protocol, so it works with these servers unchanged. It does everything the AIR client does
+([client-rs/PARITY.md](client-rs/PARITY.md) lists each feature) and adds:
+
+- **Any window size:** the HUD lays itself out, with crisp text, a zoomable minimap with
+  player menus, and nearby players' health, magic and gear on hover.
+- **Browser play:** the web build runs through `bsk-gateway`, which serves the page and bridges
+  the browser to the servers.
+- **Speed:** over 1,000 frames a second at 2560×1440 (wgpu: DirectX 12, Vulkan, Metal, WebGPU or
+  WebGL2).
+- **Condition effects as the AIR client shows them:** icons and rising names over players and
+  monsters, blurred, dark or grey views while drunk, blind or paused, and so on.
+- **Options:**
+  - key bindings;
+  - world zoom (90% to 130%) and camera modes;
+  - frame rate (vsync, unlocked or capped);
+  - particles, shadows, health bars, sound and music.
+
+  They are kept across versions in `%APPDATA%\betterSkillys-rs\settings.txt`, and the login in
+  `login.txt` beside it.
+- **The rest of the game:** the marketplace, trading, guilds, potion storage, NPC windows,
+  emotes, the graveyard, and test flags for scripted runs.
+
+```
+cd client-rs; cargo run                                  # desktop, for development
+python tools\build_client_rs.py                          # build\client-rs\native
+python tools\build_client_rs.py --web                    # build\client-rs\web, served by bsk-gateway
+```
+
+See [client-rs/AGENTS.md](client-rs/AGENTS.md) for the gateway, testing and layout.
+
+## Repository
+
+| Path | What |
+|---|---|
+| `source/` | The servers: `App` (account server), `WorldServer`, `Shared` (game data, XMLs, maps in `resources/worlds`), `Redis` |
+| `client/` | The AIR client (`src/`, ActionScript 3) |
+| `client-rs/` | The Rust client: `app` (the game), `crates/` (renderer, protocol, session, data, world, net, assets), `gateway`, `bot` |
+| `tools/` | Build scripts, the Doomed Realms porting tools, the Elder dungeon generator, the Nexus Bazaar builder, and `testclient/` (isolated test servers and a test client) |
+
+The working notes for each part are [AGENTS.md](AGENTS.md), [source/AGENTS.md](source/AGENTS.md),
+[client/AGENTS.md](client/AGENTS.md) and [client-rs/AGENTS.md](client-rs/AGENTS.md).
+
+## Prerequisites
+
+- .NET 8 SDK (the servers)
+- AIR SDK 32, unzipped into `tools/airsdk/` (the AIR client)
+- Rust stable, with the `wasm32-unknown-unknown` target and `wasm-bindgen-cli` for the browser
+  build (the Rust client)
+- Python 3 (the scripts in `tools/`)
+- Redis is included in `source/Redis`.
+
+## What changed here
+
+The highlights; [SETUP-LOCAL.md](SETUP-LOCAL.md) has the rest.
+
+### Gameplay and content
+
+- **Doomed Realms port:**
+  - 13 classes and about 390 items, dyes and 122 pets;
+  - 31 dungeons and its minigames (Battle Arenas, Zombies, Sheep Herding);
+  - 29 commands, the forge, fame selling and the shops;
+  - its monster behaviour engine.
+- **Elder dungeons:** rebuilt from this server's own maps, with darker tiles, braziers whose light
+  is baked into the floor, Elder versions of every monster and a fresh layout every visit.
+  Elder monsters are rebalanced to suit these characters.
+- **Random dungeon layouts:** the Tomb, Pirate Cave, Spider Den, Snake Pit, Forest Maze, Undead
+  Lair, Abyss, Toxic Sewers, Woodland Labyrinth, Ocean Trench and Ancient Ruins rearrange their
+  rooms for every visit.
+- **Playable dungeons:**
+  - Ancient Ruins, Cursed Library (with the Corruption Phantom event), Fungal Cavern, Parasite
+    Chambers, Secluded Thicket and the Tomb of the Ancients;
+  - the Ice Cave and Inner Sanctum, and the Oryx's Castle endgame chain;
+  - new fights for bosses that stood still (Mixcoatl, Belladonna, the Abyss Idols, Horrific
+    Creation and others);
+  - exit portals for final bosses, and portal sources for dungeons nothing led to.
+- **Nexus:**
+  - the Nexus Bazaar, a market island selling keys, potions, consumables, dyes and cloths for
+    fame;
+  - fountains that spray and heal;
+  - Battle Arena portals.
+- **Fixes:**
+  - 358 monster attacks that named missing projectiles;
+  - objects without HP dying on their first tick;
+  - buying character slots;
+  - XP and loot boosters doing nothing;
+  - the skin list showing every skin twice;
+  - admin-only classes, admins trading and sharing bags;
+  - potion storage upgrades.
+
+### Performance
+
+- **World server:**
+  - a tick's messages leave together;
+  - world threads sleep instead of spinning;
+  - a stream corruption bug in large sends is fixed.
+- **AIR client:**
+  - rendering ported from the Doomed Realms client: ground chunks, tile culling, batching and a
+    texture atlas;
+  - fullscreen sees the whole screen;
+  - almost no garbage per frame.
+
+  In the nexus it went from 110 to 191 fps, and to about 78 fps at 4K with the whole view in
+  sight.
+- **Rust client:** about 1,100 fps at 2560×1440.
+
+## Content status (from upstream)
+
+- [x] Removed TK-Reborn bloat, renamed its files, split up Player.cs, labelled entities and worlds.
+- [x] XMLs up to date with RotMG 1.0.4.0, client/server asset sorting.
+- [x] Fixed what broke when the XMLs were imported (Hermit, Treasure Cave, Davy, Shatters, ...).
+- [x] Damage counter, parallax title screen, screens that scale with the window, wis-mod in
+  tooltips.
+- [x] OnPlayerHit / OnPlayerAbility / OnPlayerShoot activate effects.
+- [x] Potion Storage, Marketplace, seasonal drop tables, item breakdowns, animated emotes.
+- [x] Samurai and Bard.
+- [ ] Every equipment item from RotMG 1.0.4.0 working.
+- [ ] The AIR client's memory leak.
+
+### Dungeons and bosses
+
+✮ finished but rough; ✧ map and monsters, still being worked on.
+
+- [x] Garnet/Jade Statues, Killer Bee Nest, Mountain Temple, Toxic Sewers, Hive, Magic Woods,
+  Ice Tomb, Tomb of the Ancients.
+- [x] Ivory Wyvern ✮, Ice Cave / Inner Sanctum ✮.
+- [ ] Lair of Draconis: no map or world here yet (the Rock Dragon drops Lair of Shaitan instead;
+  Elder Draconis uses Doomed Realms' map).
+- [x] Ancient Ruins, Cursed Library, Fungal Cavern, Parasite Chambers, Secluded Thicket: each has
+  behaviours for every monster, a boss with loot and an exit portal, and a portal source.
+- [x] Abyss Idol and Horrific Creation: both have fights now.
+- [x] Battle for the Nexus ✧, Nest ✧, Lost Halls ✧, Cultist Hideout ✧, The Void ✧, Court of
+  Oryx ✧, Oryx's Sanctuary ✧.
+
+## Credits
+
+- **Runes:** made betterSkillys.
+- **Slendergo:** created TK-Reborn, which betterSkillys is based on, and helped update the XMLs to
+  RotMG 1.0.4.0, among other things.
+- **Zolmex:** animated emotes, wis-mod, and many GitHub repositories that went into betterSkillys.
+- **Aurusenth:** item tiers and glow, the admin class, the Admin Arena and Shaitan dungeons,
+  Battle for the Nexus, the new nexus and vault.
+- **Doomed Realms:** the items, pets, classes, dungeons, minigames, commands and client rendering
+  optimisations ported here.
+- **MIKEEEEEEEEEE:** maps for Mountain Temple, Toxic Sewers, The Nest and Hive.
+- **Evil:** behaviours for the Garnet/Jade statues, and pointers to other sources of behaviours.
+- **MoonMan:** behaviours for Magic Woods and other entities.
+- **animus:** the proxy tool used to rip maps from RotMG Exalt.
+- **Boftheb:** helped rip the Fungal Cavern, Secluded Thicket, Lost Halls, Cultist Hideout and
+  other maps.
+- **Gummy:** the Lair of Draconis map.
+- **nekoT:** betterAssets in the client.
+- **Orb, GlassBBQ:** credited on TK-Reborn.
