@@ -1262,6 +1262,9 @@ impl App {
                 }
             }
             game.particles.realize(sprites, data);
+            if let Some(world) = &game.world {
+                game.particles.object_effects(world, data, sprites, dt);
+            }
             jitter = game.particles.jitter(now);
             game.merchant_balloons(now, data);
         }

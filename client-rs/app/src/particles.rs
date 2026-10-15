@@ -10,7 +10,7 @@ use crate::sprites::Sprites;
 use crate::view::Camera;
 use bsk_data::{GameData, TextureData, TextureRef};
 use bsk_proto::ShowEffect;
-use bsk_render::{Renderer, Tint};
+use bsk_render::{AtlasRect, Quad, Renderer, Tint};
 use bsk_world::{Impact, World};
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -31,6 +31,21 @@ enum Motion {
     Stream { px: f64, py: f64, xd: f64, yd: f64, period: f64 },
     /// Speeds toward an object until it reaches it (`FlowParticle`).
     Flow { id: i32, max_dist: f64, speed: f64 },
+    /// Moves, its rise changing by `acc` tiles a second each second (`ParticleGenerator`).
+    Rising { acc: f64 },
+    /// Spirals in on a point as it sinks (`VortexParticle`), growing to `max_size` pixels.
+    Vortex { cx: f64, cy: f64, ax: f64, ay: f64, max_size: f64 },
+    /// Circles a point, the circle widening to `max_rad` (`CircleParticle`); `speed` is
+    /// radians a frame at 60 frames a second.
+    Orbit { cx: f64, cy: f64, angle: f64, speed: f64, rad: f64, rise: f64, max_rad: f64 },
+}
+
+/// A particle drawn as a picture: its frames (none for a blank one), each with its size in
+/// pixels at 50 a tile and how long it shows, ms; standing on its spot, or centred on it.
+#[derive(Clone, Debug)]
+struct Image {
+    frames: Vec<(Option<AtlasRect>, f32, f32, i32)>,
+    standing: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -48,11 +63,17 @@ struct Particle {
     life: i32,
     left: i32,
     motion: Motion,
+    image: Option<Image>,
 }
 
 impl Particle {
     fn new(x: f64, y: f64, z: f64, color: u32, size: f64, life: i32, motion: Motion) -> Self {
-        Particle { x, y, z, vx: 0.0, vy: 0.0, vz: 0.0, color, size, life, left: life, motion }
+        Particle { x, y, z, vx: 0.0, vy: 0.0, vz: 0.0, color, size, life, left: life, motion, image: None }
+    }
+
+    fn with_image(mut self, image: Option<Image>) -> Self {
+        self.image = image;
+        self
     }
 
     fn moving(mut self, vx: f64, vy: f64, vz: f64) -> Self {
@@ -91,7 +112,26 @@ pub struct Particles {
     rng: u64,
     /// Options: particles off.
     pub disabled: bool,
+    /// Objects' own effects (`<Effect>`), by object id.
+    emitters: HashMap<i32, Emitter>,
 }
+
+/// An object's effect at work.
+#[derive(Clone, Copy, Debug)]
+enum Emitter {
+    /// `ParticleGenerator`: seconds running, particles made.
+    Custom { total: f64, made: i64 },
+    /// `XMLEffect`: seconds to the next particle.
+    Xml { wait: f64 },
+    /// `FountainEffect`, `VentEffect`, `VortexEffect`, `SkyBeamEffect`: a particle every
+    /// `period` seconds; seconds to the next, and (sky beam) the radius they fall in.
+    Steady { wait: f64, period: f64, radius: f64 },
+    /// One-off effects (`CircleEffect`, `ExplosionComplexEffect`), already given off.
+    Done,
+}
+
+/// How far from us objects' effects run, tiles.
+const EFFECT_RANGE: f64 = 22.0;
 
 /// At most this many particles at once, so a busy fight stays smooth.
 const MAX_PARTICLES: usize = 6000;
@@ -124,6 +164,7 @@ impl Particles {
         self.list.clear();
         self.pending.clear();
         self.flashes.clear();
+        self.emitters.clear();
         self.jitter_since = None;
     }
 
@@ -430,6 +471,29 @@ impl Particles {
                     p.y += p.vy * d;
                     p.z += p.vz * d;
                 }
+                Motion::Rising { acc } => {
+                    p.vz += acc / 1000.0 * d / 1000.0;
+                    p.x += p.vx * d;
+                    p.y += p.vy * d;
+                    p.z += p.vz * d;
+                }
+                Motion::Vortex { cx, cy, ax, ay, max_size } => {
+                    let to = (cx - p.x).atan2(cy - p.y);
+                    p.x += (to.sin() * 4.0 + ax) * d * 0.0006;
+                    p.y += (to.cos() * 4.0 + ay) * d * 0.0006;
+                    p.z -= 0.5 * d * 0.0006;
+                    // Its size grows in pixels; the AIR units are 20 a pixel.
+                    p.size = (p.size + d * 0.01 * 20.0).min(max_size * 20.0);
+                    if p.z <= 0.0 {
+                        return false;
+                    }
+                }
+                Motion::Orbit { cx, cy, ref mut angle, speed, ref mut rad, rise, max_rad } => {
+                    p.x = cx + *rad * angle.cos();
+                    p.y = cy + *rad * angle.sin();
+                    *angle += speed * d / (1000.0 / 60.0);
+                    *rad = (*rad + rise * d / 1000.0).min(max_rad);
+                }
                 Motion::Sparker => {
                     p.x += p.vx * d;
                     p.y += p.vy * d;
@@ -478,6 +542,201 @@ impl Particles {
         self.flashes.retain(|_, f| now <= f.start + f.period * f.repeats);
     }
 
+    /// Objects' own effects (`ParticleEffect.fromProps`): start them for objects near us, give
+    /// off what's due, and forget objects that have gone.
+    pub fn object_effects(&mut self, world: &World, data: &GameData, sprites: &Sprites, dt: i32) {
+        let Some(me) = world.player() else { return };
+        let (mx, my) = (me.x, me.y);
+        let secs = dt.max(0) as f64 / 1000.0;
+        self.emitters.retain(|id, _| world.objects.get(id).is_some_and(|o| (o.x - mx).hypot(o.y - my) <= EFFECT_RANGE + 4.0));
+        if self.disabled {
+            return;
+        }
+        let near: Vec<(i32, f64, f64, &bsk_data::EffectProps, f64)> = world
+            .objects
+            .values()
+            .filter(|o| (o.x - mx).hypot(o.y - my) <= EFFECT_RANGE)
+            .filter_map(|o| {
+                let d = data.objects.get(&o.object_type)?;
+                d.effect.as_ref().map(|e| (o.id, o.x, o.y, e, d.z))
+            })
+            .collect();
+        for (id, x, y, e, z) in near {
+            let state = match self.emitters.get(&id) {
+                Some(s) => *s,
+                None => {
+                    let s = match e.id.as_str() {
+                        "CustomParticles" => Emitter::Custom { total: 0.0, made: 0 },
+                        "XMLEffect" => Emitter::Xml { wait: 0.0 },
+                        "Fountain" | "FountainSnowy" | "Vent" | "Vortex" => Emitter::Steady { wait: 0.0, period: 0.05, radius: 0.0 },
+                        "SkyBeam" => Emitter::Steady { wait: 0.0, period: 0.03, radius: e.min_radius },
+                        _ => Emitter::Done,
+                    };
+                    self.emitters.insert(id, s);
+                    // One-off effects go off when the object first comes near.
+                    if matches!(s, Emitter::Done) {
+                        self.one_off(x, y, e);
+                    }
+                    s
+                }
+            };
+            match state {
+                Emitter::Custom { total, made } => {
+                    let total = total + secs;
+                    let due = (e.rate * total) as i64 - made;
+                    let image = e.bitmap.as_ref().and_then(|(set, index)| still(sprites, set, *index, e.size as f32 / 100.0 * 5.0));
+                    for _ in 0..due.min(60) {
+                        let life = ((e.life + e.life_variance * (2.0 * self.random() - 1.0)) * 1000.0) as i32;
+                        let vx = e.speed + e.speed_variance * (2.0 * self.random() - 1.0);
+                        let vy = e.speed + e.speed_variance * (2.0 * self.random() - 1.0);
+                        let vz = e.rise + e.rise_variance * (2.0 * self.random() - 1.0);
+                        let px = x + e.range_x as f64 * (2.0 * self.random() - 1.0);
+                        let py = y + e.range_y as f64 * (2.0 * self.random() - 1.0);
+                        // A square of `size` pixels: that's `size × 20` in the AIR units.
+                        let p = Particle::new(px, py, z + e.z_offset, e.color & 0xFF_FFFF, e.size as f64 * 20.0, life.max(1), Motion::Rising { acc: e.rise_acc });
+                        self.add(p.moving(vx / 1000.0, vy / 1000.0, vz / 1000.0).with_image(image.clone()));
+                    }
+                    self.emitters.insert(id, Emitter::Custom { total, made: made + due });
+                }
+                Emitter::Xml { wait } => {
+                    let wait = wait - secs;
+                    if wait >= 0.0 {
+                        self.emitters.insert(id, Emitter::Xml { wait });
+                        continue;
+                    }
+                    self.emitters.insert(id, Emitter::Xml { wait: e.cooldown });
+                    let Some(desc) = data.particles.get(&e.particle) else { continue };
+                    // XMLParticle: drifts half a tile a second in some direction.
+                    let a = 2.0 * PI * self.random();
+                    let image = self.animated(sprites, desc);
+                    let life = (desc.duration * 1000.0) as i32;
+                    let p = Particle::new(x, y, desc.z, 0xFFFFFF, 0.0, life.max(1), Motion::Plain);
+                    self.add(p.moving(a.cos() * 0.5 / 1000.0, a.sin() * 0.5 / 1000.0, 0.0).with_image(image));
+                }
+                Emitter::Steady { mut wait, period, radius } => {
+                    wait -= secs;
+                    let mut n = 0;
+                    while wait < 0.0 && n < 20 {
+                        wait += period;
+                        n += 1;
+                        self.steady(x, y, e, radius);
+                    }
+                    let radius = (radius + e.rise * secs).min(e.max_radius);
+                    self.emitters.insert(id, Emitter::Steady { wait: wait.max(-period), period, radius });
+                }
+                Emitter::Done => {}
+            }
+        }
+    }
+
+    /// One particle of a steady effect.
+    fn steady(&mut self, x: f64, y: f64, e: &bsk_data::EffectProps, radius: f64) {
+        match e.id.as_str() {
+            // FountainEffect: thrown up at 6.5 tiles a second, falling back under gravity.
+            "Fountain" | "FountainSnowy" => {
+                let a = 2.0 * PI * self.random();
+                let color = if e.id == "FountainSnowy" { 0xFFFFFF } else { 0x4165D5 };
+                let p = Particle::new(x, y, 0.75, color, 100.0, 1380, Motion::Rising { acc: -9.8 });
+                self.add(p.moving(a.cos() * 0.8 / 1000.0, a.sin() * 0.8 / 1000.0, 6.5 / 1000.0));
+            }
+            // VentEffect: bubbles rising a tile.
+            "Vent" => {
+                let (a, d, r) = (self.random() * PI, self.random() * 0.4, self.random());
+                let speed = (2.5 - r * 1.5).floor().max(1.0);
+                let p = Particle::new(x + d * a.cos(), y + d * a.sin(), 0.0, 0x26CAFF, 75.0 + r * 50.0, (1000.0 / speed) as i32, Motion::Plain);
+                self.add(p.moving(0.0, 0.0, speed / 1000.0));
+            }
+            // VortexEffect: from six tiles out, swirling in and down.
+            "Vortex" => {
+                let a = 2.0 * PI * self.random();
+                let (px, py) = (x + a.cos() * 6.0, y + a.sin() * 6.0);
+                let turn = (x - px).atan2(y - py) + PI / 2.0 - PI / 6.0;
+                let pull = 2.5 + 0.5 * self.random();
+                let max_size = 3.5 + 2.0 * self.random();
+                let motion = Motion::Vortex { cx: x, cy: y, ax: turn.sin() * pull, ay: turn.cos() * pull, max_size };
+                self.add(Particle::new(px, py, 1.0, e.color & 0xFF_FFFF, 0.0, 3400, motion));
+            }
+            // SkyBeamEffect: falling from on high within a widening circle.
+            "SkyBeam" => {
+                let (a, d) = (2.0 * PI * self.random(), self.random() * radius);
+                let speed = (e.speed + (e.max_radius - d)).max(0.1);
+                let life = (e.z_offset / speed * 1000.0) as i32;
+                let p = Particle::new(x + d * a.cos(), y + d * a.sin(), e.z_offset, e.color & 0xFF_FFFF, 80.0 + self.random() * 40.0, life.max(1), Motion::Plain);
+                self.add(p.moving(0.0, 0.0, -speed / 1000.0));
+            }
+            _ => {}
+        }
+    }
+
+    /// Start a one-off effect for a newly seen object: `CircleEffect` or `ExplosionComplexEffect`.
+    fn one_off(&mut self, x: f64, y: f64, e: &bsk_data::EffectProps) {
+        match e.id.as_str() {
+            "Circle" | "Heart" => {
+                let n = e.amount.max(1);
+                for i in 0..n {
+                    let angle = 2.0 * PI / n as f64 * i as f64;
+                    let size = 100.0 + self.random() * 20.0;
+                    let z = 0.2 + self.random() * 0.2;
+                    let motion = Motion::Orbit { cx: x, cy: y, angle, speed: e.speed, rad: e.min_radius, rise: e.rise, max_rad: e.max_radius };
+                    self.add(Particle::new(x + e.min_radius * angle.cos(), y + e.min_radius * angle.sin(), z, e.color & 0xFF_FFFF, size, (e.life * 1000.0) as i32, motion));
+                }
+            }
+            // SnowflakeEffect: six arms reaching out, sparking as they go.
+            "Snowflake" => {
+                let life = ((e.life * 1000.0) as i32).max(1);
+                let r = e.min_radius + self.random() * (e.max_radius - e.min_radius);
+                for i in 0..6 {
+                    let a = i as f64 * 2.0 * PI / 6.0;
+                    let size = e.size as f64;
+                    let p = Particle::new(x, y, 0.0, e.color & 0xFF_FFFF, size, life, Motion::Sparker);
+                    self.add(p.moving(r * a.cos() / life as f64, r * a.sin() / life as f64, 0.0));
+                }
+            }
+            "ExplosionComplex" => {
+                let life = ((e.life * 1000.0) as i32).max(1);
+                for _ in 0..e.amount.max(1) {
+                    let a = self.random() * PI * 2.0;
+                    let r = e.min_radius + self.random() * (e.max_radius - e.min_radius);
+                    let (vx, vy) = (r * a.cos() / life as f64, r * a.sin() / life as f64);
+                    self.add(Particle::new(x, y, 0.2, e.color & 0xFF_FFFF, e.size as f64, life, Motion::Plain).moving(vx, vy, 0.0));
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// An `XMLEffect` particle's picture: one of its animations (each as likely as its
+    /// `prob`), or its texture.
+    fn animated(&mut self, sprites: &Sprites, desc: &bsk_data::ParticleDesc) -> Option<Image> {
+        let k = desc.size as f32 / 100.0 * 5.0;
+        let frame = |tex: &TextureData| -> (Option<AtlasRect>, f32, f32) {
+            match &tex.pick(0).main {
+                TextureRef::Image { set, index } => match (sprites.tile(set, *index), sprites.tile_src(set, *index)) {
+                    (Some(r), Some(src)) => (Some(r), src.w as f32 * k, src.h as f32 * k),
+                    _ => (None, 0.0, 0.0),
+                },
+                _ => (None, 0.0, 0.0),
+            }
+        };
+        let pick = self.random();
+        let mut acc = 0.0;
+        let anim = desc.animations.iter().find(|a| {
+            acc += a.prob;
+            pick < acc
+        });
+        let frames: Vec<_> = match anim {
+            Some(a) => a.frames.iter().map(|f| {
+                let (r, w, h) = frame(&f.texture);
+                (r, w, h, f.time.max(1))
+            }).collect(),
+            None => {
+                let (r, w, h) = frame(&desc.texture);
+                vec![(r, w, h, i32::MAX)]
+            }
+        };
+        Some(Image { frames, standing: true })
+    }
+
     /// `Camera.update`'s shake: up to half a tile, building up over ten seconds.
     pub fn jitter(&mut self, now: i32) -> (f64, f64) {
         let Some(since) = self.jitter_since else { return (0.0, 0.0) };
@@ -498,6 +757,24 @@ impl Particles {
     pub fn draw(&self, cam: &Camera, renderer: &mut Renderer) {
         let k = cam.scale / 50.0;
         for p in &self.list {
+            if let Some(img) = &p.image {
+                // The frame showing now, by how long the particle has been about.
+                let mut t = p.life - p.left;
+                let frame = img.frames.iter().find(|f| {
+                    if t < f.3 {
+                        return true;
+                    }
+                    t -= f.3;
+                    false
+                });
+                if let Some(&(Some(rect), w, h, _)) = frame.or(img.frames.last()) {
+                    let [sx, sy] = cam.to_screen(p.x, p.y, p.z);
+                    let (w, h) = (w * k as f32, h * k as f32);
+                    let top = if img.standing { sy - h } else { sy - h / 2.0 };
+                    renderer.sprite(rect, Quad::rect((sx - w / 2.0).round(), top.round(), w, h), Tint::NONE);
+                }
+                continue;
+            }
             let size = match p.motion {
                 Motion::Throw => continue,
                 Motion::Spark => p.size * p.left as f64 / p.life as f64,
@@ -513,6 +790,12 @@ impl Particles {
             }
         }
     }
+}
+
+/// A still picture for a particle: tile `index` of `set`, `k` times its size.
+fn still(sprites: &Sprites, set: &str, index: u32, k: f32) -> Option<Image> {
+    let (rect, src) = (sprites.tile(set, index)?, sprites.tile_src(set, index)?);
+    Some(Image { frames: vec![(Some(rect), src.w as f32 * k, src.h as f32 * k, i32::MAX)], standing: false })
 }
 
 /// The colours of every opaque pixel of a texture's first frame.
@@ -559,6 +842,42 @@ mod tests {
         // Effects on unknown objects do nothing.
         p.show_effect(&effect(5, 99, (3.0, 0.0), (0.0, 0.0)), &world, 0);
         assert!(p.list.is_empty());
+    }
+
+    #[test]
+    fn objects_give_off_their_effects() {
+        let mut data = GameData::default();
+        data.add_objects(
+            r#"<Objects>
+                <Object type="0x20" id="Hero"><Class>Player</Class><Player/></Object>
+                <Object type="0x30" id="Fount"><Class>GameObject</Class>
+                    <Effect color="0x6FA8DC" rate="20" life=".5" size="8" rangeX="1" rangeY="1">CustomParticles</Effect></Object>
+                <Object type="0x31" id="Ring"><Class>GameObject</Class>
+                    <Effect color="0xFF0000" amount="12" life="2" minRadius="1" maxRadius="3" rise="1" speed="0.05">Circle</Effect></Object>
+            </Objects>"#,
+        )
+        .unwrap();
+        let mut world = World::new(10, 10, "test", 1);
+        let tiles: Vec<_> = (0..100).map(|i| bsk_proto::GroundTile { x: i % 10, y: i / 10, tile_type: 0 }).collect();
+        let obj = |id: i32, t: i32, x: f32| bsk_proto::ObjectData {
+            object_type: t,
+            status: bsk_proto::ObjectStatus { object_id: id, pos: WorldPos { x, y: 5.5 }, stats: Default::default() },
+        };
+        let update = bsk_proto::Update { tiles: tiles.into(), new_objs: vec![obj(1, 0x20, 5.5), obj(2, 0x30, 6.5), obj(3, 0x31, 3.5)].into(), drops: Default::default() };
+        world.apply_update(&update, &data, 0);
+        world.me = Some(1);
+        let sprites = Sprites::default();
+        let mut p = Particles::default();
+        // The ring goes off at once; the fountain gives off 20 a second.
+        p.object_effects(&world, &data, &sprites, 0);
+        assert_eq!(p.list.len(), 12);
+        p.object_effects(&world, &data, &sprites, 1000);
+        assert_eq!(p.list.len(), 12 + 20);
+        // Gone objects stop.
+        world.apply_update(&bsk_proto::Update { drops: vec![2].into(), ..Default::default() }, &data, 0);
+        p.object_effects(&world, &data, &sprites, 1000);
+        assert_eq!(p.list.len(), 32);
+        assert!(!p.emitters.contains_key(&2));
     }
 
     #[test]

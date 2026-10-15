@@ -148,7 +148,103 @@ pub struct ObjectDesc {
     pub projectiles: std::collections::HashMap<i32, ProjectileDesc>,
     /// `<Animation>`s, played now and then over the texture.
     pub animations: Vec<crate::animation::AnimationData>,
+    /// `<Effect>`: particles the object gives off (a fountain's spray, a torch's sparks).
+    pub effect: Option<EffectProps>,
     pub xml: Element,
+}
+
+/// `EffectProperties`: an object's `<Effect>`. Numbers left out (or zero, as the AIR client
+/// reads them with `||`) take its defaults.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EffectProps {
+    /// Which effect: `CustomParticles`, `XMLEffect`, `Circle`, `ExplosionComplex`...
+    pub id: String,
+    /// `XMLEffect`'s particle (from particles.xml), and how often it comes, seconds.
+    pub particle: String,
+    pub cooldown: f64,
+    pub color: u32,
+    pub color2: u32,
+    /// Particles a second.
+    pub rate: f64,
+    pub speed: f64,
+    pub speed_variance: f64,
+    pub spread: f64,
+    /// Seconds.
+    pub life: f64,
+    pub life_variance: f64,
+    /// Pixels.
+    pub size: i32,
+    pub friction: f64,
+    /// Upward speed, tiles a second, and its change a second.
+    pub rise: f64,
+    pub rise_variance: f64,
+    pub rise_acc: f64,
+    pub range_x: i32,
+    pub range_y: i32,
+    pub z_offset: f64,
+    pub min_radius: f64,
+    pub max_radius: f64,
+    pub amount: i32,
+    /// An image instead of a square of colour.
+    pub bitmap: Option<(String, u32)>,
+}
+
+impl EffectProps {
+    pub fn from_xml(xml: &Element) -> Self {
+        // `Number(x) || default`: missing, unreadable or zero all give the default.
+        let num = |name: &str, default: f64| xml.attr(name).and_then(|v| v.trim().parse::<f64>().ok()).filter(|v| *v != 0.0).unwrap_or(default);
+        let int = |name: &str, default: i32| xml.attr(name).map(crate::xml::as3_int).filter(|v| *v != 0).unwrap_or(default);
+        let color = |name: &str| xml.attr(name).map_or(0, |v| crate::xml::as3_int(v) as u32);
+        EffectProps {
+            id: xml.text.trim().to_owned(),
+            particle: xml.attr("particle").unwrap_or("").to_owned(),
+            cooldown: xml.attr_number("cooldown", 0.0),
+            color: color("color"),
+            color2: color("color2"),
+            rate: num("rate", 5.0),
+            speed: num("speed", 0.0),
+            speed_variance: num("speedVariance", 0.5),
+            spread: num("spread", 0.0),
+            life: num("life", 1.0),
+            life_variance: num("lifeVariance", 0.0),
+            size: int("size", 3),
+            friction: num("friction", 0.0),
+            rise: num("rise", 3.0),
+            rise_variance: num("riseVariance", 0.0),
+            rise_acc: num("riseAcc", 0.0),
+            range_x: int("rangeX", 0),
+            range_y: int("rangeY", 0),
+            z_offset: num("zOffset", 0.0),
+            min_radius: num("minRadius", 0.0),
+            max_radius: num("maxRadius", 1.0),
+            amount: int("amount", 1),
+            bitmap: xml.attr("bitmapFile").filter(|f| !f.is_empty()).map(|f| (f.to_owned(), xml.attr_int("bitmapIndex", 0) as u32)),
+        }
+    }
+}
+
+/// `ParticleProperties`: a particle `XMLEffect`s give off (particles.xml).
+#[derive(Debug, Clone)]
+pub struct ParticleDesc {
+    pub texture: crate::texture::TextureData,
+    /// `TextureRedrawer.redraw` size (100: five times the sprite).
+    pub size: i32,
+    pub z: f64,
+    /// Seconds.
+    pub duration: f64,
+    pub animations: Vec<crate::animation::AnimationData>,
+}
+
+impl ParticleDesc {
+    pub fn from_xml(xml: &Element) -> Self {
+        ParticleDesc {
+            texture: crate::texture::TextureData::from_xml(xml),
+            size: xml.int("Size", 100),
+            z: xml.number("Z", 0.0),
+            duration: xml.number("Duration", 0.0),
+            animations: xml.children_named("Animation").map(crate::animation::AnimationData::from_xml).collect(),
+        }
+    }
 }
 
 impl ObjectDesc {
@@ -222,6 +318,7 @@ impl ObjectDesc {
                 })
                 .collect(),
             animations: xml.children_named("Animation").map(crate::animation::AnimationData::from_xml).collect(),
+            effect: xml.child("Effect").map(EffectProps::from_xml),
             xml: xml.clone(),
         }
     }

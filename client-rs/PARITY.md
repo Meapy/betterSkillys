@@ -34,7 +34,8 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Feature | AIR | Status |
 |---|---|---|
 | World, walls, objects, ground, 3D | `Map`, `Square`, objects | Done |
-| Particles and effects (`ShowEffect`, hit sparks, death bursts, flashes, camera shake) | `particles/*` | Done (objects' own `<Effect>` particles, like fountains and vents, to do) |
+| Particles and effects (`ShowEffect`, hit sparks, death bursts, flashes, camera shake) | `particles/*` | Done |
+| Objects' own effects (`<Effect>`: custom particles, XML particles, circles, explosions, fountains, vents, vortexes, sky beams, hearts, snowflakes) | `ParticleEffect.fromProps` | Done |
 | Area attacks (`Aoe`) | `onAoe` | Done (the server applies the damage; the client draws the blast) |
 | Shooting, abilities, hits | `Player`, `Projectile` | Done |
 | HUD: minimap, bars, equipment, inventory, backpack, stats, potions | `HUDView` | Done |

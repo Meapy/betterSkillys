@@ -11,7 +11,7 @@ pub mod xml;
 pub use animation::{AnimationData, Animations};
 pub use ground::{Animate, AnimateKind, Ground};
 pub use model::{Model, ModelFace};
-pub use object::{ObjectClass, ObjectDesc, ProjectileDesc};
+pub use object::{EffectProps, ObjectClass, ObjectDesc, ParticleDesc, ProjectileDesc};
 pub use texture::{TextureData, TextureRef};
 
 use bsk_assets::{AssetSource, Manifest};
@@ -25,6 +25,8 @@ pub struct GameData {
     pub ground_ids: HashMap<String, u16>,
     /// 3D models by name (`<Model>` in object XML).
     pub models: HashMap<String, Model>,
+    /// Particles by id (particles.xml), for objects' `XMLEffect`s.
+    pub particles: HashMap<String, ParticleDesc>,
 }
 
 impl GameData {
@@ -38,6 +40,18 @@ impl GameData {
         }
         for (file, bytes) in manifest.object_xml.iter().zip(objects) {
             data.add_objects(&text(file, bytes)?).map_err(|e| format!("{file}: {e}"))?;
+        }
+        // particles.xml: what objects' XMLEffects give off.
+        if !manifest.particles.is_empty() {
+            let bytes = source.load(&manifest.particles).await;
+            match text(&manifest.particles, bytes).and_then(|t| elements(&t, "Particle")) {
+                Ok(nodes) => {
+                    for p in nodes {
+                        data.particles.insert(p.attr("id").unwrap_or("").to_owned(), ParticleDesc::from_xml(&p));
+                    }
+                }
+                Err(e) => log::warn!("{}: {e}", manifest.particles),
+            }
         }
         let models = futures::future::join_all(manifest.models.iter().map(|m| source.load(&m.file))).await;
         for (def, bytes) in manifest.models.iter().zip(models) {
