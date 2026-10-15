@@ -39,6 +39,9 @@ namespace WorldServer.networking.packets.outgoing
             StartingPos.Write(wtr);
             wtr.Write(Angle);
             wtr.Write(Damage);
+            // Appended: which of the container's projectiles to draw. Older clients ignore it
+            // and draw projectile 0.
+            wtr.Write((byte)(ProjectileDesc?.BulletType ?? 0));
         }
     }
 }
