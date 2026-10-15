@@ -377,6 +377,78 @@ pub enum Button {
     Enter(i32),
     /// Buy from the shop.
     Buy(i32),
+    /// A nearby player in the party list: opens the player menu.
+    Member(i32),
+    /// An option of the player menu, for that player.
+    Menu(MenuOpt, i32),
+    /// Answer the invitation.
+    InviteYes,
+    InviteNo,
+    /// One of our items in the trade window; Accept; Cancel.
+    TradeSlot(usize),
+    TradeAccept,
+    TradeCancel,
+}
+
+/// `PlayerMenu`'s options.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MenuOpt {
+    Teleport,
+    GuildInvite,
+    Lock,
+    Unlock,
+    Whisper,
+    Trade,
+    Party,
+    Ignore,
+    Unignore,
+}
+
+impl MenuOpt {
+    fn label(self) -> &'static str {
+        match self {
+            MenuOpt::Teleport => "Teleport",
+            MenuOpt::GuildInvite => "Invite to guild",
+            MenuOpt::Lock => "Lock",
+            MenuOpt::Unlock => "Unlock",
+            MenuOpt::Whisper => "Whisper",
+            MenuOpt::Trade => "Trade",
+            MenuOpt::Party => "Invite to party",
+            MenuOpt::Ignore => "Ignore",
+            MenuOpt::Unignore => "Unignore",
+        }
+    }
+}
+
+/// What the social parts of the HUD need from the game.
+pub struct Social<'a> {
+    pub trade: Option<&'a crate::game::Trade>,
+    pub invite: Option<&'a crate::game::Invite>,
+    pub locked: &'a std::collections::HashSet<String>,
+    pub ignored: &'a std::collections::HashSet<String>,
+    pub now: i32,
+}
+
+/// A player's account id (`ACCOUNT_ID_STAT`), as the account lists hold it.
+fn account_id(o: &GameObj) -> Option<String> {
+    o.stat_str(38).map(str::to_owned).or_else(|| o.stat_int(38).map(|v| v.to_string()))
+}
+
+/// `Party.update`: up to six other players within 50 tiles, locked ones first, then nearest.
+fn party_members<'a>(world: &'a World, data: &GameData, locked: &std::collections::HashSet<String>) -> Vec<&'a GameObj> {
+    let Some(me) = world.player() else { return Vec::new() };
+    let mut players: Vec<(bool, f64, &GameObj)> = world
+        .objects
+        .values()
+        .filter(|o| o.id != me.id && data.objects.get(&o.object_type).is_some_and(|d| d.player))
+        .map(|o| {
+            let starred = account_id(o).is_some_and(|a| locked.contains(&a));
+            (starred, (o.x - me.x).hypot(o.y - me.y), o)
+        })
+        .filter(|(starred, dist, _)| *starred || *dist <= 50.0)
+        .collect();
+    players.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.total_cmp(&b.1)));
+    players.into_iter().take(6).map(|(_, _, o)| o).collect()
 }
 
 /// The thing beside us the interact area shows (`InteractPanel`): a bag or a portal.
@@ -471,6 +543,8 @@ pub struct HudState {
     pub drag: Option<Slot>,
     /// The last click on a slot, for double clicks.
     last_click: Option<(i32, u8, i32)>,
+    /// The player menu: for whom, and where it opened.
+    menu: Option<(i32, (f32, f32))>,
 }
 
 /// What the player did on the HUD.
@@ -496,13 +570,28 @@ pub struct Panel {
     has_backpack: bool,
     /// A shop's merchandise icon (for its tooltip), and the item.
     shop_icon: Option<([f32; 4], i32)>,
+    /// The trade window and the player menu, when up (clicks inside them stay there).
+    trade_rect: Option<[f32; 4]>,
+    menu_rect: Option<[f32; 4]>,
+    /// The nearby players listed, and the invitation shown.
+    members: Vec<(i32, String, i32, bool)>,
 }
 
 const DOUBLE_CLICK_MS: i32 = 350;
 
 impl Panel {
-    pub fn new(lay: &Layout, world: &World, data: &GameData, page: Page) -> Self {
-        let mut panel = Panel { slots: Vec::new(), buttons: Vec::new(), interact: None, has_backpack: false, shop_icon: None };
+    pub fn new(lay: &Layout, world: &World, data: &GameData, state: &HudState, social: &Social) -> Self {
+        let page = state.page;
+        let mut panel = Panel {
+            slots: Vec::new(),
+            buttons: Vec::new(),
+            interact: None,
+            has_backpack: false,
+            shop_icon: None,
+            trade_rect: None,
+            menu_rect: None,
+            members: Vec::new(),
+        };
         let Some(me) = world.player() else { return panel };
         let item = |o: &GameObj, slot: u8| o.stat_int(slot_stat(slot)).unwrap_or(-1);
         let types = class_slot_types(data.objects.get(&me.object_type));
@@ -565,6 +654,56 @@ impl Panel {
                     panel.shop_icon = Some((lay.rect(76.0, 610.0, 48.0, 44.0), item));
                 }
             }
+        } else if social.invite.is_some() {
+            // An invitation waits in the interact area (TradeRequestPanel, PartyInvitePanel...).
+            panel.buttons.push((Button::InviteYes, lay.rect(16.0, 656.0, 82.0, 30.0)));
+            panel.buttons.push((Button::InviteNo, lay.rect(102.0, 656.0, 82.0, 30.0)));
+        } else {
+            // PartyPanel: the players around us.
+            for (i, o) in party_members(world, data, social.locked).into_iter().enumerate() {
+                let starred = account_id(o).is_some_and(|a| social.locked.contains(&a));
+                let name = o.name().unwrap_or("?").to_owned();
+                panel.members.push((o.id, name, o.stat_int(stat::LEVEL).unwrap_or(0), starred));
+                panel.buttons.push((Button::Member(o.id), lay.rect(12.0, 608.0 + 14.5 * i as f32, 176.0, 14.0)));
+            }
+        }
+
+        // The trade window, in the middle of the view.
+        if let Some(trade) = social.trade {
+            let s = lay.s;
+            let (w, h) = (440.0 * s, 290.0 * s);
+            let r = [(lay.view_w() - w) / 2.0, (lay.h - h) / 2.0, w, h];
+            panel.trade_rect = Some(r);
+            for i in 0..trade.mine.len().min(12) {
+                let sr = [r[0] + 20.0 * s + (i % 4) as f32 * 46.0 * s, r[1] + 70.0 * s + (i / 4) as f32 * 46.0 * s, 42.0 * s, 42.0 * s];
+                panel.buttons.push((Button::TradeSlot(i), sr));
+            }
+            panel.buttons.push((Button::TradeCancel, [r[0] + r[2] - 252.0 * s, r[1] + r[3] - 52.0 * s, 110.0 * s, 36.0 * s]));
+            panel.buttons.push((Button::TradeAccept, [r[0] + r[2] - 130.0 * s, r[1] + r[3] - 52.0 * s, 110.0 * s, 36.0 * s]));
+        }
+
+        // The player menu, where it was opened.
+        if let Some((id, at)) = state.menu {
+            if let (Some(p), Some(me)) = (world.objects.get(&id), world.player()) {
+                let mut opts = vec![MenuOpt::Teleport];
+                let my_rank = me.stat_int(63).unwrap_or(0);
+                if my_rank >= 20 && p.stat_str(62).unwrap_or("").is_empty() {
+                    opts.push(MenuOpt::GuildInvite);
+                }
+                let acc = account_id(p);
+                opts.push(if acc.as_ref().is_some_and(|a| social.locked.contains(a)) { MenuOpt::Unlock } else { MenuOpt::Lock });
+                opts.extend([MenuOpt::Whisper, MenuOpt::Trade, MenuOpt::Party]);
+                opts.push(if acc.as_ref().is_some_and(|a| social.ignored.contains(a)) { MenuOpt::Unignore } else { MenuOpt::Ignore });
+                let s = lay.s;
+                let (w, row) = (160.0 * s, 28.0 * s);
+                let h = row * opts.len() as f32 + 34.0 * s;
+                let x = at.0.min(lay.w - w - 4.0).max(4.0);
+                let y = at.1.min(lay.h - h - 4.0).max(4.0);
+                panel.menu_rect = Some([x, y, w, h]);
+                for (i, o) in opts.into_iter().enumerate() {
+                    panel.buttons.push((Button::Menu(o, id), [x + 6.0 * s, y + 30.0 * s + i as f32 * row, w - 12.0 * s, row - 2.0 * s]));
+                }
+            }
         }
         panel
     }
@@ -579,6 +718,32 @@ impl Panel {
 
     /// The left button went down at `pos`. True if the HUD took it (so the game doesn't fire).
     pub fn press(&self, state: &mut HudState, lay: &Layout, pos: (f64, f64), shift: bool, now: i32, actions: &mut Vec<Action>) -> bool {
+        // The player menu: an option, or a click anywhere else closes it.
+        if let Some(r) = self.menu_rect {
+            state.menu = None;
+            // Only the menu's own options: it lies over the panel's buttons.
+            let option = self.buttons.iter().find(|(b, r)| matches!(b, Button::Menu(..)) && inside(*r, pos));
+            if let Some((b, _)) = option {
+                actions.push(Action::Button(*b));
+            }
+            return inside(r, pos) || lay.on_panel(pos.0, pos.1);
+        }
+        // The trade window keeps its clicks.
+        if let Some(r) = self.trade_rect {
+            if inside(r, pos) {
+                let hit = self.buttons.iter().find(|(b, br)| {
+                    matches!(b, Button::TradeSlot(_) | Button::TradeAccept | Button::TradeCancel) && inside(*br, pos)
+                });
+                if let Some((b, _)) = hit {
+                    actions.push(Action::Button(*b));
+                }
+                return true;
+            }
+        }
+        if let Some(Button::Member(id)) = self.button_at(pos) {
+            state.menu = Some((id, (pos.0 as f32, pos.1 as f32)));
+            return true;
+        }
         if let Some(slot) = self.slot_at(pos) {
             if slot.item > 0 {
                 if shift {
@@ -637,7 +802,8 @@ impl Panel {
 
 /// The panel: minimap, portrait and name, bars, equipment, inventory, stats, potions, the
 /// interact area.
-pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, colors: &mut MapColors, panel: &Panel, state: &HudState, mouse: (f64, f64)) {
+#[allow(clippy::too_many_arguments)]
+pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, colors: &mut MapColors, panel: &Panel, state: &HudState, social: &Social, mouse: (f64, f64)) {
     let s = lay.s;
     let (px, pw) = (lay.panel_x, lay.w - lay.panel_x);
     // A soft shadow cast onto the world, the body, and a light edge.
@@ -742,6 +908,41 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
         }
     }
 
+    // Nothing to interact with: the invitation, or the players around us.
+    if panel.interact.is_none() {
+        let r = lay.rect(8.0, 588.0, 184.0, 108.0);
+        if let Some(invite) = social.invite {
+            theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::ACCENT, 0.7), ((0x231E16, 0.92), (0x17150F, 0.92)));
+            let (title, detail) = match invite {
+                crate::game::Invite::Trade { name } => (format!("{name}"), "wants to trade with you".to_owned()),
+                crate::game::Invite::Party { name, .. } => (format!("{name}"), "invites you to a party".to_owned()),
+                crate::game::Invite::Guild { name, guild } => (format!("{name}"), format!("invites you to {guild}")),
+            };
+            let size = lay.font(14.0);
+            let tw = ui.measure(&title, size, true);
+            ui.label(&title, lay.panel_x + (PANEL_W * s - tw) / 2.0, 600.0 * s, size, true, color::ACCENT_HI);
+            let small = lay.font(11.0);
+            let dw = ui.measure(&detail, small, false);
+            ui.label(&detail, lay.panel_x + (PANEL_W * s - dw) / 2.0, 622.0 * s, small, false, color::TEXT_DIM);
+        } else if !panel.members.is_empty() {
+            theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::BORDER, 0.9), ((0x1C2029, 0.9), (0x16191F, 0.9)));
+            ui.label("Nearby players", lay.panel_x + 14.0 * s, 591.0 * s, lay.font(11.0), true, color::TEXT_MUTED);
+            for (id, name, level, starred) in &panel.members {
+                let br = panel.buttons.iter().find(|(b, _)| *b == Button::Member(*id)).map(|(_, r)| *r).unwrap_or([0.0; 4]);
+                if inside(br, mouse) {
+                    theme::fill(ui.renderer, br, 3.0 * s, 0xFFFFFF, 0.07);
+                }
+                let size = lay.font(11.5);
+                let y = br[1] + (br[3] - size * 1.22) / 2.0;
+                let label = if *starred { format!("★ {name}") } else { name.clone() };
+                ui.label(&label, br[0] + 4.0 * s, y, size, true, if *starred { 0xFFD24A } else { color::TEXT });
+                let lv = format!("{level}");
+                let lw = ui.measure(&lv, size, false);
+                ui.label(&lv, br[0] + br[2] - lw - 4.0 * s, y, size, false, color::TEXT_MUTED);
+            }
+        }
+    }
+
     // The interact area's title: what we stand by.
     if let Some(target) = &panel.interact {
         let r = lay.rect(8.0, 588.0, 184.0, 108.0);
@@ -774,7 +975,9 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
                 Some(InteractKind::Shop { price, currency, .. }) => (format!("Buy  ·  {}", price_text(price, currency)), Kind::Primary),
                 _ => continue,
             },
-            Button::Page(_) => continue,
+            Button::InviteYes => (if matches!(social.invite, Some(crate::game::Invite::Trade { .. })) { "Trade" } else { "Join" }.to_owned(), Kind::Primary),
+            Button::InviteNo => ("Decline".to_owned(), Kind::Secondary),
+            _ => continue,
         };
         ui.button(*r, &label, kind, inside(*r, mouse), s);
     }
@@ -1174,6 +1377,102 @@ fn draw_tooltip(ui: &mut Ui, lay: &Layout, lines: &[Line], icon: Option<i32>, ac
     for (i, (text, size, bold, color, ry)) in rows.iter().enumerate() {
         let indent = if i < 2 && icon.is_some() && *ry < icon_w { icon_w } else { 0.0 };
         ui.label(text, x0 + pad + indent, y0 + pad + ry, *size, *bold, *color);
+    }
+}
+
+/// The trade window (`TradePanel`) and the player menu (`PlayerMenu`), over the view.
+pub fn draw_windows(ui: &mut Ui, lay: &Layout, world: &World, panel: &Panel, social: &Social, mouse: (f64, f64)) {
+    let s = lay.s;
+    if let (Some(r), Some(trade)) = (panel.trade_rect, social.trade) {
+        theme::panel(ui.renderer, r, s);
+        let title = format!("Trading with {}", trade.partner);
+        ui.label(&title, r[0] + 20.0 * s, r[1] + 16.0 * s, lay.font(18.0), true, color::TEXT);
+        let (my_room, their_room) = trade.space_ok();
+        let mut hovered = None;
+        for (items, offer, x0, mine) in [(&trade.mine, &trade.my_offer, r[0] + 20.0 * s, true), (&trade.theirs, &trade.their_offer, r[0] + 230.0 * s, false)] {
+            let (label, note, note_c) = if mine {
+                let (n, c) = if !my_room {
+                    ("Not enough space!", color::DANGER)
+                } else if trade.i_accepted {
+                    ("Trade accepted!", color::GOOD)
+                } else {
+                    ("Click the items to offer", color::TEXT_DIM)
+                };
+                ("Your offer", n, c)
+            } else {
+                let (n, c) = if !their_room {
+                    ("Not enough space!", color::DANGER)
+                } else if trade.they_accepted {
+                    ("Trade accepted!", color::GOOD)
+                } else {
+                    ("Choosing items…", color::TEXT_DIM)
+                };
+                ("Their offer", n, c)
+            };
+            ui.label(label, x0, r[1] + 48.0 * s, lay.font(13.0), true, color::TEXT_DIM);
+            for (i, item) in items.iter().take(12).enumerate() {
+                let sr = [x0 + (i % 4) as f32 * 46.0 * s, r[1] + 70.0 * s + (i / 4) as f32 * 46.0 * s, 42.0 * s, 42.0 * s];
+                let on = offer.get(i).copied().unwrap_or(false);
+                let over = inside(sr, mouse);
+                let clickable = mine && item.tradeable && item.item > 0;
+                let edge = if on { Some(color::GOOD) } else if item.item > 0 { crate::screens::tier_edge(ui.data, item.item) } else { None };
+                ui.slot_box(sr, edge, over && clickable, s);
+                if on {
+                    theme::fill(ui.renderer, [sr[0] + s, sr[1] + s, sr[2] - 2.0 * s, sr[3] - 2.0 * s], 4.0 * s, color::GOOD, 0.18);
+                }
+                if item.item > 0 {
+                    let dim = !item.tradeable;
+                    ui.item_icon(item.item, 80, sr[0] + sr[2] / 2.0, sr[1] + sr[3] / 2.0, s);
+                    if dim {
+                        theme::fill(ui.renderer, sr, 5.0 * s, 0x000000, 0.5);
+                    }
+                    if over {
+                        hovered = Some(item.item);
+                    }
+                }
+            }
+            ui.label(note, x0, r[1] + 212.0 * s, lay.font(12.0), true, note_c);
+        }
+        // Accept waits a moment after any change, then needs room on both sides.
+        let wait = (crate::game::TRADE_ACCEPT_DELAY - (social.now - trade.changed_at)).max(0);
+        for (b, br) in &panel.buttons {
+            match b {
+                Button::TradeCancel => ui.button(*br, "Cancel", Kind::Secondary, inside(*br, mouse), s),
+                Button::TradeAccept => {
+                    let ready = wait == 0 && my_room && their_room && !trade.i_accepted;
+                    let label = if trade.i_accepted { "Accepted".to_owned() } else if wait > 0 { format!("Accept ({})", (wait + 999) / 1000) } else { "Accept".to_owned() };
+                    ui.button(*br, &label, if ready { Kind::Primary } else { Kind::Secondary }, ready && inside(*br, mouse), s);
+                }
+                _ => {}
+            }
+        }
+        if let Some(item) = hovered {
+            let lines = item_tooltip(ui.data, item, world.player(), SlotKind::Shop);
+            draw_tooltip(ui, lay, &lines, Some(item), crate::screens::tier_edge(ui.data, item), mouse);
+        }
+    }
+    if let Some(r) = panel.menu_rect {
+        theme::shadow(ui.renderer, r, 8.0 * s, 10.0 * s, 0.5);
+        theme::frame(ui.renderer, r, 8.0 * s, s.max(1.0), (color::BORDER_HI, 1.0), ((color::PANEL_TOP, 0.98), (color::PANEL_BOTTOM, 0.98)));
+        let name = panel
+            .buttons
+            .iter()
+            .find_map(|(b, _)| if let Button::Menu(_, id) = b { Some(*id) } else { None })
+            .and_then(|id| world.objects.get(&id))
+            .and_then(|o| o.name())
+            .unwrap_or("")
+            .to_owned();
+        ui.label(&name, r[0] + 10.0 * s, r[1] + 7.0 * s, lay.font(14.0), true, color::ACCENT_HI);
+        for (b, br) in &panel.buttons {
+            let Button::Menu(opt, _) = b else { continue };
+            let over = inside(*br, mouse);
+            if over {
+                theme::fill(ui.renderer, *br, 4.0 * s, color::ACCENT, 0.22);
+            }
+            let size = lay.font(13.0);
+            let c = if matches!(opt, MenuOpt::Ignore) { 0xFF8A80 } else { color::TEXT };
+            ui.label(opt.label(), br[0] + 8.0 * s, br[1] + (br[3] - size * 1.22) / 2.0, size, false, c);
+        }
     }
 }
 

@@ -142,7 +142,8 @@ fn shot_args() -> Option<(String, f32)> {
 }
 
 /// Carry out what the player did on the HUD (`ItemGridMediator`).
-fn apply_action(game: &mut Game, panel: &hud::Panel, action: hud::Action, now: i32, data: &bsk_data::GameData) {
+/// Returns a chat line to start typing (Whisper), if any.
+fn apply_action(game: &mut Game, panel: &hud::Panel, action: hud::Action, now: i32, data: &bsk_data::GameData) -> Option<String> {
     use hud::{Action, Button, SlotKind};
     let slot_of = |s: &hud::Slot| (s.owner, s.index, s.item);
     // The first empty inventory slot (nextAvailableInventorySlot), as a swap target.
@@ -188,7 +189,7 @@ fn apply_action(game: &mut Game, panel: &hud::Panel, action: hud::Action, now: i
         // Onto the ground: into the bag we stand on if it has room, else a new bag.
         Action::Drop(s) => {
             if let SlotKind::Potion(_) = s.kind {
-                return;
+                return None;
             }
             let bag_slot = panel.slots.iter().find(|b| b.kind == SlotKind::Container && b.item <= 0);
             match bag_slot {
@@ -204,8 +205,30 @@ fn apply_action(game: &mut Game, panel: &hud::Panel, action: hud::Action, now: i
         Action::Button(Button::Nexus) => game.escape(),
         Action::Button(Button::Enter(id)) => game.use_portal(id),
         Action::Button(Button::Buy(id)) => game.buy(id),
+        Action::Button(Button::Menu(opt, id)) => {
+            let name = game.world.as_ref().and_then(|w| w.objects.get(&id)).and_then(|o| o.name()).unwrap_or("").to_owned();
+            log::info!("player menu: {opt:?} {name}");
+            match opt {
+                hud::MenuOpt::Teleport => game.teleport(id, now),
+                hud::MenuOpt::GuildInvite => game.guild_invite(&name),
+                hud::MenuOpt::Lock => game.edit_list(0, true, id),
+                hud::MenuOpt::Unlock => game.edit_list(0, false, id),
+                hud::MenuOpt::Whisper => return Some(format!("/tell {name} ")),
+                hud::MenuOpt::Trade => game.request_trade(&name),
+                hud::MenuOpt::Party => game.party_invite(&name),
+                hud::MenuOpt::Ignore => game.edit_list(1, true, id),
+                hud::MenuOpt::Unignore => game.edit_list(1, false, id),
+            }
+        }
+        Action::Button(Button::InviteYes) => game.answer_invite(true),
+        Action::Button(Button::InviteNo) => game.answer_invite(false),
+        Action::Button(Button::TradeSlot(i)) => game.trade_toggle(i, now),
+        Action::Button(Button::TradeAccept) => game.trade_accept(now),
+        Action::Button(Button::TradeCancel) => game.trade_cancel(),
+        Action::Button(Button::Member(_)) => {}
         Action::Button(Button::Page(_)) => {}
     }
+    None
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -818,7 +841,14 @@ impl App {
         let Loaded { renderer, sprites, data, redrawer, fonts, text, ground, .. } = &mut **loaded;
         if let Phase::Playing(game) = &mut self.phase {
             // The panel as it stands, for clicks and number keys.
-            let built = game.world.as_ref().map(|w| hud::Panel::new(&lay, w, data, self.hud.page));
+            let social = hud::Social {
+                trade: game.trade.as_ref(),
+                invite: game.invite.as_ref().map(|(i, _)| i),
+                locked: &game.locked,
+                ignored: &game.ignored,
+                now,
+            };
+            let built = game.world.as_ref().map(|w| hud::Panel::new(&lay, w, data, &self.hud, &social));
             let mut actions = Vec::new();
             for key in pressed {
                 match key {
@@ -864,7 +894,9 @@ impl App {
                     }
                 }
                 for action in actions {
-                    apply_action(game, p, action, now, data);
+                    if let Some(line) = apply_action(game, p, action, now, data) {
+                        self.chat_input = Some(line);
+                    }
                 }
             } else {
                 for (down, _) in std::mem::take(&mut self.clicks) {
@@ -945,7 +977,14 @@ impl App {
                     }
                     if let Some(p) = &panel {
                         let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
-                        hud::draw_panel(&mut ui, &lay, world, game.camera_angle, &mut self.map_colors, p, &self.hud, mouse);
+                        let social = hud::Social {
+                            trade: game.trade.as_ref(),
+                            invite: game.invite.as_ref().map(|(i, _)| i),
+                            locked: &game.locked,
+                            ignored: &game.ignored,
+                            now,
+                        };
+                        hud::draw_panel(&mut ui, &lay, world, game.camera_angle, &mut self.map_colors, p, &self.hud, &social, mouse);
                     }
                 }
                 let me = game.world.as_ref().and_then(|w| w.player()).and_then(|p| p.name()).unwrap_or("").to_owned();
@@ -970,6 +1009,14 @@ impl App {
         if let (Phase::Playing(game), Some(p)) = (&self.phase, &panel) {
             if let Some(world) = &game.world {
                 let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+                let social = hud::Social {
+                    trade: game.trade.as_ref(),
+                    invite: game.invite.as_ref().map(|(i, _)| i),
+                    locked: &game.locked,
+                    ignored: &game.ignored,
+                    now,
+                };
+                hud::draw_windows(&mut ui, &lay, world, p, &social, mouse);
                 hud::draw_overlay(&mut ui, &lay, world, p, &self.hud, mouse);
             }
         }
@@ -1152,6 +1199,12 @@ impl ApplicationHandler<UserEvent> for App {
                     return;
                 }
                 if pressed && !event.repeat && code == KeyCode::Escape {
+                    if let Phase::Playing(game) = &mut self.phase {
+                        if game.trade.is_some() {
+                            game.trade_cancel();
+                            return;
+                        }
+                    }
                     self.game_menu = !self.game_menu;
                     self.keys.clear();
                     return;

@@ -49,10 +49,11 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Dungeon keys view | `KeysView` | Done |
 | Legendary and mythical drop pop-ups | `LegendaryNotifView` | To do |
 | Portals, Nexus, Escape menu | `PortalPanel`, `onReconnect` | Done |
-| Player menu: trade, invite, teleport, lock, ignore | `PlayerMenu`, `EditAccountList` | To do |
-| Trading | `TradePanel`, `onTrade*` | To do |
-| Party: invite, panel | `PartyPanel`, `onInvitedToParty` | To do |
-| Guild: invite, register, board, chronicle, hall portal | `Guild*Panel`, `onInvitedToGuild`, `/guild/*` | To do |
+| Player menu: trade, invite, teleport, whisper, lock, ignore; nearby players | `PlayerMenu`, `PartyPanel`, `EditAccountList` | Done (opened from the nearby list; chat names and the minimap to do) |
+| Trading | `TradePanel`, `onTrade*` | Done |
+| Party: invite, join | `PartyPanel`, `onInvitedToParty` | Done |
+| Guild: invite and join | `GuildInvitePanel`, `onInvitedToGuild` | Done |
+| Guild: register, board, chronicle, hall portal | `Guild*Panel`, `/guild/*` | To do |
 | Merchants and shops (and their balloons) | `SellableObjectPanel`, `Merchant`, `onBuyResult` | Done |
 | Market | `MarketPanel`, `onMarket*Result` | To do |
 | Forge | `ForgePanel` | To do |

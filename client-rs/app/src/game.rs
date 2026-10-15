@@ -5,7 +5,8 @@
 use bsk_data::{GameData, ObjectClass};
 use bsk_net::{GameSocket, SocketEvent, Target};
 use bsk_proto::{
-    Buy, ClientMessage, EnemyHit, Escape, GroundDamage, InvDrop, InvSwap, OtherHit, PlayerHit, PlayerShoot, PlayerText,
+    AcceptTrade, Buy, CancelTrade, ChangeTrade, ClientMessage, EditAccountList, EnemyHit, Escape, GroundDamage, GuildInvite,
+    InvDrop, JoinGuild, JoinParty, List16, PartyInvite, RequestTrade, Teleport, TradeItem, InvSwap, OtherHit, PlayerHit, PlayerShoot, PlayerText,
     Reconnect, ServerMessage, SlotObject, SquareHit, UseItem, UsePortal, ViewRadius, WorldPos,
 };
 use bsk_session::{Event, HelloParams, Join, Session};
@@ -45,6 +46,13 @@ pub struct Game {
     pub bubbles: Vec<crate::view::Bubble>,
     /// The quest's object (`QuestObjId`), for the arrow and the boss bar.
     pub quest: Option<i32>,
+    pub trade: Option<Trade>,
+    /// The latest invitation, and when it came.
+    pub invite: Option<(Invite, i32)>,
+    /// `AccountList` 0 and 1: locked (starred) and ignored players' account ids.
+    pub locked: std::collections::HashSet<String>,
+    pub ignored: std::collections::HashSet<String>,
+    next_teleport: i32,
     /// Dungeon keys the server says we have (`GlobalNotification`), as colours.
     pub keys: Vec<u32>,
     /// When merchants last spoke (`Merchant.update`'s balloons every 5 s), and which message.
@@ -56,6 +64,45 @@ pub struct Game {
     /// Chat, oldest first (kept across worlds, as the AIR client's TextBox is).
     pub chat: Vec<crate::hud::ChatLine>,
 }
+
+/// A trade in progress (`TradePanel`): both sides' items and what each offers.
+#[derive(Clone, Debug)]
+pub struct Trade {
+    pub partner: String,
+    pub mine: Vec<TradeItem>,
+    pub theirs: Vec<TradeItem>,
+    pub my_offer: Vec<bool>,
+    pub their_offer: Vec<bool>,
+    /// They accepted these offers; we did.
+    pub they_accepted: bool,
+    pub i_accepted: bool,
+    /// When either side last changed its offer: accepting waits a moment after.
+    pub changed_at: i32,
+}
+
+/// How long accepting waits after an offer changes, ms.
+pub const TRADE_ACCEPT_DELAY: i32 = 3000;
+
+impl Trade {
+    /// `TradePanel.checkTrade`: whether each side has room for what it gets.
+    pub fn space_ok(&self) -> (bool, bool) {
+        let count = |offer: &[bool]| offer.iter().filter(|&&o| o).count() as i32;
+        let empty = |items: &[TradeItem]| items.iter().skip(4).filter(|i| i.item <= 0).count() as i32;
+        let (mine, theirs) = (count(&self.my_offer), count(&self.their_offer));
+        (theirs - mine - empty(&self.mine) <= 0, mine - theirs - empty(&self.theirs) <= 0)
+    }
+}
+
+/// Something someone asked of us, answered in the interact area.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Invite {
+    Trade { name: String },
+    Party { name: String, party_id: i32 },
+    Guild { name: String, guild: String },
+}
+
+/// `Player.MS_BETWEEN_TELEPORT`.
+const TELEPORT_COOLDOWN: i32 = 10_000;
 
 /// How many chat lines to keep.
 const CHAT_KEEP: usize = 200;
@@ -87,6 +134,11 @@ impl Game {
             floaters: Vec::new(),
             bubbles: Vec::new(),
             quest: None,
+            trade: None,
+            invite: None,
+            locked: Default::default(),
+            ignored: Default::default(),
+            next_teleport: 0,
             keys: Vec::new(),
             merchant_talk: Default::default(),
             next_ability: 0,
@@ -185,6 +237,56 @@ impl Game {
         }
         match msg {
             ServerMessage::QuestObjId(q) => self.quest = Some(q.object_id),
+            ServerMessage::TradeRequested(t) => {
+                self.invite = Some((Invite::Trade { name: t.name.clone() }, now));
+                self.add_chat("", "", &format!("{} wants to trade with you.", t.name), 0, 0, now);
+            }
+            ServerMessage::TradeStart(t) => {
+                self.invite = None;
+                self.trade = Some(Trade {
+                    partner: t.your_name.clone(),
+                    my_offer: t.my_items.0.iter().map(|i| i.included).collect(),
+                    their_offer: t.your_items.0.iter().map(|i| i.included).collect(),
+                    mine: t.my_items.0.clone(),
+                    theirs: t.your_items.0.clone(),
+                    they_accepted: false,
+                    i_accepted: false,
+                    changed_at: now,
+                });
+            }
+            ServerMessage::TradeChanged(c) => {
+                if let Some(trade) = &mut self.trade {
+                    trade.their_offer = c.offer.0.clone();
+                    (trade.they_accepted, trade.i_accepted, trade.changed_at) = (false, false, now);
+                }
+            }
+            ServerMessage::TradeAccepted(a) => {
+                if let Some(trade) = &mut self.trade {
+                    trade.they_accepted = a.my_offer.0 == trade.my_offer && a.your_offer.0 == trade.their_offer;
+                }
+            }
+            ServerMessage::TradeDone(d) => {
+                self.trade = None;
+                // GameServerConnection.onTradeDone: a server line, whatever the code.
+                self.add_chat("", "", &d.description, 0, 0, now);
+            }
+            ServerMessage::InvitedToParty(p) => self.invite = Some((Invite::Party { name: p.name.clone(), party_id: p.party_id }, now)),
+            ServerMessage::InvitedToGuild(g) => {
+                self.invite = Some((Invite::Guild { name: g.name.clone(), guild: g.guild_name.clone() }, now));
+            }
+            ServerMessage::GuildResult(g) => {
+                if !g.error_text.is_empty() {
+                    self.add_chat(if g.success { "" } else { "*Error*" }, "", &g.error_text, 0, 0, now);
+                }
+            }
+            ServerMessage::AccountList(l) => {
+                let ids: std::collections::HashSet<String> = l.account_ids.0.iter().cloned().collect();
+                match l.account_list_id {
+                    0 => self.locked = ids,
+                    1 => self.ignored = ids,
+                    _ => {}
+                }
+            }
             ServerMessage::BuyResult(b) => {
                 let name = if b.result == 0 { "" } else { "*Error*" };
                 self.add_chat(name, "", &b.result_string, 0, 0, now);
@@ -214,6 +316,9 @@ impl Game {
             }
         }
         if let ServerMessage::Text(t) = msg {
+            if self.is_ignored(t.object_id) {
+                return;
+            }
             self.add_chat(&t.name, &t.recipient, &t.text, t.name_color, t.text_color, now);
             // GameServerConnection.onText: a balloon over the speaker, coloured by who it is.
             let speaker = self.world.as_ref().and_then(|w| w.objects.get(&t.object_id));
@@ -518,6 +623,96 @@ impl Game {
             use_type: 1,
         };
         self.send(msg.into());
+    }
+
+    /// A player's account id (`ACCOUNT_ID_STAT`), as the account lists hold it.
+    pub fn account_id(&self, object_id: i32) -> Option<String> {
+        let o = self.world.as_ref()?.objects.get(&object_id)?;
+        o.stat_str(38).map(str::to_owned).or_else(|| o.stat_int(38).map(|v| v.to_string()))
+    }
+
+    fn is_ignored(&self, object_id: i32) -> bool {
+        self.account_id(object_id).is_some_and(|a| self.ignored.contains(&a))
+    }
+
+    pub fn request_trade(&mut self, name: &str) {
+        self.send(RequestTrade { name: name.to_owned() }.into());
+    }
+
+    /// Include or leave out one of our items (`TradeInventory.onSlotClick`).
+    pub fn trade_toggle(&mut self, slot: usize, now: i32) {
+        let Some(trade) = &mut self.trade else { return };
+        let Some(item) = trade.mine.get(slot) else { return };
+        if !item.tradeable || item.item <= 0 {
+            return;
+        }
+        trade.my_offer[slot] = !trade.my_offer[slot];
+        (trade.they_accepted, trade.i_accepted, trade.changed_at) = (false, false, now);
+        let offer = List16(trade.my_offer.clone());
+        self.send(ChangeTrade { offer }.into());
+    }
+
+    pub fn trade_accept(&mut self, now: i32) {
+        let Some(trade) = &mut self.trade else { return };
+        let (a, b) = trade.space_ok();
+        if !(a && b) || now - trade.changed_at < TRADE_ACCEPT_DELAY {
+            return;
+        }
+        trade.i_accepted = true;
+        let msg = AcceptTrade { my_offer: List16(trade.my_offer.clone()), your_offer: List16(trade.their_offer.clone()) };
+        self.send(msg.into());
+    }
+
+    pub fn trade_cancel(&mut self) {
+        if self.trade.take().is_some() {
+            self.send(CancelTrade {}.into());
+        }
+    }
+
+    /// `Player.teleportTo`: once every 10 s.
+    pub fn teleport(&mut self, object_id: i32, now: i32) {
+        if now < self.next_teleport {
+            let secs = (self.next_teleport - now + 999) / 1000;
+            self.add_chat("*Error*", "", &format!("You can't teleport for {secs} more seconds."), 0, 0, now);
+            return;
+        }
+        self.next_teleport = now + TELEPORT_COOLDOWN;
+        self.send(Teleport { object_id }.into());
+    }
+
+    pub fn party_invite(&mut self, name: &str) {
+        self.send(PartyInvite { name: name.to_owned() }.into());
+    }
+
+    pub fn guild_invite(&mut self, name: &str) {
+        self.send(GuildInvite { name: name.to_owned() }.into());
+    }
+
+    /// Answer the invitation: yes or no.
+    pub fn answer_invite(&mut self, yes: bool) {
+        let Some((invite, _)) = self.invite.take() else { return };
+        if !yes {
+            return;
+        }
+        let msg: ClientMessage = match invite {
+            Invite::Trade { name } => RequestTrade { name }.into(),
+            Invite::Party { name, party_id } => JoinParty { leader: name, party_id }.into(),
+            Invite::Guild { guild, .. } => JoinGuild { guild_name: guild }.into(),
+        };
+        self.send(msg);
+    }
+
+    /// Lock (list 0) or ignore (list 1) a player, or undo it (`EditAccountList`).
+    pub fn edit_list(&mut self, list: i32, add: bool, object_id: i32) {
+        self.send(EditAccountList { account_list_id: list, add, object_id }.into());
+        if let Some(id) = self.account_id(object_id) {
+            let set = if list == 0 { &mut self.locked } else { &mut self.ignored };
+            if add {
+                set.insert(id);
+            } else {
+                set.remove(&id);
+            }
+        }
     }
 
     /// `Buy`: buy what the shop sells.
