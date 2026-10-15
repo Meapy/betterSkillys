@@ -1707,6 +1707,23 @@ pub fn item_tooltip(data: &GameData, item: i32, me: Option<&GameObj>, kind: Slot
             "Heal" | "HealNova" => a.attr("amount").map(|v| format!("{effect}: {v} HP")),
             "Magic" | "MagicNova" => a.attr("amount").map(|v| format!("{effect}: {v} MP")),
             "IncrementStat" => Some(format!("Permanently +{} {}", a.attr_int("amount", 0), stat_name(a.attr_int("stat", -1)))),
+            // Poison ignores defense (the server's `PoisonEnemy`).
+            "PoisonGrenade" => {
+                let mut s = format!(
+                    "Poison: {} damage over {} secs, within {} sqrs",
+                    a.attr_int("totalDamage", 0),
+                    a.attr_number("duration", 0.0),
+                    a.attr_number("radius", 0.0)
+                );
+                let impact = a.attr_int("impactDamage", 0);
+                if impact > 0 {
+                    s += &format!(", plus {impact} on impact");
+                }
+                if a.attr("useWisMod") == Some("true") {
+                    s += " (raised by Wisdom)";
+                }
+                Some(s)
+            }
             "ConditionEffectSelf" | "ConditionEffectAura" => a.attr("effect").map(|e| {
                 let secs = a.attr_number("duration", 0.0);
                 format!("{e} for {secs} secs")

@@ -12,6 +12,8 @@ version number itself is in `client-rs/Cargo.toml`.
 - Assassin poisons work properly: they ignore the monster's defense, deal their full damage over
   the time they list, and can finish a monster off. Before, a poisoned monster could be left
   alive on 0 health. Other abilities that deal damage can now finish monsters off too.
+- Poison tooltips show how much damage the poison does, over how long, how wide it spreads and
+  what it deals on impact.
 
 ## 1.1.3.1 (2026-10-15)
 - In the game, your gold and fame show at the top right of the screen again, with the frame
