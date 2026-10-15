@@ -1,8 +1,10 @@
 ﻿using System.Collections.Concurrent;
+using WorldServer.core.structures;
 using WorldServer.core.worlds;
 using WorldServer.core.worlds.impl;
 using WorldServer.networking;
 using WorldServer.networking.packets.outgoing;
+using WorldServer.utils;
 
 namespace WorldServer.core.objects
 {
@@ -86,6 +88,20 @@ namespace WorldServer.core.objects
                 _clientTimeLog.TryDequeue(out var ignore);
                 _serverTimeLog.TryDequeue(out ignore);
             }
+        }
+
+        private long _lastMoveRejectTime = -1;
+
+        public void RejectMove(TickTime tickTime, float x, float y)
+        {
+            // at most one snap-back a second, so the client has time to take it
+            if (_lastMoveRejectTime != -1 && tickTime.TotalElapsedMs - _lastMoveRejectTime < 1000)
+                return;
+            _lastMoveRejectTime = tickTime.TotalElapsedMs;
+
+            StaticLogger.Instance.Info($"{Name} is walking on an occupied tile. {x}, {y}; sent back to {X}, {Y}");
+            AwaitGotoAck(tickTime.TotalElapsedMs);
+            Client.SendPacket(new GotoMessage(Id, new Position(X, Y)));
         }
 
         public void Pong(TickTime tickTime, int time, int serial)
