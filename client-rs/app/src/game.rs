@@ -45,6 +45,8 @@ pub struct Game {
     pub floaters: Vec<crate::view::Floater>,
     /// Speech balloons, one per speaker.
     pub bubbles: Vec<crate::view::Bubble>,
+    /// The market's answers, for its window.
+    pub market_events: Vec<crate::market::Event>,
     /// Sound effects to play: (name, volume, is it a weapon's shot).
     pub sounds: Vec<(String, f32, bool)>,
     /// The map's music (`MapInfo.music`, `SwitchMusic`).
@@ -163,6 +165,7 @@ impl Game {
             bubbles: Vec::new(),
             tellers: Vec::new(),
             sounds: Vec::new(),
+            market_events: Vec::new(),
             music: None,
             last_level: 0,
             dealt: Default::default(),
@@ -430,6 +433,11 @@ impl Game {
                 }
             }
             ServerMessage::SwitchMusic(m) => self.music = Some(m.music.clone()),
+            ServerMessage::MarketSearchResult(r) => self.market_events.push(crate::market::Event::Search(r.results.0.clone(), r.description.clone())),
+            ServerMessage::MarketBuyResult(r) => self.market_events.push(crate::market::Event::Buy(r.code, r.description.clone(), r.offer_id)),
+            ServerMessage::MarketAddResult(r) => self.market_events.push(crate::market::Event::Add(r.code, r.description.clone())),
+            ServerMessage::MarketRemoveResult(r) => self.market_events.push(crate::market::Event::Remove(r.code, r.description.clone())),
+            ServerMessage::MarketMyOffersResult(r) => self.market_events.push(crate::market::Event::MyOffers(r.results.0.clone())),
             ServerMessage::Goto(g) => world.apply_goto(g.object_id, g.pos.x as f64, g.pos.y as f64, now, data),
             ServerMessage::EnemyShoot(e) => {
                 let Some(owner) = world.objects.get(&e.owner_id).filter(|o| !o.dead) else { return };
@@ -861,6 +869,21 @@ impl Game {
                 set.remove(&id);
             }
         }
+    }
+
+    /// Ask the market (`marketSearch`, `marketBuy`, `marketAdd`, `marketRemove`,
+    /// `marketMyOffers`).
+    pub fn market(&mut self, act: crate::market::Act) {
+        use crate::market::Act;
+        let msg: ClientMessage = match act {
+            Act::Search(item_type) => bsk_proto::MarketSearch { item_type }.into(),
+            Act::Buy(id) => bsk_proto::MarketBuy { id }.into(),
+            // Fame (currency 1), for a day, as MemMarketSellTab sells.
+            Act::Add(slots, price) => bsk_proto::MarketAdd { slots: bsk_proto::List8(slots), price, currency: 1, hours: 24 }.into(),
+            Act::Remove(id) => bsk_proto::MarketRemove { id }.into(),
+            Act::MyOffers => bsk_proto::MarketMyOffers {}.into(),
+        };
+        self.send(msg);
     }
 
     /// The Armoire: wear this skin (0: the class's own look).

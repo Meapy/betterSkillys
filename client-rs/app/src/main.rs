@@ -7,6 +7,7 @@ mod game;
 mod ground;
 mod hud;
 mod login;
+mod market;
 mod particles;
 mod npc;
 mod options;
@@ -155,6 +156,8 @@ struct App {
     npc_keys: Vec<(KeyCode, Option<String>)>,
     /// Sound effects and music, once we know the account server.
     audio: Option<audio::Audio>,
+    /// The marketplace window.
+    market: market::Market,
     /// Key bindings, graphics and sound settings, and their window.
     settings: options::Settings,
     options_ui: options::OptionsUi,
@@ -168,11 +171,15 @@ struct App {
 
 /// Open the window of the NPC we stand by. True for the character changer: back to the
 /// character list.
-fn npc_open(kind: npc::NpcKind, game: &Game, npcs: &mut npc::Npcs, list: Option<&bsk_net::account::CharList>, data: &bsk_data::GameData) -> bool {
+fn npc_open(kind: npc::NpcKind, game: &Game, npcs: &mut npc::Npcs, market: &mut market::Market, list: Option<&bsk_net::account::CharList>, data: &bsk_data::GameData) -> bool {
     use npc::{NpcKind, Prompt, Window};
     let Some(me) = game.world.as_ref().and_then(|w| w.player()) else { return false };
     let window = match kind {
         NpcKind::CharacterChanger => return true,
+        NpcKind::Market => {
+            market.show(data);
+            return false;
+        }
         NpcKind::Reskin => {
             let class = me.object_type;
             let mut skins = vec![0];
@@ -1114,7 +1121,7 @@ impl App {
                         Some(hud::Interact { id, kind: hud::InteractKind::Portal, .. }) => game.use_portal(id),
                         Some(hud::Interact { id, kind: hud::InteractKind::Shop { .. }, .. }) => game.buy(id),
                         Some(hud::Interact { kind: hud::InteractKind::Npc { kind, .. }, .. }) => {
-                            to_chars |= npc_open(kind, game, &mut self.npcs, self.front.list.as_ref(), data);
+                            to_chars |= npc_open(kind, game, &mut self.npcs, &mut self.market, self.front.list.as_ref(), data);
                             self.keys.clear();
                         }
                         _ => {
@@ -1149,7 +1156,7 @@ impl App {
             }
             if game.world.as_ref().is_some_and(|w| w.player().is_some()) {
                 if let Some(kind) = self.npc_test.take().and_then(|c| npc::NpcKind::of_class(&c)) {
-                    to_chars |= npc_open(kind, game, &mut self.npcs, self.front.list.as_ref(), data);
+                    to_chars |= npc_open(kind, game, &mut self.npcs, &mut self.market, self.front.list.as_ref(), data);
                 }
             }
             // The options window takes the mouse while it's open.
@@ -1162,6 +1169,22 @@ impl App {
                 self.mouse_down = false;
             }
             game.particles.disabled = !self.settings.particles;
+            // The market window: its clicks, and the server's answers.
+            let mut market_acts = Vec::new();
+            if self.market.open {
+                for (down, pos) in std::mem::take(&mut self.clicks) {
+                    if down {
+                        market_acts.extend(self.market.click(pos));
+                    }
+                }
+                self.mouse_down = false;
+            }
+            for e in std::mem::take(&mut game.market_events) {
+                market_acts.extend(self.market.event(e));
+            }
+            for act in market_acts {
+                game.market(act);
+            }
             // An NPC's window takes the keyboard and the mouse while it's open.
             // --type: into a prompt (and Enter), or onto the board being edited.
             match &self.npcs.window {
@@ -1225,7 +1248,7 @@ impl App {
                 }
                 for action in actions {
                     if let hud::Action::Button(hud::Button::Npc(kind)) = action {
-                        to_chars |= npc_open(kind, game, &mut self.npcs, self.front.list.as_ref(), data);
+                        to_chars |= npc_open(kind, game, &mut self.npcs, &mut self.market, self.front.list.as_ref(), data);
                         self.keys.clear();
                         continue;
                     }
@@ -1370,6 +1393,7 @@ impl App {
                 };
                 hud::draw_windows(&mut ui, &lay, world, p, &social, mouse);
                 self.npcs.draw(&mut ui, &lay, world.player(), mouse, now);
+                self.market.draw(&mut ui, &lay, world.player(), mouse, now);
                 hud::draw_overlay(&mut ui, &lay, world, p, &self.hud, mouse);
             }
         }
@@ -1566,6 +1590,15 @@ impl ApplicationHandler<UserEvent> for App {
                     }
                     return;
                 }
+                if self.market.open && matches!(self.phase, Phase::Playing(_)) {
+                    if pressed {
+                        if let Some(l) = &self.loaded {
+                            self.market.key(code, event.text.as_deref(), &l.data);
+                        }
+                    }
+                    self.keys.remove(&code);
+                    return;
+                }
                 if self.options_ui.open && matches!(self.phase, Phase::Playing(_)) {
                     if pressed && self.options_ui.key(code, &mut self.settings) {
                         self.settings.save();
@@ -1728,6 +1761,7 @@ fn main() {
         audio: None,
         settings: options::Settings::load(),
         options_ui: Default::default(),
+        market: Default::default(),
         type_text: text_arg("--type"),
         npc_test: text_arg("--npc"),
         effect_test: text_arg("--effect").and_then(|t| t.parse().ok()).map(|t| (t, i32::MIN / 2)),

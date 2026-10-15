@@ -37,6 +37,8 @@ pub enum NpcKind {
     GuildBoard,
     GuildChronicle,
     PotionStorage,
+    /// `MarketNPC`: the marketplace.
+    Market,
 }
 
 impl NpcKind {
@@ -49,6 +51,7 @@ impl NpcKind {
             "GuildBoard" => Self::GuildBoard,
             "GuildChronicle" => Self::GuildChronicle,
             "PotionStorage" => Self::PotionStorage,
+            "MarketNPC" => Self::Market,
             _ => return None,
         })
     }
@@ -101,6 +104,7 @@ pub fn interact_text(kind: NpcKind, me: &GameObj, rank_req: i32) -> (String, Opt
         NpcKind::GuildBoard => open("The guild's notices", "View"),
         NpcKind::GuildChronicle => open("The guild's members", "View"),
         NpcKind::PotionStorage => open("Store stat potions", "Open"),
+        NpcKind::Market => open("Buy and sell items", "Manage"),
     }
 }
 
