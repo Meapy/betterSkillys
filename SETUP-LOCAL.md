@@ -26,6 +26,12 @@ For testing changes without touching the live servers or your own client, `tools
 
 The account server address is compiled into `LocalhostSetup.as`, so the script copies the sources to `build/src` and sets it there. The package is a self-contained Windows app (AIR captive runtime) signed with a self-signed certificate in `build/`.
 
+The Rust rewrite of the client (`client-rs/`, see its AGENTS.md) does everything the AIR client does and also runs in a browser. Its package is built the same way:
+
+```
+python toolsuild_client_rs.py --account http://188.141.12.3:8080 --package   # distetterSkillys-rs-windows.zip
+```
+
 ## Letting other people play
 
 - **World server address:** `source/WorldServer/wServer.json` sets `serverInfo.address` to the public IP (188.141.12.3). The account server sends 127.0.0.1 instead to clients on this PC.

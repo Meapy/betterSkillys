@@ -1,5 +1,8 @@
 //! betterSkillys client: the desktop executable and, built for wasm32, the browser version.
 
+// Release builds on Windows open without a console window behind the game.
+#![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
+
 mod audio;
 mod connected;
 mod emotes;
@@ -395,6 +398,14 @@ fn mouse_arg() -> Option<(f64, f64)> {
         }
     }
     None
+}
+
+/// The window's icon: the AIR client's `moe.png`, built in.
+#[cfg(not(target_arch = "wasm32"))]
+fn window_icon() -> Option<winit::window::Icon> {
+    let img = image::load_from_memory(include_bytes!("../../../client/src/moe.png")).ok()?.to_rgba8();
+    let (w, h) = img.dimensions();
+    winit::window::Icon::from_rgba(img.into_raw(), w, h).ok()
 }
 
 /// `--say <text>` (desktop tests): a chat line or command to send once in the game.
@@ -1545,6 +1556,8 @@ impl ApplicationHandler<UserEvent> for App {
                 Some((w, h)) => attributes.with_inner_size(winit::dpi::PhysicalSize::new(w, h)),
                 None => attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0)),
             }
+            // The AIR client's icon (WebMain-app.xml).
+            .with_window_icon(window_icon())
         };
         // In a browser the page's CSS sizes the canvas.
         #[cfg(target_arch = "wasm32")]

@@ -11,6 +11,11 @@ Usage:
 
     --debug builds without optimisation (much slower to run).
 
+    python tools/build_client_rs.py --account http://188.141.12.3:8080 --package
+        As above with that account server built in, then dist/betterSkillys-rs-<os>.zip (the
+        game and a short readme) to hand to other players, as build_client.py --package does
+        for the AIR client. With --web, the page's files go in the zip instead.
+
 Run tools/gen_rs_manifest.py first if the AIR client's asset lists changed.
 """
 
@@ -67,16 +72,57 @@ def bindgen_version():
     return m.group(1)
 
 
-def build_native(release, out):
+def cargo_env(account):
+    """The environment for cargo: BSK_ACCOUNT builds that account server in."""
+    env = dict(os.environ)
+    if account:
+        env["BSK_ACCOUNT"] = account
+    return env
+
+
+README = """betterSkillys
+=============
+
+Run {exe} to play. Keep the assets folder beside it.
+
+The game connects to {account}.
+To play on another server, start it with: {exe} --account http://<address>:8080
+
+Settings and a remembered login are kept in {store}.
+"""
+
+
+def package(out, web, account):
+    """dist/betterSkillys-rs-<os>.zip: the built files and a readme."""
+    import platform
+    import zipfile
+    name = "web" if web else {"Windows": "windows", "Darwin": "macos"}.get(platform.system(), "linux")
+    dist = os.path.join(ROOT, "dist")
+    os.makedirs(dist, exist_ok=True)
+    path = os.path.join(dist, f"betterSkillys-rs-{name}.zip")
+    exe = BIN + (".exe" if os.name == "nt" and not web else "")
+    store = {"windows": "%APPDATA%\\betterSkillys-rs", "macos": "~/Library/Application Support/betterSkillys-rs",
+             "linux": "~/.config/betterSkillys-rs", "web": "the browser's storage"}[name]
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        for dirpath, _, files in os.walk(out):
+            for f in files:
+                full = os.path.join(dirpath, f)
+                z.write(full, os.path.join("betterSkillys", os.path.relpath(full, out)))
+        if not web:
+            z.writestr("betterSkillys/README.txt", README.format(exe=exe, account=account or "this PC (127.0.0.1:8080)", store=store))
+    print("packaged", os.path.relpath(path, ROOT), f"({os.path.getsize(path) // 1024} KB)")
+
+
+def build_native(release, out, account=None):
     profile = "release" if release else "debug"
-    run(["cargo", "build", "--bin", BIN] + (["--release"] if release else []), cwd=CRATE)
+    run(["cargo", "build", "--bin", BIN] + (["--release"] if release else []), cwd=CRATE, env=cargo_env(account))
     exe = BIN + (".exe" if os.name == "nt" else "")
     os.makedirs(out, exist_ok=True)
     shutil.copy2(os.path.join(CRATE, "target", profile, exe), os.path.join(out, exe))
     copy_assets(out)
 
 
-def build_web(release, out):
+def build_web(release, out, account=None):
     want = bindgen_version()
     try:
         have = subprocess.run(["wasm-bindgen", "--version"], capture_output=True, text=True).stdout.split()[-1]
@@ -87,7 +133,7 @@ def build_web(release, out):
                  f"cargo install wasm-bindgen-cli --version {want} --locked")
     profile = "release" if release else "debug"
     run(["cargo", "build", "--bin", BIN, "--target", "wasm32-unknown-unknown"]
-        + (["--release"] if release else []), cwd=CRATE)
+        + (["--release"] if release else []), cwd=CRATE, env=cargo_env(account))
     os.makedirs(out, exist_ok=True)
     wasm = os.path.join(CRATE, "target", "wasm32-unknown-unknown", profile, BIN + ".wasm")
     run(["wasm-bindgen", "--target", "web", "--no-typescript", "--out-dir", out, wasm])
@@ -99,10 +145,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--web", action="store_true", help="build for the browser")
     parser.add_argument("--debug", action="store_true", help="unoptimised build")
+    parser.add_argument("--account", help="the account server to build in, e.g. http://188.141.12.3:8080")
+    parser.add_argument("--package", action="store_true", help="also zip it into dist/ for other players")
     args = parser.parse_args()
     out = os.path.join(ROOT, "build", "client-rs", "web" if args.web else "native")
-    (build_web if args.web else build_native)(not args.debug, out)
+    (build_web if args.web else build_native)(not args.debug, out, args.account)
     print("built", os.path.relpath(out, ROOT))
+    if args.package:
+        package(out, args.web, args.account)
 
 
 if __name__ == "__main__":
