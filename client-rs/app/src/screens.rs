@@ -128,6 +128,8 @@ pub struct Front {
     targets: Vec<(Target, [f32; 4])>,
     /// Where the account server is, shown small on the login screen.
     pub endpoint_label: String,
+    /// A button was clicked since this was last cleared (for its sound).
+    pub clicked: bool,
 }
 
 impl Default for Front {
@@ -147,6 +149,7 @@ impl Default for Front {
             timespan: 0,
             death: None,
             death_from_graveyard: false,
+            clicked: false,
             targets: Vec::new(),
             endpoint_label: String::new(),
         }
@@ -319,6 +322,7 @@ impl Front {
     /// A left click.
     pub fn click(&mut self, pos: (f64, f64)) -> Option<Action> {
         let target = self.targets.iter().rev().find(|(_, r)| inside(*r, pos)).map(|(t, _)| *t)?;
+        self.clicked |= !matches!(target, Target::Field(_));
         let servers = self.list.as_ref().map_or(0, |l| l.servers.len());
         match target {
             Target::Field(i) => self.focus = i,

@@ -13,6 +13,13 @@ pub fn post_form(url: &str, params: &[(&str, &str)]) -> Pending<Response> {
     pending
 }
 
+/// GET `url`'s bytes (sounds, music). The body arrives later in the returned `Pending`.
+pub fn get_bytes(url: &str) -> Pending<Result<Vec<u8>, String>> {
+    let (pending, slot) = Pending::new();
+    imp::get(url.to_owned(), move |r| *slot.lock().unwrap() = Some(r));
+    pending
+}
+
 pub fn encode_form(params: &[(&str, &str)]) -> String {
     let mut out = String::new();
     for (i, (k, v)) in params.iter().enumerate() {
@@ -38,6 +45,19 @@ fn escape(s: &str, out: &mut String) {
 
 #[cfg(not(target_arch = "wasm32"))]
 mod imp {
+    pub fn get(url: String, done: impl FnOnce(Result<Vec<u8>, String>) + Send + 'static) {
+        std::thread::spawn(move || {
+            let result = match ureq::get(&url).timeout(std::time::Duration::from_secs(30)).call() {
+                Ok(r) => {
+                    let mut bytes = Vec::new();
+                    std::io::Read::read_to_end(&mut r.into_reader(), &mut bytes).map(|_| bytes).map_err(|e| e.to_string())
+                }
+                Err(e) => Err(e.to_string()),
+            };
+            done(result);
+        });
+    }
+
     pub fn post(url: String, body: String, done: impl FnOnce(super::Response) + Send + 'static) {
         std::thread::spawn(move || {
             let result = match ureq::post(&url)
@@ -68,6 +88,23 @@ mod imp {
         wasm_bindgen_futures::spawn_local(async move {
             done(fetch(&url, &body).await);
         });
+    }
+
+    pub fn get(url: String, done: impl FnOnce(Result<Vec<u8>, String>) + 'static) {
+        wasm_bindgen_futures::spawn_local(async move {
+            done(fetch_bytes(&url).await);
+        });
+    }
+
+    async fn fetch_bytes(url: &str) -> Result<Vec<u8>, String> {
+        let err = |e: wasm_bindgen::JsValue| format!("{e:?}");
+        let window = web_sys::window().ok_or("no window")?;
+        let response: web_sys::Response = JsFuture::from(window.fetch_with_str(url)).await.map_err(err)?.dyn_into().map_err(err)?;
+        if !response.ok() {
+            return Err(format!("HTTP {}", response.status()));
+        }
+        let buffer = JsFuture::from(response.array_buffer().map_err(err)?).await.map_err(err)?;
+        Ok(js_sys::Uint8Array::new(&buffer).to_vec())
     }
 
     async fn fetch(url: &str, body: &str) -> super::Response {

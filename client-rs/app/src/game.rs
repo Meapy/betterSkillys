@@ -45,6 +45,12 @@ pub struct Game {
     pub floaters: Vec<crate::view::Floater>,
     /// Speech balloons, one per speaker.
     pub bubbles: Vec<crate::view::Bubble>,
+    /// Sound effects to play: (name, volume, is it a weapon's shot).
+    pub sounds: Vec<(String, f32, bool)>,
+    /// The map's music (`MapInfo.music`, `SwitchMusic`).
+    pub music: Option<String>,
+    /// Our level last tick, to hear a level up.
+    last_level: i32,
     /// Damage we've done to quest monsters and chests, by object (`Parameters.DamageCounter`).
     pub dealt: std::collections::HashMap<i32, i32>,
     /// Who we've whispered with, newest last (Tab cycles through them).
@@ -113,6 +119,16 @@ pub enum Invite {
     Guild { name: String, guild: String },
 }
 
+/// `Character.damage`: a character's hurt sound, or its death sound when it dies of it.
+fn hurt_sound(data: &GameData, object_type: u16, dead: bool) -> Option<String> {
+    let d = data.objects.get(&object_type)?;
+    if !(d.class == ObjectClass::Character || d.player) {
+        return None;
+    }
+    let (tag, fallback) = if dead { ("DeathSound", "monster/default_death") } else { ("HitSound", "monster/default_hit") };
+    Some(d.xml.text_of(tag).map_or(fallback, str::trim).to_owned())
+}
+
 /// `Player.MS_BETWEEN_TELEPORT`.
 const TELEPORT_COOLDOWN: i32 = 10_000;
 
@@ -146,6 +162,9 @@ impl Game {
             floaters: Vec::new(),
             bubbles: Vec::new(),
             tellers: Vec::new(),
+            sounds: Vec::new(),
+            music: None,
+            last_level: 0,
             dealt: Default::default(),
             arena: None,
             particles: Default::default(),
@@ -238,6 +257,8 @@ impl Game {
                 self.world = Some(World::new(info.width as i32, info.height as i32, &info.display_name, info.seed));
                 self.particles.clear();
                 self.arena = None;
+                self.music = Some(info.music.clone());
+                self.last_level = 0;
                 self.dealt.clear();
                 self.status = format!("Entering {}…", info.display_name);
             }
@@ -375,8 +396,40 @@ impl Game {
         }
         let Some(world) = &mut self.world else { return };
         match msg {
-            ServerMessage::Update(u) => world.apply_update(u, data, now),
-            ServerMessage::NewTick(t) => world.apply_new_tick(t, now),
+            ServerMessage::Update(u) => {
+                // Container.addTo: a loot bag landing within 10 tiles.
+                if let Some(me) = world.player() {
+                    let near_loot = u.new_objs.0.iter().any(|o| {
+                        let d = data.objects.get(&(o.object_type as u16));
+                        d.is_some_and(|d| d.class == ObjectClass::Container && d.xml.has("Loot"))
+                            && (o.status.pos.x as f64 - me.x).hypot(o.status.pos.y as f64 - me.y) < 10.0
+                    });
+                    if near_loot {
+                        self.sounds.push(("loot_appears".into(), 1.0, false));
+                    }
+                }
+                world.apply_update(u, data, now);
+            }
+            ServerMessage::NewTick(t) => {
+                world.apply_new_tick(t, now);
+                // Player.levelUp: our level went up.
+                let level = world.player().and_then(|p| p.stat_int(crate::hud::stat::LEVEL)).unwrap_or(0);
+                if self.last_level > 0 && level > self.last_level {
+                    self.sounds.push(("level_up".into(), 1.0, false));
+                }
+                self.last_level = level;
+            }
+            ServerMessage::InvResult(r) if r.result != 0 => self.sounds.push(("error".into(), 1.0, false)),
+            ServerMessage::PlaySound(p) => {
+                // GameObject.playSound: the object's <Sound id="n">.
+                let name = world.objects.get(&p.owner_id).and_then(|o| data.objects.get(&o.object_type)).and_then(|d| {
+                    d.xml.children_named("Sound").find(|s| s.attr_int("id", -1) == p.sound_id as i32).map(|s| s.text.trim().to_owned())
+                });
+                if let Some(name) = name {
+                    self.sounds.push((name, 1.0, false));
+                }
+            }
+            ServerMessage::SwitchMusic(m) => self.music = Some(m.music.clone()),
             ServerMessage::Goto(g) => world.apply_goto(g.object_id, g.pos.x as f64, g.pos.y as f64, now, data),
             ServerMessage::EnemyShoot(e) => {
                 let Some(owner) = world.objects.get(&e.owner_id).filter(|o| !o.dead) else { return };
@@ -434,6 +487,9 @@ impl Game {
                 // Our own shots throw their sparks where they strike.
                 if Some(d.object_id) != world.me {
                     self.particles.damaged(world, d.target_id, d.kill);
+                    if let Some(s) = world.objects.get(&d.target_id).and_then(|o| hurt_sound(data, o.object_type, d.kill)) {
+                        self.sounds.push((s, 1.0, false));
+                    }
                 }
                 // Someone was hit (not by our shots): show the number.
                 if Some(d.object_id) != world.me {
@@ -487,7 +543,14 @@ impl Game {
         }
         let last_move = self.session.last_move_time().unwrap_or(now);
         let Some(world) = &mut self.world else { return };
-        for p in world.shoot(now, angle, last_move, data) {
+        let shots = world.shoot(now, angle, last_move, data);
+        if let Some(p) = shots.first() {
+            // Player.doShoot: the weapon's sound.
+            if let Some(s) = data.objects.get(&p.container_type).and_then(|d| d.xml.text_of("OldSound")) {
+                self.sounds.push((s.trim().to_owned(), 0.75, true));
+            }
+        }
+        for p in shots {
             let msg = PlayerShoot {
                 time: now,
                 bullet_id: p.bullet_id,
@@ -506,6 +569,9 @@ impl Game {
         for hit in world.update_projectiles(now, data) {
             let msg: ClientMessage = match hit {
                 Hit::Player { bullet_id, owner_id, damage } => {
+                    if let Some(s) = world.player().and_then(|p| hurt_sound(data, p.object_type, false)) {
+                        self.sounds.push((s, 1.0, false));
+                    }
                     if let Some(me) = world.me {
                         self.floaters.push(crate::view::Floater::damage(me, damage, now));
                     }
@@ -515,6 +581,9 @@ impl Game {
                     let counted = world.objects.get(&target_id).and_then(|o| data.objects.get(&o.object_type)).is_some_and(|d| d.xml.has("Quest") || d.xml.has("Chest"));
                     if counted {
                         *self.dealt.entry(target_id).or_default() += damage;
+                    }
+                    if let Some(s) = world.objects.get(&target_id).and_then(|o| hurt_sound(data, o.object_type, kill)) {
+                        self.sounds.push((s, 1.0, false));
                     }
                     self.floaters.push(crate::view::Floater::damage(target_id, damage, now));
                     EnemyHit { time, bullet_id, target_id, kill }.into()
@@ -607,14 +676,17 @@ impl Game {
         self.send(msg.into());
         self.predict(a.0, a.1, b.2);
         self.predict(b.0, b.1, a.2);
+        self.sounds.push(("inventory_move_item".into(), 1.0, false));
     }
 
     /// `useItem_new`: use a consumable (or InvUse item) in a slot. False if it can't be used.
     pub fn use_item(&mut self, now: i32, owner: i32, slot: u8, item: i32, data: &GameData) -> bool {
         let Some(xml) = data.objects.get(&(item as u16)).map(|d| &d.xml) else { return false };
         if !(xml.has("Consumable") || xml.has("InvUse")) {
+            self.sounds.push(("error".into(), 1.0, false));
             return false;
         }
+        self.sounds.push(("use_potion".into(), 1.0, false));
         let consumable = xml.has("Consumable");
         let msg = UseItem {
             time: now,
@@ -646,7 +718,16 @@ impl Game {
         let mp = me.stat_int(crate::hud::stat::MP).unwrap_or(0);
         let (id, paused) = (me.id, bsk_world::condition::has(me.conditions(), bsk_world::condition::PAUSED));
         let Some(xml) = data.objects.get(&(item as u16)).map(|d| &d.xml) else { return };
-        if paused || !xml.has("Usable") || now < self.next_ability || xml.int("MpCost", 0) > mp {
+        if now < self.next_ability {
+            return;
+        }
+        // Player.useAltWeapon: an error, or not enough mana.
+        if paused || !xml.has("Usable") {
+            self.sounds.push(("error".into(), 1.0, false));
+            return;
+        }
+        if xml.int("MpCost", 0) > mp {
+            self.sounds.push(("no_mana".into(), 1.0, false));
             return;
         }
         self.next_ability = now + (xml.number("Cooldown", 0.5) * 1000.0) as i32;
@@ -682,6 +763,7 @@ impl Game {
             return;
         }
         let (item, slot) = crate::hud::POTIONS[which];
+        self.sounds.push(("use_potion".into(), 1.0, false));
         let msg = UseItem {
             time: now,
             slot_object: SlotObject { object_id: me.id, slot_id: slot, object_type: item },

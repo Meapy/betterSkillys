@@ -64,6 +64,6 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Arena wave and clock | `onImminentArenaWave`, `ArenaMenu` | Done |
 | Pictures from the server (`Pic`) | `onPic` | Dropped: the server never sends `Pic` |
 | Options: graphics, sound, controls, key bindings | `Options` | To do |
-| Sound effects and music | `SoundEffectLibrary`, `onPlaySound`, `onSwitchMusic` | To do |
+| Sound effects and music (shots, hits, deaths, loot, level up, potions, items, errors, buttons, `PlaySound`, map music) | `SoundEffectLibrary`, `Music` | Done |
 | Emotes (in chat and speech balloons, animated ones too) | `Emotes`, `EmoteGraphicHelper` | Done |
 | Death: back to the character list with the summary | `onDeath` | Done |

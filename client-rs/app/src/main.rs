@@ -1,5 +1,6 @@
 //! betterSkillys client: the desktop executable and, built for wasm32, the browser version.
 
+mod audio;
 mod connected;
 mod emotes;
 mod game;
@@ -151,6 +152,8 @@ struct App {
     npcs: npc::Npcs,
     npc_request: Option<(NpcRequest, Pending<bsk_net::http::Response>)>,
     npc_keys: Vec<(KeyCode, Option<String>)>,
+    /// Sound effects and music, once we know the account server.
+    audio: Option<audio::Audio>,
     /// `--type <text>` (tests): typed into the first NPC prompt that opens, then Enter.
     type_text: Option<String>,
     /// `--npc <class>` (tests): open that NPC's window once in the game, wherever we stand.
@@ -525,6 +528,7 @@ impl App {
         match login::startup() {
             Ok(start) => {
                 self.front.endpoint_label = format!("Account server: {}", start.endpoint.account);
+                self.audio = Some(audio::Audio::new(&start.endpoint.account));
                 self.endpoint = Some(start.endpoint);
                 if let Some((email, password)) = start.login {
                     self.front.fields[screens::EMAIL] = email;
@@ -856,6 +860,10 @@ impl App {
                     Ok(summary) => {
                         self.front.death = Some(summary);
                         self.front.show(Screen::Death);
+                        let now = self.now();
+                        if let Some(a) = &mut self.audio {
+                            a.play("death_screen", 1.0, false, now);
+                        }
                     }
                     Err(e) => {
                         self.front.message = Some((format!("You died. ({e})"), true));
@@ -866,6 +874,30 @@ impl App {
                 self.refresh();
             }
         }
+    }
+
+    /// Play what the game and the screens asked for; follow the map's music.
+    fn update_audio(&mut self, now: i32) {
+        let Some(audio) = &mut self.audio else { return };
+        // Scripted input (tests) counts as the player doing something.
+        if self.holds_from.is_some() {
+            audio.wake();
+        }
+        if std::mem::take(&mut self.front.clicked) {
+            audio.play("button_click", 1.0, false, now);
+        }
+        match &mut self.phase {
+            Phase::Playing(game) => {
+                for (name, volume, shot) in game.sounds.drain(..) {
+                    audio.play(&name, volume, shot, now);
+                }
+                if let Some(m) = game.music.take() {
+                    audio.music(&m);
+                }
+            }
+            Phase::Menu => audio.music(""),
+        }
+        audio.update(now);
     }
 
     /// `TextBox.insertTellPrefix`: "/tell " and the next person back (Shift: forward).
@@ -912,6 +944,7 @@ impl App {
         let dt = (now - self.last_frame).clamp(0, 200);
         self.last_frame = now;
         self.advance();
+        self.update_audio(now);
 
         let mut keys = (0.0, 0.0);
         if self.held(&[KeyCode::KeyA, KeyCode::ArrowLeft]) {
@@ -1431,6 +1464,9 @@ impl ApplicationHandler<UserEvent> for App {
             }
             WindowEvent::KeyboardInput { event, .. } => {
                 let PhysicalKey::Code(code) = event.physical_key else { return };
+                if let Some(a) = &mut self.audio {
+                    a.wake();
+                }
                 let pressed = event.state == ElementState::Pressed;
                 // F11 or Alt+Enter: fullscreen (borderless) and back.
                 if pressed && !event.repeat && (code == KeyCode::F11 || (self.alt_held && code == KeyCode::Enter)) {
@@ -1544,6 +1580,9 @@ impl ApplicationHandler<UserEvent> for App {
             // A --mouse test position stays put whatever the real cursor does.
             WindowEvent::CursorMoved { position, .. } if !self.mouse_fixed => self.mouse = (position.x, position.y),
             WindowEvent::MouseInput { state, button: winit::event::MouseButton::Left, .. } => {
+                if let Some(a) = &mut self.audio {
+                    a.wake();
+                }
                 // Handled in the frame, where the HUD's layout is known.
                 self.clicks.push((state == ElementState::Pressed, self.mouse));
             }
@@ -1626,6 +1665,7 @@ fn main() {
         npcs: Default::default(),
         npc_request: None,
         npc_keys: Vec::new(),
+        audio: None,
         type_text: text_arg("--type"),
         npc_test: text_arg("--npc"),
         effect_test: text_arg("--effect").and_then(|t| t.parse().ok()).map(|t| (t, i32::MIN / 2)),
