@@ -1769,6 +1769,8 @@ impl App {
         };
         let mut view_radius = None;
         let mut fire = None;
+        // How far down the gold and fame reach (the frame rate goes under them).
+        let mut credits_bottom = 0.0f32;
         let mut ability_at = None;
         match &self.phase {
             Phase::Menu => {}
@@ -1863,6 +1865,9 @@ impl App {
                 let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
                 prof::mark("pre-chat");
                 self.chat_names = hud::draw_chat(&mut ui, &lay, &game.chat, &me, self.chat_input.as_ref(), self.chat_scroll, now);
+                if let Some(p) = game.world.as_ref().and_then(|w| w.player()) {
+                    credits_bottom = hud::draw_credits(&mut ui, &lay, p);
+                }
                 if let Some(arena) = game.arena {
                     hud::draw_arena(&mut ui, &lay, arena, now);
                 } else if game.show_displays {
@@ -1881,12 +1886,12 @@ impl App {
                 game.use_ability(now, x, y, angle, data);
             }
         }
-        // The frame rate, top right of the view (L).
+        // The frame rate, top right of the view (L), under the gold and fame.
         if self.settings.show_fps && matches!(self.phase, Phase::Playing(_)) {
             let t = format!("{:.0} fps", self.fps_shown);
             let style = text::Style { size: (13.0 * lay.s).round().max(10.0), bold: true, color: 0xB0FFB0 };
             let w = text.measure(fonts, renderer, &t, style);
-            text.draw(fonts, renderer, &t, lay.view_w() - w - 10.0 * lay.s, 8.0 * lay.s, style);
+            text.draw(fonts, renderer, &t, lay.view_w() - w - 10.0 * lay.s, credits_bottom + 4.0 * lay.s, style);
         }
         if !status.is_empty() {
             let style = text::Style { size: 18.0, bold: true, color: 0xFFFFFF };

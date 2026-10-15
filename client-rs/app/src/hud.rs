@@ -149,6 +149,16 @@ impl Ui<'_> {
         self.renderer.sprite(icon.rect, Quad::rect((cx - w / 2.0).round(), (cy - h / 2.0 - lift).round(), w, h), Tint::NONE);
     }
 
+    /// A sheet's tile redrawn with its outline at `size` (100 = normal), centred on (cx, cy).
+    pub(crate) fn tile_icon(&mut self, set: &str, index: u32, size: i32, cx: f32, cy: f32, scale: f32) {
+        let Some(src) = self.sprites.tile_src(set, index) else { return };
+        let size = if src.h == 16 { size / 2 } else { size };
+        let size = ((size as f32 * scale).round() as i32).max(1);
+        let Some(icon) = self.redrawer.get(self.sprites, self.renderer, src, false, size, None) else { return };
+        let (w, h) = (icon.w as f32, icon.h as f32);
+        self.renderer.sprite(icon.rect, Quad::rect((cx - w / 2.0).round(), (cy - h / 2.0).round(), w, h), Tint::NONE);
+    }
+
     /// A tile drawn as one flat colour (`greyColorFilter`), keeping its shape.
     fn silhouette(&mut self, set: &str, index: u32, x: f32, y: f32, side: f32, rgb: u32) {
         if let Some(rect) = self.sprites.tile(set, index) {
@@ -2201,6 +2211,25 @@ pub fn draw_rank(ui: &mut Ui, lay: &Layout, stars: i32) {
     ui.label(&t, x + 6.0 * s, y + 4.0 * s, size, true, crate::stars::GREY);
     let classes = crate::stars::class_count(ui.data);
     crate::theme::star(ui.renderer, x + 10.0 * s + tw + 8.0 * k, y + plate[3] / 2.0, 6.5 * k, crate::stars::color(stars, classes));
+}
+
+/// `CreditDisplay`: your gold and fame, each before its icon, at the top right of the view.
+/// Returns how far down it reaches.
+pub fn draw_credits(ui: &mut Ui, lay: &Layout, me: &GameObj) -> f32 {
+    let s = lay.s;
+    let size = lay.font(16.0);
+    let right = lay.view_w() - 8.0 * s;
+    let row_h = 24.0 * s;
+    // CREDITS_STAT and FAME_STAT (the account's fame), with lofiObj3's coin and fame icons.
+    let rows = [(me.stat_int(35).unwrap_or(0), 225), (me.stat_int(39).unwrap_or(0), 224)];
+    for (i, (value, icon)) in rows.into_iter().enumerate() {
+        let cy = 6.0 * s + row_h * (i as f32 + 0.5);
+        ui.tile_icon("lofiObj3", icon, 40, right - 12.0 * s, cy, s);
+        let t = value.to_string();
+        let tw = ui.measure(&t, size, true);
+        ui.label(&t, right - 24.0 * s - tw, cy - size * 0.62, size, true, 0xFFFFFF);
+    }
+    6.0 * s + row_h * rows.len() as f32
 }
 
 /// `ArenaMenu`: the wave and the time, at the top left of the view.
