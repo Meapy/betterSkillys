@@ -46,8 +46,11 @@ namespace WorldServer.core.net.handlers
 
                 if (!player.World.IsPassable(newX, newY))
                 {
-                    StaticLogger.Instance.Info($"{player.Name} is walking on an occupied tile. {newX}, {newY}");
-                    player.Client.Disconnect("NoClipping");
+                    // the client only stops a player entering a no-walk square, so it can end up
+                    // standing on one; keep the server position, put the client back there, and
+                    // still count this move, or the next one fails the tick check
+                    player.RejectMove(tickTime, newX, newY);
+                    player.MoveReceived(tickTime, time, tickId);
                     return;
                 }
 
