@@ -1,9 +1,13 @@
-//! This build's version (`client-rs/Cargo.toml`), the commit it was built from
-//! (`BSK_COMMIT`, set by `build_client_rs.py`), and the changelog built into it.
+//! This build's version (`client-rs/Cargo.toml`, or `BSK_VERSION` from `build_client_rs.py` for a
+//! four-part release such as 1.1.3.1), the commit it was built from (`BSK_COMMIT`), and the
+//! changelog built into it.
 
 use bsk_update::Entry;
 
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const VERSION: &str = match option_env!("BSK_VERSION") {
+    Some(v) if !v.is_empty() => v,
+    _ => env!("CARGO_PKG_VERSION"),
+};
 
 /// "v1.1.0 (88b1b6d)", or "v1.1.0" without a commit.
 pub fn label() -> String {

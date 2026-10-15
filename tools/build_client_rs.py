@@ -83,9 +83,18 @@ def bindgen_version():
 
 
 def version():
-    """The client's version, from client-rs/Cargo.toml."""
+    """The client's version, from client-rs/Cargo.toml: [workspace.metadata] release when there is
+    one (a four-part version such as 1.1.3.1, which Cargo can't take), else the package version."""
     with open(os.path.join(CRATE, "Cargo.toml"), encoding="utf-8") as f:
-        return re.search(r'\[workspace\.package\][^\[]*?version = "([^"]+)"', f.read()).group(1)
+        text = f.read()
+    package = re.search(r'\[workspace\.package\][^\[]*?version = "([^"]+)"', text).group(1)
+    m = re.search(r'\[workspace\.metadata\][^\[]*?release = "([^"]+)"', text)
+    if not m:
+        return package
+    if not m.group(1).startswith(package + "."):
+        sys.exit(f"client-rs/Cargo.toml: release {m.group(1)} doesn't extend version {package}; "
+                 "take it out (or fix it) when the version is raised")
+    return m.group(1)
 
 
 def commit():
@@ -108,12 +117,14 @@ def update_key():
 
 def cargo_env(account, key=None):
     """The environment for cargo: BSK_ACCOUNT builds that account server in, BSK_UPDATE_KEY the key
-    updates must be signed with (builds for players only), BSK_COMMIT the commit."""
+    updates must be signed with (builds for players only), BSK_COMMIT the commit, BSK_VERSION the
+    version the game calls itself."""
     env = dict(os.environ)
     if account:
         env["BSK_ACCOUNT"] = account
     env["BSK_UPDATE_KEY"] = key or ""
     env["BSK_COMMIT"] = commit()
+    env["BSK_VERSION"] = version()
     return env
 
 

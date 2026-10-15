@@ -17,7 +17,9 @@ python tools\build_client_rs.py --account http://<ip>:8080 --package   # dist\be
 python tools\build_client_rs.py --account http://<ip>:8080 --publish   # dist\client, for players' clients to update to
 ```
 
-- **Versions and updates:** the version is `[workspace.package] version` in `Cargo.toml`; every
+- **Versions and updates:** the version is `[workspace.package] version` in `Cargo.toml`, or
+  `[workspace.metadata] release` there for a four-part one between Cargo's (1.1.3.1; the build
+  script bakes it in as `BSK_VERSION`, and refuses one that doesn't extend the version); every
   version needs a section in `CHANGELOG.md` (a test checks this one's). Changes collect under
   `## Unreleased` there (see ../AGENTS.md); on a release, raise the version and rename that
   section to it, as `--publish` refuses while it's left. `--package` and
