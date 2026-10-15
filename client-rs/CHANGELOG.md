@@ -5,6 +5,10 @@ this in its Changelog window. Newest first; publishing a version needs its secti
 (`python tools/build_client_rs.py --publish`), and the version number itself is in
 `client-rs/Cargo.toml`.
 
+## 1.1.3 (2026-10-15)
+- A Servers screen again: the Servers button on the character screen (or the "Server:" pill under
+  your characters) lists the world servers and how full each is. Click one to play on it.
+
 ## 1.1.2 (2026-10-15)
 - The character list is more compact, fitting up to four characters a row, and scrolls with the
   mouse wheel when you have more than fit on the screen.

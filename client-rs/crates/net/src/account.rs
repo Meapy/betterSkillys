@@ -22,6 +22,10 @@ pub struct ServerEntry {
     pub host: String,
     pub port: u16,
     pub admin_only: bool,
+    /// How full it is, players over the maximum (`<Usage>`, 0 to 1).
+    pub usage: f32,
+    /// The player count the server gives ("3/85", or "- NEW!" just after it starts).
+    pub usage_text: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -160,6 +164,8 @@ pub fn parse_char_list(xml: &str) -> Result<CharList, String> {
                 host: child_text(s, "DNS").unwrap_or("").to_owned(),
                 port: child_text(s, "Port").and_then(parse_int).unwrap_or(2050) as u16,
                 admin_only: child_text(s, "AdminOnly").is_some_and(|a| a.eq_ignore_ascii_case("true")),
+                usage: child_text(s, "Usage").and_then(|u| u.parse().ok()).unwrap_or(0.0),
+                usage_text: child_text(s, "UsageText").unwrap_or("").to_owned(),
             });
         }
     }
@@ -320,13 +326,13 @@ mod tests {
             <Char id="3"><ObjectType>782</ObjectType><Level>20</Level><Dead>False</Dead></Char>
             <Char id="4"><ObjectType>0x0300</ObjectType><Level>1</Level></Char>
             <Servers><Server><Name>Localhost</Name><DNS>127.0.0.1</DNS><Port>2053</Port>
-                <AdminOnly>false</AdminOnly></Server></Servers>
+                <Usage>0.5</Usage><AdminOnly>false</AdminOnly><UsageText>3/6</UsageText></Server></Servers>
         </Chars>"#;
         let list = parse_char_list(xml).unwrap();
         assert_eq!((list.next_char_id, list.max_num_chars), (5, 2));
         assert_eq!((list.chars[0].id, list.chars[0].object_type, list.chars[0].level, list.chars[0].dead), (3, 782, 20, false));
         assert_eq!(list.chars[1].object_type, 0x300);
-        assert_eq!(list.servers[0], ServerEntry { name: "Localhost".into(), host: "127.0.0.1".into(), port: 2053, admin_only: false });
+        assert_eq!(list.servers[0], ServerEntry { name: "Localhost".into(), host: "127.0.0.1".into(), port: 2053, admin_only: false, usage: 0.5, usage_text: "3/6".into() });
     }
 
     #[test]
