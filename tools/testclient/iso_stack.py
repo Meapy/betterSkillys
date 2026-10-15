@@ -87,6 +87,8 @@ def start(args):
     def app_cfg(d):
         d["dbInfo"]["port"] = REDIS_PORT
         d["serverInfo"]["port"] = APP_PORT
+        # Its own published client (build_client_rs.py --publish-to build/iso<N>/client).
+        d["serverSettings"]["clientFolder"] = os.path.join(ISO, "client")
     set_json(os.path.join(app_dir, "server.json"), app_cfg)
 
     def world_cfg(d):

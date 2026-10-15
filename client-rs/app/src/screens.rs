@@ -80,6 +80,8 @@ enum Target {
     ServerPrev,
     ServerNext,
     Logout,
+    /// The Changelog window.
+    Changelog,
 }
 
 /// What the player asked for.
@@ -99,6 +101,8 @@ pub enum Action {
     Legends(&'static str),
     /// Show how a dead character's fame was counted.
     ViewDeath(i32),
+    /// Open the Changelog window.
+    Changelog,
 }
 
 pub struct Front {
@@ -131,6 +135,8 @@ pub struct Front {
     pub endpoint_label: String,
     /// A button was clicked since this was last cleared (for its sound).
     pub clicked: bool,
+    /// The version (and any update in progress), bottom right; a click opens the changelog.
+    pub version_line: String,
 }
 
 impl Default for Front {
@@ -153,6 +159,7 @@ impl Default for Front {
             clicked: false,
             targets: Vec::new(),
             endpoint_label: String::new(),
+            version_line: String::new(),
         }
     }
 }
@@ -256,6 +263,18 @@ impl Front {
             Screen::Account => &[PASSWORD, NEW_PASSWORD, NEW_CONFIRM],
             _ => &[],
         }
+    }
+
+    /// Nothing under way that switching to a new version would lose: the character list with no
+    /// dialog open, or the sign-in form with nothing typed.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))] // updates are desktop-only
+    pub fn at_rest(&self) -> bool {
+        self.confirm.is_none()
+            && match self.screen {
+                Screen::Chars => true,
+                Screen::Login => self.fields[EMAIL].is_empty() && self.fields[PASSWORD].is_empty(),
+                _ => false,
+            }
     }
 
     /// Show a screen, focusing its first field.
@@ -386,6 +405,7 @@ impl Front {
             Target::ServerNext if servers > 0 => self.server = (self.server + 1) % servers,
             Target::ServerPrev | Target::ServerNext => {}
             Target::Logout => return Some(Action::Logout),
+            Target::Changelog => return Some(Action::Changelog),
         }
         None
     }
@@ -421,6 +441,15 @@ impl Front {
             Screen::Graveyard => self.draw_graveyard(ui, w, h, s, mouse),
             Screen::Account => self.draw_account(ui, w, h, s, mouse, now),
             Screen::Death => self.draw_death(ui, w, h, s, mouse),
+        }
+        // The version, bottom right: opens the changelog.
+        if !self.version_line.is_empty() && self.screen != Screen::Busy {
+            let size = (12.0 * s).round().max(9.0);
+            let line = self.version_line.clone();
+            let lw = ui.measure(&line, size, true);
+            let r = [w - lw - 14.0 * s, h - size * 1.7, lw, size * 1.3];
+            ui.label(&line, r[0], r[1], size, true, if inside(r, mouse) { color::ACCENT_HI } else { color::TEXT_MUTED });
+            self.targets.push((Target::Changelog, r));
         }
         if self.confirm.is_some() {
             self.draw_confirm(ui, w, h, s, mouse);
@@ -571,6 +600,7 @@ impl Front {
         self.button(ui, Target::ToAccount, [w - pad - 2.0 * bw - 10.0 * s, 16.0 * s, bw, 36.0 * s], "Account", Kind::Secondary, s, mouse);
         self.button(ui, Target::ToLegends, [w - pad - 3.0 * bw - 20.0 * s, 16.0 * s, bw, 36.0 * s], "Legends", Kind::Secondary, s, mouse);
         self.button(ui, Target::ToGraveyard, [w - pad - 4.0 * bw - 30.0 * s, 16.0 * s, bw, 36.0 * s], "Graveyard", Kind::Secondary, s, mouse);
+        self.button(ui, Target::Changelog, [w - pad - 5.0 * bw - 40.0 * s, 16.0 * s, bw, 36.0 * s], "Changelog", Kind::Secondary, s, mouse);
 
         // Characters, then a card for a new one while there's room, else one to buy a slot.
         let (cw, ch, gap) = (440.0 * s, 116.0 * s, 14.0 * s);
@@ -1233,6 +1263,7 @@ pub enum MenuChoice {
     /// Back to the Nexus.
     Nexus,
     Options,
+    Changelog,
     /// Out of the game, to the main menu (the character list).
     Home,
     Logout,
@@ -1242,7 +1273,7 @@ pub enum MenuChoice {
 pub fn draw_game_menu(ui: &mut Ui, w: f32, h: f32, mouse: (f64, f64)) -> Vec<(MenuChoice, [f32; 4])> {
     let s = scale(w, h);
     ui.rect(0.0, 0.0, w, h, 0x000000, 0.5);
-    let r = [(w - 320.0 * s) / 2.0, (h - 366.0 * s) / 2.0, 320.0 * s, 366.0 * s];
+    let r = [(w - 320.0 * s) / 2.0, (h - 420.0 * s) / 2.0, 320.0 * s, 420.0 * s];
     theme::panel(ui.renderer, r, s);
     let size = (22.0 * s).round();
     let tw = ui.measure("Paused", size, true);
@@ -1256,6 +1287,7 @@ pub fn draw_game_menu(ui: &mut Ui, w: f32, h: f32, mouse: (f64, f64)) -> Vec<(Me
         (MenuChoice::Resume, "Back to the game", Kind::Primary),
         (MenuChoice::Nexus, "Nexus", Kind::Secondary),
         (MenuChoice::Options, "Options", Kind::Secondary),
+        (MenuChoice::Changelog, "Changelog", Kind::Secondary),
         (MenuChoice::Home, "Return home", Kind::Secondary),
         (MenuChoice::Logout, "Log out", Kind::Danger),
     ]

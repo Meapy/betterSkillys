@@ -116,7 +116,7 @@ pub fn startup() -> Result<Startup, String> {
         match a.as_str() {
             "--account" => account = it.next(),
             // Read by main: sign in with --credentials but stay on the character list.
-            "--stay" | "--bench" => {}
+            "--stay" | "--bench" | "--resume" | "--no-update" => {}
             "--credentials" => credentials = it.next(),
             // Read by main (screenshots, scripted input).
             "--shot" | "--shot-after" | "--hold" | "--walk-to" | "--aim" | "--say" | "--type" | "--npc" | "--effect" | "--size" | "--mouse" | "--mouse-script" => {

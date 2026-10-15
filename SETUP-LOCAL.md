@@ -30,7 +30,14 @@ The Rust rewrite of the client (`client-rs/`, see its AGENTS.md) does everything
 
 ```
 python tools\build_client_rs.py --account http://188.141.12.3:8080 --package   # dist\betterSkillys-rs-windows.zip
+python tools\build_client_rs.py --account http://188.141.12.3:8080 --publish   # dist\client: players' clients update to it
 ```
+
+Players only need the zip once. Its client keeps itself up to date from `dist\client`, which the account server serves at `/client/`: it looks every five minutes, downloads what changed in the background, and switches to the new version at the player's next portal (or straight away on the character list). `Run Server.bat` publishes on every start; to publish without restarting anything, run the `--publish` line above.
+
+- **Versions:** the version is in `client-rs/Cargo.toml` (`[workspace.package]`). Raise it for each release and add a section for it at the top of `client-rs/CHANGELOG.md`, in plain words for players: publishing refuses a version with no section, and the game's Changelog window shows the file.
+- **Signing:** releases are signed with `build/client-update.key`, made on the first publish. Keep it (and back it up): clients only take releases signed with the key they were built with, so a new key means sending everyone a new zip.
+- **Rolling back:** `cargo run -p bsk-publish -- rollback --to dist/client --version <x.y.z>` (in `client-rs`) makes an earlier published version the latest again; clients switch to it like any update.
 
 ## Letting other people play
 
@@ -121,6 +128,7 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
   - Stat Potions (Store 1): the eight stat potions, 150 fame (Life and Mana 300). Consumables (Store 2): health and magic potions, tinctures, effusions and drake eggs. Specials (Store 3): XP Boosters, the Loot Drop Potion, Backpack, Vault Chest and Char Slot Unlockers, mystery dyes. Small cloths, clothing dyes and accessory dyes (Stores 7 to 9) rotate through their stalls as the town's large cloths do.
   - Merchant fixes: a stall whose shop had every item out on other stalls was dropped for good (`NexusWorld.SendOutMerchant`); it now waits and tries again. A shop item missing from the game data is removed at start-up instead of becoming a merchant with an invalid item.
 - **Nexus fountains:** the four fountains in the nexus's water basins were the frozen winter kind, which give off nothing. They are now the White Fountain, with its spray, and standing within 3.5 tiles of one gives the Healing condition (`NexusWorld.HealByFountains`, renewed every half second). The map change and the healing take effect when the world server restarts.
+- **Client updates** (account server): `/client/` serves the published Rust client (`serverSettings.clientFolder` in `server.json`, else the nearest `dist/client` above the server) for players' clients to update from. The release lists are never cached; the files, named by their content's hash, are cached for good. It's there once the account server restarts with this, and `dist/client` exists when it starts (`Run Server.bat` publishes before starting the servers).
 - **Quest damage dealers** (`QUEST_DAMAGE_SUBSCRIBE` 89, `QUEST_DAMAGE` 90): a client that asks gets its quest's top three damage dealers and its own damage, as the server counts them (`DamageCounter`), whenever they change (`Player.SendQuestDamage`, checked twice a second). The Rust client shows them under the boss bar. The AIR client never asks, so nothing changes for it; a server without this ignores the request.
 - **Boosters:** the XP Boosters and the Loot Drop Potion mark their effect with `<XpBoost/>` or `<LDBoosted/>` and a `<Timer>`, which nothing read, so using one did nothing. `Player.Activate` now starts the boost from them (`<Timer>-1</Timer>`: until level 20). Using an XP Booster while one runs gives it back instead of eating it, and starting one says so. `/boosts` lists an active XP Booster (it only counted ones with a positive time, so one lasting until level 20 never showed) and the time left. Loot tier boosts (`<LTBoosted/>`, the Loot Tier Potion and half of the Lucky Clover) still aren't implemented, so the Loot Tier Potion isn't sold.
 - **Dungeons** (world server):

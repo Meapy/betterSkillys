@@ -211,6 +211,8 @@ pub struct Settings {
     /// `preferredServer`): the camera's turn, and the server last chosen.
     pub camera_angle: Option<f64>,
     pub preferred_server: String,
+    /// The last version the player was told about (the "updated" note shows once a version).
+    pub seen_version: String,
     /// Lines this version doesn't know (from a newer or older one), kept as they were, and
     /// keys it couldn't read, kept as written.
     extra: Vec<String>,
@@ -243,6 +245,7 @@ impl Default for Settings {
             max_fps: 0,
             camera_angle: None,
             preferred_server: String::new(),
+            seen_version: String::new(),
             extra: Vec::new(),
             raw_keys: vec![None; BINDS.len()],
         }
@@ -328,6 +331,9 @@ impl Settings {
         if !self.preferred_server.is_empty() {
             out += &format!("preferredServer={}\n", self.preferred_server);
         }
+        if !self.seen_version.is_empty() {
+            out += &format!("seenVersion={}\n", self.seen_version);
+        }
         for line in &self.extra {
             out += line;
             out += "\n";
@@ -373,6 +379,7 @@ impl Settings {
                 "maxFps" => s.max_fps = value.parse().unwrap_or(0),
                 "cameraAngle" => s.camera_angle = value.parse().ok().filter(|a: &f64| a.is_finite()),
                 "preferredServer" => s.preferred_server = value.to_owned(),
+                "seenVersion" => s.seen_version = value.to_owned(),
                 "version" => {}
                 // Not this version's: kept for the version that wrote it.
                 _ => s.extra.push(line.to_owned()),

@@ -601,7 +601,7 @@ fn fit(ui: &mut Ui, text: &str, size: f32, width: f32) -> String {
 }
 
 /// Lines of `text` that fit `width`: its own line breaks, then breaks between words.
-fn wrap(ui: &mut Ui, text: &str, size: f32, width: f32) -> Vec<String> {
+pub fn wrap(ui: &mut Ui, text: &str, size: f32, width: f32) -> Vec<String> {
     let mut out = Vec::new();
     for para in text.split('\n') {
         let mut line = String::new();

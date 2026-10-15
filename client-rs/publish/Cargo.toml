@@ -1,0 +1,12 @@
+[package]
+name = "bsk-publish"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+description = "Publishes a client build for players' clients to update from (tools/build_client_rs.py --publish)"
+
+[dependencies]
+bsk-update.workspace = true
+flate2 = "1"
+getrandom = "0.2"
+serde_json.workspace = true

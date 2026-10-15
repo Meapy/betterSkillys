@@ -15,6 +15,10 @@ namespace Shared
         public int maxPlayers { get; set; } = 0;
         public int maxRealms { get; set; } = 1;
         public string resourceFolder { get; set; } = "undefined";
+        // Where the published game client is (tools/build_client_rs.py --publish), served at
+        // /client/ for players' clients to update from. Empty: dist/client in the checkout the
+        // server runs from.
+        public string clientFolder { get; set; } = "";
         public int restartTime { get; set; } = 0;
         public string version { get; set; } = "undefined";
         public int[] whitelist { get; set; } = new int[] { };

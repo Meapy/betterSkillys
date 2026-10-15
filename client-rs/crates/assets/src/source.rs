@@ -12,22 +12,25 @@ use crate::{Error, Result};
 pub struct AssetSource {
     manifest: String,
     files: String,
+    /// Added to every URL (browsers): this build's version, so a new build never gets files a
+    /// browser kept from an older one.
+    query: String,
 }
 
 impl AssetSource {
     pub fn new(manifest: impl Into<String>, files: impl Into<String>) -> Self {
         let files = files.into();
         let files = if files.is_empty() || files.ends_with('/') { files } else { files + "/" };
-        Self { manifest: manifest.into(), files }
+        Self { manifest: manifest.into(), files, query: String::new() }
     }
 
     pub async fn manifest(&self) -> Result<crate::Manifest> {
-        crate::Manifest::parse(&fetch(&self.manifest).await?)
+        crate::Manifest::parse(&fetch(&format!("{}{}", self.manifest, self.query)).await?)
     }
 
     /// A file named by the manifest (a path relative to `client/src`).
     pub async fn load(&self, path: &str) -> Result<Vec<u8>> {
-        fetch(&format!("{}{}", self.files, path)).await
+        fetch(&format!("{}{}{}", self.files, path, self.query)).await
     }
 
     pub fn describe(&self) -> String {
@@ -87,7 +90,9 @@ mod imp {
     impl AssetSource {
         /// `assets/` beside the page.
         pub fn locate() -> Result<Self> {
-            Ok(Self::new("assets/manifest.json", "assets/"))
+            let mut source = Self::new("assets/manifest.json", "assets/");
+            source.query = format!("?v={}-{}", env!("CARGO_PKG_VERSION"), option_env!("BSK_COMMIT").unwrap_or(""));
+            Ok(source)
         }
     }
 

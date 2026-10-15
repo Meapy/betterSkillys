@@ -38,6 +38,7 @@ To let friends play, forward TCP 8080 and 2051 on the router and give them a pac
 
 ```
 python tools\build_client_rs.py --account http://188.141.12.3:8080 --package   # dist\betterSkillys-rs-windows.zip
+python tools\build_client_rs.py --account http://188.141.12.3:8080 --publish   # update players' clients
 python tools\build_client.py 188.141.12.3 --package                           # dist\betterSkillys-Client.zip (AIR)
 ```
 
@@ -66,6 +67,9 @@ protocol, so it works with these servers unchanged. It does everything the AIR c
 
   They are kept across versions in `%APPDATA%\betterSkillys-rs\settings.txt`, and the login in
   `login.txt` beside it.
+- **Updates itself:** players get the zip once; after that, each version you publish downloads
+  in the background and takes over at their next portal. A Changelog window (and
+  `client-rs/CHANGELOG.md`) says what changed in each version.
 - **The rest of the game:** the marketplace, trading, guilds, potion storage, NPC windows,
   emotes, the graveyard, and test flags for scripted runs.
 

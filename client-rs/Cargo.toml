@@ -1,10 +1,10 @@
 [workspace]
-members = ["crates/*", "app", "bot", "gateway"]
+members = ["crates/*", "app", "bot", "gateway", "publish"]
 resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "0.1.0"
+version = "1.1.0"
 publish = false
 
 [workspace.dependencies]
@@ -15,6 +15,7 @@ bsk-session = { path = "crates/session" }
 bsk-net = { path = "crates/net" }
 bsk-data = { path = "crates/data" }
 bsk-world = { path = "crates/world" }
+bsk-update = { path = "crates/update" }
 
 bytemuck = { version = "1", features = ["derive"] }
 futures = { version = "0.3", default-features = false, features = ["std", "async-await"] }
