@@ -1,10 +1,13 @@
 ﻿using Shared;
+using Shared.database.vault;
 using Shared.resources;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using WorldServer.core.objects.containers;
 using WorldServer.core.objects.vendors;
 using WorldServer.core.structures;
+using WorldServer.utils;
 
 namespace WorldServer.core.worlds.impl
 {
@@ -40,6 +43,8 @@ namespace WorldServer.core.worlds.impl
         private List<(float X, float Y)> _fountains;
         private float _fountainCheck;
 
+        private const ushort VAULT_CHEST = 0x0504;
+
         public NexusWorld(GameServer gameServer, int id, WorldResource resource) 
             : base(gameServer, id, resource)
         {
@@ -57,7 +62,18 @@ namespace WorldServer.core.worlds.impl
                     });
 
             base.Init();
+            LinkVaultChests();
             doomed.DoomedWorlds.AddNexusPortals(this);
+        }
+
+        // The map's shared vault chests keep their items in Redis, one record per tile.
+        private void LinkVaultChests()
+        {
+            var db = GameServer.Database.Conn;
+            var chests = PendingEntities.OfType<Container>().Where(c => c.ObjectType == VAULT_CHEST && c.DbLink == null).ToList();
+            foreach (var chest in chests)
+                chest.LinkToDb(new DbNexusChest(db, (int)chest.X, (int)chest.Y));
+            StaticLogger.Instance.Info($"Nexus: {chests.Count} vault chests, {chests.Sum(c => c.Inventory.Count(i => i != null))} stored items");
         }
 
         protected override void UpdateLogic(ref TickTime time)

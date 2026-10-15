@@ -8,6 +8,9 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
+## Unreleased
+- The shared vault chests in the nexus keep what's in them when the server restarts.
+
 ## 1.1.3.1 (2026-10-15)
 - In the game, your gold and fame show at the top right of the screen again, with the frame
   rate under them.

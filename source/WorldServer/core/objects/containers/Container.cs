@@ -72,6 +72,20 @@ namespace WorldServer.core.objects.containers
             base.ExportStats(stats, isOtherPlayer);
         }
 
+        // Backs a container placed by a map with stored items: loads them, then saves every change.
+        public void LinkToDb(RInventory dbLink)
+        {
+            DbLink = dbLink;
+            Inventory.SetItems(Inventory.ConvertTypeToItemArray(dbLink.Items));
+            Inventory.SetDataItems(dbLink.ItemDatas);
+            Inventory.InventoryChanged += (sender, e) =>
+            {
+                DbLink.Items = Inventory.GetItemTypes();
+                DbLink.ItemDatas = Inventory.Data.GetDatas();
+                DbLink.FlushAsync();
+            };
+        }
+
         private void Initialize(RInventory dbLink)
         {
             Inventory = new Inventory(this);
