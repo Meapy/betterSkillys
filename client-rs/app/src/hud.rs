@@ -102,8 +102,9 @@ impl Ui<'_> {
 
 
 
+    /// Interface text: crisp, with a soft shadow rather than the world's heavy glow.
     pub(crate) fn label(&mut self, s: &str, x: f32, y: f32, size: f32, bold: bool, color: u32) {
-        self.text.draw(self.fonts, self.renderer, s, x, y, Style { size, bold, color });
+        self.text.draw_ui(self.fonts, self.renderer, s, x, y, Style { size, bold, color });
     }
 
     pub(crate) fn measure(&mut self, s: &str, size: f32, bold: bool) -> f32 {
@@ -129,13 +130,19 @@ impl Ui<'_> {
     }
 
     /// `getRedrawnTextureFromType(type, size, true)`, centred on (cx, cy) at `scale`.
+    ///
+    /// Redrawn at the size it shows (so pixel art stays sharp at any scale), and centred on
+    /// the sprite itself: the canvas has room for the outline above and beside the sprite but
+    /// hardly any below.
     pub(crate) fn item_icon(&mut self, item: i32, size: i32, cx: f32, cy: f32, scale: f32) {
         let Some(desc) = self.data.objects.get(&(item as u16)) else { return };
         let Some(src) = self.src(&desc.texture) else { return };
         let size = if src.h == 16 { size / 2 } else { size };
+        let size = ((size as f32 * scale).round() as i32).max(1);
         let Some(icon) = self.redrawer.get(self.sprites, self.renderer, src, false, size, None) else { return };
-        let (w, h) = (icon.w as f32 * scale, icon.h as f32 * scale);
-        self.renderer.sprite(icon.rect, Quad::rect((cx - w / 2.0).round(), (cy - h / 2.0).round(), w, h), Tint::NONE);
+        let (w, h) = (icon.w as f32, icon.h as f32);
+        let lift = (crate::redraw::PAD as f32 - 1.0) / 2.0;
+        self.renderer.sprite(icon.rect, Quad::rect((cx - w / 2.0).round(), (cy - h / 2.0 - lift).round(), w, h), Tint::NONE);
     }
 
     /// A tile drawn as one flat colour (`greyColorFilter`), keeping its shape.
@@ -1185,11 +1192,13 @@ fn draw_portrait(ui: &mut Ui, lay: &Layout, me: &GameObj) {
         tex1: me.stat_int(stat::TEX1).unwrap_or(0),
         tex2: me.stat_int(stat::TEX2).unwrap_or(0),
     });
-    let Some(icon) = ui.redrawer.get(ui.sprites, ui.renderer, src, false, 60, dye) else { return };
+    // Redrawn at the size it shows, centred on the sprite (see `item_icon`).
+    let size = ((60.0 * lay.s * 0.8).round() as i32).max(1);
+    let Some(icon) = ui.redrawer.get(ui.sprites, ui.renderer, src, false, size, dye) else { return };
     let (cx, cy) = lay.at(22.0, 213.0);
-    let k = lay.s * 0.8;
-    let (w, h) = (icon.w as f32 * k, icon.h as f32 * k);
-    ui.renderer.sprite(icon.rect, Quad::rect((cx - w / 2.0).round(), (cy - h / 2.0).round(), w, h), Tint::NONE);
+    let (w, h) = (icon.w as f32, icon.h as f32);
+    let lift = (crate::redraw::PAD as f32 - 1.0) / 2.0;
+    ui.renderer.sprite(icon.rect, Quad::rect((cx - w / 2.0).round(), (cy - h / 2.0 - lift).round(), w, h), Tint::NONE);
 }
 
 /// A status bar: a rounded dark track, a shaded fill, the label at the left and the numbers at

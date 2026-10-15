@@ -1136,11 +1136,13 @@ pub fn portrait(ui: &mut Ui, desc: &ObjectDesc, tex1: i32, tex2: i32, cx: f32, c
     let TextureRef::Animated { set, index } = &desc.texture.pick(0).main else { return };
     let Some(src) = ui.sprites.char_src(set, *index, 0, 0) else { return };
     let dye = ui.sprites.char_mask_src(set, *index, 0, 0).map(|mask| Dye { mask, tex1, tex2 });
-    let Some(img) = ui.redrawer.get(ui.sprites, ui.renderer, src, false, 100, dye) else { return };
-    let (iw, ih) = (img.w as f32 * s, img.h as f32 * s);
+    // Redrawn at the size it shows, so the pixels stay sharp.
+    let size = ((100.0 * s).round() as i32).max(1);
+    let Some(img) = ui.redrawer.get(ui.sprites, ui.renderer, src, false, size, dye) else { return };
+    let (iw, ih) = (img.w as f32, img.h as f32);
     // The redrawn image has room for the outline above and beside it: centre the sprite.
-    let pad = crate::redraw::PAD as f32 * s;
-    ui.renderer.sprite(img.rect, Quad::rect((cx - iw / 2.0).round(), (cy - ih / 2.0 + pad / 2.0).round(), iw, ih), Tint::NONE);
+    let lift = (crate::redraw::PAD as f32 - 1.0) / 2.0;
+    ui.renderer.sprite(img.rect, Quad::rect((cx - iw / 2.0).round(), (cy - ih / 2.0 - lift).round(), iw, ih), Tint::NONE);
 }
 
 /// The menu Escape opens in the game.
