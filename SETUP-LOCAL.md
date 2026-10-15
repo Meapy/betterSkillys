@@ -35,7 +35,7 @@ python tools\build_client_rs.py --account http://188.141.12.3:8080 --publish   #
 
 Players only need the zip once. Its client keeps itself up to date from `dist\client`, which the account server serves at `/client/`: it looks every five minutes, downloads what changed in the background, and switches to the new version at the player's next portal (or straight away on the character list). `Run Server.bat` publishes on every start; to publish without restarting anything, run the `--publish` line above.
 
-- **Versions:** the version is in `client-rs/Cargo.toml` (`[workspace.package]`). Raise it for each release and add a section for it at the top of `client-rs/CHANGELOG.md`, in plain words for players: publishing refuses a version with no section, and the game's Changelog window shows the file.
+- **Versions:** the version is in `client-rs/Cargo.toml` (`[workspace.package]`). Every change goes under `## Unreleased` at the top of `client-rs/CHANGELOG.md` as it lands, in plain words for players. For each release, raise the version and rename that section to it: publishing refuses a version with no section or with an `Unreleased` one left, and the game's Changelog window shows the file.
 - **Signing:** releases are signed with `build/client-update.key`, made on the first publish. Keep it (and back it up): clients only take releases signed with the key they were built with, so a new key means sending everyone a new zip.
 - **Rolling back:** `cargo run -p bsk-publish -- rollback --to dist/client --version <x.y.z>` (in `client-rs`) makes an earlier published version the latest again; clients switch to it like any update.
 

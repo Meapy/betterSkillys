@@ -91,6 +91,9 @@ fn release(seed: &[u8; 32], from: &Path, to: &Path, changelog: &Path, version: &
     if !entries.iter().any(|e| e.version == version) {
         fail(&format!("{} has no \"## {version}\" section: say what changed before publishing", changelog.display()));
     }
+    if entries.iter().any(|e| e.version.eq_ignore_ascii_case("Unreleased")) {
+        fail(&format!("{} still has an \"## Unreleased\" section: make it \"## {version} (<date>)\" or merge it into that section", changelog.display()));
+    }
     let files: Vec<FileEntry> = walk(from)
         .into_iter()
         .map(|(rel, full)| {

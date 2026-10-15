@@ -41,6 +41,11 @@ window. It skips any of them whose process name (`redis-server.exe`, `App.exe`,
 - **Secrets** stay in git-ignored `*.local.txt` files (`test-account.local.txt`) and `build/`
   (signing key). `build/`, `dist/`, `client/bin/`, `tools/airsdk/` and `source/Redis/data/` are
   not tracked.
+- **Changelog:** every change players can notice (client, servers, content, fixes) gets a line
+  in [client-rs/CHANGELOG.md](client-rs/CHANGELOG.md) under `## Unreleased` at the top, in the
+  same commit as the change. Write it in plain words for players, not code names; the game's
+  Changelog window shows it. Start the section if it isn't there. Publishing a client version
+  renames it to that version.
 - **Generated files** come from the `tools/port_doomed*.py` scripts (see source/AGENTS.md). Change
   the script and regenerate rather than editing the output by hand.
 
