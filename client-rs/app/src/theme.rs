@@ -177,3 +177,29 @@ mod tests {
         assert!(pts.iter().all(|p| p[0] >= -0.01 && p[0] <= 100.01 && p[1] >= -0.01 && p[1] <= 50.01));
     }
 }
+
+/// An X (a close or delete mark) centred on (cx, cy): two bars `half` long each way from the
+/// centre, `thick` wide. Drawn, because the font has no such character.
+pub fn cross(renderer: &mut Renderer, cx: f32, cy: f32, half: f32, thick: f32, rgb: u32) {
+    let white = renderer.white();
+    let len = half * 2.0 * std::f32::consts::SQRT_2;
+    for angle in [std::f32::consts::FRAC_PI_4, -std::f32::consts::FRAC_PI_4] {
+        renderer.sprite(white, bsk_render::Quad::rotated(cx, cy, len, thick, angle), bsk_render::Tint::color(rgb, 1.0));
+    }
+}
+
+/// A five-pointed star centred on (cx, cy), `outer` from the centre to a point. Drawn, because
+/// the font has no star character.
+pub fn star(renderer: &mut Renderer, cx: f32, cy: f32, outer: f32, rgb: u32) {
+    let white = renderer.white();
+    let inner = outer * 0.4;
+    let point = |i: i32| {
+        let a = -std::f32::consts::FRAC_PI_2 + i as f32 * std::f32::consts::PI / 5.0;
+        let r = if i % 2 == 0 { outer } else { inner };
+        [cx + r * a.cos(), cy + r * a.sin()]
+    };
+    let tint = bsk_render::Tint::color(rgb, 1.0);
+    for i in 0..10 {
+        renderer.triangle(white, [[cx, cy], point(i), point(i + 1)], [[0.5, 0.5]; 3], tint);
+    }
+}

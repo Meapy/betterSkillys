@@ -681,9 +681,7 @@ impl Front {
         if over || inside(d, mouse) {
             let over_d = inside(d, mouse);
             theme::fill(ui.renderer, d, 12.0 * s, if over_d { color::DANGER } else { 0x3A4050 }, 0.95);
-            let size = (13.0 * s).round();
-            let xw = ui.measure("✕", size, true);
-            ui.label("✕", d[0] + (d[2] - xw) / 2.0, d[1] + (d[3] - size * 1.22) / 2.0, size, true, 0xFFFFFF);
+            theme::cross(ui.renderer, d[0] + d[2] / 2.0, d[1] + d[3] / 2.0, 4.5 * s, (2.0 * s).max(1.5), 0xFFFFFF);
             self.targets.push((Target::Delete(c.id), d));
         }
     }

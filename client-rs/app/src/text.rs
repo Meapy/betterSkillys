@@ -180,3 +180,21 @@ impl Text {
         self.draw(fonts, renderer, text, cx - w / 2.0, y, style);
     }
 }
+
+#[cfg(test)]
+mod glyph_tests {
+    use ab_glyph::{Font, FontArc};
+
+    /// Every special character the interface draws as text is in Myriad Pro (a missing one
+    /// shows as an empty box). It has no heavy X (U+2715) or star (U+2605): those are drawn as
+    /// shapes (`theme::cross`, `theme::star`).
+    #[test]
+    fn interface_characters_exist() {
+        let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../../client/src/com/company/ui/fonts/");
+        for file in ["MyriadPro.otf", "MyriadProBold.otf"] {
+            let font = FontArc::try_from_vec(std::fs::read(format!("{root}{file}")).unwrap()).unwrap();
+            let missing: Vec<char> = "\u{b7}\u{2026}\u{2014}\u{2013}\u{2019}\u{d7}".chars().filter(|&c| font.glyph_id(c).0 == 0).collect();
+            assert!(missing.is_empty(), "{file} lacks {missing:?}");
+        }
+    }
+}

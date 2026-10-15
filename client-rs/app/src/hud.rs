@@ -1118,8 +1118,13 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
                 }
                 let size = lay.font(11.5);
                 let y = br[1] + (br[3] - size * 1.22) / 2.0;
-                let label = if *starred { format!("★ {name}") } else { name.clone() };
-                ui.label(&label, br[0] + 4.0 * s, y, size, true, if *starred { 0xFFD24A } else { color::TEXT });
+                // A starred (locked) player: a gold star before the name.
+                let mut x = br[0] + 4.0 * s;
+                if *starred {
+                    theme::star(ui.renderer, x + size * 0.4, br[1] + br[3] / 2.0, size * 0.42, 0xFFD24A);
+                    x += size * 0.95;
+                }
+                ui.label(name, x, y, size, true, if *starred { 0xFFD24A } else { color::TEXT });
                 let lv = format!("{level}");
                 let lw = ui.measure(&lv, size, false);
                 ui.label(&lv, br[0] + br[2] - lw - 4.0 * s, y, size, false, color::TEXT_MUTED);
