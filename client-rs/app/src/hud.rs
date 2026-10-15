@@ -599,7 +599,7 @@ impl MiniView {
         MiniView { rect: [x0, y0, side, side], zoom: level * lay.s, cx: clamp(me.x, world.width), cy: clamp(me.y, world.height) }
     }
 
-    pub fn to_map(&self, x: f64, y: f64) -> (f32, f32) {
+    pub fn to_map(self, x: f64, y: f64) -> (f32, f32) {
         let [x0, y0, side, _] = self.rect;
         (x0 + side / 2.0 + ((x - self.cx) as f32) * self.zoom, y0 + side / 2.0 + ((y - self.cy) as f32) * self.zoom)
     }
