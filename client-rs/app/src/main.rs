@@ -684,6 +684,7 @@ impl App {
                 text: c.text.clone(),
                 name_color: c.name_color,
                 text_color: c.text_color,
+                stars: c.stars,
                 at: now - c.age,
             })
             .collect();
@@ -749,7 +750,7 @@ impl App {
             if self.update_told != version {
                 self.update_told = version.clone();
                 if let Phase::Playing(game) = &mut self.phase {
-                    game.add_chat("", "", &format!("Version {version} is ready: it starts when you next take a portal."), 0, 0, now);
+                    game.add_chat("", "", &format!("Version {version} is ready: it starts when you next take a portal."), 0, 0, -1, now);
                 }
             }
             if self.handover.is_none() && !self.handover_failed {
@@ -793,7 +794,7 @@ impl App {
                         game.fallback_to_nexus = true;
                         game.reconnect(&r);
                     }
-                    game.add_chat("*Error*", "", "The new version couldn't start; it will the next time you open the game.", 0, 0, now);
+                    game.add_chat("*Error*", "", "The new version couldn't start; it will the next time you open the game.", 0, 0, -1, now);
                 }
             }
         }
@@ -817,6 +818,7 @@ impl App {
                     text: c.text.clone(),
                     name_color: c.name_color,
                     text_color: c.text_color,
+                    stars: c.stars,
                     age: now - c.at,
                 })
                 .collect(),

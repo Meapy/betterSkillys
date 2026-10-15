@@ -285,8 +285,15 @@ pub struct ResumeChat {
     pub text: String,
     pub name_color: i32,
     pub text_color: i32,
+    /// The speaker's rank, or -1 for none (and from versions before 1.1.1, which didn't send it).
+    #[serde(default = "no_stars")]
+    pub stars: i32,
     /// How long ago it arrived, ms.
     pub age: i32,
+}
+
+fn no_stars() -> i32 {
+    -1
 }
 
 /// The new version starting, as the old one sees it.
