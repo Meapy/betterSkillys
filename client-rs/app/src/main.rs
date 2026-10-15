@@ -114,6 +114,10 @@ struct App {
     /// The chat line being typed (Enter opens it), and lines to send.
     chat_input: Option<String>,
     chat_send: Vec<String>,
+    /// Page Up: the chat's history, so many rows back (`TextBox.showMax_`).
+    chat_scroll: Option<usize>,
+    /// Tab's place in the list of people we've whispered with (`TextBox.currentTeller_`).
+    teller: usize,
     /// `--say <text>` (desktop tests): sent once we're in the game.
     say: Option<String>,
     /// Whether --say was given (walking waits for the world it may move us to).
@@ -315,7 +319,7 @@ fn apply_action(game: &mut Game, panel: &hud::Panel, action: hud::Action, now: i
         Action::Button(Button::TradeAccept) => game.trade_accept(now),
         Action::Button(Button::TradeCancel) => game.trade_cancel(),
         Action::Button(Button::Member(_)) => {}
-        Action::Button(Button::Page(_) | Button::Npc(_)) => {}
+        Action::Button(Button::Page(_) | Button::Npc(_) | Button::Zoom(_)) => {}
     }
     None
 }
@@ -851,6 +855,29 @@ impl App {
         }
     }
 
+    /// `TextBox.insertTellPrefix`: "/tell " and the next person back (Shift: forward).
+    fn tell_prefix(&mut self) -> String {
+        let Phase::Playing(game) = &self.phase else { return "/tell ".into() };
+        let n = game.tellers.len();
+        if n == 0 {
+            return "/tell ".into();
+        }
+        let t = self.teller as i64 + if self.shift_held { 1 } else { -1 };
+        self.teller = t.clamp(0, n as i64 - 1) as usize;
+        format!("/tell {} ", game.tellers[self.teller])
+    }
+
+    /// Page Up: show the whole recent chat, then older pages; Page Down comes back.
+    fn scroll_chat(&mut self, up: bool) {
+        const PAGE: usize = 7;
+        self.chat_scroll = match (self.chat_scroll, up) {
+            (None, true) => Some(0),
+            (Some(n), true) => Some(n + PAGE),
+            (Some(0), false) | (None, false) => None,
+            (Some(n), false) => Some(n.saturating_sub(PAGE)),
+        };
+    }
+
     fn held(&self, codes: &[KeyCode]) -> bool {
         codes.iter().any(|c| self.keys.contains(c) || self.scripted_key(self.now()) == Some(*c))
     }
@@ -1019,6 +1046,9 @@ impl App {
                     },
                     KeyCode::KeyR => game.escape(),
                     KeyCode::KeyI => self.autofire = !self.autofire,
+                    // MiniMap zoom: - out, = in.
+                    KeyCode::Minus | KeyCode::NumpadSubtract => self.hud.minimap_zoom += 1,
+                    KeyCode::Equal | KeyCode::NumpadAdd => self.hud.minimap_zoom = self.hud.minimap_zoom.saturating_sub(1),
                     KeyCode::Space => ability = true,
                     KeyCode::KeyF => game.use_potion(now, 0),
                     KeyCode::KeyV => game.use_potion(now, 1),
@@ -1105,6 +1135,9 @@ impl App {
                 }
             }
             panel = built;
+            if let Some(world) = &game.world {
+                self.hud.minimap_zoom = self.hud.minimap_zoom.min(hud::minimap_levels(world).len() - 1);
+            }
             for line in self.chat_send.drain(..) {
                 game.say(&line);
             }
@@ -1198,7 +1231,10 @@ impl App {
                 }
                 let me = game.world.as_ref().and_then(|w| w.player()).and_then(|p| p.name()).unwrap_or("").to_owned();
                 let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
-                hud::draw_chat(&mut ui, &lay, &game.chat, &me, self.chat_input.as_deref(), now);
+                hud::draw_chat(&mut ui, &lay, &game.chat, &me, self.chat_input.as_deref(), self.chat_scroll, now);
+                if let Some(arena) = game.arena {
+                    hud::draw_arena(&mut ui, &lay, arena, now);
+                }
             }
         }
         if let (Some(far), Phase::Playing(game)) = (view_radius, &mut self.phase) {
@@ -1395,6 +1431,11 @@ impl ApplicationHandler<UserEvent> for App {
                                 self.chat_input = None;
                             }
                             KeyCode::Escape => self.chat_input = None,
+                            KeyCode::Tab => {
+                                let line = self.tell_prefix();
+                                self.chat_input = Some(line);
+                            }
+                            KeyCode::PageUp | KeyCode::PageDown => self.scroll_chat(code == KeyCode::PageUp),
                             KeyCode::Backspace => {
                                 input.pop();
                             }
@@ -1430,9 +1471,22 @@ impl ApplicationHandler<UserEvent> for App {
                     return;
                 }
                 if pressed && !event.repeat && matches!(self.phase, Phase::Playing(_)) {
+                    if matches!(code, KeyCode::PageUp | KeyCode::PageDown) {
+                        self.scroll_chat(code == KeyCode::PageUp);
+                        return;
+                    }
+                    if code != KeyCode::Tab {
+                        if let Phase::Playing(game) = &self.phase {
+                            self.teller = game.tellers.len();
+                        }
+                    }
+                    // TextBox's keys: chat, a command, a tell (Tab cycles who to), guild and party.
                     let open = match code {
                         KeyCode::Enter | KeyCode::NumpadEnter => Some(String::new()),
                         KeyCode::Slash => Some("/".to_owned()),
+                        KeyCode::Tab => Some(self.tell_prefix()),
+                        KeyCode::KeyG => Some("/g ".to_owned()),
+                        KeyCode::KeyP => Some("/p ".to_owned()),
                         _ => None,
                     };
                     if open.is_some() {
@@ -1516,6 +1570,8 @@ fn main() {
         last_scripted: None,
         pressed: Vec::new(),
         chat_input: None,
+        chat_scroll: None,
+        teller: 0,
         chat_send: Vec::new(),
         say: say_arg(),
         say_given: say_arg().map(|_| ()),

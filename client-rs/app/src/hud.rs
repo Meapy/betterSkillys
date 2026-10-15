@@ -383,6 +383,8 @@ pub enum Button {
     Member(i32),
     /// An option of the player menu, for that player.
     Menu(MenuOpt, i32),
+    /// The minimap's zoom: in (-1) or out (+1).
+    Zoom(i32),
     /// Answer the invitation.
     InviteYes,
     InviteNo,
@@ -554,6 +556,53 @@ pub struct HudState {
     last_click: Option<(i32, u8, i32)>,
     /// The player menu: for whom, and where it opened.
     menu: Option<(i32, (f32, f32))>,
+    /// Which of the minimap's zoom levels (`MiniMap.zoomIndex`): 0 is the closest.
+    pub minimap_zoom: usize,
+}
+
+/// The minimap's design size (HUD units).
+const MINIMAP_SIDE: f32 = 186.0;
+
+/// `MiniMap.zoomLevels`: pixels a tile, halving from 4 until the whole map nearly fits.
+pub fn minimap_levels(world: &World) -> Vec<f32> {
+    let min = (MINIMAP_SIDE / world.width.max(1) as f32).max(MINIMAP_SIDE / world.height.max(1) as f32);
+    let mut levels = Vec::new();
+    let mut z = 4.0;
+    while z > min && levels.len() < 8 {
+        levels.push(z);
+        z /= 2.0;
+    }
+    levels.push(min.min(4.0));
+    levels
+}
+
+/// Where the minimap shows the world this frame.
+#[derive(Clone, Copy, Debug)]
+pub struct MiniView {
+    pub rect: [f32; 4],
+    /// Screen pixels a tile.
+    pub zoom: f32,
+    /// The world point at the centre.
+    pub cx: f64,
+    pub cy: f64,
+}
+
+impl MiniView {
+    pub fn new(lay: &Layout, world: &World, me: &GameObj, zoom_index: usize) -> Self {
+        let (x0, y0) = lay.at(7.0, 7.0);
+        let side = MINIMAP_SIDE * lay.s;
+        let levels = minimap_levels(world);
+        let level = levels[zoom_index.min(levels.len() - 1)];
+        // Keep the map's edge from leaving a gap: the view stops at the map's sides.
+        let span = (MINIMAP_SIDE / level) as f64;
+        let clamp = |c: f64, size: i32| if size as f64 <= span { size as f64 / 2.0 } else { c.clamp(span / 2.0, size as f64 - span / 2.0) };
+        MiniView { rect: [x0, y0, side, side], zoom: level * lay.s, cx: clamp(me.x, world.width), cy: clamp(me.y, world.height) }
+    }
+
+    pub fn to_map(&self, x: f64, y: f64) -> (f32, f32) {
+        let [x0, y0, side, _] = self.rect;
+        (x0 + side / 2.0 + ((x - self.cx) as f32) * self.zoom, y0 + side / 2.0 + ((y - self.cy) as f32) * self.zoom)
+    }
 }
 
 /// What the player did on the HUD.
@@ -584,6 +633,9 @@ pub struct Panel {
     menu_rect: Option<[f32; 4]>,
     /// The nearby players listed, and the invitation shown.
     members: Vec<(i32, String, i32, bool)>,
+    /// Other players on the minimap: id, name, where.
+    minimap_players: Vec<(i32, String, (f32, f32))>,
+    minimap: Option<MiniView>,
 }
 
 const DOUBLE_CLICK_MS: i32 = 350;
@@ -600,6 +652,8 @@ impl Panel {
             trade_rect: None,
             menu_rect: None,
             members: Vec::new(),
+            minimap_players: Vec::new(),
+            minimap: None,
         };
         let Some(me) = world.player() else { return panel };
         let item = |o: &GameObj, slot: u8| o.stat_int(slot_stat(slot)).unwrap_or(-1);
@@ -640,6 +694,20 @@ impl Panel {
             });
         }
         panel.buttons.push((Button::Nexus, lay.rect(106.0, 544.0, 82.0, 28.0)));
+        // The minimap: zoom buttons in its corner, and the players on it.
+        let mini = MiniView::new(lay, world, me, state.minimap_zoom);
+        panel.minimap = Some(mini);
+        panel.buttons.push((Button::Zoom(-1), lay.rect(171.0, 11.0, 18.0, 18.0)));
+        panel.buttons.push((Button::Zoom(1), lay.rect(171.0, 31.0, 18.0, 18.0)));
+        for o in world.objects.values() {
+            if o.id == me.id || !data.objects.get(&o.object_type).is_some_and(|d| d.player) {
+                continue;
+            }
+            let (px, py) = mini.to_map(o.x, o.y);
+            if inside(mini.rect, (px as f64, py as f64)) {
+                panel.minimap_players.push((o.id, o.name().unwrap_or("?").to_owned(), (px, py)));
+            }
+        }
         // InteractPanel: a bag's eight slots, or a portal's Enter button.
         panel.interact = interact_target(world, data);
         if let Some(target) = &panel.interact {
@@ -721,6 +789,15 @@ impl Panel {
         panel
     }
 
+    /// The players on the minimap within a few pixels of `pos` (`MiniMap`'s tooltip).
+    fn minimap_players_at(&self, pos: (f64, f64), s: f32) -> Vec<&(i32, String, (f32, f32))> {
+        let reach = 6.0 * s;
+        self.minimap_players
+            .iter()
+            .filter(|(_, _, (x, y))| (*x - pos.0 as f32).abs() <= reach && (*y - pos.1 as f32).abs() <= reach)
+            .collect()
+    }
+
     fn slot_at(&self, pos: (f64, f64)) -> Option<Slot> {
         self.slots.iter().find(|s| inside(s.rect, pos)).copied()
     }
@@ -755,6 +832,15 @@ impl Panel {
         }
         if let Some(Button::Member(id)) = self.button_at(pos) {
             state.menu = Some((id, (pos.0 as f32, pos.1 as f32)));
+            return true;
+        }
+        if let Some(Button::Zoom(d)) = self.button_at(pos) {
+            state.minimap_zoom = (state.minimap_zoom as i32 + d).max(0) as usize;
+            return true;
+        }
+        // A player on the minimap: their menu.
+        if let Some((id, _, _)) = self.minimap_players_at(pos, lay.s).first() {
+            state.menu = Some((*id, (pos.0 as f32, pos.1 as f32)));
             return true;
         }
         if let Some(slot) = self.slot_at(pos) {
@@ -827,7 +913,20 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
     theme::rounded(ui.renderer, [px, 0.0, pw, lay.h], 0.0, (color::PANEL_TOP, 0.98), (color::PANEL_BOTTOM, 0.99));
     ui.rect(px, 0.0, s.max(1.0), lay.h, color::BORDER_HI, 0.7);
     let Some(me) = world.player() else { return };
-    draw_minimap(ui, lay, world, me, camera_angle, colors);
+    let mini = panel.minimap.unwrap_or_else(|| MiniView::new(lay, world, me, state.minimap_zoom));
+    draw_minimap(ui, lay, world, me, camera_angle, colors, &mini);
+    // Zoom in and out, in the corner.
+    let levels = minimap_levels(world).len();
+    for (button, r) in &panel.buttons {
+        let Button::Zoom(d) = button else { continue };
+        let usable = if *d < 0 { state.minimap_zoom > 0 } else { state.minimap_zoom + 1 < levels };
+        let over = usable && inside(*r, mouse);
+        theme::fill(ui.renderer, *r, 4.0 * s, if over { 0x4A5266 } else { 0x262A33 }, if usable { 0.9 } else { 0.45 });
+        let label = if *d < 0 { "+" } else { "-" };
+        let size = lay.font(13.0);
+        let w = ui.measure(label, size, true);
+        ui.label(label, r[0] + (r[2] - w) / 2.0, r[1] + (r[3] - size * 1.22) / 2.0, size, true, if usable { color::TEXT } else { color::TEXT_MUTED });
+    }
 
     // The portrait, name, and class and level.
     draw_portrait(ui, lay, me);
@@ -1107,22 +1206,17 @@ fn status_bar(ui: &mut Ui, lay: &Layout, x: f32, y: f32, label: &str, value: i32
 
 /// `MiniMap.draw` at its first zoom (4 units a tile), north up, the player's arrow turned with
 /// the camera. Static objects that fill their square show their colour over the ground.
-fn draw_minimap(ui: &mut Ui, lay: &Layout, world: &World, me: &GameObj, camera_angle: f64, colors: &mut MapColors) {
-    const SIDE: f32 = 186.0;
-    let (x0, y0) = lay.at(7.0, 7.0);
-    let side = SIDE * lay.s;
+fn draw_minimap(ui: &mut Ui, lay: &Layout, world: &World, me: &GameObj, camera_angle: f64, colors: &mut MapColors, mini: &MiniView) {
+    let [x0, y0, side, _] = mini.rect;
     let e = 3.0 * lay.s;
     theme::shadow(ui.renderer, [x0, y0, side, side], 6.0 * lay.s, 6.0 * lay.s, 0.35);
     theme::frame(ui.renderer, [x0 - e, y0 - e, side + 2.0 * e, side + 2.0 * e], 7.0 * lay.s, lay.s.max(1.0), (color::BORDER_HI, 1.0), ((MINIMAP_FILL, 1.0), (MINIMAP_FILL, 1.0)));
-    let zoom = 4.0 * lay.s;
-    let half = (SIDE / 2.0 / 4.0).ceil() as i32 + 1;
-    // Keep the map's edge from leaving a gap: the view stops at the map's sides.
-    let span = SIDE as f64 / 4.0;
-    let clamp = |c: f64, size: i32| if size as f64 <= span { size as f64 / 2.0 } else { c.clamp(span / 2.0, size as f64 - span / 2.0) };
-    let (cx, cy) = (clamp(me.x, world.width), clamp(me.y, world.height));
-    let to_map = |x: f64, y: f64| -> (f32, f32) {
-        (x0 + side / 2.0 + ((x - cx) as f32) * zoom, y0 + side / 2.0 + ((y - cy) as f32) * zoom)
-    };
+    // Zoomed far out, a cell covers several tiles (each at least two pixels wide).
+    let step = ((2.0 / mini.zoom).ceil() as i32).max(1);
+    let zoom = mini.zoom * step as f32;
+    let half = (side / 2.0 / mini.zoom).ceil() as i32 + step;
+    let (cx, cy) = (mini.cx, mini.cy);
+    let to_map = |x: f64, y: f64| mini.to_map(x, y);
     let mut marks: HashMap<(i32, i32), u32> = HashMap::new();
     for o in world.objects.values() {
         if let Some(d) = ui.data.objects.get(&o.object_type) {
@@ -1131,9 +1225,9 @@ fn draw_minimap(ui: &mut Ui, lay: &Layout, world: &World, me: &GameObj, camera_a
             }
         }
     }
-    let (tx, ty) = (cx.floor() as i32, cy.floor() as i32);
-    for y in ty - half..=ty + half {
-        for x in tx - half..=tx + half {
+    let (tx, ty) = ((cx.floor() as i32).div_euclid(step) * step, (cy.floor() as i32).div_euclid(step) * step);
+    for y in (ty - half..=ty + half).step_by(step as usize) {
+        for x in (tx - half..=tx + half).step_by(step as usize) {
             let Some(tile) = world.tile(x, y) else { continue };
             let (px, py) = to_map(x as f64, y as f64);
             // Whole tiles only, clipped to the box.
@@ -1189,6 +1283,15 @@ pub fn draw_overlay(ui: &mut Ui, lay: &Layout, world: &World, panel: &Panel, sta
     let (mx, my) = (mouse.0 as f32, mouse.1 as f32);
     if let Some(drag) = state.drag {
         ui.item_icon(drag.item, 80, mx, my, lay.s);
+        return;
+    }
+    // Players under the mouse on the minimap (`PlayerGroupToolTip`).
+    let near = panel.minimap_players_at(mouse, lay.s);
+    if !near.is_empty() {
+        let mut lines = vec![Line::new("Players", 12.0, true, color::TEXT_DIM)];
+        lines.extend(near.iter().map(|(_, name, _)| Line::new(name, 14.0, true, 0xFFFF00)));
+        lines.push(Line::new("Click for options", 11.0, false, color::TEXT_MUTED));
+        draw_tooltip(ui, lay, &lines, None, None, mouse);
         return;
     }
     if let Some((r, item)) = panel.shop_icon {
@@ -1648,7 +1751,9 @@ const CHAT_SHOW_MS: i32 = 30_000;
 
 /// The chat box at the bottom left of the view: recent lines, wrapped to fit, and the input
 /// line when open.
-pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input: Option<&str>, now: i32) {
+/// The chat: the newest lines (all of them, `scroll` rows back, after Page Up), and the line
+/// being typed.
+pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input: Option<&str>, scroll: Option<usize>, now: i32) {
     let s = lay.s;
     let size = lay.font(14.0);
     let line_h = (size * 1.3).round();
@@ -1675,17 +1780,19 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
     // Wrap the newest lines into rows, newest at the bottom.
     let mut rows: Vec<Vec<(String, u32)>> = Vec::new();
     for line in lines.iter().rev() {
-        if input.is_none() && now - line.at > CHAT_SHOW_MS {
+        if input.is_none() && scroll.is_none() && now - line.at > CHAT_SHOW_MS {
             break;
         }
         let mut wrapped = wrap(ui, &line.pieces(me), size, max_w);
         while let Some(row) = wrapped.pop() {
             rows.push(row);
         }
-        if rows.len() >= max_rows {
+        if rows.len() >= max_rows + scroll.unwrap_or(0) {
             break;
         }
     }
+    let skip = scroll.unwrap_or(0).min(rows.len().saturating_sub(max_rows.min(rows.len())));
+    rows.drain(..skip);
     rows.truncate(max_rows);
     if rows.is_empty() {
         return;
@@ -1693,7 +1800,13 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
     // A dark glass behind the lines, so they read over any ground.
     let widest = rows.iter().map(|row| row.iter().map(|(p, _)| ui.measure(p, size, false)).sum::<f32>()).fold(0.0, f32::max);
     let back_h = rows.len() as f32 * line_h + 10.0 * s;
-    theme::fill(ui.renderer, [margin, bottom - back_h, widest + 16.0 * s, back_h], 6.0 * s, 0x000000, if input.is_some() { 0.55 } else { 0.32 });
+    let strong = input.is_some() || scroll.is_some();
+    theme::fill(ui.renderer, [margin, bottom - back_h, widest + 16.0 * s, back_h], 6.0 * s, 0x000000, if strong { 0.55 } else { 0.32 });
+    if skip > 0 {
+        let t = format!("{skip} newer lines below (Page Down)");
+        let small = lay.font(11.0);
+        ui.label(&t, margin + 8.0 * s, bottom - back_h - small * 1.4, small, true, color::TEXT_DIM);
+    }
     for (i, row) in rows.iter().enumerate() {
         let y = bottom - 5.0 * s - line_h * (i as f32 + 1.0);
         let mut x = margin + 8.0 * s;
@@ -1701,6 +1814,25 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
             ui.label(piece, x, y, size, false, *c);
             x += ui.measure(piece, size, false);
         }
+    }
+}
+
+/// `ArenaMenu`: the wave and the time, at the top left of the view.
+pub fn draw_arena(ui: &mut Ui, lay: &Layout, arena: (i32, i32, i32, bool), now: i32) {
+    let s = lay.s;
+    let (wave, secs, since, running) = arena;
+    let secs = secs + if running { (now - since).max(0) / 1000 } else { 0 };
+    let r = [10.0 * s, 10.0 * s, 170.0 * s, 58.0 * s];
+    theme::panel(ui.renderer, r, s);
+    let small = lay.font(10.5);
+    let big = lay.font(19.0);
+    let cols = [("WAVE", wave.to_string()), ("TIME", format!("{:02}:{:02}", secs / 60, secs % 60))];
+    for (i, (label, value)) in cols.iter().enumerate() {
+        let cx = r[0] + r[2] * (i as f32 + 0.5) / 2.0;
+        let lw = ui.measure(label, small, true);
+        ui.label(label, cx - lw / 2.0, r[1] + 8.0 * s, small, true, color::TEXT_MUTED);
+        let vw = ui.measure(value, big, true);
+        ui.label(value, cx - vw / 2.0, r[1] + 24.0 * s, big, true, if i == 0 { color::ACCENT_HI } else { color::TEXT });
     }
 }
 

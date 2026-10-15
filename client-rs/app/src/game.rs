@@ -45,6 +45,10 @@ pub struct Game {
     pub floaters: Vec<crate::view::Floater>,
     /// Speech balloons, one per speaker.
     pub bubbles: Vec<crate::view::Bubble>,
+    /// Who we've whispered with, newest last (Tab cycles through them).
+    pub tellers: Vec<String>,
+    /// The arena's wave and clock (`ArenaMenu`): wave, seconds, since when, running.
+    pub arena: Option<(i32, i32, i32, bool)>,
     /// Sparks, effects and area attacks.
     pub particles: crate::particles::Particles,
     /// The quest's object (`QuestObjId`), for the arrow and the boss bar.
@@ -139,6 +143,8 @@ impl Game {
             view_radius_sent_at: i32::MIN / 2,
             floaters: Vec::new(),
             bubbles: Vec::new(),
+            tellers: Vec::new(),
+            arena: None,
             particles: Default::default(),
             quest: None,
             name_result: None,
@@ -228,6 +234,7 @@ impl Game {
             Some(Event::MapInfo(info)) => {
                 self.world = Some(World::new(info.width as i32, info.height as i32, &info.display_name, info.seed));
                 self.particles.clear();
+                self.arena = None;
                 self.status = format!("Entering {}…", info.display_name);
             }
             Some(Event::Joined { object_id, char_id }) => {
@@ -407,6 +414,16 @@ impl Game {
                     life: 2000,
                 });
             }
+            ServerMessage::ImminentArenaWave(w) => {
+                // ArenaMenu.onWaveInfo: state 1 starts the clock; otherwise it's set.
+                let running = self.arena.is_some_and(|a| a.3);
+                self.arena = Some(match (w.current_state, self.arena) {
+                    (1, Some((_, secs, since, true))) => (w.wave, secs, since, true),
+                    (1, Some((_, secs, _, false))) => (w.wave, secs, now, true),
+                    (1, None) => (w.wave, 0, now, true),
+                    _ => (w.wave, w.current_runtime / 1000, now, running),
+                });
+            }
             ServerMessage::Aoe(a) => self.particles.aoe(a.pos.x as f64, a.pos.y as f64, a.radius as f64, a.color),
             ServerMessage::ShowEffect(e) => self.particles.show_effect(&e, world, now),
             ServerMessage::Damage(d) => {
@@ -424,6 +441,20 @@ impl Game {
     }
 
     pub fn add_chat(&mut self, name: &str, recipient: &str, text: &str, name_color: i32, text_color: i32, now: i32) {
+        // TextBox.tellers_: who we last whispered with, newest last.
+        let me = self.world.as_ref().and_then(|w| w.player()).and_then(|p| p.name()).unwrap_or("").to_owned();
+        let other = if !recipient.is_empty() && recipient == me {
+            Some(name)
+        } else if !recipient.is_empty() && name == me && !recipient.starts_with('*') {
+            Some(recipient)
+        } else {
+            None
+        };
+        if let Some(who) = other.filter(|w| !w.is_empty()) {
+            if self.tellers.last().is_none_or(|l| l != who) {
+                self.tellers.push(who.to_owned());
+            }
+        }
         self.chat.push(crate::hud::ChatLine {
             name: name.to_owned(),
             recipient: recipient.to_owned(),

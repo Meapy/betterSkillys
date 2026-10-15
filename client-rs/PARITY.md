@@ -38,18 +38,18 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Area attacks (`Aoe`) | `onAoe` | Done (the server applies the damage; the client draws the blast) |
 | Shooting, abilities, hits | `Player`, `Projectile` | Done |
 | HUD: minimap, bars, equipment, inventory, backpack, stats, potions | `HUDView` | Done |
-| Minimap zoom, player tooltips on the minimap | `MiniMap` | To do |
+| Minimap zoom (buttons, - and =), player tooltips and menus on the minimap | `MiniMap` | Done |
 | Item tooltips | `EquipmentToolTip` | Done |
 | Items: swap, drop, use, equip, bags | `ItemGridMediator` | Done |
 | Chat, slash commands, speech balloons | `TextBox`, `onText` | Done |
-| Tells: reply key, tab completion | `TextBox` | To do |
+| Tells: Tab cycles who to whisper; G guild and P party chat; Page Up/Down history | `TextBox` | Done |
 | Notifications over objects, global notifications (keys) | `onNotification`, `onGlobalNotification` | Done |
 | Quest arrow | `QuestObjId`, `QuestArrow` | Done |
 | Boss health bar | `BossHealthBar` | Done (without the damage-dealt percentage) |
 | Dungeon keys view | `KeysView` | Done |
 | Legendary and mythical drop pop-ups | `LegendaryNotifView` | To do |
 | Portals, Nexus, Escape menu | `PortalPanel`, `onReconnect` | Done |
-| Player menu: trade, invite, teleport, whisper, lock, ignore; nearby players | `PlayerMenu`, `PartyPanel`, `EditAccountList` | Done (opened from the nearby list; chat names and the minimap to do) |
+| Player menu: trade, invite, teleport, whisper, lock, ignore; nearby players | `PlayerMenu`, `PartyPanel`, `EditAccountList` | Done (opened from the nearby list and the minimap; chat names to do) |
 | Trading | `TradePanel`, `onTrade*` | Done |
 | Party: invite, join | `PartyPanel`, `onInvitedToParty` | Done |
 | Guild: invite and join | `GuildInvitePanel`, `onInvitedToGuild` | Done |
@@ -61,7 +61,7 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | Character changer, the Armoire (skins) | `CharacterChangerPanel`, `ReskinPanel` | Done |
 | Name changer | `NameChangerPanel`, `onNameResult` | Done |
 | Stat NPC, bounty board, money changer | `StatNPCPanel`, `BountyBoardPanel`, `MoneyChangerPanel` | Dropped: no map places them |
-| Arena wave warning | `onImminentArenaWave` | To do |
+| Arena wave and clock | `onImminentArenaWave`, `ArenaMenu` | Done |
 | Pictures from the server (`Pic`) | `onPic` | To do |
 | Options: graphics, sound, controls, key bindings | `Options` | To do |
 | Sound effects and music | `SoundEffectLibrary`, `onPlaySound`, `onSwitchMusic` | To do |
