@@ -23,6 +23,8 @@ pub enum Screen {
     /// A class's page: its skins, then Create.
     Class(u16),
     Legends,
+    /// The account's dead characters (`Graveyard`).
+    Graveyard,
     /// Account settings: change the password.
     Account,
     /// How a dead character's fame was counted.
@@ -67,6 +69,9 @@ enum Target {
     Create,
     BuySlot,
     ToLegends,
+    ToGraveyard,
+    /// A grave: that dead character's fame summary.
+    Grave(i32),
     ToAccount,
     Timespan(usize),
     SavePassword,
@@ -91,6 +96,8 @@ pub enum Action {
     ChangePassword,
     /// Ask for the legends of this time span.
     Legends(&'static str),
+    /// Show how a dead character's fame was counted.
+    ViewDeath(i32),
 }
 
 pub struct Front {
@@ -115,6 +122,8 @@ pub struct Front {
     pub timespan: usize,
     /// The last death's fame summary.
     pub death: Option<FameSummary>,
+    /// The summary was opened from the graveyard (Continue goes back there).
+    pub death_from_graveyard: bool,
     /// Clickable areas from the last frame.
     targets: Vec<(Target, [f32; 4])>,
     /// Where the account server is, shown small on the login screen.
@@ -137,6 +146,7 @@ impl Default for Front {
             legends: None,
             timespan: 0,
             death: None,
+            death_from_graveyard: false,
             targets: Vec::new(),
             endpoint_label: String::new(),
         }
@@ -279,12 +289,14 @@ impl Front {
                 Screen::Login => return Some(Action::SignIn),
                 Screen::Register => return Some(Action::Register),
                 Screen::Account => return Some(Action::ChangePassword),
+                Screen::Death if self.death_from_graveyard => self.show(Screen::Graveyard),
                 Screen::Death => self.show(Screen::Chars),
                 _ => {}
             },
             KeyCode::Escape => match self.screen {
                 Screen::Register => self.show(Screen::Login),
-                Screen::NewChar | Screen::Legends | Screen::Account | Screen::Death => self.show(Screen::Chars),
+                Screen::Death if self.death_from_graveyard => self.show(Screen::Graveyard),
+                Screen::NewChar | Screen::Legends | Screen::Graveyard | Screen::Account | Screen::Death => self.show(Screen::Chars),
                 Screen::Class(_) => self.show(Screen::NewChar),
                 _ => {}
             },
@@ -322,8 +334,11 @@ impl Front {
             }
             Target::Back => match self.screen {
                 Screen::Class(_) => self.show(Screen::NewChar),
+                Screen::Death if self.death_from_graveyard => self.show(Screen::Graveyard),
                 _ => self.show(Screen::Chars),
             },
+            Target::ToGraveyard => self.show(Screen::Graveyard),
+            Target::Grave(id) => return Some(Action::ViewDeath(id)),
             Target::Remember => self.remember = !self.remember,
             Target::Char(id) => return Some(Action::Play(id)),
             Target::Delete(id) => self.confirm = Some(Confirm::Delete(id)),
@@ -398,6 +413,7 @@ impl Front {
             Screen::NewChar => self.draw_new_char(ui, w, h, s, mouse),
             Screen::Class(class) => self.draw_class(ui, w, h, s, class, mouse),
             Screen::Legends => self.draw_legends(ui, w, h, s, mouse),
+            Screen::Graveyard => self.draw_graveyard(ui, w, h, s, mouse),
             Screen::Account => self.draw_account(ui, w, h, s, mouse, now),
             Screen::Death => self.draw_death(ui, w, h, s, mouse),
         }
@@ -539,6 +555,7 @@ impl Front {
         self.button(ui, Target::Logout, [w - pad - bw, 16.0 * s, bw, 36.0 * s], "Log out", Kind::Secondary, s, mouse);
         self.button(ui, Target::ToAccount, [w - pad - 2.0 * bw - 10.0 * s, 16.0 * s, bw, 36.0 * s], "Account", Kind::Secondary, s, mouse);
         self.button(ui, Target::ToLegends, [w - pad - 3.0 * bw - 20.0 * s, 16.0 * s, bw, 36.0 * s], "Legends", Kind::Secondary, s, mouse);
+        self.button(ui, Target::ToGraveyard, [w - pad - 4.0 * bw - 30.0 * s, 16.0 * s, bw, 36.0 * s], "Graveyard", Kind::Secondary, s, mouse);
 
         // Characters, then a card for a new one while there's room, else one to buy a slot.
         let (cw, ch, gap) = (440.0 * s, 96.0 * s, 14.0 * s);
@@ -939,6 +956,51 @@ impl Front {
         self.button(ui, Target::Back, [(w - 140.0 * s) / 2.0, h - 66.0 * s, 140.0 * s, 40.0 * s], "Back", Kind::Secondary, s, mouse);
     }
 
+    /// `Graveyard`: the account's dead characters, newest first; each opens its fame summary.
+    fn draw_graveyard(&mut self, ui: &mut Ui, w: f32, h: f32, s: f32, mouse: (f64, f64)) {
+        let pad = 24.0 * s;
+        let ts = (26.0 * s).round();
+        let tw = ui.measure("Graveyard", ts, true);
+        ui.label("Graveyard", (w - tw) / 2.0, pad, ts, true, color::TEXT);
+        let graves: Vec<_> = self.list.as_ref().map_or_else(Vec::new, |l| l.news.iter().filter(|n| n.death_char_id().is_some()).cloned().collect());
+        let list_r = [(w - 640.0 * s).max(16.0) / 2.0, pad + 56.0 * s, (640.0 * s).min(w - 32.0), h - pad * 2.0 - 124.0 * s];
+        theme::panel(ui.renderer, list_r, s);
+        if graves.is_empty() {
+            let t = "No one has fallen yet.";
+            let size = (16.0 * s).round();
+            let tw = ui.measure(t, size, true);
+            ui.label(t, list_r[0] + (list_r[2] - tw) / 2.0, list_r[1] + list_r[3] / 2.0, size, true, color::TEXT_DIM);
+        }
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs() as i64);
+        let row_h = 58.0 * s;
+        let fit = ((list_r[3] - 16.0 * s) / row_h).floor().max(1.0) as usize;
+        for (i, g) in graves.iter().take(fit).enumerate() {
+            let r = [list_r[0] + 8.0 * s, list_r[1] + 8.0 * s + i as f32 * row_h, list_r[2] - 16.0 * s, row_h - 6.0 * s];
+            let over = inside(r, mouse);
+            theme::fill(ui.renderer, r, 6.0 * s, 0xFFFFFF, if over { 0.08 } else if i % 2 == 0 { 0.03 } else { 0.0 });
+            // A tombstone.
+            let (gx, gy) = (r[0] + 14.0 * s, r[1] + 9.0 * s);
+            theme::fill(ui.renderer, [gx, gy, 26.0 * s, 32.0 * s], 11.0 * s, 0x6C7484, 1.0);
+            theme::fill(ui.renderer, [gx + 11.0 * s, gy + 7.0 * s, 4.0 * s, 16.0 * s], 1.0, 0x3A4150, 1.0);
+            theme::fill(ui.renderer, [gx + 6.0 * s, gy + 12.0 * s, 14.0 * s, 4.0 * s], 1.0, 0x3A4150, 1.0);
+            ui.label(&g.title, r[0] + 56.0 * s, r[1] + 7.0 * s, (16.0 * s).round(), true, color::TEXT);
+            ui.label(&g.tagline, r[0] + 56.0 * s, r[1] + 29.0 * s, (13.0 * s).round(), false, color::ACCENT);
+            let days = (now - g.date).max(0) / 86_400;
+            let when = match days {
+                0 => "today".to_owned(),
+                1 => "yesterday".to_owned(),
+                d => format!("{d} days ago"),
+            };
+            let ws = (12.0 * s).round();
+            let ww = ui.measure(&when, ws, false);
+            ui.label(&when, r[0] + r[2] - ww - 14.0 * s, r[1] + (r[3] - ws * 1.22) / 2.0, ws, false, color::TEXT_MUTED);
+            if let Some(id) = g.death_char_id() {
+                self.targets.push((Target::Grave(id), r));
+            }
+        }
+        self.button(ui, Target::Back, [(w - 140.0 * s) / 2.0, h - 66.0 * s, 140.0 * s, 40.0 * s], "Back", Kind::Secondary, s, mouse);
+    }
+
     /// Account settings: change the password.
     fn draw_account(&mut self, ui: &mut Ui, w: f32, h: f32, s: f32, mouse: (f64, f64), now: i32) {
         let r = [(w - 380.0 * s) / 2.0, ((h - 420.0 * s) / 2.0).max(16.0), 380.0 * s, 420.0 * s];
@@ -968,7 +1030,8 @@ impl Front {
         theme::panel(ui.renderer, r, s);
         let class = ui.data.objects.get(&sum.object_type);
         let pad = 28.0 * s;
-        ui.label("You died", r[0] + pad, r[1] + 20.0 * s, (30.0 * s).round(), true, color::DANGER);
+        let head = if self.death_from_graveyard { "In memory" } else { "You died" };
+        ui.label(head, r[0] + pad, r[1] + 20.0 * s, (30.0 * s).round(), true, color::DANGER);
         let who = format!("{}, level {}, killed by {}", class.map_or("Your character", |d| d.display_id.as_str()), sum.level, if sum.killed_by.is_empty() { "something" } else { &sum.killed_by });
         ui.label(&who, r[0] + pad, r[1] + 62.0 * s, (15.0 * s).round(), false, color::TEXT_DIM);
         if let Some(d) = class {

@@ -1608,7 +1608,9 @@ pub fn draw_windows(ui: &mut Ui, lay: &Layout, world: &World, panel: &Panel, soc
 
 /// `QuestArrow` and `BossHealthBar`: the quest's health along the top of the view, and an arrow
 /// at the view's edge pointing to it when it's off screen. Then the dungeon keys (`KeysView`).
-pub fn draw_quest(ui: &mut Ui, lay: &Layout, world: &World, camera: &crate::view::Camera, quest: Option<i32>, keys: &[u32]) {
+/// The dungeon keys, the boss bar (with the share of its health we took, `DamageCounter`) and
+/// the quest arrow.
+pub fn draw_quest(ui: &mut Ui, lay: &Layout, world: &World, camera: &crate::view::Camera, quest: Option<i32>, keys: &[u32], dealt: &HashMap<i32, i32>) {
     let s = lay.s;
     for (i, &c) in keys.iter().enumerate() {
         // A key: a ring and a shaft, in the key's colour.
@@ -1642,6 +1644,16 @@ pub fn draw_quest(ui: &mut Ui, lay: &Layout, world: &World, camera: &crate::view
         let ns = lay.font(13.0);
         let nw = ui.measure(&name, ns, true);
         ui.label(&name, r[0] + (r[2] - nw) / 2.0, r[1] - ns * 1.35, ns, true, color::ACCENT_HI);
+        // BossHealthBar.setDamageInflicted: how much of it we did.
+        if let Some(&d) = dealt.get(&q.id).filter(|&&d| d > 0) {
+            let pct = (d.min(max) as f32 / max as f32 * 100.0).floor() as i32;
+            let t = format!("You: {pct}%");
+            let ds = lay.font(11.0);
+            let tw = ui.measure(&t, ds, true);
+            let tag = [r[0] + (r[2] - tw) / 2.0 - 6.0 * s, r[1] + r[3] + 3.0 * s, tw + 12.0 * s, ds * 1.35];
+            theme::fill(ui.renderer, tag, tag[3] / 2.0, 0x000000, 0.5);
+            ui.label(&t, tag[0] + 6.0 * s, tag[1] + ds * 0.05, ds, true, color::ACCENT_HI);
+        }
         if let Some(src) = ui.src(&desc.texture) {
             if let Some(icon) = ui.redrawer.get(ui.sprites, ui.renderer, src, false, 60, None) {
                 let (iw, ih) = (icon.w as f32 * s, icon.h as f32 * s);
@@ -1749,11 +1761,18 @@ impl ChatLine {
 /// How long a chat line stays up while the input is closed, ms.
 const CHAT_SHOW_MS: i32 = 30_000;
 
-/// The chat box at the bottom left of the view: recent lines, wrapped to fit, and the input
-/// line when open.
-/// The chat: the newest lines (all of them, `scroll` rows back, after Page Up), and the line
-/// being typed.
-pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input: Option<&str>, scroll: Option<usize>, now: i32) {
+impl HudState {
+    /// Open the player menu for `id` at `pos` (a name clicked in the chat).
+    pub fn open_menu(&mut self, id: i32, pos: (f64, f64)) {
+        self.menu = Some((id, (pos.0 as f32, pos.1 as f32)));
+    }
+}
+
+/// The chat box at the bottom left of the view: the newest lines (all of them, `scroll` rows
+/// back, after Page Up), wrapped to fit, and the line being typed. Returns where the players'
+/// names are, for clicks.
+pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input: Option<&str>, scroll: Option<usize>, now: i32) -> Vec<(String, [f32; 4])> {
+    let mut names = Vec::new();
     let s = lay.s;
     let size = lay.font(14.0);
     let line_h = (size * 1.3).round();
@@ -1795,7 +1814,7 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
     rows.drain(..skip);
     rows.truncate(max_rows);
     if rows.is_empty() {
-        return;
+        return names;
     }
     // A dark glass behind the lines, so they read over any ground.
     let widest = rows.iter().map(|row| row.iter().map(|(p, _)| ui.measure(p, size, false)).sum::<f32>()).fold(0.0, f32::max);
@@ -1811,10 +1830,18 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
         let y = bottom - 5.0 * s - line_h * (i as f32 + 1.0);
         let mut x = margin + 8.0 * s;
         for (piece, c) in row {
+            let w = ui.measure(piece, size, false);
+            // A player's name ("<Name> "; not NPCs' or announcements'): clickable.
+            if let Some(name) = piece.strip_prefix('<').and_then(|p| p.strip_suffix("> ")) {
+                if !matches!(*c, 0xFFA800 | 0xFFFF00) && !name.is_empty() && name != me {
+                    names.push((name.to_owned(), [x, y, w, line_h]));
+                }
+            }
             ui.label(piece, x, y, size, false, *c);
-            x += ui.measure(piece, size, false);
+            x += w;
         }
     }
+    names
 }
 
 /// `ArenaMenu`: the wave and the time, at the top left of the view.

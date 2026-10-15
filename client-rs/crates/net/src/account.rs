@@ -59,6 +59,26 @@ pub struct CharList {
     pub owned_skins: Vec<u16>,
     /// `<ClassStats>`: the best level and fame reached with each class.
     pub class_stats: std::collections::HashMap<u16, (i32, i32)>,
+    /// `<News>`: the server's news and the account's dead characters, newest first.
+    pub news: Vec<NewsItem>,
+}
+
+/// One `<News><Item>`. A dead character's links to its fame summary: `fame:<char id>`.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct NewsItem {
+    pub icon: String,
+    pub title: String,
+    pub tagline: String,
+    pub link: String,
+    /// Unix time.
+    pub date: i64,
+}
+
+impl NewsItem {
+    /// The dead character's id, for a death (`SavedNewsItem.isCharDeath`).
+    pub fn death_char_id(&self) -> Option<i32> {
+        self.link.strip_prefix("fame:").and_then(|id| id.trim().parse().ok())
+    }
 }
 
 fn child_text<'a>(node: roxmltree::Node<'a, 'a>, name: &str) -> Option<&'a str> {
@@ -120,6 +140,18 @@ pub fn parse_char_list(xml: &str) -> Result<CharList, String> {
     }
     if let Some(skins) = child_text(root, "OwnedSkins") {
         list.owned_skins = skins.split(',').filter_map(|s| parse_int(s).map(|v| v as u16)).collect();
+    }
+    if let Some(news) = root.children().find(|c| c.has_tag_name("News")) {
+        for i in news.children().filter(|c| c.has_tag_name("Item")) {
+            let text = |n: &str| child_text(i, n).unwrap_or("").to_owned();
+            list.news.push(NewsItem {
+                icon: text("Icon"),
+                title: text("Title"),
+                tagline: text("TagLine"),
+                link: text("Link"),
+                date: child_text(i, "Date").and_then(parse_int).unwrap_or(0),
+            });
+        }
     }
     if let Some(servers) = root.children().find(|c| c.has_tag_name("Servers")) {
         for s in servers.children().filter(|c| c.has_tag_name("Server")) {
@@ -356,6 +388,18 @@ mod tests {
         let (counts, cap) = parse_potions("<StoredPotions>1,2,3,4,5,6,7,8,100</StoredPotions>").unwrap();
         assert_eq!((counts, cap), (vec![1, 2, 3, 4, 5, 6, 7, 8], 100));
         assert_eq!(text_answer("Hello guild"), Ok("Hello guild".into()));
+    }
+
+    #[test]
+    fn graveyard_news() {
+        let xml = r#"<Chars nextCharId="3" maxNumChars="2"><News><Item><Icon>fame</Icon><Title>Your Wizard died at level 5</Title>
+            <TagLine>You earned 12 glorious Fame</TagLine><Link>fame:7</Link><Date>1700000000</Date></Item>
+            <Item><Icon>info</Icon><Title>Patch</Title><TagLine/><Link>https://x</Link><Date>1</Date></Item></News></Chars>"#;
+        let list = parse_char_list(xml).unwrap();
+        assert_eq!(list.news.len(), 2);
+        assert_eq!(list.news[0].death_char_id(), Some(7));
+        assert_eq!(list.news[0].date, 1_700_000_000);
+        assert_eq!(list.news[1].death_char_id(), None);
     }
 
     #[test]

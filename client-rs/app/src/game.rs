@@ -45,6 +45,8 @@ pub struct Game {
     pub floaters: Vec<crate::view::Floater>,
     /// Speech balloons, one per speaker.
     pub bubbles: Vec<crate::view::Bubble>,
+    /// Damage we've done to quest monsters and chests, by object (`Parameters.DamageCounter`).
+    pub dealt: std::collections::HashMap<i32, i32>,
     /// Who we've whispered with, newest last (Tab cycles through them).
     pub tellers: Vec<String>,
     /// The arena's wave and clock (`ArenaMenu`): wave, seconds, since when, running.
@@ -144,6 +146,7 @@ impl Game {
             floaters: Vec::new(),
             bubbles: Vec::new(),
             tellers: Vec::new(),
+            dealt: Default::default(),
             arena: None,
             particles: Default::default(),
             quest: None,
@@ -235,6 +238,7 @@ impl Game {
                 self.world = Some(World::new(info.width as i32, info.height as i32, &info.display_name, info.seed));
                 self.particles.clear();
                 self.arena = None;
+                self.dealt.clear();
                 self.status = format!("Entering {}…", info.display_name);
             }
             Some(Event::Joined { object_id, char_id }) => {
@@ -508,6 +512,10 @@ impl Game {
                     PlayerHit { bullet_id, object_id: owner_id }.into()
                 }
                 Hit::Enemy { time, bullet_id, target_id, kill, damage } => {
+                    let counted = world.objects.get(&target_id).and_then(|o| data.objects.get(&o.object_type)).is_some_and(|d| d.xml.has("Quest") || d.xml.has("Chest"));
+                    if counted {
+                        *self.dealt.entry(target_id).or_default() += damage;
+                    }
                     self.floaters.push(crate::view::Floater::damage(target_id, damage, now));
                     EnemyHit { time, bullet_id, target_id, kill }.into()
                 }

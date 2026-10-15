@@ -118,6 +118,8 @@ struct App {
     chat_scroll: Option<usize>,
     /// Tab's place in the list of people we've whispered with (`TextBox.currentTeller_`).
     teller: usize,
+    /// Players' names in the chat as last drawn, and where (a click opens their menu).
+    chat_names: Vec<(String, [f32; 4])>,
     /// `--say <text>` (desktop tests): sent once we're in the game.
     say: Option<String>,
     /// Whether --say was given (walking waits for the world it may move us to).
@@ -623,6 +625,15 @@ impl App {
                 self.request = Some((Request::ChangePassword(new.clone()), endpoint.change_password(email, &current, &new)));
                 self.front.message = None;
             }
+            Action::ViewDeath(char_id) => {
+                let account_id = self.front.list.as_ref().map(|l| l.account_id);
+                if let (Some(endpoint), Some(account_id)) = (&self.endpoint, account_id) {
+                    self.request = Some((Request::Fame, endpoint.char_fame(account_id, char_id)));
+                    self.front.death_from_graveyard = true;
+                    self.front.busy = "Reading the gravestone…".into();
+                    self.front.show(screens::Screen::Busy);
+                }
+            }
             Action::Legends(span) => {
                 if let Some(endpoint) = &self.endpoint {
                     self.front.legends = None;
@@ -689,6 +700,7 @@ impl App {
         self.front.show(screens::Screen::Chars);
         // After a death: the fame summary first (FameView), then the list.
         let account_id = self.front.list.as_ref().map(|l| l.account_id);
+        self.front.death_from_graveyard = false;
         if let (Some(char_id), Some(account_id), Some(endpoint)) = (death, account_id, &self.endpoint) {
             self.request = Some((Request::Fame, endpoint.char_fame(account_id, char_id)));
             self.front.busy = "Counting your fame…".into();
@@ -1111,6 +1123,20 @@ impl App {
             if let Some(p) = &built {
                 p.moved(&mut self.hud, self.mouse);
                 for (down, pos) in std::mem::take(&mut self.clicks) {
+                    // A player's name in the chat: their menu if they're here, else a whisper.
+                    let (px, py) = (pos.0 as f32, pos.1 as f32);
+                    let name = self.chat_names.iter().find(|(_, r)| px >= r[0] && py >= r[1] && px < r[0] + r[2] && py < r[1] + r[3]);
+                    if let (true, Some((name, _))) = (down, name) {
+                        let here = game.world.as_ref().and_then(|w| {
+                            w.objects.values().find(|o| Some(o.id) != w.me && o.name() == Some(name.as_str()) && data.objects.get(&o.object_type).is_some_and(|d| d.player))
+                        });
+                        match here {
+                            Some(o) => self.hud.open_menu(o.id, pos),
+                            None => self.chat_input = Some(format!("/tell {name} ")),
+                        }
+                        self.mouse_down = false;
+                        continue;
+                    }
                     if down {
                         let taken = self.chat_input.is_none() && p.press(&mut self.hud, &lay, pos, self.shift_held, now, &mut actions);
                         self.mouse_down = !taken;
@@ -1215,7 +1241,7 @@ impl App {
                         let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters, bubbles: &game.bubbles, particles: &game.particles };
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
                         let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
-                        hud::draw_quest(&mut ui, &lay, world, &camera, game.quest, &game.keys);
+                        hud::draw_quest(&mut ui, &lay, world, &camera, game.quest, &game.keys, &game.dealt);
                     }
                     if let Some(p) = &panel {
                         let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
@@ -1231,7 +1257,7 @@ impl App {
                 }
                 let me = game.world.as_ref().and_then(|w| w.player()).and_then(|p| p.name()).unwrap_or("").to_owned();
                 let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
-                hud::draw_chat(&mut ui, &lay, &game.chat, &me, self.chat_input.as_deref(), self.chat_scroll, now);
+                self.chat_names = hud::draw_chat(&mut ui, &lay, &game.chat, &me, self.chat_input.as_deref(), self.chat_scroll, now);
                 if let Some(arena) = game.arena {
                     hud::draw_arena(&mut ui, &lay, arena, now);
                 }
@@ -1572,6 +1598,7 @@ fn main() {
         chat_input: None,
         chat_scroll: None,
         teller: 0,
+        chat_names: Vec::new(),
         chat_send: Vec::new(),
         say: say_arg(),
         say_given: say_arg().map(|_| ()),
