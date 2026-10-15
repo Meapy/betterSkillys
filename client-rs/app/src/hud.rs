@@ -222,6 +222,9 @@ impl MapColors {
 pub mod stat {
     pub const MAX_HP: u8 = 0;
     pub const HP: u8 = 1;
+    /// What items add to the maximum HP and MP.
+    pub const MAX_HP_BOOST: u8 = 46;
+    pub const MAX_MP_BOOST: u8 = 47;
     pub const MAX_MP: u8 = 3;
     pub const MP: u8 = 4;
     pub const NEXT_LEVEL_EXP: u8 = 5;
@@ -956,19 +959,26 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
     let (x, y) = lay.at(44.0, 217.0);
     ui.label(&format!("{class}  ·  Level {level}"), x, y, lay.font(11.0), false, color::TEXT_DIM);
 
-    // Experience (fame at level 20), HP, MP.
+    // Experience (fame at level 20), HP, MP; HP and MP with what items add, and gold when the
+    // base is at the class's maximum (as the stats below show it).
+    let class_max = |tag: &str| {
+        ui.data.objects.get(&me.object_type).and_then(|c| c.xml.child(tag)).and_then(|e| e.attr("max")).and_then(|m| m.parse::<i32>().ok())
+    };
+    let (hp_boost, mp_boost) = (stat(stat::MAX_HP_BOOST), stat(stat::MAX_MP_BOOST));
+    let hp_maxed = class_max("MaxHitPoints").is_some_and(|m| stat(stat::MAX_HP) - hp_boost >= m);
+    let mp_maxed = class_max("MaxMagicPoints").is_some_and(|m| stat(stat::MAX_MP) - mp_boost >= m);
     let bars = [
         if level < 20 {
-            ("XP".to_owned(), stat(stat::EXP), stat(stat::NEXT_LEVEL_EXP), 0x6FAF2E)
+            ("XP".to_owned(), stat(stat::EXP), stat(stat::NEXT_LEVEL_EXP), 0x6FAF2E, 0, false)
         } else {
-            ("Fame".to_owned(), stat(stat::CURR_FAME), stat(stat::NEXT_CLASS_QUEST_FAME), 0xF07A1E)
+            ("Fame".to_owned(), stat(stat::CURR_FAME), stat(stat::NEXT_CLASS_QUEST_FAME), 0xF07A1E, 0, false)
         },
-        ("HP".to_owned(), stat(stat::HP), stat(stat::MAX_HP), 0xE0403E),
-        ("MP".to_owned(), stat(stat::MP), stat(stat::MAX_MP), 0x4C7BE8),
+        ("HP".to_owned(), stat(stat::HP), stat(stat::MAX_HP), 0xE0403E, hp_boost, hp_maxed),
+        ("MP".to_owned(), stat(stat::MP), stat(stat::MAX_MP), 0x4C7BE8, mp_boost, mp_maxed),
     ];
-    for (i, (label, value, max, c)) in bars.into_iter().enumerate() {
+    for (i, (label, value, max, c, boost, maxed)) in bars.into_iter().enumerate() {
         let (bx, by) = lay.at(12.0, 236.0 + 22.0 * i as f32);
-        status_bar(ui, lay, bx, by, &label, value, max, c);
+        status_bar(ui, lay, bx, by, &label, value, max, c, boost, maxed);
     }
 
     // Sections: equipment, inventory, stats, potions.
@@ -1204,7 +1214,10 @@ fn draw_portrait(ui: &mut Ui, lay: &Layout, me: &GameObj) {
 /// A status bar: a rounded dark track, a shaded fill, the label at the left and the numbers at
 /// the right.
 #[allow(clippy::too_many_arguments)]
-fn status_bar(ui: &mut Ui, lay: &Layout, x: f32, y: f32, label: &str, value: i32, max: i32, c: u32) {
+/// `boost` is what items add to the maximum, shown after it in green (red if negative);
+/// `maxed` turns the numbers gold.
+#[allow(clippy::too_many_arguments)]
+fn status_bar(ui: &mut Ui, lay: &Layout, x: f32, y: f32, label: &str, value: i32, max: i32, c: u32, boost: i32, maxed: bool) {
     let s = lay.s;
     let (w, h) = (176.0 * s, 18.0 * s);
     let r = [x, y, w, h];
@@ -1218,9 +1231,21 @@ fn status_bar(ui: &mut Ui, lay: &Layout, x: f32, y: f32, label: &str, value: i32
     let size = lay.font(11.0);
     let ty = y + (h - size * 1.22) / 2.0;
     ui.label(label, x + 6.0 * s, ty, size, true, color::TEXT);
-    let v = format!("{value} / {max}");
-    let vw = ui.measure(&v, size, true);
-    ui.label(&v, x + w - vw - 6.0 * s, ty, size, true, color::TEXT);
+    let (v, m) = (format!("{value} / "), max.to_string());
+    let b = if boost != 0 { format!(" {boost:+}") } else { String::new() };
+    let small = lay.font(9.5);
+    let (vw, mw, bw) = (ui.measure(&v, size, true), ui.measure(&m, size, true), ui.measure(&b, small, true));
+    let mut tx = x + w - vw - mw - bw - 6.0 * s;
+    ui.label(&v, tx, ty, size, true, if maxed { 0xFFD24A } else { color::TEXT });
+    tx += vw;
+    ui.label(&m, tx, ty, size, true, if maxed { 0xFFD24A } else { color::TEXT });
+    tx += mw;
+    if boost != 0 {
+        // On a dark tag, so it reads over the bar's colour.
+        let tag = [tx + 2.0 * s, y + 3.0 * s, bw + 2.0 * s, h - 6.0 * s];
+        theme::fill(ui.renderer, tag, tag[3] / 2.0, 0x000000, 0.55);
+        ui.label(b.trim_start(), tx + 4.0 * s, y + (h - small * 1.22) / 2.0, small, true, if boost > 0 { 0x8CFFA4 } else { 0xFF8C8C });
+    }
 }
 
 /// `MiniMap.draw` at its first zoom (4 units a tile), north up, the player's arrow turned with
