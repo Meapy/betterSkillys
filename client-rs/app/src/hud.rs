@@ -110,6 +110,16 @@ impl Ui<'_> {
         self.text.measure(self.fonts, self.renderer, s, Style { size, bold, color: 0 })
     }
 
+    /// Like `measure`, with emotes as pictures.
+    fn measure_rich(&mut self, s: &str, size: f32) -> f32 {
+        crate::emotes::measure(self.sprites, self.fonts, self.text, self.renderer, s, Style { size, bold: false, color: 0 })
+    }
+
+    /// Like `label`, with emotes as pictures.
+    fn label_rich(&mut self, s: &str, x: f32, y: f32, size: f32, color: u32, now: i32) {
+        crate::emotes::draw(self.sprites, self.fonts, self.text, self.renderer, s, x, y, Style { size, bold: false, color }, now);
+    }
+
     fn src(&self, tex: &TextureData) -> Option<SrcRect> {
         match &tex.pick(0).main {
             TextureRef::Image { set, index } => self.sprites.tile_src(set, *index),
@@ -1817,7 +1827,7 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
         return names;
     }
     // A dark glass behind the lines, so they read over any ground.
-    let widest = rows.iter().map(|row| row.iter().map(|(p, _)| ui.measure(p, size, false)).sum::<f32>()).fold(0.0, f32::max);
+    let widest = rows.iter().map(|row| row.iter().map(|(p, _)| ui.measure_rich(p, size)).sum::<f32>()).fold(0.0, f32::max);
     let back_h = rows.len() as f32 * line_h + 10.0 * s;
     let strong = input.is_some() || scroll.is_some();
     theme::fill(ui.renderer, [margin, bottom - back_h, widest + 16.0 * s, back_h], 6.0 * s, 0x000000, if strong { 0.55 } else { 0.32 });
@@ -1830,14 +1840,14 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
         let y = bottom - 5.0 * s - line_h * (i as f32 + 1.0);
         let mut x = margin + 8.0 * s;
         for (piece, c) in row {
-            let w = ui.measure(piece, size, false);
+            let w = ui.measure_rich(piece, size);
             // A player's name ("<Name> "; not NPCs' or announcements'): clickable.
             if let Some(name) = piece.strip_prefix('<').and_then(|p| p.strip_suffix("> ")) {
                 if !matches!(*c, 0xFFA800 | 0xFFFF00) && !name.is_empty() && name != me {
                     names.push((name.to_owned(), [x, y, w, line_h]));
                 }
             }
-            ui.label(piece, x, y, size, false, *c);
+            ui.label_rich(piece, x, y, size, *c, now);
             x += w;
         }
     }
@@ -1869,17 +1879,17 @@ fn wrap(ui: &mut Ui, pieces: &[(String, u32)], size: f32, max_w: f32) -> Vec<Vec
     let mut x = 0.0;
     for (piece, color) in pieces {
         for word in piece.split_inclusive(' ') {
-            let w = ui.measure(word, size, false);
+            let w = ui.measure_rich(word, size);
             if x + w > max_w && x > 0.0 {
                 rows.push(Vec::new());
                 x = 0.0;
             }
             // A word longer than a row is cut wherever it runs out.
             let mut rest = word;
-            while ui.measure(rest, size, false) > max_w {
+            while ui.measure_rich(rest, size) > max_w {
                 let mut cut = 0;
                 for (i, c) in rest.char_indices() {
-                    if ui.measure(&rest[..i + c.len_utf8()], size, false) > max_w {
+                    if ui.measure_rich(&rest[..i + c.len_utf8()], size) > max_w {
                         break;
                     }
                     cut = i + c.len_utf8();
@@ -1892,7 +1902,7 @@ fn wrap(ui: &mut Ui, pieces: &[(String, u32)], size: f32, max_w: f32) -> Vec<Vec
             }
             if !rest.is_empty() {
                 rows.last_mut().unwrap().push((rest.to_owned(), *color));
-                x += ui.measure(rest, size, false);
+                x += ui.measure_rich(rest, size);
             }
         }
     }

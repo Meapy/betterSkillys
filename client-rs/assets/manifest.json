@@ -3209,5 +3209,9063 @@
  },
  "screens": {
   "title": "kabam/rotmg/ui/view/ProjectOryx1.png"
- }
+ },
+ "emotes": [
+  {
+   "code": ":bocchi:",
+   "frames": [
+    [
+     "animEmotes",
+     0
+    ],
+    [
+     "animEmotes",
+     1
+    ],
+    [
+     "animEmotes",
+     2
+    ],
+    [
+     "animEmotes",
+     3
+    ],
+    [
+     "animEmotes",
+     4
+    ],
+    [
+     "animEmotes",
+     5
+    ],
+    [
+     "animEmotes",
+     6
+    ],
+    [
+     "animEmotes",
+     7
+    ],
+    [
+     "animEmotes",
+     8
+    ],
+    [
+     "animEmotes",
+     9
+    ],
+    [
+     "animEmotes",
+     10
+    ],
+    [
+     "animEmotes",
+     11
+    ],
+    [
+     "animEmotes",
+     12
+    ],
+    [
+     "animEmotes",
+     13
+    ],
+    [
+     "animEmotes",
+     14
+    ]
+   ],
+   "scale": 0.5
+  },
+  {
+   "code": ":pbag:",
+   "frames": [
+    [
+     "lofiObj4",
+     145
+    ]
+   ],
+   "scale": 1.5
+  },
+  {
+   "code": ":cyanbag:",
+   "frames": [
+    [
+     "lofiObj4",
+     146
+    ]
+   ],
+   "scale": 1.5
+  },
+  {
+   "code": ":bluebag:",
+   "frames": [
+    [
+     "lofiObj4",
+     147
+    ]
+   ],
+   "scale": 1.5
+  },
+  {
+   "code": ":whitebag:",
+   "frames": [
+    [
+     "lofiObj4",
+     148
+    ]
+   ],
+   "scale": 1.5
+  },
+  {
+   "code": ":rip:",
+   "frames": [
+    [
+     "lofiChar216x16",
+     39
+    ]
+   ],
+   "scale": 0.75
+  },
+  {
+   "code": ":thumpsup:",
+   "frames": [
+    [
+     "emotes",
+     0
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":thumbsdown:",
+   "frames": [
+    [
+     "emotes",
+     771
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": "</3",
+   "frames": [
+    [
+     "emotes",
+     113
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":)",
+   "frames": [
+    [
+     "emotes",
+     700
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":D",
+   "frames": [
+    [
+     "emotes",
+     702
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":*",
+   "frames": [
+    [
+     "emotes",
+     424
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": "<3",
+   "frames": [
+    [
+     "emotes",
+     360
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":3",
+   "frames": [
+    [
+     "emotes",
+     135
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":P",
+   "frames": [
+    [
+     "emotes",
+     740
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":$",
+   "frames": [
+    [
+     "emotes",
+     94
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":'(",
+   "frames": [
+    [
+     "emotes",
+     215
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ";(",
+   "frames": [
+    [
+     "emotes",
+     713
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ";)",
+   "frames": [
+    [
+     "emotes",
+     864
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":(",
+   "frames": [
+    [
+     "emotes",
+     236
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":kappa:",
+   "frames": [
+    [
+     "emotes",
+     879
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":o",
+   "frames": [
+    [
+     "emotes",
+     392
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":+1:",
+   "frames": [
+    [
+     "emotes",
+     0
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":-1:",
+   "frames": [
+    [
+     "emotes",
+     1
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":8ball:",
+   "frames": [
+    [
+     "emotes",
+     2
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":100:",
+   "frames": [
+    [
+     "emotes",
+     3
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":1234:",
+   "frames": [
+    [
+     "emotes",
+     4
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":a:",
+   "frames": [
+    [
+     "emotes",
+     5
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ab:",
+   "frames": [
+    [
+     "emotes",
+     6
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":abc:",
+   "frames": [
+    [
+     "emotes",
+     7
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":abcd:",
+   "frames": [
+    [
+     "emotes",
+     8
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":accept:",
+   "frames": [
+    [
+     "emotes",
+     9
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":aerial_tramway:",
+   "frames": [
+    [
+     "emotes",
+     10
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":airplane:",
+   "frames": [
+    [
+     "emotes",
+     11
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":alarm_clock:",
+   "frames": [
+    [
+     "emotes",
+     12
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":alien:",
+   "frames": [
+    [
+     "emotes",
+     13
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ambulance:",
+   "frames": [
+    [
+     "emotes",
+     14
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":anchor:",
+   "frames": [
+    [
+     "emotes",
+     15
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":angel:",
+   "frames": [
+    [
+     "emotes",
+     16
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":anger:",
+   "frames": [
+    [
+     "emotes",
+     17
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":angry:",
+   "frames": [
+    [
+     "emotes",
+     18
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":anguished:",
+   "frames": [
+    [
+     "emotes",
+     19
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ant:",
+   "frames": [
+    [
+     "emotes",
+     20
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":apple:",
+   "frames": [
+    [
+     "emotes",
+     21
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":aquarius:",
+   "frames": [
+    [
+     "emotes",
+     22
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":aries:",
+   "frames": [
+    [
+     "emotes",
+     23
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_backward:",
+   "frames": [
+    [
+     "emotes",
+     24
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_double_down:",
+   "frames": [
+    [
+     "emotes",
+     25
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_double_up:",
+   "frames": [
+    [
+     "emotes",
+     26
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_down:",
+   "frames": [
+    [
+     "emotes",
+     27
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_down_small:",
+   "frames": [
+    [
+     "emotes",
+     28
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_forward:",
+   "frames": [
+    [
+     "emotes",
+     29
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_heading_down:",
+   "frames": [
+    [
+     "emotes",
+     30
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_heading_up:",
+   "frames": [
+    [
+     "emotes",
+     31
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_left:",
+   "frames": [
+    [
+     "emotes",
+     32
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_lower_left:",
+   "frames": [
+    [
+     "emotes",
+     33
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_lower_right:",
+   "frames": [
+    [
+     "emotes",
+     34
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_right:",
+   "frames": [
+    [
+     "emotes",
+     35
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_right_hook:",
+   "frames": [
+    [
+     "emotes",
+     36
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_up:",
+   "frames": [
+    [
+     "emotes",
+     37
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_up_down:",
+   "frames": [
+    [
+     "emotes",
+     38
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_up_small:",
+   "frames": [
+    [
+     "emotes",
+     39
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_upper_left:",
+   "frames": [
+    [
+     "emotes",
+     40
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrow_upper_right:",
+   "frames": [
+    [
+     "emotes",
+     41
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrows_clockwise:",
+   "frames": [
+    [
+     "emotes",
+     42
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":arrows_counterclockwise:",
+   "frames": [
+    [
+     "emotes",
+     43
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":art:",
+   "frames": [
+    [
+     "emotes",
+     44
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":articulated_lorry:",
+   "frames": [
+    [
+     "emotes",
+     45
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":astonished:",
+   "frames": [
+    [
+     "emotes",
+     46
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":atm:",
+   "frames": [
+    [
+     "emotes",
+     47
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":b:",
+   "frames": [
+    [
+     "emotes",
+     48
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":baby:",
+   "frames": [
+    [
+     "emotes",
+     49
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":baby_bottle:",
+   "frames": [
+    [
+     "emotes",
+     50
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":baby_chick:",
+   "frames": [
+    [
+     "emotes",
+     51
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":baby_symbol:",
+   "frames": [
+    [
+     "emotes",
+     52
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":back:",
+   "frames": [
+    [
+     "emotes",
+     53
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":baggage_claim:",
+   "frames": [
+    [
+     "emotes",
+     54
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":balloon:",
+   "frames": [
+    [
+     "emotes",
+     55
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ballot_box_with_check:",
+   "frames": [
+    [
+     "emotes",
+     56
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bamboo:",
+   "frames": [
+    [
+     "emotes",
+     57
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":banana:",
+   "frames": [
+    [
+     "emotes",
+     58
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bangbang:",
+   "frames": [
+    [
+     "emotes",
+     59
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bank:",
+   "frames": [
+    [
+     "emotes",
+     60
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bar_chart:",
+   "frames": [
+    [
+     "emotes",
+     61
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":barber:",
+   "frames": [
+    [
+     "emotes",
+     62
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":baseball:",
+   "frames": [
+    [
+     "emotes",
+     63
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":basketball:",
+   "frames": [
+    [
+     "emotes",
+     64
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bath:",
+   "frames": [
+    [
+     "emotes",
+     65
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bathtub:",
+   "frames": [
+    [
+     "emotes",
+     66
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":battery:",
+   "frames": [
+    [
+     "emotes",
+     67
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bear:",
+   "frames": [
+    [
+     "emotes",
+     68
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bee:",
+   "frames": [
+    [
+     "emotes",
+     69
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":beer:",
+   "frames": [
+    [
+     "emotes",
+     70
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":beers:",
+   "frames": [
+    [
+     "emotes",
+     71
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":beetle:",
+   "frames": [
+    [
+     "emotes",
+     72
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":beginner:",
+   "frames": [
+    [
+     "emotes",
+     73
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bell:",
+   "frames": [
+    [
+     "emotes",
+     74
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bento:",
+   "frames": [
+    [
+     "emotes",
+     75
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bicyclist:",
+   "frames": [
+    [
+     "emotes",
+     76
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bike:",
+   "frames": [
+    [
+     "emotes",
+     77
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bikini:",
+   "frames": [
+    [
+     "emotes",
+     78
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bird:",
+   "frames": [
+    [
+     "emotes",
+     79
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":birthday:",
+   "frames": [
+    [
+     "emotes",
+     80
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":black_circle:",
+   "frames": [
+    [
+     "emotes",
+     81
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":black_joker:",
+   "frames": [
+    [
+     "emotes",
+     82
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":black_medium_small_square:",
+   "frames": [
+    [
+     "emotes",
+     83
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":black_medium_square:",
+   "frames": [
+    [
+     "emotes",
+     84
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":black_nib:",
+   "frames": [
+    [
+     "emotes",
+     85
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":black_small_square:",
+   "frames": [
+    [
+     "emotes",
+     86
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":black_square:",
+   "frames": [
+    [
+     "emotes",
+     87
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":black_square_button:",
+   "frames": [
+    [
+     "emotes",
+     88
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":blossom:",
+   "frames": [
+    [
+     "emotes",
+     89
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":blowfish:",
+   "frames": [
+    [
+     "emotes",
+     90
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":blue_book:",
+   "frames": [
+    [
+     "emotes",
+     91
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":blue_car:",
+   "frames": [
+    [
+     "emotes",
+     92
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":blue_heart:",
+   "frames": [
+    [
+     "emotes",
+     93
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":blush:",
+   "frames": [
+    [
+     "emotes",
+     94
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":boar:",
+   "frames": [
+    [
+     "emotes",
+     95
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":boat:",
+   "frames": [
+    [
+     "emotes",
+     96
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bomb:",
+   "frames": [
+    [
+     "emotes",
+     97
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":book:",
+   "frames": [
+    [
+     "emotes",
+     98
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bookmark:",
+   "frames": [
+    [
+     "emotes",
+     99
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bookmark_tabs:",
+   "frames": [
+    [
+     "emotes",
+     100
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":books:",
+   "frames": [
+    [
+     "emotes",
+     101
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":boom:",
+   "frames": [
+    [
+     "emotes",
+     102
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":boot:",
+   "frames": [
+    [
+     "emotes",
+     103
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bouquet:",
+   "frames": [
+    [
+     "emotes",
+     104
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bow:",
+   "frames": [
+    [
+     "emotes",
+     105
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bowling:",
+   "frames": [
+    [
+     "emotes",
+     106
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bowtie:",
+   "frames": [
+    [
+     "emotes",
+     107
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":boy:",
+   "frames": [
+    [
+     "emotes",
+     108
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bread:",
+   "frames": [
+    [
+     "emotes",
+     109
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bride_with_veil:",
+   "frames": [
+    [
+     "emotes",
+     110
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bridge_at_night:",
+   "frames": [
+    [
+     "emotes",
+     111
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":briefcase:",
+   "frames": [
+    [
+     "emotes",
+     112
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":broken_heart:",
+   "frames": [
+    [
+     "emotes",
+     113
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bug:",
+   "frames": [
+    [
+     "emotes",
+     114
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bulb:",
+   "frames": [
+    [
+     "emotes",
+     115
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bullettrain_front:",
+   "frames": [
+    [
+     "emotes",
+     116
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bullettrain_side:",
+   "frames": [
+    [
+     "emotes",
+     117
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bus:",
+   "frames": [
+    [
+     "emotes",
+     118
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":busstop:",
+   "frames": [
+    [
+     "emotes",
+     119
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":bust_in_silhouette:",
+   "frames": [
+    [
+     "emotes",
+     120
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":busts_in_silhouette:",
+   "frames": [
+    [
+     "emotes",
+     121
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cactus:",
+   "frames": [
+    [
+     "emotes",
+     122
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cake:",
+   "frames": [
+    [
+     "emotes",
+     123
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":calendar:",
+   "frames": [
+    [
+     "emotes",
+     124
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":calling:",
+   "frames": [
+    [
+     "emotes",
+     125
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":camel:",
+   "frames": [
+    [
+     "emotes",
+     126
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":camera:",
+   "frames": [
+    [
+     "emotes",
+     127
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cancer:",
+   "frames": [
+    [
+     "emotes",
+     128
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":candy:",
+   "frames": [
+    [
+     "emotes",
+     129
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":capital_abcd:",
+   "frames": [
+    [
+     "emotes",
+     130
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":capricorn:",
+   "frames": [
+    [
+     "emotes",
+     131
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":car:",
+   "frames": [
+    [
+     "emotes",
+     132
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":card_index:",
+   "frames": [
+    [
+     "emotes",
+     133
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":carousel_horse:",
+   "frames": [
+    [
+     "emotes",
+     134
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cat:",
+   "frames": [
+    [
+     "emotes",
+     135
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cat2:",
+   "frames": [
+    [
+     "emotes",
+     136
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cd:",
+   "frames": [
+    [
+     "emotes",
+     137
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":chart:",
+   "frames": [
+    [
+     "emotes",
+     138
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":chart_with_downwards_trend:",
+   "frames": [
+    [
+     "emotes",
+     139
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":chart_with_upwards_trend:",
+   "frames": [
+    [
+     "emotes",
+     140
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":checkered_flag:",
+   "frames": [
+    [
+     "emotes",
+     141
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cherries:",
+   "frames": [
+    [
+     "emotes",
+     142
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cherry_blossom:",
+   "frames": [
+    [
+     "emotes",
+     143
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":chestnut:",
+   "frames": [
+    [
+     "emotes",
+     144
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":chicken:",
+   "frames": [
+    [
+     "emotes",
+     145
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":children_crossing:",
+   "frames": [
+    [
+     "emotes",
+     146
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":chocolate_bar:",
+   "frames": [
+    [
+     "emotes",
+     147
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":christmas_tree:",
+   "frames": [
+    [
+     "emotes",
+     148
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":church:",
+   "frames": [
+    [
+     "emotes",
+     149
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cinema:",
+   "frames": [
+    [
+     "emotes",
+     150
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":circus_tent:",
+   "frames": [
+    [
+     "emotes",
+     151
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":city_sunrise:",
+   "frames": [
+    [
+     "emotes",
+     152
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":city_sunset:",
+   "frames": [
+    [
+     "emotes",
+     153
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cl:",
+   "frames": [
+    [
+     "emotes",
+     154
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clap:",
+   "frames": [
+    [
+     "emotes",
+     155
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clapper:",
+   "frames": [
+    [
+     "emotes",
+     156
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clipboard:",
+   "frames": [
+    [
+     "emotes",
+     157
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock1:",
+   "frames": [
+    [
+     "emotes",
+     158
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock2:",
+   "frames": [
+    [
+     "emotes",
+     159
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock3:",
+   "frames": [
+    [
+     "emotes",
+     160
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock4:",
+   "frames": [
+    [
+     "emotes",
+     161
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock5:",
+   "frames": [
+    [
+     "emotes",
+     162
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock6:",
+   "frames": [
+    [
+     "emotes",
+     163
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock7:",
+   "frames": [
+    [
+     "emotes",
+     164
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock8:",
+   "frames": [
+    [
+     "emotes",
+     165
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock9:",
+   "frames": [
+    [
+     "emotes",
+     166
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock10:",
+   "frames": [
+    [
+     "emotes",
+     167
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock11:",
+   "frames": [
+    [
+     "emotes",
+     168
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock12:",
+   "frames": [
+    [
+     "emotes",
+     169
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock130:",
+   "frames": [
+    [
+     "emotes",
+     170
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock230:",
+   "frames": [
+    [
+     "emotes",
+     171
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock330:",
+   "frames": [
+    [
+     "emotes",
+     172
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock430:",
+   "frames": [
+    [
+     "emotes",
+     173
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock530:",
+   "frames": [
+    [
+     "emotes",
+     174
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock630:",
+   "frames": [
+    [
+     "emotes",
+     175
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock730:",
+   "frames": [
+    [
+     "emotes",
+     176
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock830:",
+   "frames": [
+    [
+     "emotes",
+     177
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock930:",
+   "frames": [
+    [
+     "emotes",
+     178
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock1030:",
+   "frames": [
+    [
+     "emotes",
+     179
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock1130:",
+   "frames": [
+    [
+     "emotes",
+     180
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clock1230:",
+   "frames": [
+    [
+     "emotes",
+     181
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":closed_book:",
+   "frames": [
+    [
+     "emotes",
+     182
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":closed_lock_with_key:",
+   "frames": [
+    [
+     "emotes",
+     183
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":closed_umbrella:",
+   "frames": [
+    [
+     "emotes",
+     184
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cloud:",
+   "frames": [
+    [
+     "emotes",
+     185
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":clubs:",
+   "frames": [
+    [
+     "emotes",
+     186
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cn:",
+   "frames": [
+    [
+     "emotes",
+     187
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cocktail:",
+   "frames": [
+    [
+     "emotes",
+     188
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":coffee:",
+   "frames": [
+    [
+     "emotes",
+     189
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cold_sweat:",
+   "frames": [
+    [
+     "emotes",
+     190
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":collision:",
+   "frames": [
+    [
+     "emotes",
+     191
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":computer:",
+   "frames": [
+    [
+     "emotes",
+     192
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":confetti_ball:",
+   "frames": [
+    [
+     "emotes",
+     193
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":confounded:",
+   "frames": [
+    [
+     "emotes",
+     194
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":confused:",
+   "frames": [
+    [
+     "emotes",
+     195
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":congratulations:",
+   "frames": [
+    [
+     "emotes",
+     196
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":construction:",
+   "frames": [
+    [
+     "emotes",
+     197
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":construction_worker:",
+   "frames": [
+    [
+     "emotes",
+     198
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":convenience_store:",
+   "frames": [
+    [
+     "emotes",
+     199
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cookie:",
+   "frames": [
+    [
+     "emotes",
+     200
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cool:",
+   "frames": [
+    [
+     "emotes",
+     201
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cop:",
+   "frames": [
+    [
+     "emotes",
+     202
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":copyright:",
+   "frames": [
+    [
+     "emotes",
+     203
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":corn:",
+   "frames": [
+    [
+     "emotes",
+     204
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":couple:",
+   "frames": [
+    [
+     "emotes",
+     205
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":couple_with_heart:",
+   "frames": [
+    [
+     "emotes",
+     206
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":couplekiss:",
+   "frames": [
+    [
+     "emotes",
+     207
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cow:",
+   "frames": [
+    [
+     "emotes",
+     208
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cow2:",
+   "frames": [
+    [
+     "emotes",
+     209
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":credit_card:",
+   "frames": [
+    [
+     "emotes",
+     210
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":crescent_moon:",
+   "frames": [
+    [
+     "emotes",
+     211
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":crocodile:",
+   "frames": [
+    [
+     "emotes",
+     212
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":crossed_flags:",
+   "frames": [
+    [
+     "emotes",
+     213
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":crown:",
+   "frames": [
+    [
+     "emotes",
+     214
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cry:",
+   "frames": [
+    [
+     "emotes",
+     215
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":crying_cat_face:",
+   "frames": [
+    [
+     "emotes",
+     216
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":crystal_ball:",
+   "frames": [
+    [
+     "emotes",
+     217
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cupid:",
+   "frames": [
+    [
+     "emotes",
+     218
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":curly_loop:",
+   "frames": [
+    [
+     "emotes",
+     219
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":currency_exchange:",
+   "frames": [
+    [
+     "emotes",
+     220
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":curry:",
+   "frames": [
+    [
+     "emotes",
+     221
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":custard:",
+   "frames": [
+    [
+     "emotes",
+     222
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":customs:",
+   "frames": [
+    [
+     "emotes",
+     223
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":cyclone:",
+   "frames": [
+    [
+     "emotes",
+     224
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dancer:",
+   "frames": [
+    [
+     "emotes",
+     225
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dancers:",
+   "frames": [
+    [
+     "emotes",
+     226
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dango:",
+   "frames": [
+    [
+     "emotes",
+     227
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dart:",
+   "frames": [
+    [
+     "emotes",
+     228
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dash:",
+   "frames": [
+    [
+     "emotes",
+     229
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":date:",
+   "frames": [
+    [
+     "emotes",
+     230
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":de:",
+   "frames": [
+    [
+     "emotes",
+     231
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":deciduous_tree:",
+   "frames": [
+    [
+     "emotes",
+     232
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":department_store:",
+   "frames": [
+    [
+     "emotes",
+     233
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":diamond_shape_with_a_dot_inside:",
+   "frames": [
+    [
+     "emotes",
+     234
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":diamonds:",
+   "frames": [
+    [
+     "emotes",
+     235
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":disappointed:",
+   "frames": [
+    [
+     "emotes",
+     236
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":disappointed_relieved:",
+   "frames": [
+    [
+     "emotes",
+     237
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dizzy:",
+   "frames": [
+    [
+     "emotes",
+     238
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dizzy_face:",
+   "frames": [
+    [
+     "emotes",
+     239
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":do_not_litter:",
+   "frames": [
+    [
+     "emotes",
+     240
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dog:",
+   "frames": [
+    [
+     "emotes",
+     241
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dog2:",
+   "frames": [
+    [
+     "emotes",
+     242
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dollar:",
+   "frames": [
+    [
+     "emotes",
+     243
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dolls:",
+   "frames": [
+    [
+     "emotes",
+     244
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dolphin:",
+   "frames": [
+    [
+     "emotes",
+     245
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":donut:",
+   "frames": [
+    [
+     "emotes",
+     246
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":door:",
+   "frames": [
+    [
+     "emotes",
+     247
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":doughnut:",
+   "frames": [
+    [
+     "emotes",
+     248
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dragon:",
+   "frames": [
+    [
+     "emotes",
+     249
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dragon_face:",
+   "frames": [
+    [
+     "emotes",
+     250
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dress:",
+   "frames": [
+    [
+     "emotes",
+     251
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dromedary_camel:",
+   "frames": [
+    [
+     "emotes",
+     252
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":droplet:",
+   "frames": [
+    [
+     "emotes",
+     253
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":dvd:",
+   "frames": [
+    [
+     "emotes",
+     254
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ear:",
+   "frames": [
+    [
+     "emotes",
+     255
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ear_of_rice:",
+   "frames": [
+    [
+     "emotes",
+     256
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":earth_africa:",
+   "frames": [
+    [
+     "emotes",
+     257
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":earth_americas:",
+   "frames": [
+    [
+     "emotes",
+     258
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":earth_asia:",
+   "frames": [
+    [
+     "emotes",
+     259
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":egg:",
+   "frames": [
+    [
+     "emotes",
+     260
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":eggplant:",
+   "frames": [
+    [
+     "emotes",
+     261
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":eight:",
+   "frames": [
+    [
+     "emotes",
+     262
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":eight_pointed_black_star:",
+   "frames": [
+    [
+     "emotes",
+     263
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":eight_spoked_asterisk:",
+   "frames": [
+    [
+     "emotes",
+     264
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":electric_plug:",
+   "frames": [
+    [
+     "emotes",
+     265
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":elephant:",
+   "frames": [
+    [
+     "emotes",
+     266
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":email:",
+   "frames": [
+    [
+     "emotes",
+     267
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":e-mail:",
+   "frames": [
+    [
+     "emotes",
+     268
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":end:",
+   "frames": [
+    [
+     "emotes",
+     269
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":envelope:",
+   "frames": [
+    [
+     "emotes",
+     270
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":es:",
+   "frames": [
+    [
+     "emotes",
+     271
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":euro:",
+   "frames": [
+    [
+     "emotes",
+     272
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":european_castle:",
+   "frames": [
+    [
+     "emotes",
+     273
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":european_post_office:",
+   "frames": [
+    [
+     "emotes",
+     274
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":evergreen_tree:",
+   "frames": [
+    [
+     "emotes",
+     275
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":exclamation:",
+   "frames": [
+    [
+     "emotes",
+     276
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":expressionless:",
+   "frames": [
+    [
+     "emotes",
+     277
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":eyeglasses:",
+   "frames": [
+    [
+     "emotes",
+     278
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":eyes:",
+   "frames": [
+    [
+     "emotes",
+     279
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":facepunch:",
+   "frames": [
+    [
+     "emotes",
+     280
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":factory:",
+   "frames": [
+    [
+     "emotes",
+     281
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fallen_leaf:",
+   "frames": [
+    [
+     "emotes",
+     282
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":family:",
+   "frames": [
+    [
+     "emotes",
+     283
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fast_forward:",
+   "frames": [
+    [
+     "emotes",
+     284
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fax:",
+   "frames": [
+    [
+     "emotes",
+     285
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fearful:",
+   "frames": [
+    [
+     "emotes",
+     286
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":feelsgood:",
+   "frames": [
+    [
+     "emotes",
+     287
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":feet:",
+   "frames": [
+    [
+     "emotes",
+     288
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ferris_wheel:",
+   "frames": [
+    [
+     "emotes",
+     289
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":file_folder:",
+   "frames": [
+    [
+     "emotes",
+     290
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":finnadie:",
+   "frames": [
+    [
+     "emotes",
+     291
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fire:",
+   "frames": [
+    [
+     "emotes",
+     292
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fire_engine:",
+   "frames": [
+    [
+     "emotes",
+     293
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fireworks:",
+   "frames": [
+    [
+     "emotes",
+     294
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":first_quarter_moon:",
+   "frames": [
+    [
+     "emotes",
+     295
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":first_quarter_moon_with_face:",
+   "frames": [
+    [
+     "emotes",
+     296
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fish:",
+   "frames": [
+    [
+     "emotes",
+     297
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fish_cake:",
+   "frames": [
+    [
+     "emotes",
+     298
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fishing_pole_and_fish:",
+   "frames": [
+    [
+     "emotes",
+     299
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fist:",
+   "frames": [
+    [
+     "emotes",
+     300
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":five:",
+   "frames": [
+    [
+     "emotes",
+     301
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":flags:",
+   "frames": [
+    [
+     "emotes",
+     302
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":flashlight:",
+   "frames": [
+    [
+     "emotes",
+     303
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":floppy_disk:",
+   "frames": [
+    [
+     "emotes",
+     304
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":flower_playing_cards:",
+   "frames": [
+    [
+     "emotes",
+     305
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":flushed:",
+   "frames": [
+    [
+     "emotes",
+     306
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":foggy:",
+   "frames": [
+    [
+     "emotes",
+     307
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":football:",
+   "frames": [
+    [
+     "emotes",
+     308
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fork_and_knife:",
+   "frames": [
+    [
+     "emotes",
+     309
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fountain:",
+   "frames": [
+    [
+     "emotes",
+     310
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":four:",
+   "frames": [
+    [
+     "emotes",
+     311
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":four_leaf_clover:",
+   "frames": [
+    [
+     "emotes",
+     312
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fr:",
+   "frames": [
+    [
+     "emotes",
+     313
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":free:",
+   "frames": [
+    [
+     "emotes",
+     314
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fried_shrimp:",
+   "frames": [
+    [
+     "emotes",
+     315
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fries:",
+   "frames": [
+    [
+     "emotes",
+     316
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":frog:",
+   "frames": [
+    [
+     "emotes",
+     317
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":frowning:",
+   "frames": [
+    [
+     "emotes",
+     318
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fu:",
+   "frames": [
+    [
+     "emotes",
+     319
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":fuelpump:",
+   "frames": [
+    [
+     "emotes",
+     320
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":full_moon:",
+   "frames": [
+    [
+     "emotes",
+     321
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":full_moon_with_face:",
+   "frames": [
+    [
+     "emotes",
+     322
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":game_die:",
+   "frames": [
+    [
+     "emotes",
+     323
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":gb:",
+   "frames": [
+    [
+     "emotes",
+     324
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":gem:",
+   "frames": [
+    [
+     "emotes",
+     325
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":gemini:",
+   "frames": [
+    [
+     "emotes",
+     326
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ghost:",
+   "frames": [
+    [
+     "emotes",
+     327
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":gift:",
+   "frames": [
+    [
+     "emotes",
+     328
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":gift_heart:",
+   "frames": [
+    [
+     "emotes",
+     329
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":girl:",
+   "frames": [
+    [
+     "emotes",
+     330
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":globe_with_meridians:",
+   "frames": [
+    [
+     "emotes",
+     331
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":goat:",
+   "frames": [
+    [
+     "emotes",
+     332
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":goberserk:",
+   "frames": [
+    [
+     "emotes",
+     333
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":godmode:",
+   "frames": [
+    [
+     "emotes",
+     334
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":golf:",
+   "frames": [
+    [
+     "emotes",
+     335
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":grapes:",
+   "frames": [
+    [
+     "emotes",
+     336
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":green_apple:",
+   "frames": [
+    [
+     "emotes",
+     337
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":green_book:",
+   "frames": [
+    [
+     "emotes",
+     338
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":green_heart:",
+   "frames": [
+    [
+     "emotes",
+     339
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":grey_exclamation:",
+   "frames": [
+    [
+     "emotes",
+     340
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":grey_question:",
+   "frames": [
+    [
+     "emotes",
+     341
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":grimacing:",
+   "frames": [
+    [
+     "emotes",
+     342
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":grin:",
+   "frames": [
+    [
+     "emotes",
+     343
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":grinning:",
+   "frames": [
+    [
+     "emotes",
+     344
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":guardsman:",
+   "frames": [
+    [
+     "emotes",
+     345
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":guitar:",
+   "frames": [
+    [
+     "emotes",
+     346
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":gun:",
+   "frames": [
+    [
+     "emotes",
+     347
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":haircut:",
+   "frames": [
+    [
+     "emotes",
+     348
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hamburger:",
+   "frames": [
+    [
+     "emotes",
+     349
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hammer:",
+   "frames": [
+    [
+     "emotes",
+     350
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hamster:",
+   "frames": [
+    [
+     "emotes",
+     351
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hand:",
+   "frames": [
+    [
+     "emotes",
+     352
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":handbag:",
+   "frames": [
+    [
+     "emotes",
+     353
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hankey:",
+   "frames": [
+    [
+     "emotes",
+     354
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hash:",
+   "frames": [
+    [
+     "emotes",
+     355
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hatched_chick:",
+   "frames": [
+    [
+     "emotes",
+     356
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hatching_chick:",
+   "frames": [
+    [
+     "emotes",
+     357
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":headphones:",
+   "frames": [
+    [
+     "emotes",
+     358
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hear_no_evil:",
+   "frames": [
+    [
+     "emotes",
+     359
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heart:",
+   "frames": [
+    [
+     "emotes",
+     360
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heart_decoration:",
+   "frames": [
+    [
+     "emotes",
+     361
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heart_eyes:",
+   "frames": [
+    [
+     "emotes",
+     362
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heart_eyes_cat:",
+   "frames": [
+    [
+     "emotes",
+     363
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heartbeat:",
+   "frames": [
+    [
+     "emotes",
+     364
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heartpulse:",
+   "frames": [
+    [
+     "emotes",
+     365
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hearts:",
+   "frames": [
+    [
+     "emotes",
+     366
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heavy_check_mark:",
+   "frames": [
+    [
+     "emotes",
+     367
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heavy_division_sign:",
+   "frames": [
+    [
+     "emotes",
+     368
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heavy_dollar_sign:",
+   "frames": [
+    [
+     "emotes",
+     369
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heavy_exclamation_mark:",
+   "frames": [
+    [
+     "emotes",
+     370
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heavy_minus_sign:",
+   "frames": [
+    [
+     "emotes",
+     371
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heavy_multiplication_x:",
+   "frames": [
+    [
+     "emotes",
+     372
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":heavy_plus_sign:",
+   "frames": [
+    [
+     "emotes",
+     373
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":helicopter:",
+   "frames": [
+    [
+     "emotes",
+     374
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":herb:",
+   "frames": [
+    [
+     "emotes",
+     375
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hibiscus:",
+   "frames": [
+    [
+     "emotes",
+     376
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":high_brightness:",
+   "frames": [
+    [
+     "emotes",
+     377
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":high_heel:",
+   "frames": [
+    [
+     "emotes",
+     378
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hocho:",
+   "frames": [
+    [
+     "emotes",
+     379
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":honey_pot:",
+   "frames": [
+    [
+     "emotes",
+     380
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":honeybee:",
+   "frames": [
+    [
+     "emotes",
+     381
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":horse:",
+   "frames": [
+    [
+     "emotes",
+     382
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":horse_racing:",
+   "frames": [
+    [
+     "emotes",
+     383
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hospital:",
+   "frames": [
+    [
+     "emotes",
+     384
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hotel:",
+   "frames": [
+    [
+     "emotes",
+     385
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hotsprings:",
+   "frames": [
+    [
+     "emotes",
+     386
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hourglass:",
+   "frames": [
+    [
+     "emotes",
+     387
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hourglass_flowing_sand:",
+   "frames": [
+    [
+     "emotes",
+     388
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":house:",
+   "frames": [
+    [
+     "emotes",
+     389
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":house_with_garden:",
+   "frames": [
+    [
+     "emotes",
+     390
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hurtrealbad:",
+   "frames": [
+    [
+     "emotes",
+     391
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":hushed:",
+   "frames": [
+    [
+     "emotes",
+     392
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ice_cream:",
+   "frames": [
+    [
+     "emotes",
+     393
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":icecream:",
+   "frames": [
+    [
+     "emotes",
+     394
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":id:",
+   "frames": [
+    [
+     "emotes",
+     395
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ideograph_advantage:",
+   "frames": [
+    [
+     "emotes",
+     396
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":imp:",
+   "frames": [
+    [
+     "emotes",
+     397
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":inbox_tray:",
+   "frames": [
+    [
+     "emotes",
+     398
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":incoming_envelope:",
+   "frames": [
+    [
+     "emotes",
+     399
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":information_desk_person:",
+   "frames": [
+    [
+     "emotes",
+     400
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":information_source:",
+   "frames": [
+    [
+     "emotes",
+     401
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":innocent:",
+   "frames": [
+    [
+     "emotes",
+     402
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":interrobang:",
+   "frames": [
+    [
+     "emotes",
+     403
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":iphone:",
+   "frames": [
+    [
+     "emotes",
+     404
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":it:",
+   "frames": [
+    [
+     "emotes",
+     405
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":izakaya_lantern:",
+   "frames": [
+    [
+     "emotes",
+     406
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":jack_o_lantern:",
+   "frames": [
+    [
+     "emotes",
+     407
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":japan:",
+   "frames": [
+    [
+     "emotes",
+     408
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":japanese_castle:",
+   "frames": [
+    [
+     "emotes",
+     409
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":japanese_goblin:",
+   "frames": [
+    [
+     "emotes",
+     410
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":japanese_ogre:",
+   "frames": [
+    [
+     "emotes",
+     411
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":jeans:",
+   "frames": [
+    [
+     "emotes",
+     412
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":joy:",
+   "frames": [
+    [
+     "emotes",
+     413
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":joy_cat:",
+   "frames": [
+    [
+     "emotes",
+     414
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":jp:",
+   "frames": [
+    [
+     "emotes",
+     415
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":key:",
+   "frames": [
+    [
+     "emotes",
+     416
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":keycap_ten:",
+   "frames": [
+    [
+     "emotes",
+     417
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":kimono:",
+   "frames": [
+    [
+     "emotes",
+     418
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":kiss:",
+   "frames": [
+    [
+     "emotes",
+     419
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":kissing:",
+   "frames": [
+    [
+     "emotes",
+     420
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":kissing_cat:",
+   "frames": [
+    [
+     "emotes",
+     421
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":kissing_closed_eyes:",
+   "frames": [
+    [
+     "emotes",
+     422
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":kissing_face:",
+   "frames": [
+    [
+     "emotes",
+     423
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":kissing_heart:",
+   "frames": [
+    [
+     "emotes",
+     424
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":kissing_smiling_eyes:",
+   "frames": [
+    [
+     "emotes",
+     425
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":koala:",
+   "frames": [
+    [
+     "emotes",
+     426
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":koko:",
+   "frames": [
+    [
+     "emotes",
+     427
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":kr:",
+   "frames": [
+    [
+     "emotes",
+     428
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":large_blue_circle:",
+   "frames": [
+    [
+     "emotes",
+     429
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":large_blue_diamond:",
+   "frames": [
+    [
+     "emotes",
+     430
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":large_orange_diamond:",
+   "frames": [
+    [
+     "emotes",
+     431
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":last_quarter_moon:",
+   "frames": [
+    [
+     "emotes",
+     432
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":last_quarter_moon_with_face:",
+   "frames": [
+    [
+     "emotes",
+     433
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":laughing:",
+   "frames": [
+    [
+     "emotes",
+     434
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":leaves:",
+   "frames": [
+    [
+     "emotes",
+     435
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ledger:",
+   "frames": [
+    [
+     "emotes",
+     436
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":left_luggage:",
+   "frames": [
+    [
+     "emotes",
+     437
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":left_right_arrow:",
+   "frames": [
+    [
+     "emotes",
+     438
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":leftwards_arrow_with_hook:",
+   "frames": [
+    [
+     "emotes",
+     439
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":lemon:",
+   "frames": [
+    [
+     "emotes",
+     440
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":leo:",
+   "frames": [
+    [
+     "emotes",
+     441
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":leopard:",
+   "frames": [
+    [
+     "emotes",
+     442
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":libra:",
+   "frames": [
+    [
+     "emotes",
+     443
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":light_rail:",
+   "frames": [
+    [
+     "emotes",
+     444
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":link:",
+   "frames": [
+    [
+     "emotes",
+     445
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":lips:",
+   "frames": [
+    [
+     "emotes",
+     446
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":lipstick:",
+   "frames": [
+    [
+     "emotes",
+     447
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":lock:",
+   "frames": [
+    [
+     "emotes",
+     448
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":lock_with_ink_pen:",
+   "frames": [
+    [
+     "emotes",
+     449
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":lollipop:",
+   "frames": [
+    [
+     "emotes",
+     450
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":loop:",
+   "frames": [
+    [
+     "emotes",
+     451
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":loudspeaker:",
+   "frames": [
+    [
+     "emotes",
+     452
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":love_hotel:",
+   "frames": [
+    [
+     "emotes",
+     453
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":love_letter:",
+   "frames": [
+    [
+     "emotes",
+     454
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":low_brightness:",
+   "frames": [
+    [
+     "emotes",
+     455
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":m:",
+   "frames": [
+    [
+     "emotes",
+     456
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mag:",
+   "frames": [
+    [
+     "emotes",
+     457
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mag_right:",
+   "frames": [
+    [
+     "emotes",
+     458
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mahjong:",
+   "frames": [
+    [
+     "emotes",
+     459
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mailbox:",
+   "frames": [
+    [
+     "emotes",
+     460
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mailbox_closed:",
+   "frames": [
+    [
+     "emotes",
+     461
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mailbox_with_mail:",
+   "frames": [
+    [
+     "emotes",
+     462
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mailbox_with_no_mail:",
+   "frames": [
+    [
+     "emotes",
+     463
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":man:",
+   "frames": [
+    [
+     "emotes",
+     464
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":man_with_gua_pi_mao:",
+   "frames": [
+    [
+     "emotes",
+     465
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":man_with_turban:",
+   "frames": [
+    [
+     "emotes",
+     466
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mans_shoe:",
+   "frames": [
+    [
+     "emotes",
+     467
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":maple_leaf:",
+   "frames": [
+    [
+     "emotes",
+     468
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mask:",
+   "frames": [
+    [
+     "emotes",
+     469
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":massage:",
+   "frames": [
+    [
+     "emotes",
+     470
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":meat_on_bone:",
+   "frames": [
+    [
+     "emotes",
+     471
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mega:",
+   "frames": [
+    [
+     "emotes",
+     472
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":melon:",
+   "frames": [
+    [
+     "emotes",
+     473
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":memo:",
+   "frames": [
+    [
+     "emotes",
+     474
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mens:",
+   "frames": [
+    [
+     "emotes",
+     475
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":metal:",
+   "frames": [
+    [
+     "emotes",
+     476
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":metro:",
+   "frames": [
+    [
+     "emotes",
+     477
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":microphone:",
+   "frames": [
+    [
+     "emotes",
+     478
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":microscope:",
+   "frames": [
+    [
+     "emotes",
+     479
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":milky_way:",
+   "frames": [
+    [
+     "emotes",
+     480
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":minibus:",
+   "frames": [
+    [
+     "emotes",
+     481
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":minidisc:",
+   "frames": [
+    [
+     "emotes",
+     482
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mobile_phone_off:",
+   "frames": [
+    [
+     "emotes",
+     483
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":money_with_wings:",
+   "frames": [
+    [
+     "emotes",
+     484
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":moneybag:",
+   "frames": [
+    [
+     "emotes",
+     485
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":monkey:",
+   "frames": [
+    [
+     "emotes",
+     486
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":monkey_face:",
+   "frames": [
+    [
+     "emotes",
+     487
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":monorail:",
+   "frames": [
+    [
+     "emotes",
+     488
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mortar_board:",
+   "frames": [
+    [
+     "emotes",
+     489
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mount_fuji:",
+   "frames": [
+    [
+     "emotes",
+     490
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mountain_bicyclist:",
+   "frames": [
+    [
+     "emotes",
+     491
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mountain_cableway:",
+   "frames": [
+    [
+     "emotes",
+     492
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mountain_railway:",
+   "frames": [
+    [
+     "emotes",
+     493
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mouse:",
+   "frames": [
+    [
+     "emotes",
+     494
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mouse2:",
+   "frames": [
+    [
+     "emotes",
+     495
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":movie_camera:",
+   "frames": [
+    [
+     "emotes",
+     496
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":moyai:",
+   "frames": [
+    [
+     "emotes",
+     497
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":muscle:",
+   "frames": [
+    [
+     "emotes",
+     498
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mushroom:",
+   "frames": [
+    [
+     "emotes",
+     499
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":musical_keyboard:",
+   "frames": [
+    [
+     "emotes",
+     500
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":musical_note:",
+   "frames": [
+    [
+     "emotes",
+     501
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":musical_score:",
+   "frames": [
+    [
+     "emotes",
+     502
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":mute:",
+   "frames": [
+    [
+     "emotes",
+     503
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":nail_care:",
+   "frames": [
+    [
+     "emotes",
+     504
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":name_badge:",
+   "frames": [
+    [
+     "emotes",
+     505
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":neckbeard:",
+   "frames": [
+    [
+     "emotes",
+     506
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":necktie:",
+   "frames": [
+    [
+     "emotes",
+     507
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":negative_squared_cross_mark:",
+   "frames": [
+    [
+     "emotes",
+     508
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":neutral_face:",
+   "frames": [
+    [
+     "emotes",
+     509
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":new:",
+   "frames": [
+    [
+     "emotes",
+     510
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":new_moon:",
+   "frames": [
+    [
+     "emotes",
+     511
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":new_moon_with_face:",
+   "frames": [
+    [
+     "emotes",
+     512
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":newspaper:",
+   "frames": [
+    [
+     "emotes",
+     513
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ng:",
+   "frames": [
+    [
+     "emotes",
+     514
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":nine:",
+   "frames": [
+    [
+     "emotes",
+     515
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":no_bell:",
+   "frames": [
+    [
+     "emotes",
+     516
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":no_bicycles:",
+   "frames": [
+    [
+     "emotes",
+     517
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":no_entry:",
+   "frames": [
+    [
+     "emotes",
+     518
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":no_entry_sign:",
+   "frames": [
+    [
+     "emotes",
+     519
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":no_good:",
+   "frames": [
+    [
+     "emotes",
+     520
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":no_mobile_phones:",
+   "frames": [
+    [
+     "emotes",
+     521
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":no_mouth:",
+   "frames": [
+    [
+     "emotes",
+     522
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":no_pedestrians:",
+   "frames": [
+    [
+     "emotes",
+     523
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":no_smoking:",
+   "frames": [
+    [
+     "emotes",
+     524
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":non-potable_water:",
+   "frames": [
+    [
+     "emotes",
+     525
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":nose:",
+   "frames": [
+    [
+     "emotes",
+     526
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":notebook:",
+   "frames": [
+    [
+     "emotes",
+     527
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":notebook_with_decorative_cover:",
+   "frames": [
+    [
+     "emotes",
+     528
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":notes:",
+   "frames": [
+    [
+     "emotes",
+     529
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":nut_and_bolt:",
+   "frames": [
+    [
+     "emotes",
+     530
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":o:",
+   "frames": [
+    [
+     "emotes",
+     531
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":o2:",
+   "frames": [
+    [
+     "emotes",
+     532
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ocean:",
+   "frames": [
+    [
+     "emotes",
+     533
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":octocat:",
+   "frames": [
+    [
+     "emotes",
+     534
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":octopus:",
+   "frames": [
+    [
+     "emotes",
+     535
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":oden:",
+   "frames": [
+    [
+     "emotes",
+     536
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":office:",
+   "frames": [
+    [
+     "emotes",
+     537
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ok:",
+   "frames": [
+    [
+     "emotes",
+     538
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ok_hand:",
+   "frames": [
+    [
+     "emotes",
+     539
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ok_woman:",
+   "frames": [
+    [
+     "emotes",
+     540
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":older_man:",
+   "frames": [
+    [
+     "emotes",
+     541
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":older_woman:",
+   "frames": [
+    [
+     "emotes",
+     542
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":on:",
+   "frames": [
+    [
+     "emotes",
+     543
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":oncoming_automobile:",
+   "frames": [
+    [
+     "emotes",
+     544
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":oncoming_bus:",
+   "frames": [
+    [
+     "emotes",
+     545
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":oncoming_police_car:",
+   "frames": [
+    [
+     "emotes",
+     546
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":oncoming_taxi:",
+   "frames": [
+    [
+     "emotes",
+     547
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":one:",
+   "frames": [
+    [
+     "emotes",
+     548
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":open_file_folder:",
+   "frames": [
+    [
+     "emotes",
+     549
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":open_hands:",
+   "frames": [
+    [
+     "emotes",
+     550
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":open_mouth:",
+   "frames": [
+    [
+     "emotes",
+     551
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ophiuchus:",
+   "frames": [
+    [
+     "emotes",
+     552
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":orange_book:",
+   "frames": [
+    [
+     "emotes",
+     553
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":outbox_tray:",
+   "frames": [
+    [
+     "emotes",
+     554
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ox:",
+   "frames": [
+    [
+     "emotes",
+     555
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":package:",
+   "frames": [
+    [
+     "emotes",
+     556
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":page_facing_up:",
+   "frames": [
+    [
+     "emotes",
+     557
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":page_with_curl:",
+   "frames": [
+    [
+     "emotes",
+     558
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pager:",
+   "frames": [
+    [
+     "emotes",
+     559
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":palm_tree:",
+   "frames": [
+    [
+     "emotes",
+     560
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":panda_face:",
+   "frames": [
+    [
+     "emotes",
+     561
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":paperclip:",
+   "frames": [
+    [
+     "emotes",
+     562
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":parking:",
+   "frames": [
+    [
+     "emotes",
+     563
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":part_alternation_mark:",
+   "frames": [
+    [
+     "emotes",
+     564
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":partly_sunny:",
+   "frames": [
+    [
+     "emotes",
+     565
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":passport_control:",
+   "frames": [
+    [
+     "emotes",
+     566
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":paw_prints:",
+   "frames": [
+    [
+     "emotes",
+     567
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":peach:",
+   "frames": [
+    [
+     "emotes",
+     568
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pear:",
+   "frames": [
+    [
+     "emotes",
+     569
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pencil:",
+   "frames": [
+    [
+     "emotes",
+     570
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pencil2:",
+   "frames": [
+    [
+     "emotes",
+     571
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":penguin:",
+   "frames": [
+    [
+     "emotes",
+     572
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pensive:",
+   "frames": [
+    [
+     "emotes",
+     573
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":performing_arts:",
+   "frames": [
+    [
+     "emotes",
+     574
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":persevere:",
+   "frames": [
+    [
+     "emotes",
+     575
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":person_frowning:",
+   "frames": [
+    [
+     "emotes",
+     576
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":person_with_blond_hair:",
+   "frames": [
+    [
+     "emotes",
+     577
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":person_with_pouting_face:",
+   "frames": [
+    [
+     "emotes",
+     578
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":phone:",
+   "frames": [
+    [
+     "emotes",
+     579
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pig:",
+   "frames": [
+    [
+     "emotes",
+     580
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pig_nose:",
+   "frames": [
+    [
+     "emotes",
+     581
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pig2:",
+   "frames": [
+    [
+     "emotes",
+     582
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pill:",
+   "frames": [
+    [
+     "emotes",
+     583
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pineapple:",
+   "frames": [
+    [
+     "emotes",
+     584
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pisces:",
+   "frames": [
+    [
+     "emotes",
+     585
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pizza:",
+   "frames": [
+    [
+     "emotes",
+     586
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":plus1:",
+   "frames": [
+    [
+     "emotes",
+     587
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":point_down:",
+   "frames": [
+    [
+     "emotes",
+     588
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":point_left:",
+   "frames": [
+    [
+     "emotes",
+     589
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":point_right:",
+   "frames": [
+    [
+     "emotes",
+     590
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":point_up:",
+   "frames": [
+    [
+     "emotes",
+     591
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":point_up_2:",
+   "frames": [
+    [
+     "emotes",
+     592
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":police_car:",
+   "frames": [
+    [
+     "emotes",
+     593
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":poodle:",
+   "frames": [
+    [
+     "emotes",
+     594
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":poop:",
+   "frames": [
+    [
+     "emotes",
+     595
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":post_office:",
+   "frames": [
+    [
+     "emotes",
+     596
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":postal_horn:",
+   "frames": [
+    [
+     "emotes",
+     597
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":postbox:",
+   "frames": [
+    [
+     "emotes",
+     598
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":potable_water:",
+   "frames": [
+    [
+     "emotes",
+     599
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pouch:",
+   "frames": [
+    [
+     "emotes",
+     600
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":poultry_leg:",
+   "frames": [
+    [
+     "emotes",
+     601
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pound:",
+   "frames": [
+    [
+     "emotes",
+     602
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pouting_cat:",
+   "frames": [
+    [
+     "emotes",
+     603
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pray:",
+   "frames": [
+    [
+     "emotes",
+     604
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":princess:",
+   "frames": [
+    [
+     "emotes",
+     605
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":punch:",
+   "frames": [
+    [
+     "emotes",
+     606
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":purple_heart:",
+   "frames": [
+    [
+     "emotes",
+     607
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":purse:",
+   "frames": [
+    [
+     "emotes",
+     608
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":pushpin:",
+   "frames": [
+    [
+     "emotes",
+     609
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":put_litter_in_its_place:",
+   "frames": [
+    [
+     "emotes",
+     610
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":question:",
+   "frames": [
+    [
+     "emotes",
+     611
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rabbit:",
+   "frames": [
+    [
+     "emotes",
+     612
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rabbit2:",
+   "frames": [
+    [
+     "emotes",
+     613
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":racehorse:",
+   "frames": [
+    [
+     "emotes",
+     614
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":radio:",
+   "frames": [
+    [
+     "emotes",
+     615
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":radio_button:",
+   "frames": [
+    [
+     "emotes",
+     616
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rage:",
+   "frames": [
+    [
+     "emotes",
+     617
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rage1:",
+   "frames": [
+    [
+     "emotes",
+     618
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rage2:",
+   "frames": [
+    [
+     "emotes",
+     619
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rage3:",
+   "frames": [
+    [
+     "emotes",
+     620
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rage4:",
+   "frames": [
+    [
+     "emotes",
+     621
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":railway_car:",
+   "frames": [
+    [
+     "emotes",
+     622
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rainbow:",
+   "frames": [
+    [
+     "emotes",
+     623
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":raised_hand:",
+   "frames": [
+    [
+     "emotes",
+     624
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":raised_hands:",
+   "frames": [
+    [
+     "emotes",
+     625
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":raising_hand:",
+   "frames": [
+    [
+     "emotes",
+     626
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ram:",
+   "frames": [
+    [
+     "emotes",
+     627
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ramen:",
+   "frames": [
+    [
+     "emotes",
+     628
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rat:",
+   "frames": [
+    [
+     "emotes",
+     629
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":recycle:",
+   "frames": [
+    [
+     "emotes",
+     630
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":red_car:",
+   "frames": [
+    [
+     "emotes",
+     631
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":red_circle:",
+   "frames": [
+    [
+     "emotes",
+     632
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":registered:",
+   "frames": [
+    [
+     "emotes",
+     633
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":relaxed:",
+   "frames": [
+    [
+     "emotes",
+     634
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":relieved:",
+   "frames": [
+    [
+     "emotes",
+     635
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":repeat:",
+   "frames": [
+    [
+     "emotes",
+     636
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":repeat_one:",
+   "frames": [
+    [
+     "emotes",
+     637
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":restroom:",
+   "frames": [
+    [
+     "emotes",
+     638
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":revolving_hearts:",
+   "frames": [
+    [
+     "emotes",
+     639
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rewind:",
+   "frames": [
+    [
+     "emotes",
+     640
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ribbon:",
+   "frames": [
+    [
+     "emotes",
+     641
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rice:",
+   "frames": [
+    [
+     "emotes",
+     642
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rice_ball:",
+   "frames": [
+    [
+     "emotes",
+     643
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rice_cracker:",
+   "frames": [
+    [
+     "emotes",
+     644
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rice_scene:",
+   "frames": [
+    [
+     "emotes",
+     645
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ring:",
+   "frames": [
+    [
+     "emotes",
+     646
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rocket:",
+   "frames": [
+    [
+     "emotes",
+     647
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":roller_coaster:",
+   "frames": [
+    [
+     "emotes",
+     648
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rooster:",
+   "frames": [
+    [
+     "emotes",
+     649
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rose:",
+   "frames": [
+    [
+     "emotes",
+     650
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rotating_light:",
+   "frames": [
+    [
+     "emotes",
+     651
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":round_pushpin:",
+   "frames": [
+    [
+     "emotes",
+     652
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rowboat:",
+   "frames": [
+    [
+     "emotes",
+     653
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ru:",
+   "frames": [
+    [
+     "emotes",
+     654
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":rugby_football:",
+   "frames": [
+    [
+     "emotes",
+     655
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":runner:",
+   "frames": [
+    [
+     "emotes",
+     656
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":running:",
+   "frames": [
+    [
+     "emotes",
+     657
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":running_shirt_with_sash:",
+   "frames": [
+    [
+     "emotes",
+     658
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sa:",
+   "frames": [
+    [
+     "emotes",
+     659
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sagittarius:",
+   "frames": [
+    [
+     "emotes",
+     660
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sailboat:",
+   "frames": [
+    [
+     "emotes",
+     661
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sake:",
+   "frames": [
+    [
+     "emotes",
+     662
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sandal:",
+   "frames": [
+    [
+     "emotes",
+     663
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":santa:",
+   "frames": [
+    [
+     "emotes",
+     664
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":satellite:",
+   "frames": [
+    [
+     "emotes",
+     665
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":satisfied:",
+   "frames": [
+    [
+     "emotes",
+     666
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":saxophone:",
+   "frames": [
+    [
+     "emotes",
+     667
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":school:",
+   "frames": [
+    [
+     "emotes",
+     668
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":school_satchel:",
+   "frames": [
+    [
+     "emotes",
+     669
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":scissors:",
+   "frames": [
+    [
+     "emotes",
+     670
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":scorpius:",
+   "frames": [
+    [
+     "emotes",
+     671
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":scream:",
+   "frames": [
+    [
+     "emotes",
+     672
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":scream_cat:",
+   "frames": [
+    [
+     "emotes",
+     673
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":scroll:",
+   "frames": [
+    [
+     "emotes",
+     674
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":seat:",
+   "frames": [
+    [
+     "emotes",
+     675
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":secret:",
+   "frames": [
+    [
+     "emotes",
+     676
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":see_no_evil:",
+   "frames": [
+    [
+     "emotes",
+     677
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":seedling:",
+   "frames": [
+    [
+     "emotes",
+     678
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":seven:",
+   "frames": [
+    [
+     "emotes",
+     679
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":shaved_ice:",
+   "frames": [
+    [
+     "emotes",
+     680
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sheep:",
+   "frames": [
+    [
+     "emotes",
+     681
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":shell:",
+   "frames": [
+    [
+     "emotes",
+     682
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ship:",
+   "frames": [
+    [
+     "emotes",
+     683
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":shirt:",
+   "frames": [
+    [
+     "emotes",
+     684
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":shit:",
+   "frames": [
+    [
+     "emotes",
+     685
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":shoe:",
+   "frames": [
+    [
+     "emotes",
+     686
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":shower:",
+   "frames": [
+    [
+     "emotes",
+     687
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":signal_strength:",
+   "frames": [
+    [
+     "emotes",
+     688
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":six:",
+   "frames": [
+    [
+     "emotes",
+     689
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":six_pointed_star:",
+   "frames": [
+    [
+     "emotes",
+     690
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ski:",
+   "frames": [
+    [
+     "emotes",
+     691
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":skull:",
+   "frames": [
+    [
+     "emotes",
+     692
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sleeping:",
+   "frames": [
+    [
+     "emotes",
+     693
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sleepy:",
+   "frames": [
+    [
+     "emotes",
+     694
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":slot_machine:",
+   "frames": [
+    [
+     "emotes",
+     695
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":small_blue_diamond:",
+   "frames": [
+    [
+     "emotes",
+     696
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":small_orange_diamond:",
+   "frames": [
+    [
+     "emotes",
+     697
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":small_red_triangle:",
+   "frames": [
+    [
+     "emotes",
+     698
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":small_red_triangle_down:",
+   "frames": [
+    [
+     "emotes",
+     699
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":smile:",
+   "frames": [
+    [
+     "emotes",
+     700
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":smile_cat:",
+   "frames": [
+    [
+     "emotes",
+     701
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":smiley:",
+   "frames": [
+    [
+     "emotes",
+     702
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":smiley_cat:",
+   "frames": [
+    [
+     "emotes",
+     703
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":smiling_imp:",
+   "frames": [
+    [
+     "emotes",
+     704
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":smirk:",
+   "frames": [
+    [
+     "emotes",
+     705
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":smirk_cat:",
+   "frames": [
+    [
+     "emotes",
+     706
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":smoking:",
+   "frames": [
+    [
+     "emotes",
+     707
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":snail:",
+   "frames": [
+    [
+     "emotes",
+     708
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":snake:",
+   "frames": [
+    [
+     "emotes",
+     709
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":snowboarder:",
+   "frames": [
+    [
+     "emotes",
+     710
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":snowflake:",
+   "frames": [
+    [
+     "emotes",
+     711
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":snowman:",
+   "frames": [
+    [
+     "emotes",
+     712
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sob:",
+   "frames": [
+    [
+     "emotes",
+     713
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":soccer:",
+   "frames": [
+    [
+     "emotes",
+     714
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":soon:",
+   "frames": [
+    [
+     "emotes",
+     715
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sos:",
+   "frames": [
+    [
+     "emotes",
+     716
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sound:",
+   "frames": [
+    [
+     "emotes",
+     717
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":space_invader:",
+   "frames": [
+    [
+     "emotes",
+     718
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":spades:",
+   "frames": [
+    [
+     "emotes",
+     719
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":spaghetti:",
+   "frames": [
+    [
+     "emotes",
+     720
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sparkle:",
+   "frames": [
+    [
+     "emotes",
+     721
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sparkler:",
+   "frames": [
+    [
+     "emotes",
+     722
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sparkles:",
+   "frames": [
+    [
+     "emotes",
+     723
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sparkling_heart:",
+   "frames": [
+    [
+     "emotes",
+     724
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":speak_no_evil:",
+   "frames": [
+    [
+     "emotes",
+     725
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":speaker:",
+   "frames": [
+    [
+     "emotes",
+     726
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":speech_balloon:",
+   "frames": [
+    [
+     "emotes",
+     727
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":speedboat:",
+   "frames": [
+    [
+     "emotes",
+     728
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":star:",
+   "frames": [
+    [
+     "emotes",
+     729
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":star2:",
+   "frames": [
+    [
+     "emotes",
+     730
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":stars:",
+   "frames": [
+    [
+     "emotes",
+     731
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":station:",
+   "frames": [
+    [
+     "emotes",
+     732
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":statue_of_liberty:",
+   "frames": [
+    [
+     "emotes",
+     733
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":steam_locomotive:",
+   "frames": [
+    [
+     "emotes",
+     734
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":stew:",
+   "frames": [
+    [
+     "emotes",
+     735
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":straight_ruler:",
+   "frames": [
+    [
+     "emotes",
+     736
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":strawberry:",
+   "frames": [
+    [
+     "emotes",
+     737
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":stuck_out_tongue:",
+   "frames": [
+    [
+     "emotes",
+     738
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":stuck_out_tongue_closed_eyes:",
+   "frames": [
+    [
+     "emotes",
+     739
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":stuck_out_tongue_winking_eye:",
+   "frames": [
+    [
+     "emotes",
+     740
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sun_with_face:",
+   "frames": [
+    [
+     "emotes",
+     741
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sunflower:",
+   "frames": [
+    [
+     "emotes",
+     742
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sunglasses:",
+   "frames": [
+    [
+     "emotes",
+     743
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sunny:",
+   "frames": [
+    [
+     "emotes",
+     744
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sunrise:",
+   "frames": [
+    [
+     "emotes",
+     745
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sunrise_over_mountains:",
+   "frames": [
+    [
+     "emotes",
+     746
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":surfer:",
+   "frames": [
+    [
+     "emotes",
+     747
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sushi:",
+   "frames": [
+    [
+     "emotes",
+     748
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":suspect:",
+   "frames": [
+    [
+     "emotes",
+     749
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":suspension_railway:",
+   "frames": [
+    [
+     "emotes",
+     750
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sweat:",
+   "frames": [
+    [
+     "emotes",
+     751
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sweat_drops:",
+   "frames": [
+    [
+     "emotes",
+     752
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sweat_smile:",
+   "frames": [
+    [
+     "emotes",
+     753
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":sweet_potato:",
+   "frames": [
+    [
+     "emotes",
+     754
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":swimmer:",
+   "frames": [
+    [
+     "emotes",
+     755
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":symbols:",
+   "frames": [
+    [
+     "emotes",
+     756
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":syringe:",
+   "frames": [
+    [
+     "emotes",
+     757
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tada:",
+   "frames": [
+    [
+     "emotes",
+     758
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tanabata_tree:",
+   "frames": [
+    [
+     "emotes",
+     759
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tangerine:",
+   "frames": [
+    [
+     "emotes",
+     760
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":taurus:",
+   "frames": [
+    [
+     "emotes",
+     761
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":taxi:",
+   "frames": [
+    [
+     "emotes",
+     762
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tea:",
+   "frames": [
+    [
+     "emotes",
+     763
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":telephone:",
+   "frames": [
+    [
+     "emotes",
+     764
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":telephone_receiver:",
+   "frames": [
+    [
+     "emotes",
+     765
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":telescope:",
+   "frames": [
+    [
+     "emotes",
+     766
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tennis:",
+   "frames": [
+    [
+     "emotes",
+     767
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tent:",
+   "frames": [
+    [
+     "emotes",
+     768
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":thought_balloon:",
+   "frames": [
+    [
+     "emotes",
+     769
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":three:",
+   "frames": [
+    [
+     "emotes",
+     770
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":thumbsup:",
+   "frames": [
+    [
+     "emotes",
+     772
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":ticket:",
+   "frames": [
+    [
+     "emotes",
+     773
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tiger:",
+   "frames": [
+    [
+     "emotes",
+     774
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tiger2:",
+   "frames": [
+    [
+     "emotes",
+     775
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tired_face:",
+   "frames": [
+    [
+     "emotes",
+     776
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tm:",
+   "frames": [
+    [
+     "emotes",
+     777
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":toilet:",
+   "frames": [
+    [
+     "emotes",
+     778
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tokyo_tower:",
+   "frames": [
+    [
+     "emotes",
+     779
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tomato:",
+   "frames": [
+    [
+     "emotes",
+     780
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tongue:",
+   "frames": [
+    [
+     "emotes",
+     781
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":top:",
+   "frames": [
+    [
+     "emotes",
+     782
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tophat:",
+   "frames": [
+    [
+     "emotes",
+     783
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tractor:",
+   "frames": [
+    [
+     "emotes",
+     784
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":traffic_light:",
+   "frames": [
+    [
+     "emotes",
+     785
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":train:",
+   "frames": [
+    [
+     "emotes",
+     786
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":train2:",
+   "frames": [
+    [
+     "emotes",
+     787
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tram:",
+   "frames": [
+    [
+     "emotes",
+     788
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":triangular_flag_on_post:",
+   "frames": [
+    [
+     "emotes",
+     789
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":triangular_ruler:",
+   "frames": [
+    [
+     "emotes",
+     790
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":trident:",
+   "frames": [
+    [
+     "emotes",
+     791
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":triumph:",
+   "frames": [
+    [
+     "emotes",
+     792
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":trolleybus:",
+   "frames": [
+    [
+     "emotes",
+     793
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":trollface:",
+   "frames": [
+    [
+     "emotes",
+     794
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":trophy:",
+   "frames": [
+    [
+     "emotes",
+     795
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tropical_drink:",
+   "frames": [
+    [
+     "emotes",
+     796
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tropical_fish:",
+   "frames": [
+    [
+     "emotes",
+     797
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":truck:",
+   "frames": [
+    [
+     "emotes",
+     798
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":trumpet:",
+   "frames": [
+    [
+     "emotes",
+     799
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tshirt:",
+   "frames": [
+    [
+     "emotes",
+     800
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tulip:",
+   "frames": [
+    [
+     "emotes",
+     801
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":turtle:",
+   "frames": [
+    [
+     "emotes",
+     802
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":tv:",
+   "frames": [
+    [
+     "emotes",
+     803
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":twisted_rightwards_arrows:",
+   "frames": [
+    [
+     "emotes",
+     804
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":two:",
+   "frames": [
+    [
+     "emotes",
+     805
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":two_hearts:",
+   "frames": [
+    [
+     "emotes",
+     806
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":two_men_holding_hands:",
+   "frames": [
+    [
+     "emotes",
+     807
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":two_women_holding_hands:",
+   "frames": [
+    [
+     "emotes",
+     808
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u6e80:",
+   "frames": [
+    [
+     "emotes",
+     809
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u7a7a:",
+   "frames": [
+    [
+     "emotes",
+     810
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u55b6:",
+   "frames": [
+    [
+     "emotes",
+     811
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u5272:",
+   "frames": [
+    [
+     "emotes",
+     812
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u5408:",
+   "frames": [
+    [
+     "emotes",
+     813
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u6307:",
+   "frames": [
+    [
+     "emotes",
+     814
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u6708:",
+   "frames": [
+    [
+     "emotes",
+     815
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u6709:",
+   "frames": [
+    [
+     "emotes",
+     816
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u7121:",
+   "frames": [
+    [
+     "emotes",
+     817
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u7533:",
+   "frames": [
+    [
+     "emotes",
+     818
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":u7981:",
+   "frames": [
+    [
+     "emotes",
+     819
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":uk:",
+   "frames": [
+    [
+     "emotes",
+     820
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":umbrella:",
+   "frames": [
+    [
+     "emotes",
+     821
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":unamused:",
+   "frames": [
+    [
+     "emotes",
+     822
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":underage:",
+   "frames": [
+    [
+     "emotes",
+     823
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":unlock:",
+   "frames": [
+    [
+     "emotes",
+     824
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":up:",
+   "frames": [
+    [
+     "emotes",
+     825
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":us:",
+   "frames": [
+    [
+     "emotes",
+     826
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":v:",
+   "frames": [
+    [
+     "emotes",
+     827
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":vertical_traffic_light:",
+   "frames": [
+    [
+     "emotes",
+     828
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":vhs:",
+   "frames": [
+    [
+     "emotes",
+     829
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":vibration_mode:",
+   "frames": [
+    [
+     "emotes",
+     830
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":video_camera:",
+   "frames": [
+    [
+     "emotes",
+     831
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":video_game:",
+   "frames": [
+    [
+     "emotes",
+     832
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":violin:",
+   "frames": [
+    [
+     "emotes",
+     833
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":virgo:",
+   "frames": [
+    [
+     "emotes",
+     834
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":volcano:",
+   "frames": [
+    [
+     "emotes",
+     835
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":vs:",
+   "frames": [
+    [
+     "emotes",
+     836
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":walking:",
+   "frames": [
+    [
+     "emotes",
+     837
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":waning_crescent_moon:",
+   "frames": [
+    [
+     "emotes",
+     838
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":waning_gibbous_moon:",
+   "frames": [
+    [
+     "emotes",
+     839
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":warning:",
+   "frames": [
+    [
+     "emotes",
+     840
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":watch:",
+   "frames": [
+    [
+     "emotes",
+     841
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":water_buffalo:",
+   "frames": [
+    [
+     "emotes",
+     842
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":watermelon:",
+   "frames": [
+    [
+     "emotes",
+     843
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":wave:",
+   "frames": [
+    [
+     "emotes",
+     844
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":wavy_dash:",
+   "frames": [
+    [
+     "emotes",
+     845
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":waxing_crescent_moon:",
+   "frames": [
+    [
+     "emotes",
+     846
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":waxing_gibbous_moon:",
+   "frames": [
+    [
+     "emotes",
+     847
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":wc:",
+   "frames": [
+    [
+     "emotes",
+     848
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":weary:",
+   "frames": [
+    [
+     "emotes",
+     849
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":wedding:",
+   "frames": [
+    [
+     "emotes",
+     850
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":whale:",
+   "frames": [
+    [
+     "emotes",
+     851
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":whale2:",
+   "frames": [
+    [
+     "emotes",
+     852
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":wheelchair:",
+   "frames": [
+    [
+     "emotes",
+     853
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":white_check_mark:",
+   "frames": [
+    [
+     "emotes",
+     854
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":white_circle:",
+   "frames": [
+    [
+     "emotes",
+     855
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":white_flower:",
+   "frames": [
+    [
+     "emotes",
+     856
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":white_large_square:",
+   "frames": [
+    [
+     "emotes",
+     857
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":white_medium_small_square:",
+   "frames": [
+    [
+     "emotes",
+     858
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":white_medium_square:",
+   "frames": [
+    [
+     "emotes",
+     859
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":white_small_square:",
+   "frames": [
+    [
+     "emotes",
+     860
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":white_square_button:",
+   "frames": [
+    [
+     "emotes",
+     861
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":wind_chime:",
+   "frames": [
+    [
+     "emotes",
+     862
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":wine_glass:",
+   "frames": [
+    [
+     "emotes",
+     863
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":wink:",
+   "frames": [
+    [
+     "emotes",
+     864
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":wolf:",
+   "frames": [
+    [
+     "emotes",
+     865
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":woman:",
+   "frames": [
+    [
+     "emotes",
+     866
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":womans_clothes:",
+   "frames": [
+    [
+     "emotes",
+     867
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":womans_hat:",
+   "frames": [
+    [
+     "emotes",
+     868
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":womens:",
+   "frames": [
+    [
+     "emotes",
+     869
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":worried:",
+   "frames": [
+    [
+     "emotes",
+     870
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":wrench:",
+   "frames": [
+    [
+     "emotes",
+     871
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":x:",
+   "frames": [
+    [
+     "emotes",
+     872
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":yellow_heart:",
+   "frames": [
+    [
+     "emotes",
+     873
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":yen:",
+   "frames": [
+    [
+     "emotes",
+     874
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":yum:",
+   "frames": [
+    [
+     "emotes",
+     875
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":zap:",
+   "frames": [
+    [
+     "emotes",
+     876
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":zero:",
+   "frames": [
+    [
+     "emotes",
+     877
+    ]
+   ],
+   "scale": 1.0
+  },
+  {
+   "code": ":zzz:",
+   "frames": [
+    [
+     "emotes",
+     878
+    ]
+   ],
+   "scale": 1.0
+  }
+ ]
 }

@@ -17,6 +17,23 @@ pub struct Manifest {
     /// Images for the screens outside the game.
     #[serde(default)]
     pub screens: Screens,
+    /// `Emotes`: words drawn as pictures in chat and speech balloons.
+    #[serde(default)]
+    pub emotes: Vec<EmoteDef>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct EmoteDef {
+    /// The text that turns into it, like `:)` or `:kappa:`.
+    pub code: String,
+    /// (image set, index) of each frame; more than one is animated.
+    pub frames: Vec<(String, u32)>,
+    #[serde(default = "one")]
+    pub scale: f32,
+}
+
+fn one() -> f32 {
+    1.0
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]

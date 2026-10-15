@@ -411,14 +411,14 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         for word in b.text.split(' ') {
             let line = lines.last_mut().unwrap();
             let candidate = if line.is_empty() { word.to_owned() } else { format!("{line} {word}") };
-            if !line.is_empty() && text.measure(fonts, renderer, &candidate, style) > max_w {
+            if !line.is_empty() && crate::emotes::measure(scene.sprites, fonts, text, renderer, &candidate, style) > max_w {
                 lines.push(word.to_owned());
             } else {
                 *line = candidate;
             }
         }
         let line_h = size * 1.2;
-        let w = lines.iter().map(|l| text.measure(fonts, renderer, l, style)).fold(0.0, f32::max);
+        let w = lines.iter().map(|l| crate::emotes::measure(scene.sprites, fonts, text, renderer, l, style)).fold(0.0, f32::max);
         let h = line_h * lines.len() as f32;
         let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
         let size_pct = obj.stat_int(2).unwrap_or(100) as f32 / 100.0;
@@ -434,7 +434,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         renderer.triangle(white, [[px - 8.0 * k, tail_top], [px + 8.0 * k, tail_top], [px, tail_top + 12.0 * k]], [[0.5, 0.5]; 3], Tint::color(b.colors[1], 1.0));
         renderer.triangle(white, [[px - 6.0 * k, tail_top - k], [px + 6.0 * k, tail_top - k], [px, tail_top + 9.0 * k]], [[0.5, 0.5]; 3], Tint::color(b.colors[0], 1.0));
         for (i, line) in lines.iter().enumerate() {
-            text.draw(fonts, renderer, line, bx + 6.0 * k, by + 6.0 * k + line_h * i as f32, style);
+            crate::emotes::draw(scene.sprites, fonts, text, renderer, line, bx + 6.0 * k, by + 6.0 * k + line_h * i as f32, style, scene.time);
         }
     }
 

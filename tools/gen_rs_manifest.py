@@ -24,6 +24,9 @@ ASSET_LOADER = "com/company/assembleegameclient/util/AssetLoader.as"
 EMBEDDED_ASSETS = "kabam/rotmg/assets/EmbeddedAssets.as"
 EMBEDDED_DATA = "kabam/rotmg/assets/EmbeddedData.as"
 DOOMED_ASSETS = "kabam/rotmg/assets/doomed/DoomedAssets.as"
+EMOTES = "kabam/rotmg/emotes/Emotes.as"
+EMOTES_XML = "kabam/rotmg/assets/custom/xmls/EmotesXML.xml"
+ADD_EMOTE = re.compile(r'addEmote\("((?:[^"\\]|\\.)*)",\s*AssetLibrary\.getImageFromSet\("(\w+)",\s*(\d+)\)(?:,\s*([\d.]+))?')
 
 EMBED_VAR = re.compile(
     r'\[Embed\(source="([^"]+)"[^\]]*\)\]\s*(?:public|private)\s+static\s+(?:var|const)\s+(\w+)\s*:\s*Class')
@@ -122,6 +125,26 @@ def data_files(code, scope, array):
     return [scope.resolve(name, "EmbeddedData") for name in re.findall(r"new\s+(\w+)\(\)", m.group(1))]
 
 
+def emotes():
+    """`Emotes.load`: the XML's emotes and animated emotes, then the ones added in code (a later
+    code replaces an earlier one). Each is the text that turns into it, its frames and scale."""
+    import xml.etree.ElementTree as ET
+    found = {}
+    root = ET.fromstring(read(EMOTES_XML))
+    for e in root.iter("Emote"):
+        tex = e.find("Texture")
+        found[":" + e.get("id") + ":"] = {"frames": [[tex.findtext("File"), int(tex.findtext("Index"), 0)]],
+                                           "scale": float(e.get("scale") or 1)}
+    for e in root.iter("AnimatedEmote"):
+        frames = [[f.findtext("File"), int(f.findtext("Index"), 0)] for f in e.iter("Frame")]
+        found[":" + e.get("id") + ":"] = {"frames": frames, "scale": float(e.get("scale") or 1)}
+    code = strip_comments(read(EMOTES))
+    for text, sheet, index, scale in ADD_EMOTE.findall(code):
+        text = text.replace("\\'", "'").replace('\\"', '"')
+        found[text] = {"frames": [[sheet, int(index)]], "scale": float(scale or 1)}
+    return [{"code": k, **v} for k, v in found.items()]
+
+
 def main():
     assets = Scope(EMBEDDED_ASSETS)
     doomed = Scope(DOOMED_ASSETS)
@@ -148,6 +171,8 @@ def main():
         "fonts": {"regular": "com/company/ui/fonts/MyriadPro.otf", "bold": "com/company/ui/fonts/MyriadProBold.otf"},
         # The title screen's background (TitleView's NewHomeScreen).
         "screens": {"title": "kabam/rotmg/ui/view/ProjectOryx1.png"},
+        # Emotes: words in chat and speech balloons drawn as pictures.
+        "emotes": emotes(),
     }
 
     missing = []
@@ -169,7 +194,8 @@ def main():
     print(f"{norm(OUT) if OUT.startswith(SRC) else os.path.relpath(OUT, ROOT)}: "
           f"{len(manifest['image_sets'])} image sets, {len(manifest['animated_chars'])} animated sheets, "
           f"{len(manifest['models'])} models, {len(manifest['ground_xml'])} ground, "
-          f"{len(manifest['object_xml'])} object, {len(manifest['region_xml'])} region files")
+          f"{len(manifest['object_xml'])} object, {len(manifest['region_xml'])} region files, "
+          f"{len(manifest['emotes'])} emotes")
 
 
 if __name__ == "__main__":

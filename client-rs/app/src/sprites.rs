@@ -73,6 +73,8 @@ pub struct Sprites {
     sheets: Vec<Sheet>,
     sets: HashMap<String, ImageSet>,
     chars: HashMap<String, CharSheet>,
+    /// Emotes by the text that turns into them.
+    pub emotes: HashMap<String, bsk_assets::EmoteDef>,
 }
 
 impl Sprites {
@@ -223,6 +225,7 @@ impl Sprites {
                 },
             );
         }
+        sprites.emotes = manifest.emotes.iter().map(|e| (e.code.clone(), e.clone())).collect();
         Ok(sprites)
     }
 }
