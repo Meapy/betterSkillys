@@ -88,6 +88,13 @@ pub struct Game {
     pub counts: std::collections::BTreeMap<&'static str, u32>,
     /// Chat, oldest first (kept across worlds, as the AIR client's TextBox is).
     pub chat: Vec<crate::hud::ChatLine>,
+    /// A new version is ready: the next portal's Reconnect is kept in `held` for it, not
+    /// followed (see `update.rs`).
+    pub hold_reconnect: bool,
+    pub held: Option<Reconnect>,
+    /// This connection follows a portal handed over by the version before: if its key no
+    /// longer works, go to the Nexus instead.
+    pub fallback_to_nexus: bool,
 }
 
 /// A trade in progress (`TradePanel`): both sides' items and what each offers.
@@ -191,6 +198,9 @@ impl Game {
             next_ability: 0,
             counts: Default::default(),
             chat: Vec::new(),
+            hold_reconnect: false,
+            held: None,
+            fallback_to_nexus: false,
         };
         game.socket.send(&first);
         game
@@ -198,7 +208,7 @@ impl Game {
 
     /// `GameServerConnection.onReconnect`: connect again, to another server if the message
     /// names one, with its game id and key.
-    fn reconnect(&mut self, r: &Reconnect) {
+    pub fn reconnect(&mut self, r: &Reconnect) {
         self.reconnects += 1;
         self.socket.close();
         if !r.host.is_empty() {
@@ -217,8 +227,23 @@ impl Game {
         self.status = format!("Entering {}…", r.name);
     }
 
+    /// Where a Reconnect goes: its own server, or this one when it names none.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))] // updates are desktop-only
+    pub fn reconnect_target(&self, r: &Reconnect) -> (String, u16) {
+        if r.host.is_empty() {
+            (self.target.host.clone(), self.target.port)
+        } else {
+            (r.host.clone(), r.port as u16)
+        }
+    }
+
     /// Handle everything the server sent since the last frame.
     pub fn poll(&mut self, now: i32, data: &GameData) {
+        // A portal kept for the new version: this connection is closed, and its closing isn't
+        // the game ending.
+        if self.held.is_some() {
+            return;
+        }
         while let Some(event) = self.socket.poll() {
             match event {
                 SocketEvent::Connected => self.status = "Connected, entering the game…".into(),
@@ -280,11 +305,36 @@ impl Game {
                 }
                 // The quest's top damage dealers, from now on.
                 self.quest_damage = None;
+                self.fallback_to_nexus = false;
                 self.socket.send(&bsk_proto::QuestDamageSubscribe {}.into());
                 self.status.clear();
             }
-            Some(Event::Failure { description, .. }) => self.status = description,
+            Some(Event::Failure { description, .. }) => {
+                // A handed-over portal whose key ran out: the Nexus instead.
+                if std::mem::take(&mut self.fallback_to_nexus) && self.world.as_ref().is_none_or(|w| w.me.is_none()) {
+                    log::info!("{description}: going to the Nexus instead");
+                    let nexus = Reconnect {
+                        name: "Nexus".into(),
+                        host: String::new(),
+                        port: self.target.port as i32,
+                        game_id: bsk_session::NEXUS_GAME_ID,
+                        key_time: -1,
+                        key: Default::default(),
+                    };
+                    self.reconnect(&nexus);
+                    return;
+                }
+                self.status = description;
+            }
             Some(Event::Reconnect(r)) => {
+                if self.hold_reconnect {
+                    // Kept for the new version, which goes through the portal instead.
+                    self.socket.close();
+                    self.world = None;
+                    self.status = format!("Entering {}…", r.name);
+                    self.held = Some(r);
+                    return;
+                }
                 self.reconnect(&r);
                 return;
             }

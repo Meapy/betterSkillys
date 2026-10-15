@@ -14,7 +14,17 @@ cd client-rs; cargo run                      # desktop, development layout
 python tools\build_client_rs.py              # build\client-rs\native: exe + assets\
 python tools\build_client_rs.py --web        # build\client-rs\web: index.html + wasm + assets/
 python tools\build_client_rs.py --account http://<ip>:8080 --package   # dist\betterSkillys-rs-<os>.zip for players
+python tools\build_client_rs.py --account http://<ip>:8080 --publish   # dist\client, for players' clients to update to
 ```
+
+- **Versions and updates:** the version is `[workspace.package] version` in `Cargo.toml`; every
+  version needs a section in `CHANGELOG.md` (a test checks this one's). `--package` and
+  `--publish` builds have the update key built in (`build/client-update.key`, made by
+  `bsk-publish` on first use); they check `<account>/client/` (`update.rs`), download changed
+  files in the background, and hand over to the new version at the next portal (`--resume`, with
+  the login, the portal's key, the window and the chat on a pipe). Other builds never update.
+  `bsk-update` holds the release format, `publish` the tool that writes it. To try it, publish to
+  the test stack: `--account http://127.0.0.1:8082 --publish --publish-to build/iso1/client`.
 
 - **Web:** needs `rustup target add wasm32-unknown-unknown` and `wasm-bindgen-cli` at the
   version in `Cargo.lock` (the script says which). Serve it with the gateway (below);
@@ -56,6 +66,7 @@ The client itself can be scripted for tests (desktop only):
 |---|---|
 | `--credentials <file>` | Sign in with the file's `email:` and `password:` and play the first character (a new Wizard if there is none) |
 | `--stay` | With `--credentials`: stop at the character list instead |
+| `--no-update` | Don't look for or install updates (published builds) |
 | `--bench` | No vsync or frame cap for this run (the settings are left alone), and every 2 s the frame rate, CPU time by section and draw calls in the log. Measure a release build, after the first few seconds |
 | `--shot <png> --shot-after <seconds>` | Save one frame, then quit (logs the position and what it sent) |
 | `--walk-to x,y[;x,y...]` | Walk to world positions in turn (in the first world joined, or the one `--say` moves to) |
@@ -132,5 +143,8 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
 6. Party, trading, guild and the NPC windows (`npc.rs`): **Done.** Market, emotes, sound to do.
 7. Packaging: `build_client_rs.py --account <url> --package` (the address built in, release
    builds without a console window on Windows, the AIR client's icon). **Done.**
+8. Updates: versions, the changelog window, signed releases on the account server, downloads in
+   the background and the switch at the next portal. **Done** (desktop; the browser loads the
+   newest build when the page loads).
 
 Not planned: the map editor, the tutorial, Kabam's payment, offer and news screens.

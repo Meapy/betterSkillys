@@ -2,8 +2,9 @@
 REM Starts Redis (the database, port 6379, this PC only), the account server (port 8080)
 REM and the world server (port 2051), each in its own window. Close those windows to stop.
 REM Build the Rust client for players (dist\betterSkillys-rs-windows.zip, connecting to the public
-REM address); quick when nothing changed. A failed build doesn't stop the servers.
-python "%~dp0tools\build_client_rs.py" --account http://188.141.12.3:8080 --package || ECHO The client build failed; starting the servers anyway.
+REM address) and publish it to dist\client, where players' clients update from; quick when nothing
+REM changed. A failed build doesn't stop the servers.
+python "%~dp0tools\build_client_rs.py" --account http://188.141.12.3:8080 --package --publish || ECHO The client build failed; starting the servers anyway.
 CD /D "%~dp0source"
 REM Rebuild first (quick when nothing changed) unless a server is already running.
 TASKLIST /FI "IMAGENAME eq App.exe" /NH | FINDSTR /B /I "App.exe" >NUL && GOTO START

@@ -16,6 +16,15 @@ Usage:
         game and a short readme) to hand to other players, as build_client.py --package does
         for the AIR client. With --web, the page's files go in the zip instead.
 
+    python tools/build_client_rs.py --account http://188.141.12.3:8080 --publish
+        As above, then publish it to dist/client, which the account server serves at /client/:
+        players' clients (packaged or published builds) download it in the background and
+        switch to it at their next portal. Needs a section for the version (client-rs/Cargo.toml)
+        in client-rs/CHANGELOG.md. The release is signed with build/client-update.key (made on
+        the first publish; keep it: clients only take releases signed with it). --publish-to DIR
+        publishes somewhere else (an isolated test stack's build/iso<N>/client).
+        Roll back with: cargo run -p bsk-publish -- rollback --to dist/client --version <x.y.z>
+
 Run tools/gen_rs_manifest.py first if the AIR client's asset lists changed.
 """
 
@@ -32,6 +41,7 @@ CRATE = os.path.join(ROOT, "client-rs")
 SRC = os.path.join(ROOT, "client", "src")
 MANIFEST = os.path.join(CRATE, "assets", "manifest.json")
 BIN = "betterskillys"
+UPDATE_KEY = os.path.join(ROOT, "build", "client-update.key")
 
 
 def run(cmd, **kw):
@@ -72,11 +82,38 @@ def bindgen_version():
     return m.group(1)
 
 
-def cargo_env(account):
-    """The environment for cargo: BSK_ACCOUNT builds that account server in."""
+def version():
+    """The client's version, from client-rs/Cargo.toml."""
+    with open(os.path.join(CRATE, "Cargo.toml"), encoding="utf-8") as f:
+        return re.search(r'\[workspace\.package\][^\[]*?version = "([^"]+)"', f.read()).group(1)
+
+
+def commit():
+    """The commit being built (short hash), or "" outside git."""
+    r = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else ""
+
+
+def publish_tool(*args):
+    """Run bsk-publish; returns what it printed."""
+    cmd = ["cargo", "run", "-q", "--release", "-p", "bsk-publish", "--"] + list(args)
+    print(">", " ".join(cmd))
+    return subprocess.run(cmd, cwd=CRATE, check=True, capture_output=True, text=True).stdout.strip()
+
+
+def update_key():
+    """The public key releases are signed with (made with its private key on first use)."""
+    return publish_tool("key", "--key", UPDATE_KEY)
+
+
+def cargo_env(account, key=None):
+    """The environment for cargo: BSK_ACCOUNT builds that account server in, BSK_UPDATE_KEY the key
+    updates must be signed with (builds for players only), BSK_COMMIT the commit."""
     env = dict(os.environ)
     if account:
         env["BSK_ACCOUNT"] = account
+    env["BSK_UPDATE_KEY"] = key or ""
+    env["BSK_COMMIT"] = commit()
     return env
 
 
@@ -113,16 +150,16 @@ def package(out, web, account):
     print("packaged", os.path.relpath(path, ROOT), f"({os.path.getsize(path) // 1024} KB)")
 
 
-def build_native(release, out, account=None):
+def build_native(release, out, account=None, key=None):
     profile = "release" if release else "debug"
-    run(["cargo", "build", "--bin", BIN] + (["--release"] if release else []), cwd=CRATE, env=cargo_env(account))
+    run(["cargo", "build", "--bin", BIN] + (["--release"] if release else []), cwd=CRATE, env=cargo_env(account, key))
     exe = BIN + (".exe" if os.name == "nt" else "")
     os.makedirs(out, exist_ok=True)
     shutil.copy2(os.path.join(CRATE, "target", profile, exe), os.path.join(out, exe))
     copy_assets(out)
 
 
-def build_web(release, out, account=None):
+def build_web(release, out, account=None, key=None):
     want = bindgen_version()
     try:
         have = subprocess.run(["wasm-bindgen", "--version"], capture_output=True, text=True).stdout.split()[-1]
@@ -137,7 +174,10 @@ def build_web(release, out, account=None):
     os.makedirs(out, exist_ok=True)
     wasm = os.path.join(CRATE, "target", "wasm32-unknown-unknown", profile, BIN + ".wasm")
     run(["wasm-bindgen", "--target", "web", "--no-typescript", "--out-dir", out, wasm])
-    shutil.copy2(os.path.join(CRATE, "web", "index.html"), os.path.join(out, "index.html"))
+    with open(os.path.join(CRATE, "web", "index.html"), encoding="utf-8") as f:
+        page = f.read().replace("BSK_BUILD", f"{version()}-{commit()}")
+    with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as f:
+        f.write(page)
     copy_assets(out)
 
 
@@ -147,12 +187,22 @@ def main():
     parser.add_argument("--debug", action="store_true", help="unoptimised build")
     parser.add_argument("--account", help="the account server to build in, e.g. http://188.141.12.3:8080")
     parser.add_argument("--package", action="store_true", help="also zip it into dist/ for other players")
+    parser.add_argument("--publish", action="store_true", help="also publish it for players' clients to update to")
+    parser.add_argument("--publish-to", help="where to publish (default dist/client)")
     args = parser.parse_args()
+    if args.publish and args.web:
+        sys.exit("--publish is for the desktop build (browsers load the newest files when the page loads)")
     out = os.path.join(ROOT, "build", "client-rs", "web" if args.web else "native")
-    (build_web if args.web else build_native)(not args.debug, out, args.account)
-    print("built", os.path.relpath(out, ROOT))
+    # Builds for players check for updates, signed with this key.
+    key = update_key() if (args.package or args.publish) and not args.web else None
+    (build_web if args.web else build_native)(not args.debug, out, args.account, key)
+    print("built", os.path.relpath(out, ROOT), f"(version {version()})")
     if args.package:
         package(out, args.web, args.account)
+    if args.publish:
+        to = os.path.abspath(args.publish_to or os.path.join(ROOT, "dist", "client"))
+        print(publish_tool("release", "--key", UPDATE_KEY, "--from", out, "--to", to,
+                           "--changelog", os.path.join(CRATE, "CHANGELOG.md"), "--version", version(), "--commit", commit()))
 
 
 if __name__ == "__main__":

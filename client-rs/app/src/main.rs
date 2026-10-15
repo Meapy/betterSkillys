@@ -4,6 +4,7 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 mod audio;
+mod changelog;
 mod connected;
 mod emotes;
 mod game;
@@ -22,6 +23,9 @@ mod sprites;
 mod text;
 mod textedit;
 mod theme;
+#[cfg(not(target_arch = "wasm32"))]
+mod update;
+mod version;
 mod view;
 
 use bsk_assets::AssetSource;
@@ -187,6 +191,24 @@ struct App {
     npc_test: Option<String>,
     /// `--effect <type>` (tests): show that effect on us every half second, and when it last did.
     effect_test: Option<(u8, i32)>,
+    /// The Changelog window and the "updated" note.
+    changelog: changelog::ChangelogUi,
+    /// The "updated" note was looked at for this run.
+    noted_version: bool,
+    /// Updates (desktop): looking for them, the new version taking over, and what was said.
+    #[cfg(not(target_arch = "wasm32"))]
+    updater: Option<update::Updater>,
+    #[cfg(not(target_arch = "wasm32"))]
+    handover: Option<update::Handover>,
+    #[cfg(not(target_arch = "wasm32"))]
+    handover_failed: bool,
+    #[cfg(not(target_arch = "wasm32"))]
+    update_told: String,
+    /// `--resume`: what the version before handed over, and the window to show once it's set up.
+    #[cfg(not(target_arch = "wasm32"))]
+    resume: Option<update::Resume>,
+    #[cfg(not(target_arch = "wasm32"))]
+    show_window: Option<update::WindowState>,
 }
 
 /// Open the window of the NPC we stand by. True for the character changer: back to the
@@ -589,7 +611,16 @@ impl App {
             Ok(start) => {
                 self.front.endpoint_label = format!("Account server: {}", start.endpoint.account);
                 self.audio = Some(audio::Audio::new(&start.endpoint.account));
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    self.updater = update::Updater::start(&start.endpoint.account);
+                }
                 self.endpoint = Some(start.endpoint);
+                #[cfg(not(target_arch = "wasm32"))]
+                if let Some(resume) = self.resume.take() {
+                    self.resume_from(resume);
+                    return;
+                }
                 if let Some((email, password)) = start.login {
                     self.front.fields[screens::EMAIL] = email;
                     self.front.fields[screens::PASSWORD] = password;
@@ -627,6 +658,253 @@ impl App {
         self.front.busy = "Signing in…".into();
         self.front.message = None;
         self.front.show(screens::Screen::Busy);
+    }
+
+    /// Carry on where the version before left off (`--resume`): signed in, and through the
+    /// portal it was taking.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn resume_from(&mut self, r: update::Resume) {
+        log::info!("carrying on from version {}", r.from_version);
+        let now = self.now();
+        if !r.email.is_empty() {
+            self.front.fields[screens::EMAIL] = r.email.clone();
+            self.front.fields[screens::PASSWORD] = r.password.clone();
+            self.account = Some((r.email.clone(), r.password.clone()));
+            // The remembered login is the old version's business: left as it is.
+            self.test_login = true;
+        }
+        self.show_window = Some(r.window.clone());
+        let chat: Vec<hud::ChatLine> = r
+            .chat
+            .iter()
+            .map(|c| hud::ChatLine {
+                name: c.name.clone(),
+                recipient: c.recipient.clone(),
+                text: c.text.clone(),
+                name_color: c.name_color,
+                text_color: c.text_color,
+                at: now - c.age,
+            })
+            .collect();
+        match (r.game, &self.endpoint, &self.account) {
+            (Some(g), Some(endpoint), Some((email, password))) => {
+                let hello = HelloParams {
+                    build_version: bsk_net::login::BUILD_VERSION.into(),
+                    game_id: g.game_id,
+                    guid: bsk_net::login::encrypt(email),
+                    password: bsk_net::login::encrypt(password),
+                    key_time: g.key_time,
+                    key: g.key,
+                };
+                let mut game = Game::start(endpoint.target(&g.host, g.port), hello, Join::Load { char_id: g.char_id });
+                game.fallback_to_nexus = true;
+                game.status = format!("Entering {}…", g.name);
+                game.chat = chat;
+                if let Some(a) = self.settings.camera_angle {
+                    game.camera_angle = a;
+                }
+                self.phase = Phase::Playing(game);
+                self.front.show(screens::Screen::Chars);
+                // The character list behind the game, for the screens and the NPCs.
+                self.refresh();
+            }
+            (_, _, Some(_)) => self.sign_in(false),
+            _ => self.front.show(screens::Screen::Login),
+        }
+    }
+
+    /// `--resume`: put the window where the old one was, draw into it, then show it and tell the
+    /// old version to go.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn show_resumed_window(&mut self) {
+        let (Some(ws), Some(window)) = (self.show_window.take(), self.window.clone()) else { return };
+        window.set_outer_position(winit::dpi::PhysicalPosition::new(ws.x, ws.y));
+        if ws.width > 0 && ws.height > 0 {
+            let _ = window.request_inner_size(winit::dpi::PhysicalSize::new(ws.width, ws.height));
+        }
+        if ws.maximized {
+            window.set_maximized(true);
+        }
+        if ws.fullscreen {
+            window.set_fullscreen(Some(winit::window::Fullscreen::Borderless(None)));
+        }
+        let size = window.inner_size();
+        if let Some(loaded) = &mut self.loaded {
+            loaded.renderer.resize(size.width, size.height);
+        }
+        self.frame();
+        window.set_visible(true);
+        window.focus_window();
+        update::announce_shown();
+    }
+
+    /// Updates (desktop): say when one is ready, switch to it at a good moment (the next
+    /// portal, or now on the character list), and see the switch through.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn advance_update(&mut self) {
+        let now = self.now();
+        let Some(updater) = &self.updater else { return };
+        if let update::Status::Ready { version } = updater.status() {
+            if self.update_told != version {
+                self.update_told = version.clone();
+                if let Phase::Playing(game) = &mut self.phase {
+                    game.add_chat("", "", &format!("Version {version} is ready: it starts when you next take a portal."), 0, 0, now);
+                }
+            }
+            if self.handover.is_none() && !self.handover_failed {
+                match &mut self.phase {
+                    Phase::Playing(game) => game.hold_reconnect = true,
+                    Phase::Menu => {
+                        if self.front.at_rest() && self.request.is_none() && !self.changelog.open {
+                            self.start_handover(None);
+                        }
+                    }
+                }
+            }
+        }
+        // A portal kept for the new version.
+        if self.handover.is_none() {
+            let held = match &self.phase {
+                Phase::Playing(game) => game.held.as_ref().map(|r| {
+                    let (host, port) = game.reconnect_target(r);
+                    update::ResumeGame { host, port, game_id: r.game_id, key_time: r.key_time, key: r.key.0.clone(), char_id: game.char_id, name: r.name.clone() }
+                }),
+                Phase::Menu => None,
+            };
+            if held.is_some() {
+                self.start_handover(held);
+            }
+        }
+        let Some(handover) = &mut self.handover else { return };
+        match handover.poll() {
+            update::HandoverState::Waiting => {}
+            update::HandoverState::Shown => {
+                log::info!("updates: the new version took over");
+                self.quit = true;
+            }
+            update::HandoverState::Failed(why) => {
+                log::warn!("updates: {why}");
+                self.handover = None;
+                self.handover_failed = true;
+                if let Phase::Playing(game) = &mut self.phase {
+                    game.hold_reconnect = false;
+                    if let Some(r) = game.held.take() {
+                        game.fallback_to_nexus = true;
+                        game.reconnect(&r);
+                    }
+                    game.add_chat("*Error*", "", "The new version couldn't start; it will the next time you open the game.", 0, 0, now);
+                }
+            }
+        }
+    }
+
+    /// Start the new version, handing it the login, the window, the chat and (in the game) the
+    /// portal to go through.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn start_handover(&mut self, game: Option<update::ResumeGame>) {
+        let (Some(updater), Some(window)) = (&self.updater, &self.window) else { return };
+        let now = self.now();
+        let position = window.outer_position().unwrap_or_default();
+        let size = window.inner_size();
+        let chat = match &self.phase {
+            Phase::Playing(g) => g
+                .chat
+                .iter()
+                .map(|c| update::ResumeChat {
+                    name: c.name.clone(),
+                    recipient: c.recipient.clone(),
+                    text: c.text.clone(),
+                    name_color: c.name_color,
+                    text_color: c.text_color,
+                    age: now - c.at,
+                })
+                .collect(),
+            Phase::Menu => Vec::new(),
+        };
+        let (email, password) = self.account.clone().unwrap_or_default();
+        let resume = update::Resume {
+            from_version: version::VERSION.into(),
+            email,
+            password,
+            game,
+            window: update::WindowState {
+                x: position.x,
+                y: position.y,
+                width: size.width,
+                height: size.height,
+                maximized: window.is_maximized(),
+                fullscreen: window.fullscreen().is_some(),
+            },
+            chat,
+        };
+        match updater.hand_over(&resume) {
+            Ok(h) => self.handover = Some(h),
+            Err(e) => {
+                log::warn!("updates: {e}");
+                self.handover_failed = true;
+                if let Phase::Playing(game) = &mut self.phase {
+                    game.hold_reconnect = false;
+                    if let Some(r) = game.held.take() {
+                        game.reconnect(&r);
+                    }
+                }
+            }
+        }
+    }
+
+    /// The changelog to show (the newest release's when one has been seen, else this build's),
+    /// and a newer version that's ready to take over.
+    fn changelog_entries(&self) -> (Vec<bsk_update::Entry>, Option<String>) {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(updater) = &self.updater {
+            let coming = match updater.status() {
+                update::Status::Ready { version } => Some(version),
+                _ => None,
+            };
+            if let Some(latest) = updater.latest().filter(|l| !l.changelog.is_empty()) {
+                return (latest.changelog, coming);
+            }
+            return (version::changelog(), coming);
+        }
+        (version::changelog(), None)
+    }
+
+    /// The version line on the screens, with any update under way.
+    fn version_line(&self) -> String {
+        let label = version::label();
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(updater) = &self.updater {
+            return match updater.status() {
+                update::Status::Downloading { version, done, total } => {
+                    format!("{label}  ·  downloading {version} ({}%)", done * 100 / total.max(1))
+                }
+                update::Status::Ready { version } => format!("{label}  ·  {version} is ready"),
+                _ => format!("{label}  ·  Changelog"),
+            };
+        }
+        format!("{label}  ·  Changelog")
+    }
+
+    /// Once a version, when the screens or the game first show: a note that it's new.
+    fn note_version(&mut self, now: i32) {
+        if self.noted_version {
+            return;
+        }
+        let ready = match &self.phase {
+            Phase::Menu => self.front.screen == screens::Screen::Chars,
+            Phase::Playing(game) => game.world.as_ref().is_some_and(|w| w.player().is_some()),
+        };
+        if !ready {
+            return;
+        }
+        self.noted_version = true;
+        if self.settings.seen_version != version::VERSION {
+            let first = self.settings.seen_version.is_empty();
+            self.settings.seen_version = version::VERSION.into();
+            self.settings.save();
+            let text = if first { format!("You're playing version {}", version::VERSION) } else { format!("Updated to version {}", version::VERSION) };
+            self.changelog.note(text, now);
+        }
     }
 
     /// Ask for the character list again (after a game, or a deletion).
@@ -712,6 +990,7 @@ impl App {
                 self.request = Some((Request::Delete, endpoint.delete_char(email, password, id)));
             }
             Action::Logout => self.logout(),
+            Action::Changelog => self.changelog.show(),
         }
     }
 
@@ -1027,6 +1306,24 @@ impl App {
             input.insert(&text);
         }
         self.advance();
+        #[cfg(not(target_arch = "wasm32"))]
+        self.advance_update();
+        self.note_version(now);
+        self.front.version_line = self.version_line();
+        // What the Changelog window shows, when it's open.
+        let (cl_entries, cl_coming) = if self.changelog.open { self.changelog_entries() } else { (Vec::new(), None) };
+        // The Changelog window takes the clicks while it's open; the note takes its own.
+        if self.changelog.open {
+            for (down, pos) in std::mem::take(&mut self.clicks) {
+                if down {
+                    self.changelog.click(pos);
+                }
+            }
+            self.mouse_down = false;
+        } else {
+            let changelog = &mut self.changelog;
+            self.clicks.retain(|&(down, pos)| !(down && changelog.click(pos)));
+        }
         prof::mark("advance");
         self.update_audio(now);
 
@@ -1141,6 +1438,9 @@ impl App {
             let (w, h) = renderer.size();
             let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
             self.front.draw(&mut ui, w as f32, h as f32, *title, mouse, now);
+            let s = screens::scale(w as f32, h as f32);
+            self.changelog.draw_note(&mut ui, 16.0 * s, 16.0 * s, s, mouse, now);
+            self.changelog.draw(&mut ui, w as f32, h as f32, &cl_entries, version::VERSION, cl_coming.as_deref(), mouse);
             self.finish_frame(now);
             for action in actions {
                 self.front_action(action);
@@ -1173,6 +1473,10 @@ impl App {
                 Some(screens::MenuChoice::Options) => {
                     self.game_menu = false;
                     self.options_ui.show();
+                }
+                Some(screens::MenuChoice::Changelog) => {
+                    self.game_menu = false;
+                    self.changelog.show();
                 }
                 Some(screens::MenuChoice::Home) => {
                     self.leave_game(None);
@@ -1609,6 +1913,12 @@ impl App {
             let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
             self.options_ui.draw(&mut ui, &lay, &self.settings, mouse);
         }
+        {
+            let (w, h) = renderer.size();
+            let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+            self.changelog.draw_note(&mut ui, 12.0 * lay.s, 12.0 * lay.s, lay.s, mouse, now);
+            self.changelog.draw(&mut ui, w as f32, h as f32, &cl_entries, version::VERSION, cl_coming.as_deref(), mouse);
+        }
         self.finish_frame(now);
         if to_chars {
             self.leave_game(None);
@@ -1716,6 +2026,9 @@ impl ApplicationHandler<UserEvent> for App {
             use winit::platform::web::WindowAttributesExtWebSys;
             attributes.with_append(true)
         };
+        // Resuming from the version before: hidden until it's ready to take over.
+        #[cfg(not(target_arch = "wasm32"))]
+        let attributes = attributes.with_visible(self.resume.is_none());
         let window = Arc::new(event_loop.create_window(attributes).expect("create window"));
         self.window = Some(window.clone());
 
@@ -1743,6 +2056,8 @@ impl ApplicationHandler<UserEvent> for App {
                     window.request_redraw();
                 }
                 self.start();
+                #[cfg(not(target_arch = "wasm32"))]
+                self.show_resumed_window();
             }
             UserEvent::Failed(e) => {
                 log::error!("startup failed: {e}");
@@ -1781,6 +2096,13 @@ impl ApplicationHandler<UserEvent> for App {
                         let full = window.fullscreen().is_some();
                         window.set_fullscreen((!full).then_some(winit::window::Fullscreen::Borderless(None)));
                     }
+                    return;
+                }
+                if self.changelog.open {
+                    if pressed {
+                        self.changelog.key(code);
+                    }
+                    self.keys.remove(&code);
                     return;
                 }
                 if matches!(self.phase, Phase::Menu) {
@@ -1896,6 +2218,13 @@ impl ApplicationHandler<UserEvent> for App {
             // A --mouse test position stays put whatever the real cursor does.
             WindowEvent::CursorMoved { position, .. } if !self.mouse_fixed => self.mouse = (position.x, position.y),
             // The mouse wheel zooms the minimap, a level a notch, when no window is open.
+            WindowEvent::MouseWheel { delta, .. } if self.changelog.open => {
+                let lines = match delta {
+                    winit::event::MouseScrollDelta::LineDelta(_, y) => y,
+                    winit::event::MouseScrollDelta::PixelDelta(p) => (p.y / 40.0) as f32,
+                };
+                self.changelog.wheel(lines.round() as i32);
+            }
             WindowEvent::MouseWheel { delta, .. } => {
                 let free = matches!(self.phase, Phase::Playing(_))
                     && !(self.game_menu || self.options_ui.open || self.market.open || self.npcs.window.is_some());
@@ -2023,6 +2352,20 @@ fn main() {
         type_text: text_arg("--type"),
         npc_test: text_arg("--npc"),
         effect_test: text_arg("--effect").and_then(|t| t.parse().ok()).map(|t| (t, i32::MIN / 2)),
+        changelog: Default::default(),
+        noted_version: false,
+        #[cfg(not(target_arch = "wasm32"))]
+        updater: None,
+        #[cfg(not(target_arch = "wasm32"))]
+        handover: None,
+        #[cfg(not(target_arch = "wasm32"))]
+        handover_failed: false,
+        #[cfg(not(target_arch = "wasm32"))]
+        update_told: String::new(),
+        #[cfg(not(target_arch = "wasm32"))]
+        resume: update::read_resume(),
+        #[cfg(not(target_arch = "wasm32"))]
+        show_window: None,
     };
     #[cfg(not(target_arch = "wasm32"))]
     {

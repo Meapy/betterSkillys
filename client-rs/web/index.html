@@ -15,9 +15,11 @@
   <script type="module">
     // The client draws its own sign-in screen. A page may set window.bskLogin = {email, password}
     // before init() to sign in straight away (see client-rs/app/src/login.rs).
-    import init from "./betterskillys.js";
+    // ?v=: the build (filled in by build_client_rs.py), so a browser never mixes in files it
+    // kept from an older one.
+    import init from "./betterskillys.js?v=BSK_BUILD";
     const status = document.getElementById("status");
-    init().then(() => status.remove(), (err) => { status.textContent = "Failed to start: " + err; });
+    init({ module_or_path: "./betterskillys_bg.wasm?v=BSK_BUILD" }).then(() => status.remove(), (err) => { status.textContent = "Failed to start: " + err; });
   </script>
 </body>
 </html>
