@@ -5,6 +5,11 @@ this in its Changelog window. Newest first; publishing a version needs its secti
 (`python tools/build_client_rs.py --publish`), and the version number itself is in
 `client-rs/Cargo.toml`.
 
+## 1.1.2 (2026-10-15)
+- The character list is more compact, fitting up to four characters a row, and scrolls with the
+  mouse wheel when you have more than fit on the screen.
+- Your fame and gold are back in the top right corner of the character screen.
+
 ## 1.1.1 (2026-10-15)
 - Rank stars are back. The character screen shows your rank (hover over it to see which colour
   each range of stars earns) and, on each character, its progress toward the next class quest.
