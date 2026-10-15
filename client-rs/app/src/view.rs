@@ -97,6 +97,15 @@ impl Floater {
     }
 }
 
+/// Whether a condition effect helps whoever has it (its text shows green, not red): speed,
+/// healing, damage and defence buffs, invisibility, the immunities and stat boosts.
+pub fn helps(effect: u32) -> bool {
+    use bsk_world::condition::*;
+    matches!(effect, SPEEDY | HEALING | DAMAGING | BERSERK | INVULNERABLE | INVINCIBLE | ARMORED | NINJA_SPEEDY | INVISIBLE | INSPIRED)
+        || matches!(effect, 12 | 17 | 23 | 32 | 33 | 34 | 36 | 39 | 50)
+        || (40..=47).contains(&effect)
+}
+
 /// `SpeechBalloon`: what someone said, over their head for a few seconds.
 #[derive(Debug, Clone)]
 pub struct Bubble {
@@ -403,7 +412,9 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
 
     // Condition icons (`GameObject.drawConditionIcons`): in a row centred on the sprite's top,
     // each taking turns through its icons; none while paused.
-    let icon_scale = ((2.0 * k).round() as u32).max(1);
+    // Whole screen pixels per icon pixel, a little under the AIR client's x2, so the art stays
+    // sharp.
+    let icon_scale = ((1.5 * k).round() as u32).max(1);
     for (obj, [x, y]) in &tops {
         let c = obj.conditions();
         if c == [0, 0] || has(c, condition::PAUSED) {
@@ -414,7 +425,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
             .filter_map(|(big, index)| scene.sprites.tile_src(if big { "lofiInterfaceBig" } else { "lofiInterface2" }, index))
             .filter_map(|src| redrawer.icon(scene.sprites, renderer, src, icon_scale))
             .collect();
-        let step = 8.0 * icon_scale as f32 + 2.0 * k;
+        let step = 8.0 * icon_scale as f32 + 3.0;
         let left = x - step * icons.len() as f32 / 2.0;
         for (i, icon) in icons.iter().enumerate() {
             let cx = left + step * (i as f32 + 0.5);

@@ -77,11 +77,11 @@ pub fn item_dye(sprites: &Sprites, desc: &bsk_data::ObjectDesc) -> Option<Dye> {
     Some(Dye { mask, tex1: tex("Tex1"), tex2: tex("Tex2") })
 }
 
-/// A condition effect's icon (`ConditionEffect.getIconsFromBit`): the tile at ×`scale`, with a
-/// white outline and a faint dark glow.
+/// A condition effect's icon (`ConditionEffect.getIconsFromBit`): the tile at ×`scale`, ringed by
+/// one hard white pixel and one dark one, so it stays sharp at any size.
 fn effect_icon(src: &RgbaImage, scale: u32) -> RgbaImage {
     let (w, h) = src.dimensions();
-    let pad = 2 * scale.max(1);
+    let pad = 2;
     let (cw, ch) = (w * scale + 2 * pad, h * scale + 2 * pad);
     let solid = |x: i64, y: i64| -> bool {
         if x < pad as i64 || y < pad as i64 {
@@ -90,7 +90,6 @@ fn effect_icon(src: &RgbaImage, scale: u32) -> RgbaImage {
         let (sx, sy) = ((x - pad as i64) / scale as i64, (y - pad as i64) / scale as i64);
         sx < w as i64 && sy < h as i64 && src.get_pixel(sx as u32, sy as u32)[3] > 0
     };
-    let edge = (scale / 2).max(1) as i64;
     RgbaImage::from_fn(cw, ch, |x, y| {
         let (x, y) = (x as i64, y as i64);
         if solid(x, y) {
@@ -98,10 +97,10 @@ fn effect_icon(src: &RgbaImage, scale: u32) -> RgbaImage {
             return *p;
         }
         let near = |r: i64| (-r..=r).any(|dy| (-r..=r).any(|dx| solid(x + dx, y + dy)));
-        if near(edge) {
+        if near(1) {
             Rgba([255, 255, 255, 255])
-        } else if near(edge + scale as i64) {
-            Rgba([0, 0, 0, 70])
+        } else if near(2) {
+            Rgba([0, 0, 0, 150])
         } else {
             Rgba([0, 0, 0, 0])
         }
