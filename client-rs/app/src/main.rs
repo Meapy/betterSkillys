@@ -20,6 +20,7 @@ mod screens;
 #[allow(dead_code)] // lookups the game screens will use
 mod sprites;
 mod text;
+mod textedit;
 mod theme;
 mod view;
 
@@ -100,7 +101,8 @@ struct App {
     fps_since: Instant,
     /// The frame rate last measured, for the on-screen display.
     fps_shown: f32,
-    /// When the last frame started (the max frame rate).
+    /// When the last frame started (the max frame rate; desktop only).
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     frame_start: Instant,
     /// --bench: no frame cap or vsync, and timings in the log.
     bench: Option<Bench>,
@@ -129,7 +131,7 @@ struct App {
     /// Keys pressed since the last frame (for one-shot actions).
     pressed: Vec<KeyCode>,
     /// The chat line being typed (Enter opens it), and lines to send.
-    chat_input: Option<String>,
+    chat_input: Option<textedit::LineEdit>,
     chat_send: Vec<String>,
     /// Page Up: the chat's history, so many rows back (`TextBox.showMax_`).
     chat_scroll: Option<usize>,
@@ -267,6 +269,11 @@ fn shot_args() -> Option<(String, f32)> {
 #[cfg(target_arch = "wasm32")]
 fn shot_args() -> Option<(String, f32)> {
     None
+}
+
+/// A chat line being typed, starting from `text` (TextBox's limit: 128 characters).
+fn chat_line(text: impl Into<String>) -> textedit::LineEdit {
+    textedit::LineEdit::new(text, 128)
 }
 
 /// Frame timings for --bench.
@@ -1016,6 +1023,9 @@ impl App {
         let dt = (now - self.last_frame).clamp(0, 200);
         self.last_frame = now;
         prof::start();
+        if let (Some(text), Some(input)) = (textedit::clipboard::take_pasted(), &mut self.chat_input) {
+            input.insert(&text);
+        }
         self.advance();
         prof::mark("advance");
         self.update_audio(now);
@@ -1375,7 +1385,7 @@ impl App {
                         });
                         match here {
                             Some(o) => self.hud.open_menu(o.id, pos),
-                            None => self.chat_input = Some(format!("/tell {name} ")),
+                            None => self.chat_input = Some(chat_line(format!("/tell {name} "))),
                         }
                         self.mouse_down = false;
                         continue;
@@ -1395,7 +1405,7 @@ impl App {
                         continue;
                     }
                     if let Some(line) = apply_action(game, p, action, now, data) {
-                        self.chat_input = Some(line);
+                        self.chat_input = Some(chat_line(line));
                     }
                 }
             } else {
@@ -1520,7 +1530,7 @@ impl App {
                         };
                         renderer.world_done(filter);
                         let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
-                        hud::draw_quest(&mut ui, &lay, world, &camera, game.quest, &game.keys, &game.dealt);
+                        hud::draw_quest(&mut ui, &lay, world, &camera, game.quest, &game.keys, &game.dealt, game.quest_damage.as_ref());
                         prof::mark("quest");
                     }
                     if let Some(p) = &panel {
@@ -1545,7 +1555,7 @@ impl App {
                 let me = game.world.as_ref().and_then(|w| w.player()).and_then(|p| p.name()).unwrap_or("").to_owned();
                 let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
                 prof::mark("pre-chat");
-                self.chat_names = hud::draw_chat(&mut ui, &lay, &game.chat, &me, self.chat_input.as_deref(), self.chat_scroll, now);
+                self.chat_names = hud::draw_chat(&mut ui, &lay, &game.chat, &me, self.chat_input.as_ref(), self.chat_scroll, now);
                 if let Some(arena) = game.arena {
                     hud::draw_arena(&mut ui, &lay, arena, now);
                 }
@@ -1784,7 +1794,7 @@ impl ApplicationHandler<UserEvent> for App {
                     if pressed {
                         match code {
                             KeyCode::Enter | KeyCode::NumpadEnter => {
-                                let line = std::mem::take(input);
+                                let line = std::mem::take(&mut input.text);
                                 if !line.trim().is_empty() {
                                     self.chat_send.push(line);
                                 }
@@ -1793,20 +1803,11 @@ impl ApplicationHandler<UserEvent> for App {
                             KeyCode::Escape => self.chat_input = None,
                             KeyCode::Tab => {
                                 let line = self.tell_prefix();
-                                self.chat_input = Some(line);
+                                self.chat_input = Some(chat_line(line));
                             }
                             KeyCode::PageUp | KeyCode::PageDown => self.scroll_chat(code == KeyCode::PageUp),
-                            KeyCode::Backspace => {
-                                input.pop();
-                            }
                             _ => {
-                                if let Some(t) = &event.text {
-                                    input.extend(t.chars().filter(|c| !c.is_control()));
-                                    // TextBox's limit.
-                                    while input.chars().count() > 128 {
-                                        input.pop();
-                                    }
-                                }
+                                input.key(code, event.text.as_deref(), self.ctrl_held, self.shift_held);
                             }
                         }
                     }
@@ -1868,7 +1869,7 @@ impl ApplicationHandler<UserEvent> for App {
                         _ => None,
                     };
                     if open.is_some() {
-                        self.chat_input = open;
+                        self.chat_input = open.map(chat_line);
                         self.keys.clear();
                         self.mouse_down = false;
                         return;
@@ -1952,6 +1953,7 @@ fn main() {
     #[cfg(target_arch = "wasm32")]
     {
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+        textedit::clipboard::listen();
         let _ = console_log::init_with_level(log::Level::Info);
     }
 

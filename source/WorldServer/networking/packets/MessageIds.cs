@@ -91,5 +91,9 @@ public enum MessageId : byte
     MARKET_MY_OFFERS_RESULT = 85,
     BREAKDOWN_SLOT = 86,
     IMMINENT_ARENA_WAVE = 87,
-    VIEW_RADIUS = 88
+    VIEW_RADIUS = 88,
+    // The client asks for its quest's top damage dealers (once a connection); the AIR client
+    // never asks, so it never gets QUEST_DAMAGE.
+    QUEST_DAMAGE_SUBSCRIBE = 89,
+    QUEST_DAMAGE = 90
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Shared.resources;
 using WorldServer.core.net.datas;
 using WorldServer.core.net.stats;
@@ -107,10 +108,18 @@ namespace WorldServer.core.objects
             return ret;
         }
 
+        // The client asked for its quest's top damage dealers (QUEST_DAMAGE_SUBSCRIBE), and what
+        // it was last sent.
+        public bool WantsQuestDamage { get; set; }
+        private string _questDamageSent;
+
         public void HandleQuest(TickTime time)
         {
             if (Quest != null && Quest.Dead)
                 Quest = null;
+
+            if (WantsQuestDamage && time.TickCount % 5 == 0)
+                SendQuestDamage();
 
             if (Quest == null || time.TickCount % 10 == 0)
             {
@@ -124,6 +133,21 @@ namespace WorldServer.core.objects
                     Quest = newQuest;
                 }
             }
+        }
+
+        // The top three damage dealers on the quest, and our own damage, when they change.
+        private void SendQuestDamage()
+        {
+            if (Quest is not Enemy enemy || enemy.DamageCounter == null)
+                return;
+            var hitters = enemy.DamageCounter.GetPlayerData();
+            var top = hitters.OrderByDescending(h => h.Item2).Take(3).Select(h => (h.Item1.Name, h.Item2)).ToArray();
+            var mine = hitters.Where(h => h.Item1 == this).Select(h => h.Item2).FirstOrDefault();
+            var key = enemy.Id + ":" + string.Join(",", top.Select(t => t.Name + "=" + t.Item2)) + ":" + mine;
+            if (key == _questDamageSent)
+                return;
+            _questDamageSent = key;
+            Client.SendPacket(new QuestDamage() { ObjectId = enemy.Id, Top = top, Mine = mine });
         }
 
         private bool CheckLevelUp()

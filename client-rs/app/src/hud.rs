@@ -1546,10 +1546,79 @@ fn stat_name(id: i32) -> &'static str {
 
 /// `EquipmentToolTip`, the parts that matter: title and tier, description, weapon numbers,
 /// ability costs, stat bonuses, and how to use it.
+/// What an item's tooltip compares with another's (`EquipmentToolTip`'s comparisons).
+#[derive(Default)]
+struct ItemNumbers {
+    /// An item was there to compare with.
+    present: bool,
+    shots: Option<f64>,
+    damage: Option<f64>,
+    range: Option<f64>,
+    rate_of_fire: Option<f64>,
+    mp_cost: Option<f64>,
+    cooldown: Option<f64>,
+    fame_bonus: Option<f64>,
+    boosts: Vec<(i32, i32)>,
+}
+
+fn item_numbers(desc: &ObjectDesc) -> ItemNumbers {
+    let xml = &desc.xml;
+    let mut n = ItemNumbers { present: true, ..Default::default() };
+    if let Some(p) = desc.projectiles.get(&0) {
+        n.shots = Some(desc.num_projectiles() as f64);
+        n.damage = Some((p.min_damage + p.max_damage) as f64 / 2.0);
+        n.range = Some(p.speed as f64 * p.lifetime as f64 / 10000.0);
+        n.rate_of_fire = Some(desc.rate_of_fire());
+    }
+    if xml.has("Usable") {
+        n.mp_cost = xml.text_of("MpCost").and_then(|c| c.trim().parse().ok());
+        n.cooldown = Some(xml.number("Cooldown", 0.5));
+    }
+    n.fame_bonus = xml.text_of("FameBonus").and_then(|f| f.trim().parse().ok());
+    n.boosts = xml
+        .children_named("ActivateOnEquip")
+        .filter(|a| a.text.trim() == "IncrementStat")
+        .map(|b| (b.attr_int("stat", -1), b.attr_int("amount", 0)))
+        .collect();
+    n
+}
+
+/// Better than what's worn: green; worse: red; the same, or nothing to compare: plain.
+const BETTER: u32 = 0x00FF00;
+const WORSE: u32 = 0xFF0000;
+
+fn compare(mine: Option<f64>, worn: Option<f64>, higher_is_better: bool) -> u32 {
+    match (mine, worn) {
+        (Some(a), Some(b)) if (a - b).abs() > 1e-9 => {
+            if (a > b) == higher_is_better {
+                BETTER
+            } else {
+                WORSE
+            }
+        }
+        _ => VALUE,
+    }
+}
+
+/// The item worn in the slot this item would go in, if it's another item.
+fn worn_for(data: &GameData, item: i32, me: Option<&GameObj>, kind: SlotKind) -> Option<i32> {
+    if matches!(kind, SlotKind::Equip(_)) {
+        return None;
+    }
+    let me = me?;
+    let slot_type = data.objects.get(&(item as u16))?.xml.int("SlotType", 0);
+    let types = class_slot_types(data.objects.get(&me.object_type));
+    let i = types.iter().take(4).position(|&t| t == slot_type && t != 0)?;
+    me.stat_int(slot_stat(i as u8)).filter(|&w| w > 0 && w != item)
+}
+
 pub fn item_tooltip(data: &GameData, item: i32, me: Option<&GameObj>, kind: SlotKind) -> Vec<Line> {
     let Some(desc) = data.objects.get(&(item as u16)) else { return vec![Line::new("Unknown item", 14.0, true, 0xFFFFFF)] };
     let xml = &desc.xml;
     let mut out = Vec::new();
+    // Compared with what's worn in its slot.
+    let mine = item_numbers(desc);
+    let worn = worn_for(data, item, me, kind).and_then(|w| data.objects.get(&(w as u16))).map(item_numbers).unwrap_or_default();
     let title_color = [("Admin", 0xFF8BDE), ("Ethereal", 0xFF5A5A), ("Ascended", 0x66FFF0), ("Legendary", 0xFFE066)]
         .iter()
         .find(|(t, _)| xml.has(t))
@@ -1561,39 +1630,50 @@ pub fn item_tooltip(data: &GameData, item: i32, me: Option<&GameObj>, kind: Slot
     if let Some(d) = xml.text_of("Description") {
         out.push(Line::new(d.trim(), 13.0, false, ATTR));
     }
-    let mut attr = |label: &str, value: String| out.push(Line::new(&format!("{label}: {value}"), 13.0, false, VALUE));
+    let mut attr = |label: &str, value: String, color: u32| out.push(Line::new(&format!("{label}: {value}"), 13.0, false, color));
     if let Some(p) = desc.projectiles.get(&0) {
-        attr("Shots", desc.num_projectiles().to_string());
+        attr("Shots", desc.num_projectiles().to_string(), compare(mine.shots, worn.shots, true));
         let dmg = if p.min_damage == p.max_damage { p.min_damage.to_string() } else { format!("{} - {}", p.min_damage, p.max_damage) };
-        attr("Damage", dmg);
+        attr("Damage", dmg, compare(mine.damage, worn.damage, true));
         let range = p.speed as f64 * p.lifetime as f64 / 10000.0;
-        attr("Range", format!("{}", (range * 100.0).round() / 100.0));
+        attr("Range", format!("{}", (range * 100.0).round() / 100.0), compare(mine.range, worn.range, true));
         if [1, 2, 3, 8, 17, 24].contains(&xml.int("SlotType", 0)) {
-            attr("Rate of Fire", format!("{:.0}%", desc.rate_of_fire() * 100.0));
+            attr("Rate of Fire", format!("{:.0}%", desc.rate_of_fire() * 100.0), compare(mine.rate_of_fire, worn.rate_of_fire, true));
         }
         for e in &p.effects {
-            attr("Shot effect", e.clone());
+            attr("Shot effect", e.clone(), VALUE);
         }
     }
     if xml.has("Usable") {
         if let Some(cost) = xml.text_of("MpCost") {
-            attr("MP Cost", cost.trim().to_owned());
+            attr("MP Cost", cost.trim().to_owned(), compare(mine.mp_cost, worn.mp_cost, false));
         }
-        attr("Cooldown", format!("{} secs", xml.number("Cooldown", 0.5)));
+        attr("Cooldown", format!("{} secs", xml.number("Cooldown", 0.5)), compare(mine.cooldown, worn.cooldown, false));
     }
     if let Some(doses) = xml.text_of("Doses") {
-        attr("Doses", doses.trim().to_owned());
+        attr("Doses", doses.trim().to_owned(), VALUE);
     }
     if let Some(fame) = xml.text_of("FameBonus") {
-        attr("Fame Bonus", format!("{}%", fame.trim()));
+        attr("Fame Bonus", format!("{}%", fame.trim()), compare(mine.fame_bonus, worn.present.then(|| worn.fame_bonus.unwrap_or(0.0)), true));
     }
-    let boosts: Vec<_> = xml.children_named("ActivateOnEquip").filter(|a| a.text.trim() == "IncrementStat").collect();
-    if !boosts.is_empty() {
+    if !mine.boosts.is_empty() {
         out.push(Line::new("On Equip:", 13.0, false, ATTR));
-        for b in boosts {
-            let amount = b.attr_int("amount", 0);
-            let color = if amount < 0 { 0xFF0000 } else { 0x00FF00 };
-            out.push(Line::new(&format!("    {amount:+} {}", stat_name(b.attr_int("stat", -1))), 13.0, false, color));
+        let comparing = worn.present;
+        for &(stat, amount) in &mine.boosts {
+            let color = if comparing {
+                // Against what the worn item gives of the same stat (none: 0).
+                let other = worn.boosts.iter().filter(|b| b.0 == stat).map(|b| b.1).sum::<i32>();
+                match amount.cmp(&other) {
+                    std::cmp::Ordering::Greater => BETTER,
+                    std::cmp::Ordering::Less => WORSE,
+                    std::cmp::Ordering::Equal => VALUE,
+                }
+            } else if amount < 0 {
+                WORSE
+            } else {
+                BETTER
+            };
+            out.push(Line::new(&format!("    {amount:+} {}", stat_name(stat)), 13.0, false, color));
         }
     }
     for a in xml.children_named("Activate") {
@@ -1788,7 +1868,17 @@ pub fn draw_windows(ui: &mut Ui, lay: &Layout, world: &World, panel: &Panel, soc
 /// at the view's edge pointing to it when it's off screen. Then the dungeon keys (`KeysView`).
 /// The dungeon keys, the boss bar (with the share of its health we took, `DamageCounter`) and
 /// the quest arrow.
-pub fn draw_quest(ui: &mut Ui, lay: &Layout, world: &World, camera: &crate::view::Camera, quest: Option<i32>, keys: &[u32], dealt: &HashMap<i32, i32>) {
+#[allow(clippy::too_many_arguments)]
+pub fn draw_quest(
+    ui: &mut Ui,
+    lay: &Layout,
+    world: &World,
+    camera: &crate::view::Camera,
+    quest: Option<i32>,
+    keys: &[u32],
+    dealt: &HashMap<i32, i32>,
+    top: Option<&(i32, Vec<(String, i32)>, i32)>,
+) {
     let s = lay.s;
     for (i, &c) in keys.iter().enumerate() {
         // A key: a ring and a shaft, in the key's colour.
@@ -1822,15 +1912,33 @@ pub fn draw_quest(ui: &mut Ui, lay: &Layout, world: &World, camera: &crate::view
         let ns = lay.font(13.0);
         let nw = ui.measure(&name, ns, true);
         ui.label(&name, r[0] + (r[2] - nw) / 2.0, r[1] - ns * 1.35, ns, true, color::ACCENT_HI);
-        // BossHealthBar.setDamageInflicted: how much of it we did.
-        if let Some(&d) = dealt.get(&q.id).filter(|&&d| d > 0) {
-            let pct = (d.min(max) as f32 / max as f32 * 100.0).floor() as i32;
-            let t = format!("You: {pct}%");
+        // Who did the most of it (the server's count, when it sends one), then how much we did
+        // (BossHealthBar.setDamageInflicted).
+        let pct = |d: i32| (d.clamp(0, max) as f32 / max as f32 * 100.0).floor() as i32;
+        let top = top.filter(|t| t.0 == q.id);
+        let me = world.player().and_then(|p| p.name()).unwrap_or("");
+        let mut rows: Vec<(String, u32)> = top
+            .map(|t| {
+                t.1.iter()
+                    .enumerate()
+                    .map(|(i, (name, d))| (format!("{}. {name}  {}%", i + 1, pct(*d)), if name == me { color::ACCENT_HI } else { color::TEXT }))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let mine = top.map(|t| t.2).filter(|&d| d > 0).or_else(|| dealt.get(&q.id).copied().filter(|&d| d > 0));
+        if let Some(d) = mine {
+            rows.push((format!("You: {}%", pct(d)), color::ACCENT_HI));
+        }
+        if !rows.is_empty() {
             let ds = lay.font(11.0);
-            let tw = ui.measure(&t, ds, true);
-            let tag = [r[0] + (r[2] - tw) / 2.0 - 6.0 * s, r[1] + r[3] + 3.0 * s, tw + 12.0 * s, ds * 1.35];
-            theme::fill(ui.renderer, tag, tag[3] / 2.0, 0x000000, 0.5);
-            ui.label(&t, tag[0] + 6.0 * s, tag[1] + ds * 0.05, ds, true, color::ACCENT_HI);
+            let row_h = ds * 1.35;
+            let tw = rows.iter().map(|(t, _)| ui.measure(t, ds, true)).fold(0.0, f32::max);
+            let tag = [r[0] + (r[2] - tw) / 2.0 - 8.0 * s, r[1] + r[3] + 3.0 * s, tw + 16.0 * s, row_h * rows.len() as f32 + 4.0 * s];
+            theme::fill(ui.renderer, tag, 8.0 * s, 0x000000, 0.5);
+            for (i, (t, c)) in rows.iter().enumerate() {
+                let w = ui.measure(t, ds, true);
+                ui.label(t, r[0] + (r[2] - w) / 2.0, tag[1] + 2.0 * s + row_h * i as f32 + ds * 0.05, ds, true, *c);
+            }
         }
         if let Some(src) = ui.src(&desc.texture) {
             if let Some(icon) = ui.redrawer.get(ui.sprites, ui.renderer, src, false, 60, None) {
@@ -1936,6 +2044,38 @@ impl ChatLine {
     }
 }
 
+/// A line being typed: its text, scrolled to keep the cursor in sight, the selection behind it
+/// and a blinking cursor, in `r` (x, y, width, height).
+pub fn draw_line_edit(ui: &mut Ui, e: &crate::textedit::LineEdit, r: [f32; 4], size: f32, placeholder: &str, now: i32) {
+    let ty = r[1] + (r[3] - size * 1.22) / 2.0;
+    if e.text.is_empty() {
+        ui.label(placeholder, r[0], ty, size, false, color::TEXT_MUTED);
+    }
+    let chars: Vec<(usize, char)> = e.text.char_indices().collect();
+    let byte = |i: usize| chars.get(i).map_or(e.text.len(), |c| c.0);
+    // The first character shown: as far left as keeps the cursor inside the box.
+    let mut start = 0;
+    while start < e.cursor && ui.measure(&e.text[byte(start)..byte(e.cursor)], size, false) > r[2] - 4.0 {
+        start += 1;
+    }
+    let mut end = chars.len();
+    while end > e.cursor && ui.measure(&e.text[byte(start)..byte(end)], size, false) > r[2] {
+        end -= 1;
+    }
+    let x_of = |ui: &mut Ui, i: usize| r[0] + ui.measure(&e.text[byte(start)..byte(i.clamp(start, end))], size, false);
+    if let Some((a, b)) = e.selection() {
+        let (xa, xb) = (x_of(ui, a), x_of(ui, b));
+        if xb > xa {
+            ui.rect(xa, ty - 1.0, xb - xa, size * 1.3, color::ACCENT, 0.45);
+        }
+    }
+    ui.label(&e.text[byte(start)..byte(end)], r[0], ty, size, false, color::TEXT);
+    if (now / 530) % 2 == 0 {
+        let x = x_of(ui, e.cursor);
+        ui.rect(x.round(), ty, (size / 14.0).max(1.0).round(), size * 1.2, color::TEXT, 1.0);
+    }
+}
+
 /// How long a chat line stays up while the input is closed, ms.
 const CHAT_SHOW_MS: i32 = 30_000;
 
@@ -1949,7 +2089,7 @@ impl HudState {
 /// The chat box at the bottom left of the view: the newest lines (all of them, `scroll` rows
 /// back, after Page Up), wrapped to fit, and the line being typed. Returns where the players'
 /// names are, for clicks.
-pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input: Option<&str>, scroll: Option<usize>, now: i32) -> Vec<(String, [f32; 4])> {
+pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input: Option<&crate::textedit::LineEdit>, scroll: Option<usize>, now: i32) -> Vec<(String, [f32; 4])> {
     let mut names = Vec::new();
     let s = lay.s;
     let size = lay.font(14.0);
@@ -1961,17 +2101,7 @@ pub fn draw_chat(ui: &mut Ui, lay: &Layout, lines: &[ChatLine], me: &str, input:
     if let Some(input) = input {
         let r = [margin, bottom - line_h - 12.0 * s, max_w + 16.0 * s, line_h + 12.0 * s];
         ui.field_box(r, true, s);
-        let shown = if (now / 530) % 2 == 0 { format!("{input}|") } else { input.to_owned() };
-        // Long input scrolls: show its end.
-        let mut start = 0;
-        while start < shown.len() && ui.measure(&shown[start..], size, false) > max_w {
-            start += shown[start..].chars().next().map_or(1, |c| c.len_utf8());
-        }
-        if input.is_empty() {
-            ui.label("Say something, or /help", r[0] + 8.0 * s, r[1] + (r[3] - size * 1.22) / 2.0, size, false, color::TEXT_MUTED);
-        } else {
-            ui.label(&shown[start..], r[0] + 8.0 * s, r[1] + (r[3] - size * 1.22) / 2.0, size, false, color::TEXT);
-        }
+        draw_line_edit(ui, input, [r[0] + 8.0 * s, r[1], max_w, r[3]], size, "Say something, or /help", now);
         bottom = r[1] - 6.0 * s;
     }
     // Wrap the newest lines into rows, newest at the bottom.

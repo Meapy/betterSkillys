@@ -40,6 +40,14 @@ wire_struct! {
 }
 
 wire_struct! {
+    /// One of a quest's top damage dealers (`QuestDamage`).
+    pub struct DamageShare {
+        pub name: String,
+        pub damage: i32,
+    }
+}
+
+wire_struct! {
     pub struct TradeItem {
         pub item: i32,
         pub slot_type: i32,

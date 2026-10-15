@@ -43,9 +43,10 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | HUD: minimap, bars, equipment, inventory, backpack, stats, potions | `HUDView` | Done |
 | Minimap zoom (buttons, - and =, the mouse wheel), player tooltips and menus on the minimap; the map's name | `MiniMap` | Done |
 | Nearby players' details on hover: health, magic, gear | `PlayerToolTip` | Done |
-| Item tooltips | `EquipmentToolTip` | Done |
+| Item tooltips, compared with what's worn in that slot (better green, worse red) | `EquipmentToolTip` | Done |
 | Items: swap, drop, use, equip, bags; Ctrl+click to the other page, Ctrl+right-click to break down; health and magic potions into their stacks (drag or double-click); cloth and dyes in their colours | `ItemGridMediator`, `BreakdownSlot` | Done |
-| Chat, slash commands, speech balloons | `TextBox`, `onText` | Done |
+| Chat, slash commands, speech balloons; editing the line (cursor, selection, words, copy, cut, paste, undo) | `TextBox`, `onText` | Done |
+| The quest's top three damage dealers under the boss bar | (new: `QuestDamage`) | Done |
 | Tells: Tab cycles who to whisper; G guild and P party chat; Page Up/Down history | `TextBox` | Done |
 | Notifications over objects, global notifications (keys) | `onNotification`, `onGlobalNotification` | Done |
 | Quest arrow | `QuestObjId`, `QuestArrow` | Done |

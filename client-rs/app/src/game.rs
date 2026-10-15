@@ -57,6 +57,9 @@ pub struct Game {
     last_level: i32,
     /// Damage we've done to quest monsters and chests, by object (`Parameters.DamageCounter`).
     pub dealt: std::collections::HashMap<i32, i32>,
+    /// The quest's top damage dealers (name, damage) and our own damage, as the server counts
+    /// them, for the quest it's about.
+    pub quest_damage: Option<(i32, Vec<(String, i32)>, i32)>,
     /// Who we've whispered with, newest last (Tab cycles through them).
     pub tellers: Vec<String>,
     /// The arena's wave and clock (`ArenaMenu`): wave, seconds, since when, running.
@@ -172,6 +175,7 @@ impl Game {
             music: None,
             last_level: 0,
             dealt: Default::default(),
+            quest_damage: None,
             arena: None,
             particles: Default::default(),
             quest: None,
@@ -274,6 +278,9 @@ impl Game {
                 if let Some(w) = &mut self.world {
                     w.me = Some(object_id);
                 }
+                // The quest's top damage dealers, from now on.
+                self.quest_damage = None;
+                self.socket.send(&bsk_proto::QuestDamageSubscribe {}.into());
                 self.status.clear();
             }
             Some(Event::Failure { description, .. }) => self.status = description,
@@ -285,6 +292,10 @@ impl Game {
         }
         match msg {
             ServerMessage::QuestObjId(q) => self.quest = Some(q.object_id),
+            ServerMessage::QuestDamage(d) => {
+                let top = d.top.iter().map(|s| (s.name.clone(), s.damage)).collect();
+                self.quest_damage = Some((d.object_id, top, d.mine));
+            }
             ServerMessage::TradeRequested(t) => {
                 self.invite = Some((Invite::Trade { name: t.name.clone() }, now));
                 self.add_chat("", "", &format!("{} wants to trade with you.", t.name), 0, 0, now);

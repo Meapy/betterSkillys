@@ -157,6 +157,9 @@ messages! {
         83 => MarketRemoveResult { code: i32, description: String },
         85 => MarketMyOffersResult { results: List16<MarketData> },
         87 => ImminentArenaWave { current_runtime: i32, wave: i32, current_state: i32 },
+        // Sent only to clients that asked (QuestDamageSubscribe): the quest's top damage
+        // dealers, most first, and our own damage.
+        90 => QuestDamage { object_id: i32, top: List8<DamageShare>, mine: i32 },
     }
 }
 
@@ -211,5 +214,7 @@ messages! {
         84 => MarketMyOffers {},
         86 => BreakdownSlot { time: i32, slot: u8, object_id: i32 },
         88 => ViewRadius { radius: i32 },
+        // Ask for QuestDamage (once a connection; a server without it ignores it).
+        89 => QuestDamageSubscribe {},
     }
 }
