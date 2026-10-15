@@ -8,8 +8,29 @@ struct Globals {
 };
 
 @group(0) @binding(0) var<uniform> globals: Globals;
-@group(1) @binding(0) var page: texture_2d<f32>;
-@group(1) @binding(1) var page_sampler: sampler;
+@group(1) @binding(0) var p0: texture_2d<f32>;
+@group(1) @binding(1) var p1: texture_2d<f32>;
+@group(1) @binding(2) var p2: texture_2d<f32>;
+@group(1) @binding(3) var p3: texture_2d<f32>;
+@group(1) @binding(4) var p4: texture_2d<f32>;
+@group(1) @binding(5) var p5: texture_2d<f32>;
+@group(1) @binding(6) var p6: texture_2d<f32>;
+@group(1) @binding(7) var p7: texture_2d<f32>;
+@group(1) @binding(8) var page_sampler: sampler;
+
+// A texel of page `page` of the bound group (nearest, no mipmaps).
+fn page_texel(page: u32, uv: vec2<f32>) -> vec4<f32> {
+    switch page {
+        case 0u: { return textureSampleLevel(p0, page_sampler, uv, 0.0); }
+        case 1u: { return textureSampleLevel(p1, page_sampler, uv, 0.0); }
+        case 2u: { return textureSampleLevel(p2, page_sampler, uv, 0.0); }
+        case 3u: { return textureSampleLevel(p3, page_sampler, uv, 0.0); }
+        case 4u: { return textureSampleLevel(p4, page_sampler, uv, 0.0); }
+        case 5u: { return textureSampleLevel(p5, page_sampler, uv, 0.0); }
+        case 6u: { return textureSampleLevel(p6, page_sampler, uv, 0.0); }
+        default: { return textureSampleLevel(p7, page_sampler, uv, 0.0); }
+    }
+}
 
 struct Instance {
     @location(0) axes: vec4<f32>,   // x axis (a, b), y axis (c, d)
@@ -17,6 +38,7 @@ struct Instance {
     @location(2) uv: vec4<f32>,     // u0, v0, u1, v1
     @location(3) mul: vec4<f32>,
     @location(4) add: vec4<f32>,
+    @location(5) page: u32,
 };
 
 struct VertexOut {
@@ -24,6 +46,7 @@ struct VertexOut {
     @location(0) uv: vec2<f32>,
     @location(1) mul: vec4<f32>,
     @location(2) add: vec4<f32>,
+    @location(3) @interpolate(flat) page: u32,
 };
 
 @vertex
@@ -40,12 +63,13 @@ fn vs_main(@builtin(vertex_index) vi: u32, inst: Instance) -> VertexOut {
     out.uv = mix(inst.uv.xy, inst.uv.zw, c);
     out.mul = inst.mul;
     out.add = inst.add;
+    out.page = inst.page;
     return out;
 }
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4<f32> {
-    let t = textureSample(page, page_sampler, in.uv);
+    let t = page_texel(in.page, in.uv);
     // add.w picks a colour filter first: 1 grey (greyscaleFilterMatrix), 2 red (redFilterMatrix).
     let l = dot(t.rgb, vec3<f32>(0.3, 0.59, 0.11));
     var c = t.rgb;

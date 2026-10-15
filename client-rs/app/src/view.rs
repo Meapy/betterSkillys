@@ -29,20 +29,36 @@ pub struct Camera {
     /// Where the camera point is on the screen.
     pub cx: f64,
     pub cy: f64,
+    /// The angle's sine and cosine, worked out once (every point drawn uses them).
+    sin: f64,
+    cos: f64,
 }
 
 impl Camera {
+    pub fn new(x: f64, y: f64, angle: f64, scale: f64, cx: f64, cy: f64) -> Self {
+        let (sin, cos) = angle.sin_cos();
+        Camera { x, y, angle, scale, cx, cy, sin, cos }
+    }
+
     pub fn to_screen(&self, x: f64, y: f64, z: f64) -> [f32; 2] {
-        let (s, c) = self.angle.sin_cos();
+        let (s, c) = (self.sin, self.cos);
         let (dx, dy) = (x - self.x, y - self.y);
         let sx = dx * c + dy * s;
         let sy = -dx * s + dy * c - z;
         [(self.cx + sx * self.scale) as f32, (self.cy + sy * self.scale) as f32]
     }
 
+    /// `to_screen` as an affine map: where (0, 0, 0) lands, and the steps for one tile along x
+    /// and along y (z goes straight up the screen by `scale`). Exact, and cheap for many points.
+    fn affine(&self) -> ([f64; 2], [f64; 2], [f64; 2]) {
+        let (s, c) = (self.sin, self.cos);
+        let o = [self.cx - (self.x * c + self.y * s) * self.scale, self.cy - (-self.x * s + self.y * c) * self.scale];
+        (o, [c * self.scale, -s * self.scale], [s * self.scale, c * self.scale])
+    }
+
     /// The ground point under a screen point (`Map.pSTopW`).
     pub fn to_world(&self, px: f64, py: f64) -> (f64, f64) {
-        let (s, c) = self.angle.sin_cos();
+        let (s, c) = (self.sin, self.cos);
         let (sx, sy) = ((px - self.cx) / self.scale, (py - self.cy) / self.scale);
         (self.x + sx * c - sy * s, self.y + sx * s + sy * c)
     }
@@ -321,11 +337,37 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
 
     // Ground: all base faces, then the blended overlays (Map.draw's two passes).
     let mut overlays = Vec::new();
+    let (o, ex, ey) = cam.affine();
+    // Only squares on the screen: a tile's centre within a tile of the window's edges.
+    let (sw, sh, margin) = (w as f64, h as f64, cam.scale);
     for ty in y0.max(0)..=y1.min(world.height - 1) {
-        for tx in x0.max(0)..=x1.min(world.width - 1) {
+        let y = ty as f64;
+        // Along a row the tile centres move in a straight line: the columns on screen are
+        // where both screen coordinates are in range.
+        let (mut lo, mut hi) = (x0.max(0) as f64, x1.min(world.width - 1) as f64);
+        for (base, step, max) in [(o[0] + (y + 0.5) * ey[0] + 0.5 * ex[0], ex[0], sw), (o[1] + (y + 0.5) * ey[1] + 0.5 * ex[1], ex[1], sh)] {
+            if step.abs() < 1e-9 {
+                if base < -margin || base > max + margin {
+                    hi = lo - 1.0;
+                }
+                continue;
+            }
+            let (a, b) = ((-margin - base) / step, (max + margin - base) / step);
+            lo = lo.max(a.min(b).floor());
+            hi = hi.min(a.max(b).ceil());
+        }
+        if hi < lo {
+            continue;
+        }
+        for tx in lo as i32..=hi as i32 {
+            let x = tx as f64;
+            let (cx, cy) = (o[0] + (x + 0.5) * ex[0] + (y + 0.5) * ey[0], o[1] + (x + 0.5) * ex[1] + (y + 0.5) * ey[1]);
+            if cx < -margin || cy < -margin || cx > sw + margin || cy > sh + margin {
+                continue;
+            }
             let Some(layers) = ground.layers(world, scene.data, scene.sprites, renderer, tx, ty) else { continue };
-            let (x, y) = (tx as f64, ty as f64);
-            let quad = cam.quad([x, y, 0.0], [x + 1.0, y, 0.0], [x, y + 1.0, 0.0]);
+            let origin = [(o[0] + x * ex[0] + y * ey[0]) as f32, (o[1] + x * ex[1] + y * ey[1]) as f32];
+            let quad = Quad { origin, x_axis: [ex[0] as f32, ex[1] as f32], y_axis: [ey[0] as f32, ey[1] as f32] };
             if let Some((rect, kind, dx, dy)) = layers.base {
                 let (ox, oy) = crate::ground::scroll(kind, dx, dy, scene.time);
                 crate::ground::draw_scrolled(renderer, rect, quad, ox, oy, Tint::NONE);
@@ -338,6 +380,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
     for (rect, quad) in overlays {
         renderer.sprite(rect, quad, Tint::NONE);
     }
+    crate::prof::mark("v.ground");
 
     // Objects and walls, back to front by the screen y of their ground point.
     let mut items: Vec<(f32, Item)> = Vec::new();
@@ -368,6 +411,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         }
     }
     items.sort_by(|a, b| a.0.total_cmp(&b.0));
+    crate::prof::mark("v.sort");
 
     // Map.draw: DrawUnder objects first, then the shadows, then everything else.
     let under = |item: &Item| matches!(item, Item::Sprite { desc, .. } if desc.draw_under);
@@ -398,7 +442,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
     for (_, item) in items.iter().filter(|(_, i)| !under(i)) {
         match item {
             Item::Wall { obj, desc } => draw_wall(scene, renderer, obj, desc),
-            Item::Connected { obj, desc } => draw_connected(scene, renderer, obj, desc),
+            Item::Connected { obj, desc } => draw_connected(scene, renderer, ground, obj, desc),
             Item::Model { obj, desc, model } => draw_model(scene, renderer, obj, desc, model),
             Item::Projectile(p) => draw_projectile(scene, renderer, redrawer, p),
             Item::Sprite { obj, desc } => {
@@ -408,7 +452,9 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
             }
         }
     }
+    crate::prof::mark("v.objects");
     scene.particles.draw(&cam, renderer);
+    crate::prof::mark("v.particles");
 
     // Condition icons (`GameObject.drawConditionIcons`): in a row centred on the sprite's top,
     // each taking turns through its icons; none while paused.
@@ -434,6 +480,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         }
     }
 
+    crate::prof::mark("v.icons");
     // HP bars (`GameObject.drawHpBar`) under monsters and players.
     for (_, item) in items.iter().filter(|_| scene.show.hp_bars) {
         let Item::Sprite { obj, desc } = item else { continue };
@@ -460,6 +507,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         }
     }
 
+    crate::prof::mark("v.hp");
     // Damage numbers and notifications, rising above the object.
     let style = Style { size: (18.0 * k).round().max(10.0), bold: true, color: 0xFF0000 };
     for f in scene.floaters.iter().filter(|f| scene.show.damage_numbers || !(f.color == 0xFF0000 && f.text.starts_with('-'))) {
@@ -547,6 +595,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         draw_star(renderer, left + 10.0 * k, py + 12.0 * k, k, star_color(obj.stat_int(30).unwrap_or(0), classes));
         text.draw_centered(fonts, renderer, name, left + 20.0 * k + w / 2.0, py, style);
     }
+    crate::prof::mark("v.text");
     let _ = PAD;
 }
 
@@ -726,9 +775,28 @@ fn draw_model(scene: &Scene, renderer: &mut Renderer, obj: &GameObj, desc: &Obje
 
 /// `ConnectedObject.draw`: the faces for the shape the CONNECT stat gives, turned to fit. Faces
 /// that look at unknown ground are black.
-fn draw_connected(scene: &Scene, renderer: &mut Renderer, obj: &GameObj, desc: &ObjectDesc) {
-    let Some((shape, rotation)) = obj.stat_int(41).and_then(connected::shape) else { return };
+fn draw_connected(scene: &Scene, renderer: &mut Renderer, ground: &mut Ground, obj: &GameObj, desc: &ObjectDesc) {
+    let Some(connect) = obj.stat_int(41) else { return };
+    let cached = ground.walls.get(&obj.id).filter(|c| c.0 == connect && c.1 == obj.object_type).map(|c| c.2.clone());
+    let look = match cached {
+        Some(look) => look,
+        None => {
+            let Some(look) = connected_look(scene, obj, desc, connect) else { return };
+            let look = std::rc::Rc::new(look);
+            ground.walls.insert(obj.id, (connect, obj.object_type, look.clone()));
+            look
+        }
+    };
     let cam = scene.camera;
+    let crate::ground::WallLook { faces, rotation, side, top } = &*look;
+    let (rotation, side, top) = (*rotation, *side, *top);
+    connected_faces(scene, renderer, obj, faces, rotation, side, top, &cam);
+}
+
+/// A connected wall's faces for its shape, and its textures (all fixed while its CONNECT stat
+/// is).
+fn connected_look(scene: &Scene, obj: &GameObj, desc: &ObjectDesc, connect: i32) -> Option<crate::ground::WallLook> {
+    let (shape, rotation) = connected::shape(connect)?;
     let side = scene.texture_src(&desc.texture, obj.id).and_then(|s| scene.sprites.atlas(s));
     let faces = if desc.class == ObjectClass::CaveWall {
         // Math.random in the AIR client; seeded by the object here so it holds still.
@@ -752,13 +820,27 @@ fn draw_connected(scene: &Scene, renderer: &mut Renderer, obj: &GameObj, desc: &
         })
         .and_then(|s| scene.sprites.atlas(s))
         .or(side);
+    Some(crate::ground::WallLook { faces, rotation, side, top })
+}
+
+#[allow(clippy::too_many_arguments)]
+fn connected_faces(
+    scene: &Scene,
+    renderer: &mut Renderer,
+    obj: &GameObj,
+    faces: &[connected::Face],
+    rotation: i32,
+    side: Option<bsk_render::AtlasRect>,
+    top: Option<bsk_render::AtlasRect>,
+    cam: &Camera,
+) {
     let (s, c) = (rotation as f64 * 90.0).to_radians().sin_cos();
     let turn = |p: connected::V3| [p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2]];
     let to_world = |p: connected::V3| {
         let t = turn(p);
         [t[0] + obj.x, t[1] + obj.y, t[2]]
     };
-    for face in &faces {
+    for face in faces {
         let basis = face.basis.map(to_world);
         let bs = basis.map(|p| cam.to_screen(p[0], p[1], p[2]));
         let (u, v) = (sub(bs[1], bs[0]), sub(bs[2], bs[0]));
@@ -867,12 +949,12 @@ mod tests {
 
     #[test]
     fn camera_projection() {
-        let cam = Camera { x: 10.0, y: 10.0, angle: 0.0, scale: 50.0, cx: 400.0, cy: 300.0 };
+        let cam = Camera::new(10.0, 10.0, 0.0, 50.0, 400.0, 300.0);
         assert_eq!(cam.to_screen(10.0, 10.0, 0.0), [400.0, 300.0]);
         assert_eq!(cam.to_screen(11.0, 10.0, 0.0), [450.0, 300.0]);
         assert_eq!(cam.to_screen(10.0, 11.0, 1.0), [400.0, 300.0], "one tile south, one up");
         // Turned a quarter: east goes up the screen.
-        let cam = Camera { angle: std::f64::consts::FRAC_PI_2, ..cam };
+        let cam = Camera::new(10.0, 10.0, std::f64::consts::FRAC_PI_2, 50.0, 400.0, 300.0);
         let p = cam.to_screen(11.0, 10.0, 0.0);
         assert!((p[0] - 400.0).abs() < 1e-3 && (p[1] - 250.0).abs() < 1e-3, "{p:?}");
     }

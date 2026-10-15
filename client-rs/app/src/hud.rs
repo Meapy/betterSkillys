@@ -190,6 +190,8 @@ pub fn cut_rect(renderer: &mut Renderer, r: [f32; 4], cut: f32, cuts: [bool; 4],
 #[derive(Default)]
 pub struct MapColors {
     tiles: HashMap<u16, u32>,
+    /// `tiles` by tile type (u32::MAX: not worked out yet).
+    tile_fast: Vec<u32>,
     objects: HashMap<u16, u32>,
 }
 
@@ -206,10 +208,20 @@ fn most_common_color(img: &image::RgbaImage) -> u32 {
 
 impl MapColors {
     fn tile(&mut self, ui: &Ui, tile: u16) -> u32 {
-        *self.tiles.entry(tile).or_insert_with(|| {
+        // Looked up for every minimap cell, every frame: by index once known.
+        if self.tile_fast.is_empty() {
+            self.tile_fast = vec![u32::MAX; 1 << 16];
+        }
+        let fast = self.tile_fast[tile as usize];
+        if fast != u32::MAX {
+            return fast;
+        }
+        let c = *self.tiles.entry(tile).or_insert_with(|| {
             let Some(g) = ui.data.grounds.get(&tile) else { return 0 };
             g.color.unwrap_or_else(|| ui.src(&g.texture).map_or(0, |r| most_common_color(&ui.sprites.pixels(r))))
-        })
+        });
+        self.tile_fast[tile as usize] = c & 0xFF_FFFF;
+        c
     }
 
     fn object(&mut self, ui: &Ui, object_type: u16) -> u32 {
@@ -1289,29 +1301,51 @@ fn draw_minimap(ui: &mut Ui, lay: &Layout, world: &World, me: &GameObj, camera_a
     let half = (side / 2.0 / mini.zoom).ceil() as i32 + step;
     let (cx, cy) = (mini.cx, mini.cy);
     let to_map = |x: f64, y: f64| mini.to_map(x, y);
-    let mut marks: HashMap<(i32, i32), u32> = HashMap::new();
+    let (tx, ty) = ((cx.floor() as i32).div_euclid(step) * step, (cy.floor() as i32).div_euclid(step) * step);
+    // Static objects that fill their square, by cell of the box (u32::MAX: none).
+    let cells = (2 * half / step + 1) as usize;
+    let mut marks = vec![u32::MAX; cells * cells];
+    let cell_of = |x: i32, y: i32| -> Option<usize> {
+        let (dx, dy) = (x - (tx - half), y - (ty - half));
+        (dx >= 0 && dy >= 0 && dx % step == 0 && dy % step == 0 && (dx / step) < cells as i32 && (dy / step) < cells as i32)
+            .then(|| (dy / step) as usize * cells + (dx / step) as usize)
+    };
     for o in world.objects.values() {
         if let Some(d) = ui.data.objects.get(&o.object_type) {
             if d.is_static && d.occupy_square && !d.no_mini_map {
-                marks.insert((o.x.floor() as i32, o.y.floor() as i32), colors.object(ui, o.object_type));
+                if let Some(i) = cell_of(o.x.floor() as i32, o.y.floor() as i32) {
+                    marks[i] = colors.object(ui, o.object_type);
+                }
             }
         }
     }
-    let (tx, ty) = ((cx.floor() as i32).div_euclid(step) * step, (cy.floor() as i32).div_euclid(step) * step);
-    for y in (ty - half..=ty + half).step_by(step as usize) {
-        for x in (tx - half..=tx + half).step_by(step as usize) {
-            let Some(tile) = world.tile(x, y) else { continue };
-            let (px, py) = to_map(x as f64, y as f64);
-            // Whole tiles only, clipped to the box.
-            let (l, t) = (px.max(x0), py.max(y0));
-            let (r, b) = ((px + zoom).min(x0 + side), (py + zoom).min(y0 + side));
-            if r <= l || b <= t {
-                continue;
+    // Each row as runs of one colour, one rectangle a run.
+    for (row, y) in (ty - half..=ty + half).step_by(step as usize).enumerate() {
+        let mut run: Option<([f32; 4], u32)> = None;
+        for (col, x) in (tx - half..=tx + half).step_by(step as usize).enumerate() {
+            let cell = world.tile(x, y).and_then(|tile| {
+                let (px, py) = to_map(x as f64, y as f64);
+                // Whole tiles only, clipped to the box.
+                let (l, t) = (px.max(x0), py.max(y0));
+                let (r, b) = ((px + zoom).min(x0 + side), (py + zoom).min(y0 + side));
+                if r <= l || b <= t {
+                    return None;
+                }
+                let mark = marks.get(row * cells + col).copied().unwrap_or(u32::MAX);
+                let color = if mark != u32::MAX { mark } else { colors.tile(ui, tile) };
+                Some(([l, t, r, b], color))
+            });
+            match (&mut run, cell) {
+                (Some((rr, rc)), Some((c, color))) if *rc == color && rr[1] == c[1] && rr[3] == c[3] && rr[2] == c[0] => rr[2] = c[2],
+                (_, next) => {
+                    if let Some(([l, t, r, b], color)) = run {
+                        ui.rect(l, t, r - l, b - t, color, 1.0);
+                    }
+                    run = next;
+                }
             }
-            let color = match marks.get(&(x, y)) {
-                Some(&c) => c,
-                None => colors.tile(ui, tile),
-            };
+        }
+        if let Some(([l, t, r, b], color)) = run {
             ui.rect(l, t, r - l, b - t, color, 1.0);
         }
     }

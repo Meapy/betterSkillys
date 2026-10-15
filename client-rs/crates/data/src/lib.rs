@@ -19,9 +19,9 @@ use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct GameData {
-    pub grounds: HashMap<u16, Ground>,
-    pub objects: HashMap<u16, ObjectDesc>,
-    pub object_ids: HashMap<String, u16>,
+    pub grounds: rustc_hash::FxHashMap<u16, Ground>,
+    pub objects: rustc_hash::FxHashMap<u16, ObjectDesc>,
+    pub object_ids: rustc_hash::FxHashMap<String, u16>,
     pub ground_ids: HashMap<String, u16>,
     /// 3D models by name (`<Model>` in object XML).
     pub models: HashMap<String, Model>,

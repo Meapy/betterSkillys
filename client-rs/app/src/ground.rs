@@ -8,7 +8,6 @@ use bsk_data::{AnimateKind, GameData, TextureData, TextureRef};
 use bsk_render::{AtlasRect, Quad, Renderer, Tint};
 use bsk_world::World;
 use image::RgbaImage;
-use std::collections::HashMap;
 
 const INNER: usize = 0;
 const SIDE0: usize = 1;
@@ -18,6 +17,7 @@ const INNER_P1: usize = 4;
 const INNER_P2: usize = 5;
 
 /// What to draw for one square.
+#[derive(Clone, Copy)]
 pub struct TileLayers {
     /// The tile's own texture (scrolling if animated), unless the blended image replaces it.
     pub base: Option<(AtlasRect, AnimateKind, f64, f64)>,
@@ -31,10 +31,27 @@ pub struct TileLayers {
 pub struct Ground {
     /// Per quadrant (0..4): the six mask sets, each a list of 4×4 alpha images.
     masks: Option<Vec<[Vec<RgbaImage>; 6]>>,
-    cache: HashMap<([u16; 9], bool), Option<AtlasRect>>,
-    composites: HashMap<[u16; 4], Option<AtlasRect>>,
+    cache: rustc_hash::FxHashMap<([u16; 9], bool), Option<AtlasRect>>,
+    composites: rustc_hash::FxHashMap<[u16; 4], Option<AtlasRect>>,
     /// Edged tiles by (type, which of the eight neighbours need no edge).
-    edges: HashMap<(u16, u8), Option<AtlasRect>>,
+    edges: rustc_hash::FxHashMap<(u16, u8), Option<AtlasRect>>,
+    /// Each square's layers once worked out (outer None: not yet), for the World `world_id`,
+    /// up to `log_seen` of its tile log. A square is worked out again when it or a neighbour
+    /// changes.
+    squares: Vec<Option<Option<TileLayers>>>,
+    world_id: u64,
+    log_seen: usize,
+    /// Connected walls' faces and top texture by object id, with the CONNECT stat and type
+    /// they were worked out for (they only change if those do).
+    pub walls: rustc_hash::FxHashMap<i32, (i32, u16, std::rc::Rc<WallLook>)>,
+}
+
+/// What a connected wall draws: its faces, its side and top textures.
+pub struct WallLook {
+    pub faces: Vec<crate::connected::Face>,
+    pub rotation: i32,
+    pub side: Option<AtlasRect>,
+    pub top: Option<AtlasRect>,
 }
 
 /// The tile type of a composite square (`TileRedrawer`'s 253).
@@ -107,8 +124,51 @@ impl Ground {
         })
     }
 
+    /// Forget squares whose tile, or a neighbour's, changed since last time (all of them for a
+    /// new map).
+    fn sync(&mut self, world: &World) {
+        let n = (world.width.max(0) * world.height.max(0)) as usize;
+        if self.world_id != world.id() || self.squares.len() != n {
+            self.world_id = world.id();
+            self.squares = vec![None; n];
+            self.log_seen = 0;
+            self.walls.clear();
+        }
+        let log = world.tile_log();
+        if self.log_seen == log.len() {
+            return;
+        }
+        let w = world.width;
+        for &i in &log[self.log_seen..] {
+            let (x, y) = (i as i32 % w, i as i32 / w);
+            for dy in -1..=1 {
+                for dx in -1..=1 {
+                    let (nx, ny) = (x + dx, y + dy);
+                    if nx >= 0 && ny >= 0 && nx < w && ny < world.height {
+                        self.squares[(nx + ny * w) as usize] = None;
+                    }
+                }
+            }
+        }
+        self.log_seen = log.len();
+    }
+
     /// The layers for square (x, y).
     pub fn layers(&mut self, world: &World, data: &GameData, sprites: &Sprites, renderer: &mut Renderer, x: i32, y: i32) -> Option<TileLayers> {
+        self.sync(world);
+        if x < 0 || y < 0 || x >= world.width || y >= world.height {
+            return None;
+        }
+        let i = (x + y * world.width) as usize;
+        if let Some(cached) = self.squares[i] {
+            return cached;
+        }
+        let layers = self.work_out(world, data, sprites, renderer, x, y);
+        self.squares[i] = Some(layers);
+        layers
+    }
+
+    fn work_out(&mut self, world: &World, data: &GameData, sprites: &Sprites, renderer: &mut Renderer, x: i32, y: i32) -> Option<TileLayers> {
         let tile = world.tile(x, y)?;
         let ground = data.grounds.get(&tile)?;
         let animated = ground.animate.kind != AnimateKind::None;

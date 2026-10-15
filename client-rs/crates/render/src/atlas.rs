@@ -30,7 +30,7 @@ struct Shelf {
 
 pub(crate) struct Page {
     pub texture: wgpu::Texture,
-    pub bind_group: wgpu::BindGroup,
+    pub view: wgpu::TextureView,
     shelves: Vec<Shelf>,
     next_y: u32,
 }
@@ -72,8 +72,9 @@ fn rect(page: usize, x: u32, y: u32, w: u32, h: u32) -> AtlasRect {
 }
 
 impl Page {
-    pub fn new(texture: wgpu::Texture, bind_group: wgpu::BindGroup) -> Self {
-        Self { texture, bind_group, shelves: Vec::new(), next_y: 0 }
+    pub fn new(texture: wgpu::Texture) -> Self {
+        let view = texture.create_view(&Default::default());
+        Self { texture, view, shelves: Vec::new(), next_y: 0 }
     }
 
     /// Shelf packing: the first shelf tall enough (but not wastefully tall) with room left.

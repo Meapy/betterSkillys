@@ -71,8 +71,8 @@ impl CharSheet {
 #[derive(Default)]
 pub struct Sprites {
     sheets: Vec<Sheet>,
-    sets: HashMap<String, ImageSet>,
-    chars: HashMap<String, CharSheet>,
+    sets: rustc_hash::FxHashMap<String, ImageSet>,
+    chars: rustc_hash::FxHashMap<String, CharSheet>,
     /// Emotes by the text that turns into them.
     pub emotes: HashMap<String, bsk_assets::EmoteDef>,
 }

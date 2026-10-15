@@ -381,6 +381,7 @@ dependencies = [
  "log",
  "pollster",
  "rodio",
+ "rustc-hash",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -397,6 +398,7 @@ dependencies = [
  "log",
  "pollster",
  "roxmltree",
+ "rustc-hash",
 ]
 
 [[package]]
@@ -462,6 +464,7 @@ dependencies = [
  "bsk-data",
  "bsk-proto",
  "log",
+ "rustc-hash",
 ]
 
 [[package]]

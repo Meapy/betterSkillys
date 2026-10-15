@@ -5,6 +5,7 @@ version.workspace = true
 publish.workspace = true
 
 [dependencies]
+rustc-hash.workspace = true
 bsk-assets.workspace = true
 futures.workspace = true
 log.workspace = true

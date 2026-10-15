@@ -80,16 +80,23 @@ impl GameObj {
     }
 }
 
+/// Numbers each World made, so caches can tell a new map from the old one.
+static NEXT_WORLD_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+
 pub struct World {
     pub width: i32,
     pub height: i32,
     pub name: String,
+    /// Different for every World made.
+    id: u64,
     tiles: Vec<u16>,
+    /// The squares whose tile was set or changed, in order (for caches of what's drawn there).
+    tile_log: Vec<u32>,
     /// Squares a tile has been set on (`Map.squares_` entries that exist).
     known: Vec<bool>,
     /// The static object standing on each square (`Square.obj_`).
-    occupant: HashMap<(i32, i32), i32>,
-    pub objects: HashMap<i32, GameObj>,
+    occupant: rustc_hash::FxHashMap<(i32, i32), i32>,
+    pub objects: rustc_hash::FxHashMap<i32, GameObj>,
     /// Our player's object id.
     pub me: Option<i32>,
     pub last_tick_id: i32,
@@ -114,10 +121,12 @@ impl World {
             width,
             height,
             name: name.to_owned(),
+            id: NEXT_WORLD_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             tiles: vec![NO_TILE; n],
+            tile_log: Vec::new(),
             known: vec![false; n],
-            occupant: HashMap::new(),
-            objects: HashMap::new(),
+            occupant: Default::default(),
+            objects: Default::default(),
             me: None,
             last_tick_id: -1,
             move_multiplier: 1.0,
@@ -142,9 +151,22 @@ impl World {
 
     pub fn set_tile(&mut self, x: i32, y: i32, tile_type: u16) {
         if let Some(i) = self.index(x, y) {
+            if !self.known[i] || self.tiles[i] != tile_type {
+                self.tile_log.push(i as u32);
+            }
             self.tiles[i] = tile_type;
             self.known[i] = true;
         }
+    }
+
+    /// Different for every World made.
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+
+    /// The squares (`x + y * width`) whose tile was set or changed, oldest first.
+    pub fn tile_log(&self) -> &[u32] {
+        &self.tile_log
     }
 
     pub fn occupant(&self, x: i32, y: i32) -> Option<&GameObj> {

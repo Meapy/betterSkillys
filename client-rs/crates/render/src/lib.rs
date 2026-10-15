@@ -13,6 +13,10 @@ use atlas::{Atlas, Page};
 /// 2048×2048, which needs a bigger page once padded.
 const PAGE_SIZE: u32 = 4096;
 
+/// Atlas pages bound together: draws from any of them go out in one call. (WebGL2 allows 16
+/// textures a shader stage.)
+const GROUP: usize = 8;
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 struct Instance {
@@ -21,6 +25,8 @@ struct Instance {
     uv: [f32; 4],
     mul: [f32; 4],
     add: [f32; 4],
+    /// Which page of its group.
+    page: u32,
 }
 
 #[repr(C)]
@@ -40,6 +46,8 @@ struct TriVertex {
     rect: [f32; 4],
     mul: [f32; 4],
     wrap: f32,
+    /// Which page of its group.
+    page: u32,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -48,10 +56,11 @@ enum Kind {
     Triangles,
 }
 
-/// A run of consecutive quads (instances) or triangle vertices drawn from the same page.
+/// A run of consecutive quads (instances) or triangle vertices drawn from the same group of
+/// pages.
 struct Run {
     kind: Kind,
-    page: u16,
+    group: u16,
     start: u32,
     end: u32,
 }
@@ -156,6 +165,9 @@ pub struct Renderer {
     instance_buffer: wgpu::Buffer,
     instance_capacity: usize,
     atlas: Atlas,
+    /// One binding per GROUP pages, and how many pages they were made for.
+    groups: Vec<wgpu::BindGroup>,
+    groups_pages: usize,
     white: AtlasRect,
     instances: Vec<Instance>,
     runs: Vec<Run>,
@@ -247,24 +259,7 @@ impl Renderer {
         });
         let page_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("page"),
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        multisampled: false,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: None,
-                },
-            ],
+            entries: &page_entries(),
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("sprite"),
@@ -282,7 +277,7 @@ impl Renderer {
                     array_stride: std::mem::size_of::<Instance>() as u64,
                     step_mode: wgpu::VertexStepMode::Instance,
                     attributes: &wgpu::vertex_attr_array![
-                        0 => Float32x4, 1 => Float32x2, 2 => Float32x4, 3 => Float32x4, 4 => Float32x4
+                        0 => Float32x4, 1 => Float32x2, 2 => Float32x4, 3 => Float32x4, 4 => Float32x4, 5 => Uint32
                     ],
                 }],
             },
@@ -314,7 +309,7 @@ impl Renderer {
                 buffers: &[wgpu::VertexBufferLayout {
                     array_stride: std::mem::size_of::<TriVertex>() as u64,
                     step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: &wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2, 2 => Float32x4, 3 => Float32x4, 4 => Float32],
+                    attributes: &wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2, 2 => Float32x4, 3 => Float32x4, 4 => Float32, 5 => Uint32],
                 }],
             },
             fragment: Some(wgpu::FragmentState {
@@ -446,6 +441,8 @@ impl Renderer {
             instance_buffer,
             instance_capacity,
             atlas: Atlas::new(page_size),
+            groups: Vec::new(),
+            groups_pages: 0,
             white: AtlasRect { page: 0, x: 0, y: 0, w: 0, h: 0 },
             instances: Vec::with_capacity(instance_capacity),
             runs: Vec::new(),
@@ -516,9 +513,7 @@ impl Renderer {
     pub fn add_image(&mut self, image: &image::RgbaImage) -> Option<AtlasRect> {
         let (w, h) = image.dimensions();
         let device = &self.device;
-        let layout = &self.page_layout;
-        let sampler = &self.sampler;
-        let rect = self.atlas.allocate(w, h, |size| new_page(device, layout, sampler, size))?;
+        let rect = self.atlas.allocate(w, h, |size| new_page(device, size))?;
         let mut pixels = image.as_raw().clone();
         for px in pixels.chunks_exact_mut(4) {
             let a = px[3] as u16;
@@ -538,6 +533,11 @@ impl Renderer {
             wgpu::Extent3d { width: w, height: h, depth_or_array_layers: 1 },
         );
         Some(rect)
+    }
+
+    /// Quads and triangle vertices queued this frame.
+    pub fn queued(&self) -> (usize, usize) {
+        (self.instances.len(), self.tri_vertices.len())
     }
 
     pub fn atlas_pages(&self) -> usize {
@@ -561,11 +561,31 @@ impl Renderer {
     }
 
     fn extend_run(&mut self, kind: Kind, page: u16, start: u32, end: u32) {
+        let group = page / GROUP as u16;
         let at_split = self.split == Some(self.runs.len());
         match self.runs.last_mut() {
-            Some(run) if !at_split && run.kind == kind && run.page == page && run.end == start => run.end = end,
-            _ => self.runs.push(Run { kind, page, start, end }),
+            Some(run) if !at_split && run.kind == kind && run.group == group && run.end == start => run.end = end,
+            _ => self.runs.push(Run { kind, group, start, end }),
         }
+    }
+
+    /// The page bindings, made again when pages were added.
+    fn update_groups(&mut self) {
+        let pages = self.atlas.pages.len();
+        if pages == self.groups_pages {
+            return;
+        }
+        self.groups = (0..pages.div_ceil(GROUP))
+            .map(|g| {
+                let view = |i: usize| &self.atlas.pages[(g * GROUP + i).min(pages - 1)].view;
+                let mut entries: Vec<wgpu::BindGroupEntry> = (0..GROUP)
+                    .map(|i| wgpu::BindGroupEntry { binding: i as u32, resource: wgpu::BindingResource::TextureView(view(i)) })
+                    .collect();
+                entries.push(wgpu::BindGroupEntry { binding: GROUP as u32, resource: wgpu::BindingResource::Sampler(&self.sampler) });
+                self.device.create_bind_group(&wgpu::BindGroupDescriptor { label: Some("atlas pages"), layout: &self.page_layout, entries: &entries })
+            })
+            .collect();
+        self.groups_pages = pages;
     }
 
     /// A textured triangle: screen points, and texture coordinates within `src` (0..1).
@@ -593,7 +613,7 @@ impl Renderer {
         let rect = [src.x as f32 * inv, src.y as f32 * inv, src.w as f32 * inv, src.h as f32 * inv];
         let start = self.tri_vertices.len() as u32;
         for ((p, uv), mul) in pts.iter().zip(uvs).zip(muls) {
-            self.tri_vertices.push(TriVertex { pos: *p, uv, rect, mul, wrap: if wrap { 1.0 } else { 0.0 } });
+            self.tri_vertices.push(TriVertex { pos: *p, uv, rect, mul, wrap: if wrap { 1.0 } else { 0.0 }, page: (src.page as usize % GROUP) as u32 });
         }
         self.extend_run(Kind::Triangles, src.page, start, start + 3);
     }
@@ -628,6 +648,7 @@ impl Renderer {
                 Filter::Grey => 1.0,
                 Filter::Red => 2.0,
             }],
+            page: (src.page as usize % GROUP) as u32,
         });
         let end = self.instances.len() as u32;
         self.extend_run(Kind::Quads, src.page, end - 1, end);
@@ -668,6 +689,7 @@ impl Renderer {
             self.queue.write_buffer(&self.tri_buffer, 0, bytemuck::cast_slice(&self.tri_vertices));
         }
 
+        self.update_groups();
         let mut encoder = self.device.create_command_encoder(&Default::default());
         let [r, g, b] = rgb_f32(clear_rgb);
         let clear = wgpu::Color { r: r as f64, g: g as f64, b: b as f64, a: 1.0 };
@@ -713,6 +735,7 @@ impl Renderer {
     fn draw_runs(&self, pass: &mut wgpu::RenderPass, runs: &[Run]) {
         pass.set_bind_group(0, &self.globals_group, &[]);
         let mut bound: Option<Kind> = None;
+        let mut bound_group: Option<u16> = None;
         for run in runs {
             if bound != Some(run.kind) {
                 match run.kind {
@@ -727,7 +750,10 @@ impl Renderer {
                 }
                 bound = Some(run.kind);
             }
-            pass.set_bind_group(1, &self.atlas.pages[run.page as usize].bind_group, &[]);
+            if bound_group != Some(run.group) {
+                pass.set_bind_group(1, &self.groups[run.group as usize], &[]);
+                bound_group = Some(run.group);
+            }
             match run.kind {
                 Kind::Quads => pass.draw(0..6, run.start..run.end),
                 Kind::Triangles => pass.draw(run.start..run.end, 0..1),
@@ -829,7 +855,30 @@ fn begin_pass<'a>(encoder: &'a mut wgpu::CommandEncoder, view: &'a wgpu::Texture
     })
 }
 
-fn new_page(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, sampler: &wgpu::Sampler, size: u32) -> Page {
+/// The page binding's entries: GROUP textures, then the sampler.
+fn page_entries() -> Vec<wgpu::BindGroupLayoutEntry> {
+    let mut entries: Vec<wgpu::BindGroupLayoutEntry> = (0..GROUP as u32)
+        .map(|binding| wgpu::BindGroupLayoutEntry {
+            binding,
+            visibility: wgpu::ShaderStages::FRAGMENT,
+            ty: wgpu::BindingType::Texture {
+                sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                view_dimension: wgpu::TextureViewDimension::D2,
+                multisampled: false,
+            },
+            count: None,
+        })
+        .collect();
+    entries.push(wgpu::BindGroupLayoutEntry {
+        binding: GROUP as u32,
+        visibility: wgpu::ShaderStages::FRAGMENT,
+        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+        count: None,
+    });
+    entries
+}
+
+fn new_page(device: &wgpu::Device, size: u32) -> Page {
     let texture = device.create_texture(&wgpu::TextureDescriptor {
         label: Some("atlas page"),
         size: wgpu::Extent3d { width: size, height: size, depth_or_array_layers: 1 },
@@ -840,14 +889,5 @@ fn new_page(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, sampler: &wgp
         usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
         view_formats: &[],
     });
-    let view = texture.create_view(&Default::default());
-    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-        label: Some("atlas page"),
-        layout,
-        entries: &[
-            wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&view) },
-            wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(sampler) },
-        ],
-    });
-    Page::new(texture, bind_group)
+    Page::new(texture)
 }

@@ -12,6 +12,7 @@ mod hud;
 mod login;
 mod market;
 mod particles;
+mod prof;
 mod npc;
 mod options;
 mod redraw;
@@ -101,6 +102,9 @@ struct App {
     fps_shown: f32,
     /// When the last frame started (the max frame rate).
     frame_start: Instant,
+    /// --bench: no frame cap or vsync, and timings in the log.
+    bench: Option<Bench>,
+    frame_start_bench: Instant,
     /// Wheel movement not yet a whole notch (the minimap's zoom).
     wheel: f32,
     last_title: String,
@@ -263,6 +267,20 @@ fn shot_args() -> Option<(String, f32)> {
 #[cfg(target_arch = "wasm32")]
 fn shot_args() -> Option<(String, f32)> {
     None
+}
+
+/// Frame timings for --bench.
+struct Bench {
+    since: Instant,
+    frames: u32,
+    build: f64,
+    total: f64,
+}
+
+impl Default for Bench {
+    fn default() -> Self {
+        Bench { since: Instant::now(), frames: 0, build: 0.0, total: 0.0 }
+    }
 }
 
 /// Carry out what the player did on the HUD (`ItemGridMediator`).
@@ -997,7 +1015,9 @@ impl App {
         let now = self.now();
         let dt = (now - self.last_frame).clamp(0, 200);
         self.last_frame = now;
+        prof::start();
         self.advance();
+        prof::mark("advance");
         self.update_audio(now);
 
         let mut keys = (0.0, 0.0);
@@ -1075,9 +1095,9 @@ impl App {
         let (mouse, script_aim) = (self.mouse, self.script_aim);
         let Some(loaded) = self.loaded.as_mut() else { return };
         let Loaded { renderer, sprites, data, redrawer, fonts, text, title, .. } = &mut **loaded;
-        renderer.set_vsync(!self.settings.unlock_fps);
+        renderer.set_vsync(!(self.settings.unlock_fps || self.bench.is_some()));
         #[cfg(not(target_arch = "wasm32"))]
-        if self.settings.max_fps > 0 {
+        if self.settings.max_fps > 0 && self.bench.is_none() {
             let frame = std::time::Duration::from_secs_f64(1.0 / self.settings.max_fps as f64);
             let spent = self.frame_start.elapsed();
             if spent < frame {
@@ -1395,11 +1415,14 @@ impl App {
                     game.say(&line);
                 }
             }
+            prof::mark("pre");
             game.poll(now, data);
+            prof::mark("poll");
             if reset_angle {
                 game.camera_angle = game::DEFAULT_CAMERA_ANGLE;
             }
             game.update(now, dt, keys, rotate, data);
+            prof::mark("update");
             // Keep the camera's turn once it stops turning (cameraAngle).
             if rotate == 0.0 && self.settings.camera_angle != Some(game.camera_angle) {
                 self.settings.camera_angle = Some(game.camera_angle);
@@ -1417,6 +1440,7 @@ impl App {
             }
             jitter = game.particles.jitter(now);
             game.merchant_balloons(now, data);
+            prof::mark("effects");
         }
 
         let wants_fire = (self.mouse_down && self.hud.drag.is_none()) || wants_fire_scripted;
@@ -1439,14 +1463,7 @@ impl App {
                         // little below the middle, the map scaled to the space (hud::Layout).
                         let scale = lay.map_scale(self.settings.zoom);
                         let (cx, cy) = lay.camera_point(self.settings.centered);
-                        let camera = view::Camera {
-                            x: me.x + jitter.0,
-                            y: me.y + jitter.1,
-                            angle: game.camera_angle,
-                            scale,
-                            cx,
-                            cy,
-                        };
+                        let camera = view::Camera::new(me.x + jitter.0, me.y + jitter.1, game.camera_angle, scale, cx, cy);
                         // The farthest corner of the view from us, in tiles.
                         let vw = lay.view_w() as f64;
                         let far = [(0.0, 0.0), (vw, 0.0), (0.0, h as f64), (vw, h as f64)]
@@ -1487,6 +1504,7 @@ impl App {
                         }
                         let hallucinating = has(bsk_world::condition::HALLUCINATING);
                         let scene = view::Scene { sprites, data, world, camera, time: now, floaters: &game.floaters, bubbles: &game.bubbles, particles: &game.particles, show, hallucinating };
+                        prof::mark("pre-world");
                         view::draw(&scene, renderer, redrawer, ground, fonts, text);
                         // The world through a filter (Map.getFilterIndex): paused, else blind, else
                         // drunk (a swaying blur).
@@ -1503,6 +1521,7 @@ impl App {
                         renderer.world_done(filter);
                         let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
                         hud::draw_quest(&mut ui, &lay, world, &camera, game.quest, &game.keys, &game.dealt);
+                        prof::mark("quest");
                     }
                     if let Some(p) = &panel {
                         let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
@@ -1518,11 +1537,14 @@ impl App {
                             options::key_label(self.settings.key(options::Bind::HealthPotion)),
                             options::key_label(self.settings.key(options::Bind::MagicPotion)),
                         ];
+                        prof::mark("pre-panel");
                         hud::draw_panel(&mut ui, &lay, world, game.camera_angle, &mut self.map_colors, p, &self.hud, &social, mouse);
+                        prof::mark("panel");
                     }
                 }
                 let me = game.world.as_ref().and_then(|w| w.player()).and_then(|p| p.name()).unwrap_or("").to_owned();
                 let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+                prof::mark("pre-chat");
                 self.chat_names = hud::draw_chat(&mut ui, &lay, &game.chat, &me, self.chat_input.as_deref(), self.chat_scroll, now);
                 if let Some(arena) = game.arena {
                     hud::draw_arena(&mut ui, &lay, arena, now);
@@ -1563,7 +1585,9 @@ impl App {
                 hud::draw_windows(&mut ui, &lay, world, p, &social, mouse);
                 self.npcs.draw(&mut ui, &lay, world.player(), mouse, now);
                 self.market.draw(&mut ui, &lay, world.player(), mouse, now);
+                prof::mark("chat..windows");
                 hud::draw_overlay(&mut ui, &lay, world, p, &self.hud, mouse);
+                prof::mark("overlay");
             }
         }
         if self.game_menu {
@@ -1595,9 +1619,34 @@ impl App {
                 self.quit = true;
             }
         }
+        prof::mark("rest");
+        let built = self.frame_start_bench.elapsed();
+        let queued = renderer.queued();
         if let Err(e) = renderer.present(0x000000) {
             log::warn!("present: {e}");
         }
+        prof::mark("present");
+        // --bench: where the time goes, every two seconds.
+        if let Some(b) = &mut self.bench {
+            b.frames += 1;
+            b.build += built.as_secs_f64();
+            b.total += self.frame_start_bench.elapsed().as_secs_f64();
+            if b.since.elapsed().as_secs_f64() >= 2.0 {
+                let n = b.frames as f64;
+                log::info!(
+                    "bench: {:.0} fps, build {:.3} ms, present {:.3} ms, {} quads, {} tri verts, {} draws",
+                    n / b.since.elapsed().as_secs_f64(),
+                    b.build / n * 1000.0,
+                    (b.total - b.build) / n * 1000.0,
+                    queued.0,
+                    queued.1,
+                    renderer.last_draws
+                );
+                log::info!("bench: {}", prof::report(b.frames));
+                *b = Bench::default();
+            }
+        }
+        self.frame_start_bench = Instant::now();
         if let Some(image) = renderer.take_capture() {
             let path = self.shot.take().map(|s| s.0).unwrap_or_default();
             match image.save(&path) {
@@ -1919,6 +1968,11 @@ fn main() {
         fps_since: Instant::now(),
         fps_shown: 0.0,
         frame_start: Instant::now(),
+        bench: std::env::args().any(|a| a == "--bench").then(|| {
+            prof::enable();
+            Bench::default()
+        }),
+        frame_start_bench: Instant::now(),
         wheel: 0.0,
         last_title: String::new(),
         shot: shot_args(),

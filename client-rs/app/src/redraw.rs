@@ -5,7 +5,6 @@
 use crate::sprites::{Sprites, SrcRect};
 use bsk_render::{AtlasRect, Renderer};
 use image::{GenericImageView, Rgba, RgbaImage};
-use std::collections::HashMap;
 
 /// `TextureRedrawer.magic`: padding left, right and above the sprite, for the outline.
 pub const PAD: u32 = 12;
@@ -121,8 +120,8 @@ pub struct Redrawn {
 
 #[derive(Default)]
 pub struct Redrawer {
-    cache: HashMap<Key, Option<Redrawn>>,
-    icons: HashMap<(SrcRect, u32), Option<Redrawn>>,
+    cache: rustc_hash::FxHashMap<Key, Option<Redrawn>>,
+    icons: rustc_hash::FxHashMap<(SrcRect, u32), Option<Redrawn>>,
     shadow: Option<AtlasRect>,
 }
 
