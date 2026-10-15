@@ -729,6 +729,11 @@ impl Game {
         let (id, position) = (me.id, WorldPos { x: me.x as f32, y: me.y as f32 });
         let count_stat = if k == 0 { crate::hud::stat::HEALTH_POTION_STACK } else { crate::hud::stat::MAGIC_POTION_STACK };
         let count = me.stat_int(count_stat).unwrap_or(0);
+        // A full stack takes no more (PotionModel.maxPotionCount).
+        if count >= crate::hud::MAX_STACKED {
+            self.sounds.push(("error".into(), 1.0, false));
+            return;
+        }
         let msg = InvSwap {
             time: now,
             position,

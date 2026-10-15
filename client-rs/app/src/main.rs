@@ -155,6 +155,8 @@ struct App {
     endpoint: Option<login::Endpoint>,
     /// The signed-in account's email and password.
     account: Option<(String, String)>,
+    /// Signed in from --credentials (a test): the remembered login is left as it is.
+    test_login: bool,
     request: Option<(Request, Pending<bsk_net::http::Response>)>,
     /// Keys typed on the screens: (key, text).
     front_keys: Vec<(KeyCode, Option<String>)>,
@@ -566,8 +568,10 @@ impl App {
                 if let Some((email, password)) = start.login {
                     self.front.fields[screens::EMAIL] = email;
                     self.front.fields[screens::PASSWORD] = password;
-                    // Desktop tests sign in and go straight into the game.
+                    // Desktop tests sign in and go straight into the game, leaving the player's
+                    // remembered login alone.
                     self.front.remember = false;
+                    self.test_login = true;
                     let stay = cfg!(not(target_arch = "wasm32")) && std::env::args().any(|a| a == "--stay");
                     self.sign_in(cfg!(not(target_arch = "wasm32")) && !stay);
                 } else if let Some((email, password)) = login::remembered() {
@@ -822,7 +826,9 @@ impl App {
             Request::CharList { auto_play } => match login::parse_char_list(response) {
                 Ok(list) => {
                     if let Some((email, password)) = &self.account {
-                        login::remember(self.front.remember.then_some((email.as_str(), password.as_str())));
+                        if !self.test_login {
+                            login::remember(self.front.remember.then_some((email.as_str(), password.as_str())));
+                        }
                     }
                     // The server chosen last time (preferredServer), else the one showing.
                     self.front.server = list
@@ -1946,6 +1952,7 @@ fn main() {
         front: Default::default(),
         endpoint: None,
         account: None,
+        test_login: false,
         request: None,
         front_keys: Vec::new(),
         game_menu: false,

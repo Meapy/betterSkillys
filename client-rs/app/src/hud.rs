@@ -266,6 +266,9 @@ pub fn slot_stat(slot: u8) -> u8 {
 /// The health and magic potions kept in stacks (`PotionInventoryModel`): item, slot id.
 pub const POTIONS: [(i32, u8); 2] = [(2594, 254), (2595, 255)];
 
+/// The most potions a stack holds.
+pub const MAX_STACKED: i32 = 6;
+
 /// The minimap's ground where nothing is known.
 const MINIMAP_FILL: u32 = 0x1B1B1B;
 

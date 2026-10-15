@@ -221,8 +221,8 @@ pub struct Settings {
 pub const MAX_FPS: [u32; 8] = [0, 30, 60, 120, 144, 165, 240, 360];
 
 /// The world zoom's range (`Settings::zoom`).
-pub const ZOOM_MIN: f32 = 0.5;
-pub const ZOOM_MAX: f32 = 1.5;
+pub const ZOOM_MIN: f32 = 0.9;
+pub const ZOOM_MAX: f32 = 1.3;
 
 impl Default for Settings {
     fn default() -> Self {
@@ -664,7 +664,7 @@ mod tests {
         assert_eq!(s.key(Bind::MoveUp), None);
         s.particles = false;
         s.sound.music_volume = 0.25;
-        s.zoom = 0.75;
+        s.zoom = 1.2;
         s.max_fps = 144;
         s.camera_angle = Some(1.5);
         s.preferred_server = "Localhost".into();
