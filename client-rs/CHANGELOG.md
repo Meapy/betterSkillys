@@ -1,9 +1,16 @@
 # Changelog
 
-What changed in each version of the game client, in plain words for players. The game shows
-this in its Changelog window. Newest first; publishing a version needs its section here
-(`python tools/build_client_rs.py --publish`), and the version number itself is in
-`client-rs/Cargo.toml`.
+What changed in the game, in plain words for players: the client, the servers and the content.
+The game shows this in its Changelog window. Newest first.
+
+Every change goes under `## Unreleased` at the top as soon as it lands. Publishing a client
+version (`python tools/build_client_rs.py --publish`) needs a section for that version and
+refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
+version number itself is in `client-rs/Cargo.toml`.
+
+## Unreleased
+- Walking onto a square you can't stand on (it happened in the Sprite World) no longer
+  disconnects you: the server puts you back where you were.
 
 ## 1.1.3 (2026-10-15)
 - A Servers screen again: the Servers button on the character screen (or the "Server:" pill under

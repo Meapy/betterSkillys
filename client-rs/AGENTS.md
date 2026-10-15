@@ -18,7 +18,9 @@ python tools\build_client_rs.py --account http://<ip>:8080 --publish   # dist\cl
 ```
 
 - **Versions and updates:** the version is `[workspace.package] version` in `Cargo.toml`; every
-  version needs a section in `CHANGELOG.md` (a test checks this one's). `--package` and
+  version needs a section in `CHANGELOG.md` (a test checks this one's). Changes collect under
+  `## Unreleased` there (see ../AGENTS.md); on a release, raise the version and rename that
+  section to it, as `--publish` refuses while it's left. `--package` and
   `--publish` builds have the update key built in (`build/client-update.key`, made by
   `bsk-publish` on first use); they check `<account>/client/` (`update.rs`), download changed
   files in the background, and hand over to the new version at the next portal (`--resume`, with
