@@ -525,7 +525,7 @@ impl Game {
             ServerMessage::ServerPlayerShoot(s) => {
                 if world.objects.get(&s.owner_id).is_some_and(|o| !o.dead) {
                     let (x, y) = (s.starting_pos.x as f64, s.starting_pos.y as f64);
-                    let p = Projectile::new(s.owner_id, s.bullet_id, s.container_type as u16, 0, s.angle as f64, now, x, y, 1.0, s.damage, false);
+                    let p = Projectile::new(s.owner_id, s.bullet_id, s.container_type as u16, s.bullet_type.unwrap_or(0) as i32, s.angle as f64, now, x, y, 1.0, s.damage, false);
                     world.add_projectile(p);
                 }
             }

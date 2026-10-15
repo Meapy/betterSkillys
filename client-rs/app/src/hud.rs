@@ -1703,6 +1703,20 @@ pub fn item_tooltip(data: &GameData, item: i32, me: Option<&GameObj>, kind: Slot
     }
     for a in xml.children_named("Activate") {
         let effect = a.text.trim();
+        if effect == "PermaPet" {
+            // The port writes the pet's damage on one enemy and its healing here.
+            out.push(Line::new("Gives a permanent pet", 13.0, false, VALUE));
+            if let Some(dps) = a.attr("petDps") {
+                out.push(Line::new(&format!("    Pet damage: {dps} per second"), 13.0, false, VALUE));
+            }
+            for (key, verb, what) in [("petHp", "heals", "HP"), ("petMp", "restores", "MP")] {
+                if let Some(amount) = a.attr(key) {
+                    let secs = a.attr_number(&format!("{key}Ms"), 0.0) / 1000.0;
+                    out.push(Line::new(&format!("    Pet {verb} {amount} {what} every {secs}s"), 13.0, false, VALUE));
+                }
+            }
+            continue;
+        }
         let detail = match effect {
             "Heal" | "HealNova" => a.attr("amount").map(|v| format!("{effect}: {v} HP")),
             "Magic" | "MagicNova" => a.attr("amount").map(|v| format!("{effect}: {v} MP")),
