@@ -709,6 +709,16 @@ impl Game {
         true
     }
 
+    /// `breakdownSlot` (Ctrl+right-click): break the item in a slot down. Only slots the
+    /// server allows (it disconnects for others): our inventory and backpack, or a bag's.
+    pub fn breakdown(&mut self, now: i32, owner: i32, slot: u8) {
+        let mine = self.world.as_ref().and_then(|w| w.me) == Some(owner);
+        if (mine && !(4..20).contains(&slot)) || (!mine && slot >= 8) {
+            return;
+        }
+        self.send(bsk_proto::BreakdownSlot { time: now, slot, object_id: owner }.into());
+    }
+
     /// `invDrop`: put it on the ground.
     pub fn inv_drop(&mut self, owner: i32, slot: u8, item: i32) {
         self.send(InvDrop { slot_object: SlotObject { object_id: owner, slot_id: slot, object_type: item } }.into());

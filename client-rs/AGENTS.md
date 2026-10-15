@@ -104,7 +104,8 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
   whispers (again to cycle who to), G and P guild and party chat, Page Up/Down the chat history,
   - and = zoom the minimap, O opens the options (all of these can be rebound there), Escape opens the menu (character select,
   log out). Items drag between slots, onto the
-  world to drop; double-click equips, uses or takes from a bag; shift-click uses.
+  world to drop; double-click equips, uses or takes from a bag; shift-click uses; Ctrl+click moves an
+  item to the other page (inventory, backpack); Ctrl+right-click breaks it down.
 - **Layout:** `hud::Layout` works everything out from the window size each frame: one scale for
   the HUD (the AIR client's 200×600 panel plus stats, potions and the interact area: 200×700,
   fitted to the height, at most 28% of the width), the world in

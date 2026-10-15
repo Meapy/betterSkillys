@@ -818,7 +818,7 @@ impl Panel {
             .collect()
     }
 
-    fn slot_at(&self, pos: (f64, f64)) -> Option<Slot> {
+    pub fn slot_at(&self, pos: (f64, f64)) -> Option<Slot> {
         self.slots.iter().find(|s| inside(s.rect, pos)).copied()
     }
 

@@ -41,7 +41,7 @@ server messages it handles (`GameServerConnection.mapMessages`), the account ser
 | HUD: minimap, bars, equipment, inventory, backpack, stats, potions | `HUDView` | Done |
 | Minimap zoom (buttons, - and =), player tooltips and menus on the minimap | `MiniMap` | Done |
 | Item tooltips | `EquipmentToolTip` | Done |
-| Items: swap, drop, use, equip, bags | `ItemGridMediator` | Done |
+| Items: swap, drop, use, equip, bags; Ctrl+click to the other page, Ctrl+right-click to break down | `ItemGridMediator`, `BreakdownSlot` | Done |
 | Chat, slash commands, speech balloons | `TextBox`, `onText` | Done |
 | Tells: Tab cycles who to whisper; G guild and P party chat; Page Up/Down history | `TextBox` | Done |
 | Notifications over objects, global notifications (keys) | `onNotification`, `onGlobalNotification` | Done |

@@ -130,6 +130,9 @@ struct App {
     say_given: Option<()>,
     alt_held: bool,
     shift_held: bool,
+    ctrl_held: bool,
+    /// Right button presses since the last frame, and where (Ctrl+right-click breaks items down).
+    right_clicks: Vec<(f64, f64)>,
     /// `--mouse` was given: ignore the real cursor.
     mouse_fixed: bool,
     /// `--mouse-script` (tests): (ms after joining, down/up/move, where), oldest first.
@@ -1223,7 +1226,29 @@ impl App {
             }
             if let Some(p) = &built {
                 p.moved(&mut self.hud, self.mouse);
+                // Ctrl+right-click: break the item down (ItemGridMediator.onRightCtrlClick).
+                for pos in std::mem::take(&mut self.right_clicks) {
+                    if let (true, Some(slot)) = (self.ctrl_held, p.slot_at(pos)) {
+                        if slot.item > 0 && matches!(slot.kind, hud::SlotKind::Inventory(_) | hud::SlotKind::Container) {
+                            game.breakdown(now, slot.owner, slot.index);
+                        }
+                    }
+                }
                 for (down, pos) in std::mem::take(&mut self.clicks) {
+                    // Ctrl+click: to the first free slot of the other page (onCtrlClick).
+                    if let (true, true, Some(slot)) = (down, self.ctrl_held, p.slot_at(pos)) {
+                        if slot.item > 0 && matches!(slot.kind, hud::SlotKind::Inventory(_)) {
+                            let me = game.world.as_ref().and_then(|w| w.player());
+                            let backpack = me.is_some_and(|m| m.stat_int(hud::stat::HAS_BACKPACK).unwrap_or(0) != 0);
+                            let other = if slot.index < 12 { 12..20 } else { 4..12 };
+                            let free = me.and_then(|m| other.clone().find(|&i| m.stat_int(hud::slot_stat(i)).unwrap_or(-1) <= 0));
+                            if let (true, Some(to), Some(id)) = (backpack, free, me.map(|m| m.id)) {
+                                game.inv_swap(now, (slot.owner, slot.index, slot.item), (id, to, -1));
+                            }
+                            self.mouse_down = false;
+                            continue;
+                        }
+                    }
                     // A player's name in the chat: their menu if they're here, else a whisper.
                     let (px, py) = (pos.0 as f32, pos.1 as f32);
                     let name = self.chat_names.iter().find(|(_, r)| px >= r[0] && py >= r[1] && px < r[0] + r[2] && py < r[1] + r[3]);
@@ -1536,6 +1561,7 @@ impl ApplicationHandler<UserEvent> for App {
             WindowEvent::ModifiersChanged(m) => {
                 self.alt_held = m.state().alt_key();
                 self.shift_held = m.state().shift_key();
+                self.ctrl_held = m.state().control_key();
             }
             WindowEvent::KeyboardInput { event, .. } => {
                 let PhysicalKey::Code(code) = event.physical_key else { return };
@@ -1672,6 +1698,9 @@ impl ApplicationHandler<UserEvent> for App {
             }
             // A --mouse test position stays put whatever the real cursor does.
             WindowEvent::CursorMoved { position, .. } if !self.mouse_fixed => self.mouse = (position.x, position.y),
+            WindowEvent::MouseInput { state: ElementState::Pressed, button: winit::event::MouseButton::Right, .. } => {
+                self.right_clicks.push(self.mouse);
+            }
             WindowEvent::MouseInput { state, button: winit::event::MouseButton::Left, .. } => {
                 if let Some(a) = &mut self.audio {
                     a.wake();
@@ -1737,6 +1766,8 @@ fn main() {
         say_given: say_arg().map(|_| ()),
         alt_held: false,
         shift_held: false,
+        ctrl_held: false,
+        right_clicks: Vec::new(),
         hud: Default::default(),
         clicks: Vec::new(),
         map_colors: Default::default(),
