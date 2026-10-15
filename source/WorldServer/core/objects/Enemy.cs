@@ -174,7 +174,7 @@ namespace WorldServer.core.objects
                     TargetId = Id,
                     Effects = 0,
                     DamageAmount = effDmg,
-                    Kill = Health < 0,
+                    Kill = Health <= 0,
                     BulletId = 0,
                     ObjectId = from.Id
                 }, this);
@@ -182,7 +182,7 @@ namespace WorldServer.core.objects
                 DamageCounter?.HitBy(from, effDmg);
                 logic.doomed.DoomedRuntime.OnHit(this, from, time);
 
-                if (Health < 0 && World != null)
+                if (Health <= 0 && World != null)
                     Death(ref time);
 
                 return effDmg;

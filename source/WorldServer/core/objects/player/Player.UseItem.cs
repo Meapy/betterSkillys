@@ -1518,41 +1518,44 @@ namespace WorldServer.core.objects
 
         private void PoisonEnemy(World world, Enemy enemy, ActivateEffect eff, bool poisonWis)
         {
-            var remainingDmg = StatsManager.DamageWithDefense(enemy, eff.TotalDamage, false, enemy.Defense);
-            var perDmg = remainingDmg * 1000 / eff.DurationMS;
-
-            if (poisonWis)
-            {
-                remainingDmg = (int)UseWisMod(remainingDmg);
-                perDmg = (int)UseWisMod(perDmg);
-            }
+            // Poison ignores defense, as in the original game, and is spread evenly over its
+            // duration: one hit a second, with whatever is left on the last one.
+            var totalDmg = poisonWis ? (int)UseWisMod(eff.TotalDamage) : eff.TotalDamage;
+            var durationMs = Math.Max(1, eff.DurationMS);
+            var elapsed = 0;
+            var sinceHit = 0;
+            var dealt = 0;
 
             WorldTimer tmr = null;
-            var x = 0;
 
             bool poisonTick(World w, TickTime t)
             {
-                if (x % 4 == 0)
+                if (enemy.Dead || enemy.World != w)
+                    return true;
+
+                elapsed += t.ElapsedMsDelta;
+                sinceHit += t.ElapsedMsDelta;
+
+                var done = elapsed >= durationMs;
+                if (sinceHit >= 1000 || done)
                 {
-                    var thisDmg = perDmg;
-                    if (remainingDmg < thisDmg)
-                        thisDmg = remainingDmg;
-
-                    if (enemy.Dead)
-                        return false;
-
-                    enemy?.Damage(this, ref t, thisDmg, true);
-                    remainingDmg -= thisDmg;
-                    if (remainingDmg <= 0)
-                        return true;
+                    sinceHit = 0;
+                    var owed = (int)((long)totalDmg * Math.Min(elapsed, durationMs) / durationMs) - dealt;
+                    if (owed > 0)
+                    {
+                        dealt += owed;
+                        enemy.Damage(this, ref t, owed, true);
+                    }
                 }
-                x++;
+
+                if (done || enemy.Dead)
+                    return true;
 
                 tmr.Reset();
                 return false;
             }
 
-            tmr = world.StartNewTimer(200, poisonTick);
+            tmr = world.StartNewTimer(0, poisonTick);
         }
 
         private void StasisBlast(Item item, Position target, ActivateEffect eff)

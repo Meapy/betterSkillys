@@ -89,6 +89,7 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
 
 ## Changes from upstream
 
+- **Assassin poison** (world server): `PoisonEnemy` in `Player.UseItem.cs` ignores defense (it took defense off the total), spreads `TotalDamage` over `DurationMS` from the elapsed tick time with one hit a second (it hit every 1.2 s for a per-second amount, so it ran 20% long), and stops when the enemy dies or leaves the world (a dead enemy's timer used to fire every tick forever). `Enemy.Damage` kills at 0 health: it caps damage at the enemy's health, so the old `Health < 0` check let poison and other ability damage leave monsters alive on 0.
 - **Servers screen (Rust client 1.1.3)**: the character list has a Servers button again (the "Server:" pill under the characters opens it too). It lists the world servers from `/char/list` with Normal/Crowded/Full and the player count, as the AIR client's `ServersScreen` does; a click picks the server and returns to the characters, and the choice is kept (`preferredServer`). The AIR client's screen (title screen, Servers) is unchanged. Client only.
 - `client/src/WebMain.as`: on a first run the map scale setting (`mscale`) is undefined until the player enters the game. The first window resize divided by it and asked for a 0-pixel-wide Stage3D back buffer (Error #3780); it now defaults to 1.
 - `source/App`: `char/list` and `app/serverList` send 127.0.0.1 as the world server address to clients on this PC, and this PC's LAN address to clients on the local network or reaching us through our own public IP.
