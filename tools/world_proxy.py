@@ -17,9 +17,11 @@ tools/rolling_restart.py starts it and keeps its state, <state folder>/state.jso
 - It reads the state again whenever the file changes: a deploy only rewrites it.
 - When the active server asks for its scheduled restart (restart.request in its folder), it runs
   `rolling_restart.py deploy --reuse`, so the 2-hourly restart kicks nobody either.
+- It runs the command in deploy.request (a JSON list of rolling_restart.py arguments, written by
+  `rolling_restart.py request`), its output in deploy.log and its exit code in deploy.result: on
+  Linux the world servers it starts then belong to the proxy's service, as the first one does.
 """
 import asyncio
-import ctypes
 import json
 import os
 import socket
@@ -29,6 +31,7 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+WINDOWS = os.name == "nt"
 HELLO, PROXY_INFO = 16, 250
 POLICY = struct.pack(">i", 1014001516)  # "<pol": a Flash policy-file request
 SLOT_BY_RANGE = {1: "a", 2: "b"}       # world id // 1000000
@@ -167,40 +170,63 @@ async def handle(creader, cwriter):
     await asyncio.gather(pipe(creader, bwriter), pipe(breader, cwriter))
 
 
-def alive(pid):
-    if not pid:
-        return False
-    k = ctypes.windll.kernel32
-    h = k.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
-    if not h:
-        return False
-    code = ctypes.c_ulong()
-    ok = k.GetExitCodeProcess(h, ctypes.byref(code))
-    k.CloseHandle(h)
-    return bool(ok) and code.value == 259  # STILL_ACTIVE
+def run_tool(args, out_name):
+    """Runs rolling_restart.py with the state's global arguments, output to a file here."""
+    out = open(os.path.join(STATE_DIR, out_name), "a")
+    flags = {"creationflags": subprocess.CREATE_NO_WINDOW} if WINDOWS else {"stdin": subprocess.DEVNULL}
+    return subprocess.Popen([sys.executable, os.path.join(HERE, "rolling_restart.py")]
+                            + state.get("tool_args", []) + args, stdout=out, stderr=subprocess.STDOUT, **flags)
+
+
+def collect_stopped():
+    """Linux: world servers started by `rolling_restart.py serve` are this process's children,
+    and stay zombies until collected."""
+    if WINDOWS:
+        return
+    for b in state.get("backends", {}).values():
+        try:
+            if b.get("pid"):
+                os.waitpid(b["pid"], os.WNOHANG)
+        except ChildProcessError:
+            pass
 
 
 async def supervise():
-    """Reloads the state, and runs a rolling restart when the active server asks for one."""
+    """Reloads the state, and runs a rolling restart when the active server asks for one, or the
+    command a deploy asks for (deploy.request)."""
     restarting = None
+    deploying = None
     while True:
         load_state()
+        collect_stopped()
         active = state.get("active")
         request = active and os.path.join(STATE_DIR, active, "restart.request")
+        deploy_request = os.path.join(STATE_DIR, "deploy.request")
         if restarting is not None and restarting.poll() is not None:
             log("scheduled restart finished (exit code %s)" % restarting.returncode)
             restarting = None
-        if request and os.path.exists(request) and restarting is None:
+        if deploying is not None and deploying.poll() is not None:
+            log("requested command finished (exit code %s)" % deploying.returncode)
+            with open(os.path.join(STATE_DIR, "deploy.result"), "w", encoding="utf-8") as f:
+                json.dump({"code": deploying.returncode}, f)
+            deploying = None
+        if request and os.path.exists(request) and restarting is None and deploying is None:
             try:
                 os.remove(request)
             except OSError:
                 pass
             log("world server %s asks for its scheduled restart: starting a new one beside it" % active)
-            out = open(os.path.join(STATE_DIR, "restart.log"), "a")
-            restarting = subprocess.Popen([sys.executable, os.path.join(HERE, "rolling_restart.py")]
-                                          + state.get("tool_args", []) + ["deploy", "--reuse"],
-                                          stdout=out, stderr=subprocess.STDOUT,
-                                          creationflags=subprocess.CREATE_NO_WINDOW)
+            restarting = run_tool(["deploy", "--reuse"], "restart.log")
+        if os.path.exists(deploy_request) and restarting is None and deploying is None:
+            try:
+                with open(deploy_request, encoding="utf-8") as f:
+                    args = [str(a) for a in json.load(f)]
+                os.remove(deploy_request)
+            except (OSError, ValueError):
+                args = None
+            if args:
+                log("running the requested command: %s" % " ".join(args))
+                deploying = run_tool(args, "deploy.log")
         await asyncio.sleep(1)
 
 
@@ -213,10 +239,12 @@ async def main():
     load_state()
     if not state:
         sys.exit("no state in %s (start it with tools/rolling_restart.py up)" % STATE_DIR)
-    try:
-        ctypes.windll.kernel32.SetConsoleTitleW("World Proxy (port %d)" % state["front_port"])
-    except Exception:
-        pass
+    if WINDOWS:
+        try:
+            import ctypes
+            ctypes.windll.kernel32.SetConsoleTitleW("World Proxy (port %d)" % state["front_port"])
+        except Exception:
+            pass
     server = await asyncio.start_server(handle, state.get("bind", "0.0.0.0"), state["front_port"])
     log("world proxy on %s:%d, active world server %s" % (state.get("bind", "0.0.0.0"), state["front_port"], state.get("active")))
     with open(os.path.join(STATE_DIR, "proxy.pid"), "w") as f:

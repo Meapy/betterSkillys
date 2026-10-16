@@ -1,0 +1,18 @@
+[Unit]
+Description=betterSkillys Redis
+After=network.target
+
+[Service]
+Type=notify
+User=bsk
+Group=bsk
+EnvironmentFile=/opt/bsk/bsk.env
+WorkingDirectory=/opt/bsk/redis
+ExecStart=/usr/bin/redis-server /opt/bsk/deploy/redis.conf --port ${BSK_REDIS_PORT} --supervised systemd
+Restart=always
+RestartSec=2
+TimeoutStopSec=120
+LimitNOFILE=10032
+
+[Install]
+WantedBy=multi-user.target

@@ -82,6 +82,90 @@ python tools\rolling_restart.py status          # which slot is active, and how 
 - **If the public IP changes:** update `wServer.json` and rebuild the package.
 - **Play on this PC with `Play Client.bat`**, not the friends' package. The package connects to the public IP, so all of your game traffic goes out through the router and back in (NAT loopback), which loads the router and makes the game lag for players connecting from outside. The account server now sends this PC's LAN address to clients that arrive that way, but the local client avoids the router altogether.
 
+## Running on a VPS
+
+The same servers run on a Linux VPS (Ubuntu 24.04, x86_64; 4 GB of RAM is enough, 8 GB is
+comfortable), so this PC doesn't have to stay on. Everything is built on this PC by
+`deploy/deploy.py` and copied over ssh; the VPS only runs it. Players open `https://<site>` in a
+browser, or use the desktop client with `http://<public_address>:8080` as its account server.
+
+| Service (systemd) | What | Port |
+|---|---|---|
+| `bsk-redis` | Ubuntu's Redis 7, `deploy/remote/redis.conf`, data in `/opt/bsk/redis/data` | 6379, VPS only |
+| `bsk-account` | Account server, `/opt/bsk/app` | 8080 |
+| `bsk-world` | World proxy and world servers (`rolling_restart.py serve`), `/opt/bsk/build/live` | 2051 (slots 12051 / 22051, VPS only) |
+| `bsk-gateway` | Browser client and its WebSocket bridge, `/opt/bsk/web` | 8095, VPS only |
+| `caddy` | https for the site (its own Let's Encrypt certificate), forwards to the gateway | 80, 443 |
+
+**First time:**
+
+1. A VPS with Ubuntu 24.04, and a domain (or subdomain) whose A record points at its IP. Open TCP
+   22, 80, 443, 8080 and 2051 if the provider has a firewall. Set up ssh with a key, so
+   `ssh ubuntu@<vps>` works without a password; that user needs `sudo` without one (OVH's does).
+2. On this PC, the build tools: the .NET 8 SDK, Rust with `wasm32-unknown-unknown` and
+   `wasm-bindgen-cli` (as for the web client), and WSL with Ubuntu 24.04 and Rust inside it, which
+   builds the Linux gateway (`curl https://sh.rustup.rs -sSf | sh` and `sudo apt install
+   build-essential` in WSL).
+3. Copy `deploy/vps.example.json` to `deploy/vps.local.json` (not tracked) and fill in `ssh`,
+   `site` (the domain) and `public_address` (the same domain, or the IP).
+4. Move the data. Stop the servers on this PC (that kicks everyone: tell them first), so nothing
+   changes after the copy, then:
+
+   ```
+   python deploy\deploy.py --import-data source\Redis\data
+   ```
+
+   It builds everything, uploads it, installs Redis, the .NET runtime, Caddy and the services,
+   copies `dump.rdb` and `appendonly.aof` in, and starts it all. Redis 7 reads the Redis 3.2
+   files as they are: on its first start it moves `appendonly.aof` into `appendonlydir/` as the
+   base of its new AOF (tried with a copy of the live data: all 139 keys loaded). It refuses to overwrite data already on the VPS; `--force-data`
+   replaces it (the old folder is kept as `data.before-import.<time>`).
+5. Point players at the VPS: publish the desktop client for the new address
+   (`python tools\build_client_rs.py --account http://<public_address>:8080 --publish`, then run
+   `deploy\deploy.py` again so the VPS serves it at `/client/`) and send the `--package` zip to
+   anyone who needs it. Clients built for the old address keep updating from this PC until it
+   stops, so publish the new-address build from this PC once as well.
+
+**Updating:** `python deploy\deploy.py`. It replaces only what changed: a new world server goes in
+with a rolling deploy (nobody is kicked, as on this PC); a changed account server restarts (logins
+pause for a few seconds); a changed gateway restarts, which disconnects browser players; the web
+client and the published desktop releases are swapped in place. `--skip-build` uploads the last
+build again, `--no-releases` leaves `dist\client` out, and `--status` shows the services and the
+world server slots.
+
+**On the VPS:**
+
+```
+sudo systemctl status bsk-world                       # also bsk-redis, bsk-account, bsk-gateway, caddy
+sudo journalctl -u bsk-world -f                       # the proxy and the world servers' console
+sudo -u bsk python3 /opt/bsk/tools/rolling_restart.py status
+sudo -u bsk python3 /opt/bsk/tools/rolling_restart.py request deploy --reuse   # a rolling restart
+sudo systemctl restart bsk-world                      # kicks everyone (they're saved first)
+redis-cli -p 6379 hget names MEAPY                    # Redis, as on this PC
+```
+
+- **Logs:** `/opt/bsk/build/live/<slot>/logs/wServer/`, `/opt/bsk/build/live/proxy.log` and
+  `deploy.log`, `/opt/bsk/app/logs/`, and the journal.
+- **Stopping:** `systemctl stop bsk-world` sends the world servers SIGTERM; they save everyone and
+  stop, as Ctrl+C does on Windows (`SignalListenerLinux`).
+- **Deploys inside the service:** `bsk-world` runs `rolling_restart.py serve`, which starts a
+  world server and then becomes the world proxy, so the world servers belong to the service. A
+  deploy starts its new world server through the proxy (`rolling_restart.py request update`,
+  `deploy.request` in `/opt/bsk/build/live`); the 2-hourly restart already went that way.
+- **Ports and address** come from `/opt/bsk/bsk.env`, which `deploy.py` writes from the config.
+  `rolling_restart.py` takes them from `BSK_WORLD_PORT`, `BSK_REDIS_PORT` and
+  `BSK_PUBLIC_ADDRESS`. Changing the Redis port needs `systemctl restart bsk-redis` by hand.
+- **The gateway** takes `--allow <public>:2051=127.0.0.1:2051`: the browser asks for the address
+  in the server list and the gateway connects to the world proxy on the VPS itself.
+- **Backups:** copy `/opt/bsk/redis/data` (and keep `build/client-update.key` on this PC).
+- **Memory:** a world server uses about 800 MB, two run side by side during a hand-over, and the
+  account server about 250 MB. `install.sh` adds a 2 GB swap file when the VPS has no swap.
+- **Trying it on this PC:** `deploy/deploy.py` can install into a WSL distro instead of a VPS
+  (`"target": "wsl"`). The test used Ubuntu-24.04 with ports kept clear of the live servers:
+  `{"target": "wsl", "wsl": "Ubuntu-24.04", "site": "localhost:8444", "public_address":
+  "127.0.0.1", "ports": {"redis": 6399, "account": 8099, "world": 2099, "gateway": 8097}}` in
+  `deploy/wsl-test.local.json`, then `python deploy\deploy.py --config deploy\wsl-test.local.json`.
+
 ## Admin
 
 Rank is the `rank` field of the account in Redis:

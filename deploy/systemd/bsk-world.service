@@ -1,0 +1,22 @@
+# The world proxy and the world servers behind it (tools/rolling_restart.py serve). Deploys start
+# the next world server inside this service with `rolling_restart.py request update`, which kicks
+# nobody; stopping or restarting this service disconnects everyone (they're saved first).
+[Unit]
+Description=betterSkillys world servers (behind the world proxy)
+Wants=bsk-redis.service
+After=network.target bsk-redis.service bsk-account.service
+
+[Service]
+User=bsk
+Group=bsk
+EnvironmentFile=/opt/bsk/bsk.env
+Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1 PYTHONUNBUFFERED=1
+WorkingDirectory=/opt/bsk
+ExecStart=/usr/bin/python3 /opt/bsk/tools/rolling_restart.py --from /opt/bsk/worldserver serve
+ExecStop=/usr/bin/python3 /opt/bsk/tools/rolling_restart.py stop
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=240
+
+[Install]
+WantedBy=multi-user.target

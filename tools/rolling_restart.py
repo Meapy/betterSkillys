@@ -6,10 +6,23 @@
     python tools/rolling_restart.py deploy --reuse  # same build again (the scheduled restart)
     python tools/rolling_restart.py status
     python tools/rolling_restart.py stop            # stops the proxy and the world servers: kicks everyone
+    python tools/rolling_restart.py serve           # Linux service: a world server, then become the proxy
+    python tools/rolling_restart.py request update  # ask the running proxy to run `update` (Linux service)
 
     --iso N (before the command) works on isolated test stack N instead (Redis 6380+N, world port
     2052+N, under build/iso<N>/live; start its Redis and account server with
     `iso_stack.py --slot N start --rolling`).
+
+    --from DIR (before the command) copies a finished build from DIR (`dotnet publish` output with
+    its wServer.json) instead of building the source: what a Linux server does, which has no SDK.
+    It's kept in the state, so the scheduled restarts use it too.
+
+On Linux (deploy/systemd/bsk-world.service) the service runs `serve`: it starts a world server and
+then turns into the world proxy, so every world server it or the proxy starts belongs to the
+service. A deploy has to start the new world server inside the service too, so it goes through
+`request`, which hands the command to the proxy and shows its output. BSK_WORLD_PORT,
+BSK_REDIS_PORT and BSK_PUBLIC_ADDRESS (deploy/bsk.env) override the live ports and the address
+the server list gives players.
 
 How it fits together:
 - tools/world_proxy.py owns the public world port (2051) and forwards each connection to world
@@ -26,10 +39,10 @@ How it fits together:
   players to the new Nexus first.
 """
 import argparse
-import ctypes
 import json
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -39,20 +52,28 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 SOURCE = os.path.join(ROOT, "source")
 SLOTS = {"a": 1, "b": 2}
+WINDOWS = os.name == "nt"
 
 LIVE = None   # set by configure()
 ISO = None
+BUILD_FROM = None
 
 
-def configure(iso):
-    global LIVE, ISO
+def configure(iso, build_from=None):
+    global LIVE, ISO, BUILD_FROM
     ISO = iso
+    BUILD_FROM = build_from and os.path.abspath(build_from)
     LIVE = os.path.join(ROOT, "build", "live" if iso is None else os.path.join("iso%s" % (iso or ""), "live"))
     os.makedirs(LIVE, exist_ok=True)
 
 
 def front_port():
-    return 2051 if ISO is None else 2052 + ISO
+    return int(os.environ.get("BSK_WORLD_PORT") or 2051) if ISO is None else 2052 + ISO
+
+
+def tool_args():
+    """The global arguments, for the commands the proxy runs later."""
+    return ([] if ISO is None else ["--iso", str(ISO)]) + ([] if BUILD_FROM is None else ["--from", BUILD_FROM])
 
 
 def slot_port(slot):
@@ -69,7 +90,7 @@ def read_state():
             return json.load(f)
     except (OSError, ValueError):
         return {"front_port": front_port(), "bind": "0.0.0.0" if ISO is None else "127.0.0.1",
-                "tool_args": [] if ISO is None else ["--iso", str(ISO)], "active": None, "backends": {}}
+                "tool_args": tool_args(), "active": None, "backends": {}}
 
 
 def write_state(st):
@@ -86,16 +107,33 @@ def write_state(st):
 
 
 def alive(pid):
+    """Whether a world server or world proxy runs with this process id."""
     if not pid:
         return False
-    k = ctypes.windll.kernel32
-    h = k.OpenProcess(0x1000, False, pid)
-    if not h:
+    if WINDOWS:
+        import ctypes
+        k = ctypes.windll.kernel32
+        h = k.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return False
+        code = ctypes.c_ulong()
+        ok = k.GetExitCodeProcess(h, ctypes.byref(code))
+        k.CloseHandle(h)
+        return bool(ok) and code.value == 259  # STILL_ACTIVE
+    try:
+        os.waitpid(pid, os.WNOHANG)  # our own child that stopped: collect it
+    except ChildProcessError:
+        pass
+    try:
+        with open("/proc/%d/stat" % pid, "rb") as f:
+            if f.read().rsplit(b")", 1)[1].split()[0] == b"Z":
+                return False  # stopped, not yet collected by its parent
+        with open("/proc/%d/cmdline" % pid, "rb") as f:
+            cmdline = f.read()
+    except (OSError, IndexError):
         return False
-    code = ctypes.c_ulong()
-    ok = k.GetExitCodeProcess(h, ctypes.byref(code))
-    k.CloseHandle(h)
-    return bool(ok) and code.value == 259
+    # after a reboot an old id can belong to anything
+    return b"WorldServer" in cmdline or b"world_proxy" in cmdline
 
 
 def listening(port):
@@ -107,7 +145,13 @@ def listening(port):
 
 
 def popen(args, cwd, out_name):
-    """Live: in its own console window, like the other servers. Test stacks: hidden, output to a file."""
+    """Live: in its own console window, like the other servers (on Linux: in the service's log).
+    Test stacks: hidden, output to a file."""
+    if not WINDOWS:
+        if ISO is None:
+            return subprocess.Popen(args, cwd=cwd, stdin=subprocess.DEVNULL)
+        return subprocess.Popen(args, cwd=cwd, stdin=subprocess.DEVNULL, stdout=open(os.path.join(cwd, out_name), "a"),
+                                stderr=subprocess.STDOUT, start_new_session=True)
     if ISO is None:
         return subprocess.Popen(args, cwd=cwd, creationflags=subprocess.CREATE_NEW_CONSOLE)
     return subprocess.Popen(args, cwd=cwd, stdout=open(os.path.join(cwd, out_name), "a"), stderr=subprocess.STDOUT,
@@ -142,11 +186,16 @@ def set_json(path, fn):
 def prepare(slot, reuse_from=None):
     """Puts a world server build in build/live/<slot>, configured for that slot."""
     folder = os.path.join(LIVE, slot)
+    skip = shutil.ignore_patterns("logs", "GenerateXMLS", "*.request", "*.status", "*.out")
     if reuse_from:
         src = os.path.join(LIVE, reuse_from)
         print("copying the running build from slot %s to slot %s" % (reuse_from, slot))
-        skip = shutil.ignore_patterns("logs", "GenerateXMLS", "*.request", "*.status", "*.out")
         shutil.copytree(src, folder, ignore=skip, dirs_exist_ok=True)
+    elif BUILD_FROM:
+        if not os.path.exists(os.path.join(BUILD_FROM, "WorldServer.dll")):
+            sys.exit("no world server build in %s" % BUILD_FROM)
+        print("copying the world server build from %s to slot %s" % (BUILD_FROM, slot))
+        shutil.copytree(BUILD_FROM, folder, ignore=skip, dirs_exist_ok=True)
     else:
         print("building source/WorldServer into %s" % os.path.relpath(folder, ROOT))
         subprocess.check_call(["dotnet", "build", os.path.join(SOURCE, "WorldServer", "WorldServer.csproj"),
@@ -169,6 +218,13 @@ def configure_slot(slot):
             d["dbInfo"]["port"] = 6380 + ISO
             d["serverInfo"]["port"] = front_port()
             d["serverInfo"]["address"] = "127.0.0.1"
+        else:
+            if os.environ.get("BSK_WORLD_PORT"):
+                d["serverInfo"]["port"] = front_port()
+            if os.environ.get("BSK_REDIS_PORT"):
+                d["dbInfo"]["port"] = int(os.environ["BSK_REDIS_PORT"])
+            if os.environ.get("BSK_PUBLIC_ADDRESS"):
+                d["serverInfo"]["address"] = os.environ["BSK_PUBLIC_ADDRESS"]
     set_json(os.path.join(folder, "wServer.json"), cfg)
     return folder
 
@@ -176,7 +232,7 @@ def configure_slot(slot):
 def start_backend(st, slot, folder):
     if listening(slot_port(slot)):
         sys.exit("port %d (slot %s) is already taken" % (slot_port(slot), slot))
-    args = [os.path.join(folder, "WorldServer.exe")] if ISO is None else ["dotnet", "WorldServer.dll"]
+    args = [os.path.join(folder, "WorldServer.exe")] if ISO is None and WINDOWS else ["dotnet", "WorldServer.dll"]
     p = popen(args, folder, "ws.out")
     print("started world server %s (pid %d, port %d); waiting until it listens..." % (slot, p.pid, slot_port(slot)))
     deadline = time.time() + 300
@@ -307,8 +363,18 @@ def cmd_status(_):
 
 
 def kill(pid):
-    if alive(pid):
+    if not alive(pid):
+        return
+    if WINDOWS:
         subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
+        return
+    # SIGTERM: a world server saves everyone and stops (SignalListenerLinux)
+    os.kill(pid, signal.SIGTERM)
+    deadline = time.time() + 90
+    while alive(pid) and time.time() < deadline:
+        time.sleep(0.5)
+    if alive(pid):
+        os.kill(pid, signal.SIGKILL)
 
 
 def cmd_stop(_):
@@ -325,9 +391,77 @@ def cmd_stop(_):
     write_state(st)
 
 
+def cmd_serve(_):
+    """The Linux service (deploy/systemd/bsk-world.service): starts a world server, then becomes
+    the world proxy, so the world servers stay in the service: systemd stops them with it, and
+    `request` starts the next ones inside it."""
+    if WINDOWS:
+        sys.exit("serve is for Linux services: use up")
+    st = read_state()
+    prune(st)
+    st["tool_args"] = tool_args()
+    if not st["active"]:
+        slot = "a" if "a" not in st["backends"] else "b"
+        # a cold start takes the newest build: a deploy may have replaced it while stopped
+        if BUILD_FROM or not os.path.exists(os.path.join(LIVE, slot, "WorldServer.dll")):
+            folder = prepare(slot)
+        else:
+            folder = configure_slot(slot)
+        start_backend(st, slot, folder)
+        st["active"] = slot
+    write_state(st)
+    if listening(st["front_port"]):
+        sys.exit("port %d is taken by something else: stop it first" % st["front_port"])
+    sys.stdout.flush()
+    os.execv(sys.executable, [sys.executable, os.path.join(HERE, "world_proxy.py"), LIVE])
+
+
+def cmd_request(args):
+    """Hands a command to the running world proxy (deploy.request), which runs it inside its
+    service, and shows its output until it ends; exits with its exit code."""
+    if not args.command:
+        sys.exit("request needs a command, such as: request update")
+    request = os.path.join(LIVE, "deploy.request")
+    result = os.path.join(LIVE, "deploy.result")
+    out = os.path.join(LIVE, "deploy.log")
+    pid_file = os.path.join(LIVE, "proxy.pid")
+
+    def proxy_alive():
+        return os.path.exists(pid_file) and alive(int(open(pid_file).read()))
+
+    if not proxy_alive():
+        sys.exit("the world proxy isn't running (start its service: systemctl start bsk-world)")
+    if os.path.exists(result):
+        os.remove(result)
+    pos = os.path.getsize(out) if os.path.exists(out) else 0
+    with open(request + ".tmp", "w", encoding="utf-8") as f:
+        json.dump(args.command, f)
+    os.replace(request + ".tmp", request)
+    print("asked the world proxy to run: %s" % " ".join(args.command), flush=True)
+    asked = time.time()
+    while True:
+        done = os.path.exists(result)
+        if os.path.exists(out):
+            with open(out, "rb") as f:
+                f.seek(pos)
+                data = f.read()
+            pos += len(data)
+            sys.stdout.write(data.decode("utf-8", "replace"))
+            sys.stdout.flush()
+        if done:
+            with open(result, encoding="utf-8") as f:
+                sys.exit(json.load(f).get("code", 1))
+        if os.path.exists(request) and time.time() - asked > 30 and not proxy_alive():
+            sys.exit("the world proxy stopped before taking the request")
+        if time.time() - asked > 3 * 3600:
+            sys.exit("no result after 3 hours")
+        time.sleep(1)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--iso", type=int, help="isolated test stack N instead of the live servers")
+    ap.add_argument("--from", dest="build_from", help="copy this finished world server build instead of building")
     sub = ap.add_subparsers(dest="cmd", required=True)
     u = sub.add_parser("up")
     u.add_argument("--no-build", action="store_true", help="start the last build of the slot")
@@ -339,9 +473,13 @@ def main():
     upd.add_argument("--minutes", type=float, default=60, help="how long players get to reach the Nexus (60)")
     sub.add_parser("status")
     sub.add_parser("stop")
+    sub.add_parser("serve")
+    r = sub.add_parser("request")
+    r.add_argument("command", nargs=argparse.REMAINDER, help="the command and its options (update, deploy --reuse...)")
     args = ap.parse_args()
-    configure(args.iso)
-    {"up": cmd_up, "update": cmd_update, "deploy": cmd_deploy, "status": cmd_status, "stop": cmd_stop}[args.cmd](args)
+    configure(args.iso, args.build_from)
+    {"up": cmd_up, "update": cmd_update, "deploy": cmd_deploy, "status": cmd_status, "stop": cmd_stop,
+     "serve": cmd_serve, "request": cmd_request}[args.cmd](args)
 
 
 if __name__ == "__main__":

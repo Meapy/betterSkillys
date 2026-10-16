@@ -4,6 +4,7 @@
 /tools/*.log
 /build/
 /dist/
+/deploy/*.local.json
 /source/Redis/data/
 *.local.txt
 /tools/__pycache__/

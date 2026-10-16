@@ -22,6 +22,10 @@ on this PC for a small group of players. Read the guide for the part you're chan
 | World servers (`source/WorldServer`, from `build/live/a` and `b`) | 12051 / 22051 (this PC only) | public address in `wServer.json`; deploy with `tools/rolling_restart.py` |
 | Isolated test servers | 6380 / 8081 / 2052 | `tools/testclient/iso_stack.py`, under `build/iso/` |
 
+The same stack also runs on a Linux VPS under systemd: `deploy/deploy.py` builds it here and
+installs it there (SETUP-LOCAL.md, "Running on a VPS"). The tools in `tools/` that it uses
+(`world_proxy.py`, `rolling_restart.py`) must keep working on both Windows and Linux.
+
 Doomed Realms, another server on this PC, uses 8888, 2050 and 843. Don't take those ports.
 
 `Run Server.bat` builds and starts Redis, the account server and the world server (behind the world

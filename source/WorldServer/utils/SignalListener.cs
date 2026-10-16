@@ -3,13 +3,26 @@ using WorldServer.core;
 
 namespace WorldServer.utils
 {
+	// Linux (systemd, Docker): SIGTERM (systemctl stop) and SIGINT stop the server as Ctrl+C does
+	// on Windows, so it saves everyone before it exits.
 	public sealed class SignalListenerLinux : SignalListener
 	{
-		public SignalListenerLinux(GameServer gameServer) : base(gameServer) 
+		private readonly PosixSignalRegistration Term;
+		private readonly PosixSignalRegistration Interrupt;
+
+		public SignalListenerLinux(GameServer gameServer) : base(gameServer)
 		{
+			Term = PosixSignalRegistration.Create(PosixSignal.SIGTERM, OnSignal);
+			Interrupt = PosixSignalRegistration.Create(PosixSignal.SIGINT, OnSignal);
+		}
+
+		private void OnSignal(PosixSignalContext context)
+		{
+			context.Cancel = true; // don't exit yet: Run() ends its loop and disposes
+			GameServer.Stop();
 		}
 	}
-	
+
 	public sealed class SignalListenerWindows : SignalListener
 	{
 		public enum CtrlTypes
@@ -29,7 +42,7 @@ namespace WorldServer.utils
         private readonly HandlerRoutine ConsoleCtrlCheckRoutine;
 
 		public SignalListenerWindows(GameServer gameServer) : base(gameServer) {
-		
+
 
             ConsoleCtrlCheckRoutine = ConsoleCtrlCheck;
             SetConsoleCtrlHandler(ConsoleCtrlCheckRoutine, true);
@@ -50,11 +63,11 @@ namespace WorldServer.utils
             return true;
         }
 	}
-	
+
     public abstract class SignalListener
     {
 		protected readonly GameServer GameServer;
-   
+
         public SignalListener(GameServer gameServer) => GameServer = gameServer;
     }
 }

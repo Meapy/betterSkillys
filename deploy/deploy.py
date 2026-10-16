@@ -1,0 +1,254 @@
+"""Builds the betterSkillys servers and the browser client on this PC and installs them on a Linux
+server (a VPS with Ubuntu 24.04) over ssh. Nothing is built on the server.
+
+    python deploy/deploy.py                          # build, upload, install (deploy/vps.local.json)
+    python deploy/deploy.py --import-data source/Redis/data   # first time: also copy the Redis data
+    python deploy/deploy.py --skip-build             # upload the last build again
+    python deploy/deploy.py --status                 # the services and world servers on the server
+
+The settings are in deploy/vps.local.json (copy deploy/vps.example.json; --config picks another):
+
+    target          "ssh" (a VPS) or "wsl" (a WSL distro on this PC, for testing: "wsl": its name)
+    ssh             user@host; the user needs sudo without a password (OVH's "ubuntu" has it)
+    ssh_options     extra ssh arguments, such as ["-i", "C:/Users/me/.ssh/vps", "-p", "22"]
+    site            Caddy's site address: the domain players open in a browser (https), or ""
+                    for no Caddy
+    public_address  the host players' clients connect to: the world server address in the server
+                    list, and the account server is http://<public_address>:<account port>
+    ports           redis, account, world, gateway (the gateway only listens on 127.0.0.1)
+    build_wsl       on Windows: the WSL distro (with Rust) that builds the Linux gateway
+
+What it builds (in build/vps/bundle), then unpacks into /opt/bsk/incoming and installs with
+deploy/remote/install.sh as root:
+- app/          dotnet publish of source/App for linux-x64 (needs the .NET runtime, which
+                install.sh puts on the server), with server.json set to the ports
+- worldserver/  the same for source/WorldServer, with wServer.json set to the ports and address
+- web/          tools/build_client_rs.py --web
+- bin/          bsk-gateway, built for Linux (in WSL when run on Windows)
+- tools/        world_proxy.py and rolling_restart.py; deploy/: the units, redis.conf, install.sh
+- client/       dist/client, the published desktop client releases (unless --no-releases)
+- redis-data/   with --import-data: dump.rdb and appendonly.aof from that folder
+"""
+import argparse
+import io
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tarfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+OUT = os.path.join(ROOT, "build", "vps")
+STAGE = os.path.join(OUT, "bundle")
+BUNDLE = os.path.join(OUT, "bundle.tar.gz")
+REMOTE = "/opt/bsk"
+WINDOWS = os.name == "nt"
+
+
+def run(cmd, **kw):
+    print(">", " ".join(cmd), flush=True)
+    subprocess.run(cmd, check=True, **kw)
+
+
+def load_config(path):
+    with open(path, encoding="utf-8") as f:
+        cfg = json.load(f)
+    cfg.setdefault("target", "ssh")
+    cfg.setdefault("ssh_options", [])
+    cfg.setdefault("site", "")
+    ports = {"redis": 6379, "account": 8080, "world": 2051, "gateway": 8095}
+    ports.update(cfg.get("ports", {}))
+    cfg["ports"] = ports
+    if not cfg.get("public_address"):
+        sys.exit("%s: public_address is missing" % path)
+    if cfg["target"] == "ssh" and not cfg.get("ssh"):
+        sys.exit("%s: ssh (user@host) is missing" % path)
+    if cfg["target"] == "wsl" and not cfg.get("wsl"):
+        sys.exit("%s: wsl (the distro's name) is missing" % path)
+    return cfg
+
+
+def set_json(path, fn):
+    with open(path, encoding="utf-8-sig") as f:
+        data = json.load(f)
+    fn(data)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(data, f, indent=2)
+
+
+def write_lf(path, text):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text.replace("\r\n", "\n"))
+
+
+def copy_lf(src, dst):
+    with open(src, encoding="utf-8") as f:
+        write_lf(dst, f.read())
+
+
+def wsl_path(distro, path):
+    out = subprocess.run(["wsl", "-d", distro, "--", "wslpath", "-a", path.replace("\\", "/")],
+                         check=True, capture_output=True, text=True)
+    return out.stdout.strip()
+
+
+def build_gateway(cfg):
+    dest = os.path.join(STAGE, "bin")
+    os.makedirs(dest, exist_ok=True)
+    manifest = os.path.join(ROOT, "client-rs", "Cargo.toml")
+    if not WINDOWS:
+        run(["cargo", "build", "--release", "-p", "bsk-gateway", "--manifest-path", manifest])
+        shutil.copy2(os.path.join(ROOT, "client-rs", "target", "release", "bsk-gateway"), dest)
+        return
+    distro = cfg.get("build_wsl") or "Ubuntu-24.04"
+    # the target folder stays in WSL's own disk: building on /mnt/c is slow
+    script = ('set -e; . "$HOME/.cargo/env" 2>/dev/null || true; '
+              'cargo build --release -p bsk-gateway --manifest-path "%s" --target-dir "$HOME/.cache/bsk-gateway"; '
+              'cp "$HOME/.cache/bsk-gateway/release/bsk-gateway" "%s/"'
+              % (wsl_path(distro, manifest), wsl_path(distro, dest)))
+    run(["wsl", "-d", distro, "--", "bash", "-c", script])
+
+
+def build(cfg, args):
+    if os.path.exists(STAGE):
+        shutil.rmtree(STAGE)
+    os.makedirs(STAGE)
+    ports = cfg["ports"]
+    source = os.path.join(ROOT, "source")
+
+    # Debug, as Run Server.bat builds: Optimize is on for WorldServer and Shared in Debug too
+    for project, folder in (("App", "app"), ("WorldServer", "worldserver")):
+        run(["dotnet", "publish", os.path.join(source, project, project + ".csproj"), "-c", "Debug",
+             "-r", "linux-x64", "--self-contained", "false", "-o", os.path.join(STAGE, folder),
+             "-v", "q", "--nologo"])
+
+    def account(d):
+        d["dbInfo"]["port"] = ports["redis"]
+        d["serverInfo"]["port"] = ports["account"]
+    shutil.copyfile(os.path.join(source, "App", "server.json"), os.path.join(STAGE, "app", "server.json"))
+    set_json(os.path.join(STAGE, "app", "server.json"), account)
+
+    def world(d):
+        d["dbInfo"]["port"] = ports["redis"]
+        d["serverInfo"]["port"] = ports["world"]
+        d["serverInfo"]["address"] = cfg["public_address"]
+    shutil.copyfile(os.path.join(source, "WorldServer", "wServer.json"),
+                    os.path.join(STAGE, "worldserver", "wServer.json"))
+    set_json(os.path.join(STAGE, "worldserver", "wServer.json"), world)
+
+    run([sys.executable, os.path.join(ROOT, "tools", "build_client_rs.py"), "--web"])
+    shutil.copytree(os.path.join(ROOT, "build", "client-rs", "web"), os.path.join(STAGE, "web"))
+    build_gateway(cfg)
+
+    for name in ("world_proxy.py", "rolling_restart.py"):
+        copy_lf(os.path.join(ROOT, "tools", name), os.path.join(STAGE, "tools", name))
+    for name in os.listdir(os.path.join(HERE, "remote")):
+        copy_lf(os.path.join(HERE, "remote", name), os.path.join(STAGE, "deploy", name))
+    for name in os.listdir(os.path.join(HERE, "systemd")):
+        copy_lf(os.path.join(HERE, "systemd", name), os.path.join(STAGE, "deploy", "systemd", name))
+
+    write_lf(os.path.join(STAGE, "bsk.env"),
+             "# Written by deploy/deploy.py from %s: change it there.\n"
+             "BSK_PUBLIC_ADDRESS=%s\nBSK_REDIS_PORT=%d\nBSK_ACCOUNT_PORT=%d\nBSK_WORLD_PORT=%d\nBSK_GATEWAY_PORT=%d\n"
+             % (os.path.basename(args.config), cfg["public_address"], ports["redis"], ports["account"],
+                ports["world"], ports["gateway"]))
+    if cfg["site"]:
+        # Caddy gets the certificate for the site by itself (ports 80 and 443 must be open);
+        # WebSockets pass through reverse_proxy as they are
+        write_lf(os.path.join(STAGE, "Caddyfile"),
+                 "# Written by deploy/deploy.py: the browser client over https (wss for the game).\n"
+                 "%s {\n\tencode zstd gzip\n\treverse_proxy 127.0.0.1:%d\n}\n" % (cfg["site"], ports["gateway"]))
+
+    releases = os.path.join(ROOT, "dist", "client")
+    if not args.no_releases and os.path.isdir(releases):
+        shutil.copytree(releases, os.path.join(STAGE, "client"))
+
+
+def add_data(folder):
+    dest = os.path.join(STAGE, "redis-data")
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    os.makedirs(dest)
+    found = False
+    for name in ("dump.rdb", "appendonly.aof", "appendonlydir"):
+        src = os.path.join(folder, name)
+        if os.path.isdir(src):
+            shutil.copytree(src, os.path.join(dest, name))
+            found = True
+        elif os.path.isfile(src):
+            shutil.copy2(src, dest)
+            found = True
+    if not found:
+        sys.exit("no dump.rdb or appendonly.aof in %s" % folder)
+
+
+def pack():
+    def norm(info):
+        info.uid = info.gid = 0
+        info.uname = info.gname = "root"
+        if info.isdir():
+            info.mode = 0o755
+        else:
+            executable = info.name.startswith("bin/") or info.name.endswith(".sh")
+            info.mode = 0o755 if executable else 0o644
+        return info
+    with tarfile.open(BUNDLE, "w:gz", compresslevel=6) as tar:
+        for name in sorted(os.listdir(STAGE)):
+            tar.add(os.path.join(STAGE, name), arcname=name, filter=norm)
+    print("bundle: %s (%.1f MB)" % (os.path.relpath(BUNDLE, ROOT), os.path.getsize(BUNDLE) / 1e6))
+
+
+def remote(cfg, script, stdin=None):
+    """Runs a bash script as root on the server."""
+    if cfg["target"] == "wsl":
+        cmd = ["wsl", "-d", cfg["wsl"], "-u", "root", "--", "bash", "-c", script]
+    else:
+        quoted = "'" + script.replace("'", "'\\''") + "'"
+        root = cfg["ssh"].split("@")[0] == "root"
+        cmd = ["ssh"] + cfg["ssh_options"] + [cfg["ssh"], ("bash -c " if root else "sudo bash -c ") + quoted]
+    print(">", script if len(script) < 200 else script[:200] + "...", flush=True)
+    if stdin is None:
+        return subprocess.run(cmd).returncode
+    with open(stdin, "rb") as f:
+        return subprocess.run(cmd, stdin=f).returncode
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--config", default=os.path.join(HERE, "vps.local.json"))
+    ap.add_argument("--skip-build", action="store_true", help="upload build/vps/bundle as it is")
+    ap.add_argument("--no-releases", action="store_true", help="leave out dist/client (desktop client releases)")
+    ap.add_argument("--import-data", metavar="DIR", help="also copy this Redis data folder (first install)")
+    ap.add_argument("--force-data", action="store_true", help="with --import-data: replace data already there")
+    ap.add_argument("--status", action="store_true", help="only show the services' state")
+    args = ap.parse_args()
+    if not os.path.exists(args.config):
+        sys.exit("no %s: copy deploy/vps.example.json there and fill it in" % args.config)
+    cfg = load_config(args.config)
+
+    if args.status:
+        sys.exit(remote(cfg, "systemctl --no-pager --lines=0 status bsk-redis bsk-account bsk-world bsk-gateway caddy"
+                             " | grep -E '[.]service - |^ *Active'; runuser -u bsk -- python3 %s/tools/rolling_restart.py status"
+                        % REMOTE))
+    if not args.skip_build:
+        build(cfg, args)
+    elif not os.path.isdir(STAGE):
+        sys.exit("nothing built yet: run without --skip-build")
+    if args.import_data:
+        add_data(args.import_data)
+    elif os.path.exists(os.path.join(STAGE, "redis-data")):
+        shutil.rmtree(os.path.join(STAGE, "redis-data"))
+    pack()
+
+    incoming = REMOTE + "/incoming"
+    if remote(cfg, "set -e; rm -rf %s; mkdir -p %s; tar xzf - -C %s" % (incoming, incoming, incoming), BUNDLE):
+        sys.exit("upload failed")
+    flags = (" --import-data" if args.import_data else "") + (" --force-data" if args.force_data else "")
+    sys.exit(remote(cfg, "bash %s/deploy/install.sh%s" % (incoming, flags)))
+
+
+if __name__ == "__main__":
+    main()

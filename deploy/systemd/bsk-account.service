@@ -1,0 +1,18 @@
+[Unit]
+Description=betterSkillys account server
+Wants=bsk-redis.service
+After=network.target bsk-redis.service
+
+[Service]
+User=bsk
+Group=bsk
+EnvironmentFile=/opt/bsk/bsk.env
+Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
+WorkingDirectory=/opt/bsk/app
+ExecStart=/usr/bin/dotnet /opt/bsk/app/App.dll
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

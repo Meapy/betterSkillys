@@ -1,0 +1,16 @@
+# The browser client's server (client-rs/gateway), behind Caddy (https). Restarting it
+# disconnects players in the browser, not those on the desktop client.
+[Unit]
+Description=betterSkillys gateway (browser play)
+After=network.target bsk-account.service
+
+[Service]
+User=bsk
+Group=bsk
+EnvironmentFile=/opt/bsk/bsk.env
+ExecStart=/opt/bsk/bin/bsk-gateway --web /opt/bsk/web --account http://127.0.0.1:${BSK_ACCOUNT_PORT} --allow ${BSK_PUBLIC_ADDRESS}:${BSK_WORLD_PORT}=127.0.0.1:${BSK_WORLD_PORT} --allow 127.0.0.1:${BSK_WORLD_PORT} --bind 127.0.0.1:${BSK_GATEWAY_PORT}
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

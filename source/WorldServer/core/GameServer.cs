@@ -77,8 +77,7 @@ namespace WorldServer.core
             InterServerManager = new ISManager(Database.Subscriber, Configuration);
             WorldManager = new WorldManager(this);
             
-            var isDocker = Environment.GetEnvironmentVariable("IS_DOCKER") != null;
-			SignalListener = isDocker ? new SignalListenerLinux(this) : new SignalListenerWindows(this);
+			SignalListener = OperatingSystem.IsWindows() ? new SignalListenerWindows(this) : new SignalListenerLinux(this);
         }
 
         public bool IsWhitelisted(int accountId) => Configuration.serverSettings.whitelist.Contains(accountId);
@@ -177,7 +176,8 @@ namespace WorldServer.core
                 Log.Info("A server shutdown has been triggered.");
             Dispose();
 
-            if (restart)
+            // on Linux the service manager (systemd) starts it again
+            if (restart && OperatingSystem.IsWindows())
                 _ = Process.Start($"{AppDomain.CurrentDomain.FriendlyName}.exe");
 
             Log.Info("Program has been terminated.");

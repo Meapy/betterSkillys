@@ -1,0 +1,15 @@
+{
+  "_comment": "Copy to deploy/vps.local.json (not tracked) and fill in. See SETUP-LOCAL.md, Running on a VPS.",
+  "target": "ssh",
+  "ssh": "ubuntu@vps-1234abcd.vps.ovh.net",
+  "ssh_options": [],
+  "site": "play.example.com",
+  "public_address": "play.example.com",
+  "ports": {
+    "redis": 6379,
+    "account": 8080,
+    "world": 2051,
+    "gateway": 8095
+  },
+  "build_wsl": "Ubuntu-24.04"
+}

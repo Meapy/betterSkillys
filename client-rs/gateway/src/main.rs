@@ -5,6 +5,9 @@
 //! - `/api/<path>`: forwarded to the account server as `<account>/<path>` (POST and GET);
 //! - `/ws/<host>:<port>`: a WebSocket whose binary messages are the bytes of a TCP connection to
 //!   that world server. Only targets given with `--allow` are accepted, so it isn't an open proxy.
+//!   `--allow <host:port>=<host:port>` accepts the first (the address the server list gives
+//!   players) and connects to the second, as on a VPS where the gateway and the world server share
+//!   the machine: `--allow play.example.com:2051=127.0.0.1:2051`.
 //!
 //!     bsk-gateway --web build/client-rs/web --account http://127.0.0.1:8080 --allow 127.0.0.1:2051
 //!                 [--bind 127.0.0.1:8095]
@@ -19,14 +22,15 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get};
 use axum::Router;
 use futures::{SinkExt, StreamExt};
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
 struct Config {
     account: String,
-    allowed: HashSet<String>,
+    /// Target asked for -> address connected to.
+    allowed: HashMap<String, String>,
     http: reqwest::Client,
 }
 
@@ -37,7 +41,7 @@ fn parse_args() -> Result<(String, String, Config), String> {
     let mut web = None;
     let mut bind = "127.0.0.1:8095".to_owned();
     let mut account = None;
-    let mut allowed = HashSet::new();
+    let mut allowed = HashMap::new();
     let mut it = std::env::args().skip(1);
     while let Some(a) = it.next() {
         let mut value = || it.next().ok_or(format!("{a} needs a value"));
@@ -46,12 +50,14 @@ fn parse_args() -> Result<(String, String, Config), String> {
             "--bind" => bind = value()?,
             "--account" => account = Some(value()?.trim_end_matches('/').to_owned()),
             "--allow" => {
-                allowed.insert(value()?);
+                let v = value()?;
+                let (target, to) = v.split_once('=').unwrap_or((&v, &v));
+                allowed.insert(target.to_owned(), to.to_owned());
             }
             _ => return Err(format!("unknown argument {a}")),
         }
     }
-    let usage = "usage: bsk-gateway --web <dir> --account <url> --allow <host:port>... [--bind <addr:port>]";
+    let usage = "usage: bsk-gateway --web <dir> --account <url> --allow <host:port>[=<host:port>]... [--bind <addr:port>]";
     let (Some(web), Some(account)) = (web, account) else { return Err(usage.into()) };
     if allowed.is_empty() {
         return Err(format!("no --allow world server given\n{usage}"));
@@ -120,11 +126,11 @@ async fn api(
 }
 
 async fn bridge(State(config): State<Arc<Config>>, Path(target): Path<String>, ws: WebSocketUpgrade) -> Response {
-    if !config.allowed.contains(&target) {
+    let Some(to) = config.allowed.get(&target).cloned() else {
         log::warn!("refused WebSocket to {target}");
         return StatusCode::FORBIDDEN.into_response();
-    }
-    ws.on_upgrade(move |socket| relay(socket, target))
+    };
+    ws.on_upgrade(move |socket| relay(socket, to))
 }
 
 async fn relay(socket: WebSocket, target: String) {
