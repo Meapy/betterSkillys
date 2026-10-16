@@ -15,6 +15,9 @@ version number itself is in `client-rs/Cargo.toml`.
   email, name or email already taken, an email that isn't valid, a password that's too short
   (6 characters at least), or no connection to the server. Long messages now wrap instead of
   running off the screen.
+- The sign-in, register and account boxes work like normal text boxes: Ctrl+A, copy, cut and
+  paste, undo, the arrow keys, Home and End, Shift to select, Shift+Tab to go back a box, and a
+  click puts the cursor where you click. Passwords can't be copied out.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is

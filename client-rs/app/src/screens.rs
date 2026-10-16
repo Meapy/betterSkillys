@@ -8,6 +8,7 @@ use crate::hud::Ui;
 use crate::redraw::Dye;
 use crate::sky;
 use crate::stars;
+use crate::textedit::LineEdit;
 use crate::theme::{self, color, Kind};
 use bsk_data::{ObjectClass, ObjectDesc, TextureRef};
 use bsk_net::account::{CharList, CharSummary, FameSummary, Legend};
@@ -114,7 +115,7 @@ pub enum Action {
 pub struct Front {
     pub screen: Screen,
     /// Email, password, name, confirm password, new password, confirm new password.
-    pub fields: [String; 6],
+    pub fields: [LineEdit; 6],
     focus: usize,
     pub remember: bool,
     /// A line under the form or list: (text, is it an error).
@@ -137,6 +138,9 @@ pub struct Front {
     pub death_from_graveyard: bool,
     /// Clickable areas from the last frame.
     targets: Vec<(Target, [f32; 4])>,
+    /// Where each field's characters were drawn last frame: (field, first character shown,
+    /// the x of each edge between the characters shown), to put the cursor where it's clicked.
+    field_edges: Vec<(usize, usize, Vec<f32>)>,
     /// Where the account server is, shown small on the login screen.
     pub endpoint_label: String,
     /// A button was clicked since this was last cleared (for its sound).
@@ -153,7 +157,7 @@ impl Default for Front {
     fn default() -> Self {
         Front {
             screen: Screen::Login,
-            fields: Default::default(),
+            fields: std::array::from_fn(|_| LineEdit::new("", 128)),
             focus: EMAIL,
             remember: true,
             message: None,
@@ -168,6 +172,7 @@ impl Default for Front {
             death_from_graveyard: false,
             clicked: false,
             targets: Vec::new(),
+            field_edges: Vec::new(),
             endpoint_label: String::new(),
             version_line: String::new(),
             chars_row: 0,
@@ -284,7 +289,7 @@ impl Front {
         self.confirm.is_none()
             && match self.screen {
                 Screen::Chars => true,
-                Screen::Login => self.fields[EMAIL].is_empty() && self.fields[PASSWORD].is_empty(),
+                Screen::Login => self.fields[EMAIL].text.is_empty() && self.fields[PASSWORD].text.is_empty(),
                 _ => false,
             }
     }
@@ -302,17 +307,30 @@ impl Front {
         self.confirm = None;
         if screen == Screen::Account {
             for f in [PASSWORD, NEW_PASSWORD, NEW_CONFIRM] {
-                self.fields[f].clear();
+                self.set_field(f, String::new());
             }
         }
         if let Some(&first) = self.fields_on_screen().first() {
             // Signing in with an email already typed: start at the password.
-            self.focus = if screen == Screen::Login && !self.fields[EMAIL].is_empty() { PASSWORD } else { first };
+            self.focus = if screen == Screen::Login && !self.fields[EMAIL].text.is_empty() { PASSWORD } else { first };
         }
     }
 
-    /// A key pressed (with the text it types, if any).
-    pub fn key(&mut self, code: KeyCode, text: Option<&str>) -> Option<Action> {
+    /// Put `text` in a field, with the cursor at its end.
+    pub fn set_field(&mut self, i: usize, text: String) {
+        self.fields[i] = LineEdit::new(text, 128);
+    }
+
+    /// Text the browser pasted: into the field being typed in.
+    #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+    pub fn paste(&mut self, text: &str) {
+        if self.fields_on_screen().contains(&self.focus) {
+            self.fields[self.focus].insert(text);
+        }
+    }
+
+    /// A key pressed (with the text it types, if any, and whether Ctrl and Shift are held).
+    pub fn key(&mut self, code: KeyCode, text: Option<&str>, ctrl: bool, shift: bool) -> Option<Action> {
         if self.confirm.is_some() {
             match code {
                 KeyCode::Escape => self.confirm = None,
@@ -323,9 +341,11 @@ impl Front {
         }
         let fields = self.fields_on_screen();
         match code {
+            // Shift+Tab goes back a field.
             KeyCode::Tab if !fields.is_empty() => {
                 let i = fields.iter().position(|&f| f == self.focus).unwrap_or(0);
-                self.focus = fields[(i + 1) % fields.len()];
+                let n = fields.len();
+                self.focus = fields[if shift { (i + n - 1) % n } else { (i + 1) % n }];
             }
             KeyCode::Enter | KeyCode::NumpadEnter => match self.screen {
                 Screen::Login => return Some(Action::SignIn),
@@ -342,18 +362,13 @@ impl Front {
                 Screen::Class(_) => self.show(Screen::NewChar),
                 _ => {}
             },
-            KeyCode::Backspace if fields.contains(&self.focus) => {
-                self.fields[self.focus].pop();
+            // A password can't be copied or cut out of its field, as in any desktop text box.
+            KeyCode::KeyC | KeyCode::KeyX | KeyCode::Insert if ctrl && Self::field_is_secret(self.focus) => {}
+            KeyCode::Delete if shift && !ctrl && Self::field_is_secret(self.focus) => {}
+            _ if fields.contains(&self.focus) => {
+                self.fields[self.focus].key(code, text, ctrl, shift);
             }
-            _ => {
-                if let (Some(t), true) = (text, fields.contains(&self.focus)) {
-                    let field = &mut self.fields[self.focus];
-                    field.extend(t.chars().filter(|c| !c.is_control()));
-                    while field.chars().count() > 128 {
-                        field.pop();
-                    }
-                }
-            }
+            _ => {}
         }
         None
     }
@@ -364,7 +379,17 @@ impl Front {
         self.clicked |= !matches!(target, Target::Field(_));
         let servers = self.list.as_ref().map_or(0, |l| l.servers.len());
         match target {
-            Target::Field(i) => self.focus = i,
+            Target::Field(i) => {
+                self.focus = i;
+                // The cursor goes to the edge between characters nearest the click.
+                if let Some((_, first, edges)) = self.field_edges.iter().find(|(f, _, _)| *f == i) {
+                    let x = pos.0 as f32;
+                    let k = edges.iter().enumerate().min_by(|a, b| (a.1 - x).abs().total_cmp(&(b.1 - x).abs())).map_or(0, |(k, _)| k);
+                    let field = &mut self.fields[i];
+                    field.cursor = first + k;
+                    field.anchor = None;
+                }
+            }
             Target::SignIn => return Some(Action::SignIn),
             Target::Register => return Some(Action::Register),
             Target::ToRegister => {
@@ -446,6 +471,7 @@ impl Front {
     /// Draw the current screen.
     pub fn draw(&mut self, ui: &mut Ui, w: f32, h: f32, mouse: (f64, f64), now: i32) {
         self.targets.clear();
+        self.field_edges.clear();
         let s = scale(w, h);
         self.sky.draw(ui, w, h, s, now);
         draw_shade(ui, w, h, self.screen);
@@ -510,22 +536,40 @@ impl Front {
         let r = [x, y + 20.0 * s, width, 38.0 * s];
         let focused = self.focus == i;
         ui.field_box(r, focused, s);
-        let value = &self.fields[i];
+        let field = &self.fields[i];
         let fsize = (16.0 * s).round().max(10.0);
         let ty = r[1] + (r[3] - fsize * 1.22) / 2.0;
-        if value.is_empty() && !focused {
-            ui.label(placeholder, r[0] + 12.0 * s, ty, fsize, false, color::TEXT_MUTED);
+        let (left, room) = (r[0] + 12.0 * s, width - 24.0 * s);
+        if field.text.is_empty() && !focused {
+            ui.label(placeholder, left, ty, fsize, false, color::TEXT_MUTED);
         } else {
-            let mut shown = if Self::field_is_secret(i) { "•".repeat(value.chars().count()) } else { value.clone() };
+            let chars: Vec<char> = if Self::field_is_secret(i) { vec!['•'; field.text.chars().count()] } else { field.text.chars().collect() };
+            let width_of = |ui: &mut Ui, a: usize, b: usize| ui.measure(&chars[a..b].iter().collect::<String>(), fsize, false);
+            // Scroll so the cursor shows: the first character drawn is the furthest left that
+            // keeps it in the box, then as many as fit after it.
+            let cursor = field.cursor.min(chars.len());
+            let mut first = 0;
+            while first < cursor && width_of(ui, first, cursor) > room {
+                first += 1;
+            }
+            let mut last = cursor;
+            while last < chars.len() && width_of(ui, first, last + 1) <= room {
+                last += 1;
+            }
+            let edges: Vec<f32> = (first..=last).map(|k| left + width_of(ui, first, k)).collect();
+            if let (true, Some((a, b))) = (focused, field.selection()) {
+                let (a, b) = (a.clamp(first, last), b.clamp(first, last));
+                if b > a {
+                    theme::fill(ui.renderer, [edges[a - first], ty - 1.0 * s, edges[b - first] - edges[a - first], fsize * 1.25], 2.0 * s, color::ACCENT, 0.35);
+                }
+            }
+            let shown: String = chars[first..last].iter().collect();
+            ui.label(&shown, left, ty, fsize, false, color::TEXT);
             if focused && (now / 530) % 2 == 0 {
-                shown.push('|');
+                let x = edges[cursor - first];
+                theme::fill(ui.renderer, [x, ty, (1.5 * s).max(1.0), fsize * 1.2], 0.0, color::TEXT, 1.0);
             }
-            // Long text scrolls: show its end.
-            let mut start = 0;
-            while start < shown.len() && ui.measure(&shown[start..], fsize, false) > width - 24.0 * s {
-                start += shown[start..].chars().next().map_or(1, |c| c.len_utf8());
-            }
-            ui.label(&shown[start..], r[0] + 12.0 * s, ty, fsize, false, color::TEXT);
+            self.field_edges.push((i, first, edges));
         }
         self.targets.push((Target::Field(i), r));
         y + 72.0 * s
@@ -1205,7 +1249,7 @@ impl Front {
         theme::panel(ui.renderer, r, s);
         let pad = 28.0 * s;
         ui.label("Account", x + pad, y + 24.0 * s, (24.0 * s).round(), true, color::TEXT);
-        let email = self.fields[EMAIL].clone();
+        let email = self.fields[EMAIL].text.clone();
         ui.label(&email, x + pad, y + 58.0 * s, (14.0 * s).round(), false, color::TEXT_DIM);
         let mut fy = y + 90.0 * s;
         fy = self.field(ui, PASSWORD, "Current password", "Your password", x + pad, fy, bw - 2.0 * pad, s, now);
@@ -1472,16 +1516,27 @@ mod tests {
     fn typing_and_tab() {
         let mut f = Front::default();
         f.show(Screen::Login);
-        f.key(KeyCode::KeyA, Some("a@b"));
-        f.key(KeyCode::Tab, None);
-        f.key(KeyCode::KeyX, Some("pw"));
-        f.key(KeyCode::Backspace, None);
-        assert_eq!(f.fields[EMAIL], "a@b");
-        assert_eq!(f.fields[PASSWORD], "p");
-        assert_eq!(f.key(KeyCode::Enter, None), Some(Action::SignIn));
+        f.key(KeyCode::KeyA, Some("a@b"), false, false);
+        f.key(KeyCode::Tab, None, false, false);
+        f.key(KeyCode::KeyX, Some("pw"), false, false);
+        f.key(KeyCode::Backspace, None, false, false);
+        assert_eq!(f.fields[EMAIL].text, "a@b");
+        assert_eq!(f.fields[PASSWORD].text, "p");
+        // Shift+Tab back to the email; Home, Shift+End selects it all, and typing replaces it.
+        f.key(KeyCode::Tab, None, false, true);
+        f.key(KeyCode::Home, None, false, false);
+        f.key(KeyCode::End, None, false, true);
+        assert_eq!(f.fields[EMAIL].selected_text(), Some("a@b"));
+        f.key(KeyCode::KeyC, Some("c"), false, false);
+        assert_eq!(f.fields[EMAIL].text, "c");
+        // Ctrl+A then Backspace empties it.
+        f.key(KeyCode::KeyA, None, true, false);
+        f.key(KeyCode::Backspace, None, false, false);
+        assert_eq!(f.fields[EMAIL].text, "");
+        assert_eq!(f.key(KeyCode::Enter, None, false, false), Some(Action::SignIn));
         // Escape from Register goes back to Login.
         f.show(Screen::Register);
-        f.key(KeyCode::Escape, None);
+        f.key(KeyCode::Escape, None, false, false);
         assert_eq!(f.screen, Screen::Login);
     }
 

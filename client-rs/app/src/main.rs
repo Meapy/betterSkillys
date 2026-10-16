@@ -171,7 +171,8 @@ struct App {
     test_login: bool,
     request: Option<(Request, Pending<bsk_net::http::Response>)>,
     /// Keys typed on the screens: (key, text).
-    front_keys: Vec<(KeyCode, Option<String>)>,
+    /// Keys for the screens: the key, the text it types, and whether Ctrl and Shift were held.
+    front_keys: Vec<(KeyCode, Option<String>, bool, bool)>,
     /// The Escape menu in the game, and its buttons last frame.
     game_menu: bool,
     menu_buttons: Vec<(screens::MenuChoice, [f32; 4])>,
@@ -618,8 +619,8 @@ impl App {
                     return;
                 }
                 if let Some((email, password)) = start.login {
-                    self.front.fields[screens::EMAIL] = email;
-                    self.front.fields[screens::PASSWORD] = password;
+                    self.front.set_field(screens::EMAIL, email);
+                    self.front.set_field(screens::PASSWORD, password);
                     // Desktop tests sign in and go straight into the game, leaving the player's
                     // remembered login alone.
                     self.front.remember = false;
@@ -627,8 +628,8 @@ impl App {
                     let stay = cfg!(not(target_arch = "wasm32")) && std::env::args().any(|a| a == "--stay");
                     self.sign_in(cfg!(not(target_arch = "wasm32")) && !stay);
                 } else if let Some((email, password)) = login::remembered() {
-                    self.front.fields[screens::EMAIL] = email;
-                    self.front.fields[screens::PASSWORD] = password;
+                    self.front.set_field(screens::EMAIL, email);
+                    self.front.set_field(screens::PASSWORD, password);
                     self.sign_in(false);
                 } else {
                     self.front.show(screens::Screen::Login);
@@ -642,7 +643,7 @@ impl App {
     }
 
     fn sign_in(&mut self, auto_play: bool) {
-        let (email, password) = (self.front.fields[screens::EMAIL].trim().to_owned(), self.front.fields[screens::PASSWORD].clone());
+        let (email, password) = (self.front.fields[screens::EMAIL].text.trim().to_owned(), self.front.fields[screens::PASSWORD].text.clone());
         if let Some(problem) = login::check_sign_in(&email, &password) {
             self.front.message = Some((problem.into(), true));
             self.front.show(screens::Screen::Login);
@@ -663,8 +664,8 @@ impl App {
         log::info!("carrying on from version {}", r.from_version);
         let now = self.now();
         if !r.email.is_empty() {
-            self.front.fields[screens::EMAIL] = r.email.clone();
-            self.front.fields[screens::PASSWORD] = r.password.clone();
+            self.front.set_field(screens::EMAIL, r.email.clone());
+            self.front.set_field(screens::PASSWORD, r.password.clone());
             self.account = Some((r.email.clone(), r.password.clone()));
             // The remembered login is the old version's business: left as it is.
             self.test_login = true;
@@ -918,8 +919,8 @@ impl App {
             Action::SignIn => self.sign_in(false),
             Action::Register => {
                 let f = &self.front.fields;
-                let (name, email, password) = (f[screens::NAME].trim().to_owned(), f[screens::EMAIL].trim().to_owned(), f[screens::PASSWORD].clone());
-                if let Some(p) = login::check_register(&name, &email, &password, &f[screens::CONFIRM]) {
+                let (name, email, password) = (f[screens::NAME].text.trim().to_owned(), f[screens::EMAIL].text.trim().to_owned(), f[screens::PASSWORD].text.clone());
+                if let Some(p) = login::check_register(&name, &email, &password, &f[screens::CONFIRM].text) {
                     self.front.message = Some((p.into(), true));
                     return;
                 }
@@ -941,10 +942,10 @@ impl App {
             }
             Action::ChangePassword => {
                 let f = &self.front.fields;
-                let (current, new) = (f[screens::PASSWORD].clone(), f[screens::NEW_PASSWORD].clone());
+                let (current, new) = (f[screens::PASSWORD].text.clone(), f[screens::NEW_PASSWORD].text.clone());
                 let problem = if current.is_empty() || new.is_empty() {
                     Some("Fill in every field.")
-                } else if new != f[screens::NEW_CONFIRM] {
+                } else if new != f[screens::NEW_CONFIRM].text {
                     Some("The new passwords don't match.")
                 } else if new.chars().count() < login::MIN_PASSWORD {
                     Some("Passwords need at least 6 characters.")
@@ -986,7 +987,7 @@ impl App {
     fn logout(&mut self) {
         self.account = None;
         self.front.list = None;
-        self.front.fields[screens::PASSWORD].clear();
+        self.front.set_field(screens::PASSWORD, String::new());
         self.front.message = None;
         login::remember(None);
         self.front.show(screens::Screen::Login);
@@ -1195,7 +1196,7 @@ impl App {
                             login::remember(Some((email, &new)));
                         }
                     }
-                    self.front.fields[screens::PASSWORD] = new;
+                    self.front.set_field(screens::PASSWORD, new);
                     self.front.message = Some(("Password changed.".into(), false));
                     self.front.show(Screen::Chars);
                 }
@@ -1298,8 +1299,12 @@ impl App {
         let dt = (now - self.last_frame).clamp(0, 200);
         self.last_frame = now;
         prof::start();
-        if let (Some(text), Some(input)) = (textedit::clipboard::take_pasted(), &mut self.chat_input) {
-            input.insert(&text);
+        if let Some(text) = textedit::clipboard::take_pasted() {
+            match (&mut self.chat_input, &self.phase) {
+                (Some(input), _) => input.insert(&text),
+                (None, Phase::Menu) => self.front.paste(&text),
+                _ => {}
+            }
         }
         self.advance();
         #[cfg(not(target_arch = "wasm32"))]
@@ -1425,8 +1430,8 @@ impl App {
         };
         if matches!(self.phase, Phase::Menu) {
             let mut actions = Vec::new();
-            for (code, text) in std::mem::take(&mut self.front_keys) {
-                actions.extend(self.front.key(code, text.as_deref()));
+            for (code, text, ctrl, shift) in std::mem::take(&mut self.front_keys) {
+                actions.extend(self.front.key(code, text.as_deref(), ctrl, shift));
             }
             for (down, pos) in std::mem::take(&mut self.clicks) {
                 if down {
@@ -2117,7 +2122,7 @@ impl ApplicationHandler<UserEvent> for App {
                 }
                 if matches!(self.phase, Phase::Menu) {
                     if pressed {
-                        self.front_keys.push((code, event.text.as_ref().map(|t| t.to_string())));
+                        self.front_keys.push((code, event.text.as_ref().map(|t| t.to_string()), self.ctrl_held, self.shift_held));
                     }
                     return;
                 }
