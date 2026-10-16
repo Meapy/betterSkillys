@@ -91,11 +91,13 @@ namespace WorldServer.core.objects
 
             // get item
             Item item = null;
+            PotionStack fromStack = null;
             foreach (var stack in PotionStacks.Where(stack => stack.Slot == slot))
             {
                 item = stack.Pop();
                 if (item == null)
                     return;
+                fromStack = stack;
                 break;
             }
 
@@ -117,13 +119,27 @@ namespace WorldServer.core.objects
                 return;
             }
 
+            // An item that can't be used here stays where it was: a potion goes back on its stack,
+            // and the slot is sent again, because the client empties it as soon as it asks to use it.
+            void Refuse(string error)
+            {
+                fromStack?.Push(item);
+                entity.ForceUpdate(slot);
+                if (error != null)
+                    SendError(error);
+                Client.SendPacket(new InvResult() { Result = 1 });
+            }
+
             // make sure not trading and trying to cunsume item
             if (TradeTarget != null && item.Consumable)
+            {
+                Refuse("You can't use that while trading.");
                 return;
+            }
 
             if (Mana < item.MpCost)
             {
-                Client.SendPacket(new InvResult() { Result = 1 });
+                Refuse(null);
                 return;
             }
 
@@ -131,8 +147,7 @@ namespace WorldServer.core.objects
             foreach (var eff in item.ActivateEffects)
                 if (eff.Effect == ActivateEffects.ChangeObject && ChangeObjectTarget(eff, out var why) == null)
                 {
-                    SendError(why);
-                    Client.SendPacket(new InvResult() { Result = 1 });
+                    Refuse(why);
                     return;
                 }
 
