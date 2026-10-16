@@ -83,6 +83,8 @@ enum Request {
     Legends,
     /// A dead character's fame summary.
     Fame,
+    /// A new guest account.
+    Guest,
 }
 
 /// What an NPC's window asked the account server.
@@ -169,6 +171,8 @@ struct App {
     account: Option<(String, String)>,
     /// Signed in from --credentials (a test): the remembered login is left as it is.
     test_login: bool,
+    /// Signed in with this device's guest login (`login::guest_login`).
+    guest: bool,
     request: Option<(Request, Pending<bsk_net::http::Response>)>,
     /// Keys typed on the screens: (key, text).
     /// Keys for the screens: the key, the text it types, and whether Ctrl and Shift were held.
@@ -632,6 +636,9 @@ impl App {
                     self.front.set_field(screens::PASSWORD, password);
                     self.front.show(screens::Screen::Home);
                     self.sign_in_quietly();
+                } else if let Some((guid, password)) = login::guest_login() {
+                    self.front.show(screens::Screen::Home);
+                    self.sign_in_as_guest(guid, password, false);
                 } else {
                     self.front.show(screens::Screen::Home);
                 }
@@ -653,9 +660,38 @@ impl App {
         let Some(endpoint) = &self.endpoint else { return };
         self.request = Some((Request::CharList { auto_play }, endpoint.char_list(&email, &password)));
         self.account = Some((email, password));
+        self.guest = false;
         self.front.busy = "Signing in…".into();
         self.front.message = None;
         self.front.show(screens::Screen::Busy);
+    }
+
+    /// Play without an account: this device's guest login, or a new one from the server.
+    fn play_as_guest(&mut self) {
+        if let Some((guid, password)) = login::guest_login() {
+            self.sign_in_as_guest(guid, password, true);
+            return;
+        }
+        let Some(endpoint) = &self.endpoint else { return };
+        self.request = Some((Request::Guest, endpoint.guest()));
+        self.front.busy = "Making you a guest account…".into();
+        self.front.message = None;
+        self.front.show(screens::Screen::Busy);
+    }
+
+    /// Sign in with a guest login: on to the characters (`busy`), or quietly behind the menu.
+    fn sign_in_as_guest(&mut self, guid: String, password: String, busy: bool) {
+        let Some(endpoint) = &self.endpoint else { return };
+        self.request = Some((Request::CharList { auto_play: false }, endpoint.char_list(&guid, &password)));
+        self.account = Some((guid, password));
+        self.guest = true;
+        self.front.message = None;
+        if busy {
+            self.front.busy = "Entering as a guest…".into();
+            self.front.show(screens::Screen::Busy);
+        } else {
+            self.front.signing_in = true;
+        }
     }
 
     /// Check the remembered login while the main menu shows (Play then goes straight to the
@@ -668,6 +704,7 @@ impl App {
         }
         self.request = Some((Request::CharList { auto_play: false }, endpoint.char_list(&email, &password)));
         self.account = Some((email, password));
+        self.guest = false;
         self.front.signing_in = true;
     }
 
@@ -939,8 +976,9 @@ impl App {
                     return;
                 }
                 let Some(endpoint) = &self.endpoint else { return };
-                self.request = Some((Request::Register, endpoint.register(&email, &password, &name)));
-                self.front.busy = "Creating your account…".into();
+                let guest = self.account.as_ref().filter(|_| self.guest).map(|(g, p)| (g.as_str(), p.as_str()));
+                self.request = Some((Request::Register, endpoint.register(&email, &password, &name, guest)));
+                self.front.busy = if guest.is_some() { "Saving your progress…" } else { "Creating your account…" }.into();
                 self.front.message = None;
                 self.front.show(Screen::Busy);
             }
@@ -996,12 +1034,16 @@ impl App {
             Action::Logout => self.logout(),
             Action::Changelog => self.changelog.show(),
             Action::Options => self.options_ui.show(),
+            Action::PlayAsGuest => self.play_as_guest(),
             Action::Quit => self.quit = true,
         }
     }
 
     fn logout(&mut self) {
         self.account = None;
+        // A guest's login stays on this device: Play brings them back.
+        self.guest = false;
+        self.front.guest = false;
         self.front.list = None;
         self.front.set_field(screens::PASSWORD, String::new());
         self.front.message = None;
@@ -1146,7 +1188,7 @@ impl App {
                 }
                 Ok(list) => {
                     if let Some((email, password)) = &self.account {
-                        if !self.test_login {
+                        if !self.test_login && !self.guest {
                             login::remember(self.front.remember.then_some((email.as_str(), password.as_str())));
                         }
                     }
@@ -1159,6 +1201,7 @@ impl App {
                         .min(list.servers.len().saturating_sub(1));
                     let first = list.chars.iter().find(|c| !c.dead).map(|c| c.id);
                     self.front.list = Some(list);
+                    self.front.guest = self.guest;
                     if matches!(self.phase, Phase::Menu) {
                         if self.front.screen == Screen::Busy || self.front.screen == Screen::Login {
                             self.front.show(Screen::Chars);
@@ -1172,6 +1215,12 @@ impl App {
                     }
                 }
                 Err(e) => {
+                    // A guest login the server no longer knows (its data was reset): forget it,
+                    // and Play makes a new one.
+                    if self.guest && self.front.list.is_none() {
+                        login::keep_guest(None);
+                        self.guest = false;
+                    }
                     if self.front.list.is_none() {
                         self.account = None;
                         // A remembered login that failed behind the main menu says so there.
@@ -1183,7 +1232,13 @@ impl App {
                 }
             },
             Request::Register => match login::parse_success(response) {
-                Ok(()) => self.sign_in(false),
+                Ok(()) => {
+                    // A guest's progress is the new account's now.
+                    if self.guest {
+                        login::keep_guest(None);
+                    }
+                    self.sign_in(false);
+                }
                 Err(e) => {
                     self.front.message = Some((e, true));
                     self.front.show(Screen::Register);
@@ -1227,6 +1282,16 @@ impl App {
                 Err(e) => {
                     self.front.legends = Some(Vec::new());
                     self.front.message = Some((e, true));
+                }
+            },
+            Request::Guest => match login::parse_guest(response) {
+                Ok((guid, password)) => {
+                    login::keep_guest(Some((&guid, &password)));
+                    self.sign_in_as_guest(guid, password, true);
+                }
+                Err(e) => {
+                    self.front.message = Some((e, true));
+                    self.front.show(Screen::Home);
                 }
             },
             Request::Fame => {
@@ -2403,6 +2468,7 @@ fn main() {
         endpoint: None,
         account: None,
         test_login: false,
+        guest: false,
         request: None,
         front_keys: Vec::new(),
         game_menu: false,

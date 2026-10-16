@@ -105,6 +105,10 @@ async fn api(
     if let Some(ct) = headers.get("content-type") {
         request = request.header("content-type", ct);
     }
+    // The player's address from the proxy in front (Caddy), for the account server's limits.
+    if let Some(f) = headers.get("x-forwarded-for") {
+        request = request.header("x-forwarded-for", f);
+    }
     match request.send().await {
         Ok(r) => {
             let status = StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY);

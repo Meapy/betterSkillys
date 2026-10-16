@@ -24,12 +24,19 @@ impl Endpoint {
         http::post_form(&format!("{}/char/list", self.account), &[("guid", email), ("password", password)])
     }
 
-    /// `/account/register`: a new account with this email, password and name.
-    pub fn register(&self, email: &str, password: &str, name: &str) -> Pending<http::Response> {
+    /// `/account/register`: a new account with this email, password and name; or, from a guest
+    /// (its made-up login), the guest's account under them, characters and all.
+    pub fn register(&self, email: &str, password: &str, name: &str, guest: Option<(&str, &str)>) -> Pending<http::Response> {
+        let (guid, old_password) = guest.unwrap_or((email, ""));
         http::post_form(
             &format!("{}/account/register", self.account),
-            &[("guid", email), ("newGuid", email), ("newPassword", password), ("name", name)],
+            &[("guid", guid), ("password", old_password), ("newGuid", email), ("newPassword", password), ("name", name)],
         )
+    }
+
+    /// `/account/guest`: a new guest account's made-up login.
+    pub fn guest(&self) -> Pending<http::Response> {
+        http::post_form(&format!("{}/account/guest", self.account), &[])
     }
 
     /// `/char/delete`.
@@ -138,6 +145,40 @@ pub fn explain(e: &str) -> String {
     text.to_owned()
 }
 
+/// A new guest's login (`<Guest><GUID>..</GUID><Password>..</Password></Guest>`).
+pub fn parse_guest(response: http::Response) -> Result<(String, String), String> {
+    let xml = reached(response)?;
+    if let Some(e) = account::error_text(&xml) {
+        return Err(explain(&e));
+    }
+    // Made-up logins are letters, digits, '-' and '_': no escaping to undo.
+    let field = |name: &str| {
+        let start = xml.find(&format!("<{name}>"))? + name.len() + 2;
+        let end = start + xml[start..].find(&format!("</{name}>"))?;
+        Some(xml[start..end].trim().to_owned())
+    };
+    match (field("GUID"), field("Password")) {
+        (Some(g), Some(p)) if !g.is_empty() && !p.is_empty() => Ok((g, p)),
+        _ => Err("The server didn't make a guest account. Try again, or register.".into()),
+    }
+}
+
+/// This device's guest login, kept apart from "Remember me" so a guest's characters stay theirs
+/// until they register (which keeps them) or the device forgets it.
+pub fn guest_login() -> Option<(String, String)> {
+    let text = store::load("guest")?;
+    let mut lines = text.lines();
+    let (g, p) = (lines.next()?.trim().to_owned(), lines.next()?.trim().to_owned());
+    (!g.is_empty() && !p.is_empty()).then_some((g, p))
+}
+
+pub fn keep_guest(login: Option<(&str, &str)>) {
+    match login {
+        Some((g, p)) => store::save("guest", Some(&format!("{g}\n{p}\n"))),
+        None => store::save("guest", None),
+    }
+}
+
 /// What's wrong with a sign-in form, before asking the server.
 pub fn check_sign_in(email: &str, password: &str) -> Option<&'static str> {
     if email.is_empty() && password.is_empty() {
@@ -208,6 +249,13 @@ mod tests {
         assert!(check_register("Bob", "bob@x.com", "short", "short").is_some());
         assert!(check_register("Bob", "bob@x.com", "secret1", "secret2").is_some());
         assert_eq!(check_sign_in("", "pw"), Some("Enter your email."));
+    }
+
+    #[test]
+    fn guest_answer() {
+        let ok = Ok("<Guest><GUID>guest-ab</GUID><Password>pw</Password><Name>Darq</Name></Guest>".to_owned());
+        assert_eq!(parse_guest(ok), Ok(("guest-ab".into(), "pw".into())));
+        assert!(parse_guest(Ok("<Error>Too many new guests from here.</Error>".into())).unwrap_err().starts_with("Too many"));
     }
 }
 

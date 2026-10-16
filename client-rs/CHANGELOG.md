@@ -21,6 +21,10 @@ version number itself is in `client-rs/Cargo.toml`.
 - The game opens on a main menu: Play, Sign in, Register, Options, Changelog and Quit. If you
   stay signed in, it says who you are and Play takes you straight to your characters. Options
   can be changed before you play, and Escape or "Main menu" brings you back to it.
+- Play without an account: Play on the main menu starts you as a guest with a name of your own.
+  Your characters stay on this computer or browser; Register ("Save progress") at any time
+  turns them into a full account, characters, items and fame included. Guests can't buy from
+  the Nexus merchants.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is

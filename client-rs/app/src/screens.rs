@@ -119,6 +119,8 @@ pub enum Action {
     Changelog,
     /// Open the Options window.
     Options,
+    /// Play without an account.
+    PlayAsGuest,
     /// Close the game.
     Quit,
 }
@@ -162,6 +164,8 @@ pub struct Front {
     chars_row: usize,
     /// A remembered login is being checked in the background (Home says so).
     pub signing_in: bool,
+    /// Signed in as this device's guest: Register saves their progress.
+    pub guest: bool,
     /// The night sky behind it all.
     sky: crate::sky::Sky,
 }
@@ -190,6 +194,7 @@ impl Default for Front {
             version_line: String::new(),
             chars_row: 0,
             signing_in: false,
+            guest: false,
             sky: Default::default(),
         }
     }
@@ -472,10 +477,14 @@ impl Front {
             }
             Target::Logout => return Some(Action::Logout),
             Target::Changelog => return Some(Action::Changelog),
-            // Signed in: the characters; else sign in first.
+            // Signed in (or a guest): the characters; else play as a guest.
             Target::Play => {
                 self.message = None;
-                self.show(if self.list.is_some() { Screen::Chars } else { Screen::Login });
+                if self.list.is_some() {
+                    self.show(Screen::Chars);
+                } else {
+                    return Some(Action::PlayAsGuest);
+                }
             }
             Target::ToHome => {
                 self.message = None;
@@ -651,6 +660,7 @@ impl Front {
         let mut y = top + lh + 56.0 * s;
         // Who's signed in, if anyone.
         let who = match (&self.list, self.signing_in) {
+            (Some(list), _) if self.guest => Some(format!("Playing as a guest ({})", list.name)),
             (Some(list), _) => Some(format!("Signed in as {}", list.name)),
             (None, true) => Some("Signing in\u{2026}".to_owned()),
             _ => None,
@@ -664,7 +674,10 @@ impl Front {
         let half = (bw - gap) / 2.0;
         self.button(ui, Target::Play, [x, y, bw, bh + 6.0 * s], "Play", Kind::Primary, s, mouse);
         y += bh + 6.0 * s + gap;
-        if self.list.is_some() {
+        if self.list.is_some() && self.guest {
+            self.button(ui, Target::ToRegister, [x, y, half, bh], "Save progress", Kind::Secondary, s, mouse);
+            self.button(ui, Target::ToLogin, [x + half + gap, y, half, bh], "Sign in", Kind::Secondary, s, mouse);
+        } else if self.list.is_some() {
             self.button(ui, Target::Logout, [x, y, bw, bh], "Log out", Kind::Secondary, s, mouse);
         } else {
             self.button(ui, Target::ToLogin, [x, y, half, bh], "Sign in", Kind::Secondary, s, mouse);
@@ -678,6 +691,12 @@ impl Front {
         if cfg!(not(target_arch = "wasm32")) {
             self.button(ui, Target::Quit, [x, y, bw, bh], "Quit", Kind::Secondary, s, mouse);
             y += bh + gap;
+        }
+        if self.list.is_none() && self.message.is_none() {
+            let hint = "No account needed: Play starts you as a guest. Register any time to keep your progress.";
+            let hs = (13.0 * s).round().max(9.0);
+            let hw = ui.measure(hint, hs, false).min(w - 32.0);
+            ui.label(hint, (w - hw) / 2.0, y + 4.0 * s, hs, false, color::TEXT_DIM);
         }
         self.message_line(ui, w / 2.0, y + 8.0 * s, (w - 32.0).min(560.0 * s), s);
         let _ = now;
@@ -723,7 +742,8 @@ impl Front {
         let [x, y, bw, bh] = r;
         theme::panel(ui.renderer, r, s);
         let pad = 28.0 * s;
-        ui.label("Create your account", x + pad, y + 24.0 * s, (24.0 * s).round(), true, color::TEXT);
+        let title = if self.guest && self.list.is_some() { "Save your progress" } else { "Create your account" };
+        ui.label(title, x + pad, y + 24.0 * s, (24.0 * s).round(), true, color::TEXT);
         let mut fy = y + 66.0 * s;
         for (i, label, hint) in [
             (NAME, "Name", "Up to 10 letters"),
@@ -775,7 +795,7 @@ impl Front {
         let right = w - pad - money_w - 22.0 * s;
         let buttons = [
             (Target::ToHome, "Main menu"),
-            (Target::ToAccount, "Account"),
+            if self.guest { (Target::ToRegister, "Register") } else { (Target::ToAccount, "Account") },
             (Target::ToServers, "Servers"),
             (Target::ToLegends, "Legends"),
             (Target::ToGraveyard, "Graveyard"),

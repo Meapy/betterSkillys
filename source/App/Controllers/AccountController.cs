@@ -2,7 +2,11 @@
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Security.Cryptography;
+using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Shared;
@@ -182,9 +186,104 @@ namespace App.Controllers
             Response.CreateError("Unknown Error");
         }
         
-        [HttpPost("register")]
-        public void Register([FromForm] string guid, [FromForm] string newGuid, [FromForm] string newPassword, [FromForm] string name)
+        /// <summary>
+        /// A new guest account, for playing without registering: a made-up login the client keeps
+        /// on its device. Registering later with it (register's guid and password) keeps everything.
+        /// </summary>
+        [HttpPost("guest")]
+        public void Guest()
         {
+            if (!GuestLimit.Allow(ClientIp()))
+            {
+                Response.CreateError("Too many new guests from here. Try again later, or register.");
+                return;
+            }
+
+            var guid = "guest-" + Guid.NewGuid().ToString("N");
+            var password = Convert.ToBase64String(RandomNumberGenerator.GetBytes(18)).Replace('+', '-').Replace('/', '_');
+            var status = _core.Database.Register(guid, password, true, out var acc);
+            if (status != DbRegisterStatus.OK)
+            {
+                Response.CreateError(status.GetInfo());
+                return;
+            }
+
+            // A name of its own (the world server only lets named accounts in, and finds players
+            // by name): "Guest" and four random letters.
+            var nameKey = Database.NAME_LOCK;
+            string nameLock = null;
+            try
+            {
+                while ((nameLock = _core.Database.AcquireLock(nameKey)) == null) ;
+                string guestName;
+                do
+                {
+                    var letters = RandomNumberGenerator.GetBytes(4).Select(b => (char)('a' + b % 26));
+                    guestName = "Guest" + char.ToUpperInvariant(letters.First()) + new string(letters.Skip(1).ToArray());
+                }
+                while (_core.Database.Conn.HashExists("names", guestName.ToUpperInvariant()));
+                while (!_core.Database.RenameIGN(acc, guestName, nameLock)) ;
+            }
+            finally
+            {
+                if (nameLock != null)
+                    _core.Database.ReleaseLock(nameKey, nameLock);
+            }
+
+            _core.Logger.Info($"Guest account {acc.AccountId} ({acc.Name}) for {ClientIp()}");
+            Response.CreateXml(new XElement("Guest",
+                new XElement("GUID", guid),
+                new XElement("Password", password),
+                new XElement("Name", acc.Name)).ToString());
+        }
+
+        /// <summary>The player's address: behind this PC's own proxy (the gateway, Caddy), the one it forwarded.</summary>
+        private string ClientIp()
+        {
+            var ip = HttpContext.Connection.RemoteIpAddress;
+            var forwarded = Request.Headers["X-Forwarded-For"].ToString();
+            if (ip != null && IPAddress.IsLoopback(ip) && !string.IsNullOrWhiteSpace(forwarded))
+                return forwarded.Split(',')[0].Trim();
+            return ip?.ToString() ?? "";
+        }
+
+        /// <summary>At most 10 new guests an hour from one address, and 300 an hour in all.</summary>
+        private static class GuestLimit
+        {
+            private static readonly Dictionary<string, List<DateTime>> ByIp = new();
+            private static readonly List<DateTime> All = new();
+
+            public static bool Allow(string ip)
+            {
+                var now = DateTime.UtcNow;
+                lock (All)
+                {
+                    All.RemoveAll(t => now - t > TimeSpan.FromHours(1));
+                    foreach (var key in ByIp.Keys.ToList())
+                    {
+                        ByIp[key].RemoveAll(t => now - t > TimeSpan.FromHours(1));
+                        if (ByIp[key].Count == 0)
+                            ByIp.Remove(key);
+                    }
+
+                    if (!ByIp.TryGetValue(ip, out var times))
+                        ByIp[ip] = times = new List<DateTime>();
+                    if (times.Count >= 10 || All.Count >= 300)
+                        return false;
+                    times.Add(now);
+                    All.Add(now);
+                    return true;
+                }
+            }
+        }
+
+        [HttpPost("register")]
+        public void Register([FromForm] string guid, [FromForm] string newGuid, [FromForm] string newPassword, [FromForm] string name, [FromForm] string password)
+        {
+            // A guest registering (guid and password are its made-up login): the guest account
+            // becomes this one, characters and all.
+            var claiming = !string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(guid) && !guid.Equals(newGuid, StringComparison.OrdinalIgnoreCase);
+
             //if (_core.IsProduction()) // old code
             //{
             //    if (_core.Config.serverInfo.requireSecret && secret != "69420")
@@ -246,6 +345,12 @@ namespace App.Controllers
                         return;
                     }
 
+                    if (claiming)
+                    {
+                        ClaimGuest(guid, password, newGuid, newPassword, name, lockToken, nameLockToken);
+                        return;
+                    }
+
                     var s = _core.Database.Register(newGuid, newPassword, false, out var acc);
                     if (s == DbRegisterStatus.OK)
                     {
@@ -267,6 +372,37 @@ namespace App.Controllers
             {
                 if (lockToken != null)
                     _core.Database.ReleaseLock(key, lockToken);
+            }
+
+            void ClaimGuest(string guestGuid, string guestPassword, string email, string newPw, string newName, string regLock, string nameLock)
+            {
+                var db = _core.Database;
+                if (db.Verify(guestGuid, guestPassword, out var acc) != DbLoginStatus.OK || !acc.Guest)
+                {
+                    Response.CreateError("Only a guest account can be registered this way");
+                    return;
+                }
+
+                using (var accountLock = db.LockAccount(acc))
+                {
+                    if (!accountLock.HasLock)
+                    {
+                        Response.CreateError("Account in use");
+                        return;
+                    }
+
+                    if (!db.RenameUUID(acc, email, regLock))
+                    {
+                        Response.CreateError(DbRegisterStatus.UsedName.GetInfo());
+                        return;
+                    }
+
+                    db.ChangePassword(email, newPw);
+                    acc.Guest = false;
+                    while (!db.RenameIGN(acc, newName, nameLock)) ;
+                    _core.Logger.Info($"Guest account {acc.AccountId} registered as {newName}");
+                    Response.CreateSuccess();
+                }
             }
 
             bool IsValidName(string text)
