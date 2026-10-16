@@ -32,8 +32,11 @@ pub struct GameData {
 impl GameData {
     /// Read every ground and object file of the manifest.
     pub async fn load(source: &AssetSource, manifest: &Manifest) -> Result<Self, String> {
-        let grounds = futures::future::join_all(manifest.ground_xml.iter().map(|f| source.load(f))).await;
-        let objects = futures::future::join_all(manifest.object_xml.iter().map(|f| source.load(f))).await;
+        // All at once: in a browser each is a download.
+        let (grounds, objects) = futures::join!(
+            futures::future::join_all(manifest.ground_xml.iter().map(|f| source.load(f))),
+            futures::future::join_all(manifest.object_xml.iter().map(|f| source.load(f)))
+        );
         let mut data = GameData::default();
         for (file, bytes) in manifest.ground_xml.iter().zip(grounds) {
             data.add_grounds(&text(file, bytes)?).map_err(|e| format!("{file}: {e}"))?;

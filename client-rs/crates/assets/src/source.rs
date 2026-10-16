@@ -108,7 +108,19 @@ mod imp {
             return Err(Error::Io { path: url.to_owned(), message: format!("HTTP {}", response.status()) });
         }
         let buffer = JsFuture::from(response.array_buffer().map_err(err)?).await.map_err(err)?;
-        Ok(js_sys::Uint8Array::new(&buffer).to_vec())
+        let bytes = js_sys::Uint8Array::new(&buffer).to_vec();
+        report(bytes.len());
+        Ok(bytes)
+    }
+
+    /// Tell the page a file has arrived (`window.bskAssetLoaded(bytes)`, for its loading bar).
+    fn report(bytes: usize) {
+        let Some(window) = web_sys::window() else { return };
+        if let Ok(f) = js_sys::Reflect::get(&window, &wasm_bindgen::JsValue::from_str("bskAssetLoaded")) {
+            if let Some(f) = f.dyn_ref::<js_sys::Function>() {
+                let _ = f.call1(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_f64(bytes as f64));
+            }
+        }
     }
 }
 

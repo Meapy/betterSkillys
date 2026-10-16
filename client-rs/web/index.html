@@ -5,21 +5,106 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Do Damage</title>
   <style>
-    html, body { margin: 0; height: 100%; background: #07080a; overflow: hidden; font: 14px sans-serif; color: #a9b0be; }
+    html, body { margin: 0; height: 100%; background: #0b0716; overflow: hidden; font: 15px system-ui, sans-serif; color: #cfc6e6; }
     canvas { display: block; width: 100vw; height: 100vh; outline: none; }
-    #status { position: fixed; inset: 0; display: grid; place-items: center; }
+    /* The loading screen, in the game's look (theme.rs): a night sky, violet glass, ember. */
+    #loader {
+      position: fixed; inset: 0; display: grid; place-items: center; z-index: 10;
+      background: radial-gradient(ellipse at 50% 120%, #3a1d4f 0%, #1a0f2e 45%, #0b0716 100%);
+      transition: opacity .4s ease;
+    }
+    #loader.done { opacity: 0; pointer-events: none; }
+    #card { width: min(440px, calc(100vw - 32px)); text-align: center; }
+    #title {
+      font: 900 clamp(34px, 9vw, 60px)/1 "Courier New", monospace; letter-spacing: .08em;
+      background: linear-gradient(#ffe28a, #ff9a3c 55%, #c8431c); -webkit-background-clip: text; background-clip: text; color: transparent;
+      text-shadow: 0 4px 0 rgba(0, 0, 0, .35);
+    }
+    #track {
+      margin: 28px 0 12px; height: 12px; border-radius: 6px; overflow: hidden;
+      background: rgba(120, 90, 170, .25); border: 1px solid rgba(170, 140, 220, .35);
+    }
+    /* no transition: the game keeps the page busy while it loads, and the bar would lag */
+    #bar { height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, #ff9a3c, #ffcf6b); }
+    #track.busy #bar { width: 100%; animation: pulse 1.2s ease-in-out infinite; }
+    #track.failed #bar { width: 100%; background: #e0505a; }
+    @keyframes pulse { 50% { opacity: .45; } }
+    #text { min-height: 1.4em; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
-  <div id="status">Loading…</div>
+  <div id="loader">
+    <div id="card">
+      <div id="title">DO DAMAGE</div>
+      <div id="track"><div id="bar"></div></div>
+      <div id="text">Starting…</div>
+    </div>
+  </div>
   <script type="module">
-    // The client draws its own sign-in screen. A page may set window.bskLogin = {email, password}
+    // The client draws its own screens. A page may set window.bskLogin = {email, password}
     // before init() to sign in straight away (see client-rs/app/src/login.rs).
     // ?v=: the build (filled in by build_client_rs.py), so a browser never mixes in files it
-    // kept from an older one.
+    // kept from an older one; the gateway lets browsers keep those for good.
     import init from "./betterskillys.js?v=BSK_BUILD";
-    const status = document.getElementById("status");
-    init({ module_or_path: "./betterskillys_bg.wasm?v=BSK_BUILD" }).then(() => status.remove(), (err) => { status.textContent = "Failed to start: " + err; });
+    // What the first visit downloads (build_client_rs.py fills these in): the game, then its
+    // art and data, which the game reports file by file (window.bskAssetLoaded).
+    const WASM_BYTES = Number("BSK_WASM_BYTES") || 0;
+    const ASSET_BYTES = Number("BSK_ASSET_BYTES") || 0;
+    const total = WASM_BYTES + ASSET_BYTES;
+    const loader = document.getElementById("loader");
+    const track = document.getElementById("track");
+    const bar = document.getElementById("bar");
+    const text = document.getElementById("text");
+    let got = 0;
+    const mb = (n) => (n / 1e6).toFixed(1);
+    function show() {
+      if (got >= total || !total) {
+        track.classList.add("busy");
+        text.textContent = "Getting ready…";
+        return;
+      }
+      bar.style.width = (100 * got / total).toFixed(1) + "%";
+      text.textContent = `Downloading the game… ${mb(got)} of ${mb(total)} MB`;
+    }
+    window.bskAssetLoaded = (n) => { got += n; show(); };
+    // The game's first frame is ready: the loading screen goes.
+    window.bskReady = () => {
+      console.info(`ready in ${Math.round(performance.now())} ms`);
+      loader.classList.add("done");
+      setTimeout(() => loader.remove(), 450);
+    };
+
+    // The wasm module through a counting stream, so its download shows on the bar (it's most of
+    // a first visit) and the browser still compiles it while it arrives.
+    async function fetchWasm(url) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      if (!response.body) return response;
+      const reader = response.body.getReader();
+      const counted = new ReadableStream({
+        async pull(controller) {
+          const { done, value } = await reader.read();
+          if (done) {
+            controller.close();
+            return;
+          }
+          got += value.length;
+          show();
+          controller.enqueue(value);
+        },
+      });
+      return new Response(counted, { headers: { "Content-Type": "application/wasm" } });
+    }
+
+    try {
+      show();
+      const wasm = await fetchWasm("./betterskillys_bg.wasm?v=BSK_BUILD");
+      await init({ module_or_path: wasm });
+    } catch (err) {
+      track.classList.remove("busy");
+      track.classList.add("failed");
+      text.textContent = "The game couldn't load (" + err + "). Reload the page to try again.";
+    }
   </script>
 </body>
 </html>

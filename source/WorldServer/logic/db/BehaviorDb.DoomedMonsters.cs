@@ -181,6 +181,7 @@ namespace WorldServer.logic
             .InitDoomed("Mega Sheep", DoomedSetup.State(DoomedMonsterDefs.M_Mega_Sheep), DoomedSetup.Drops("Mega Sheep", DoomedMonsterDefs.M_Mega_Sheep))
             .InitDoomed("Mega Sheep Minion", DoomedSetup.State(DoomedMonsterDefs.M_Mega_Sheep_Minion), DoomedSetup.Drops("Mega Sheep Minion", DoomedMonsterDefs.M_Mega_Sheep_Minion))
             .InitDoomed("Native Ent God", DoomedSetup.State(DoomedMonsterDefs.M_Native_Ent_God), DoomedSetup.Drops("Native Ent God", DoomedMonsterDefs.M_Native_Ent_God))
+            .InitDoomed("Native White Demon", DoomedSetup.State(DoomedMonsterDefs.M_Native_White_Demon), DoomedSetup.Drops("Native White Demon", DoomedMonsterDefs.M_Native_White_Demon))
             .InitDoomed("Oryx the Birthday God", DoomedSetup.State(DoomedMonsterDefs.M_Oryx_the_Birthday_God), DoomedSetup.Drops("Oryx the Birthday God", DoomedMonsterDefs.M_Oryx_the_Birthday_God))
             .InitDoomed("Oryx the Mad God 4", DoomedSetup.State(DoomedMonsterDefs.M_Oryx_the_Mad_God_4), DoomedSetup.Drops("Oryx the Mad God 4", DoomedMonsterDefs.M_Oryx_the_Mad_God_4))
             .InitDoomed("Oryx the Mad God 5", DoomedSetup.State(DoomedMonsterDefs.M_Oryx_the_Mad_God_5), DoomedSetup.Drops("Oryx the Mad God 5", DoomedMonsterDefs.M_Oryx_the_Mad_God_5))

@@ -5554,6 +5554,23 @@ namespace WorldServer.logic.doomed
                         ))
                     ));
 
+        // Native White Demon
+        public static readonly Definition M_Native_White_Demon = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(6, 9, 4, null),
+                    SimpleWandering.Instance(4)
+                    ),
+                Cooldown.Instance(1000, PredictiveMultiAttack.Instance(10, 15*(float) Math.PI/180, 3, 1))
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(1, CommonGodSoulBag),
+                    Tuple.Create(360, new LootDef(0, 1, 0, 8,
+                        Tuple.Create(PotProbability, (ILoot) new StatPotionLoot(StatPotion.Att))
+                        ))
+                    ));
+
         // Oryx the Birthday God
         public static readonly Definition M_Oryx_the_Birthday_God = new Definition(
             new Behavior[] {

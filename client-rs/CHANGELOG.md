@@ -12,6 +12,9 @@ version number itself is in `client-rs/Cargo.toml`.
 - The desktop game now signs in and plays over an encrypted connection (https), like the
   browser version, so your password and what you do in game can't be read on the way to the
   server. Your game switches over by itself when it updates.
+- The Native White Demons in the Abyss of Demons now chase you and shoot back instead of standing still.
+
+## 1.2.0 (2026-10-16)
 - Signing in with an email that has no account, or with the wrong password, now stops at the
   sign-in screen with a message. It used to show an empty character list that couldn't play.
 - Clearer messages when signing in or creating an account fails: wrong password, unknown
@@ -46,6 +49,9 @@ version number itself is in `client-rs/Cargo.toml`.
   Necromancer's skull, the Huntress's trap, the Mystic's orb, the Sorcerer's scepter, auras,
   boosts, decoys, teleports and the rest, instead of just a code name like "VampireBlast".
 - With the frame rate on (L), the ping to the server shows beside it.
+- Playing in the browser: a loading screen with a progress bar shows how much of the game is
+  left to download. The download is about a third of the size, the game's files load all at
+  once, and your browser keeps them, so the next visit starts much faster.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is

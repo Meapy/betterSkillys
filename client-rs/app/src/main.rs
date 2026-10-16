@@ -577,8 +577,13 @@ async fn load(window: Arc<Window>) -> Result<Box<Loaded>, String> {
     log::info!("assets: {}", source.describe());
     let manifest = source.manifest().await.map_err(|e| e.to_string())?;
     let t = Instant::now();
-    let sprites = Sprites::load(&source, &manifest, &mut renderer).await?;
-    let data = GameData::load(&source, &manifest).await?;
+    // The sprites, the game data and the fonts download together (in a browser they're 500 files).
+    let (sprites, data, (regular, bold)) = futures::join!(
+        Sprites::load(&source, &manifest, &mut renderer),
+        GameData::load(&source, &manifest),
+        async { futures::join!(source.load(&manifest.fonts.regular), source.load(&manifest.fonts.bold)) }
+    );
+    let (sprites, data) = (sprites?, data?);
     log::info!(
         "loaded {} sheets ({} atlas pages), {} grounds, {} objects in {} ms",
         manifest.sheet_files().len(),
@@ -587,7 +592,6 @@ async fn load(window: Arc<Window>) -> Result<Box<Loaded>, String> {
         data.objects.len(),
         t.elapsed().as_millis()
     );
-    let (regular, bold) = futures::join!(source.load(&manifest.fonts.regular), source.load(&manifest.fonts.bold));
     let fonts = text::Fonts::new(regular.map_err(|e| e.to_string())?, bold.map_err(|e| e.to_string())?)?;
     Ok(Box::new(Loaded {
         renderer,
@@ -2165,6 +2169,16 @@ impl ApplicationHandler<UserEvent> for App {
         match event {
             UserEvent::Ready(loaded) => {
                 self.loaded = Some(loaded);
+                // The page's loading screen can go (`window.bskReady()`, web/index.html).
+                #[cfg(target_arch = "wasm32")]
+                if let Some(window) = web_sys::window() {
+                    use wasm_bindgen::JsCast;
+                    if let Ok(f) = js_sys::Reflect::get(&window, &wasm_bindgen::JsValue::from_str("bskReady")) {
+                        if let Some(f) = f.dyn_ref::<js_sys::Function>() {
+                            let _ = f.call0(&wasm_bindgen::JsValue::NULL);
+                        }
+                    }
+                }
                 if let Some(window) = &self.window {
                     let size = window.inner_size();
                     self.loaded.as_mut().unwrap().renderer.resize(size.width, size.height);
