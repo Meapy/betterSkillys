@@ -162,6 +162,8 @@ struct App {
     mouse_script: Vec<(i32, MouseStep, (f64, f64))>,
     map_colors: hud::MapColors,
     hud: hud::HudState,
+    /// The pointer is hidden for the crosshair.
+    cursor_hidden: bool,
     /// Left button presses (true) and releases since the last frame, and where.
     clicks: Vec<(bool, (f64, f64))>,
     /// The screens before the game.
@@ -1515,6 +1517,9 @@ impl App {
             hp_bars: self.settings.hp_bars,
             bubbles: self.settings.bubbles,
             ally_shots: self.settings.ally_shots,
+            pet_shots: self.settings.pet_shots,
+            player_alpha: self.settings.player_alpha,
+            pet_alpha: self.settings.pet_alpha,
             damage_numbers: self.settings.damage_numbers,
         };
         if matches!(self.phase, Phase::Menu) {
@@ -1702,6 +1707,7 @@ impl App {
                 self.mouse_down = false;
             }
             game.particles.disabled = !self.settings.particles;
+            game.particles.hide_pets = !self.settings.pet_effects;
             // Options' "Return home": out to the main menu.
             if std::mem::take(&mut self.options_ui.go_home) {
                 self.leave_game(None);
@@ -1885,7 +1891,7 @@ impl App {
                         // little below the middle, the map scaled to the space (hud::Layout).
                         let scale = lay.map_scale(self.settings.zoom);
                         let (cx, cy) = lay.camera_point(self.settings.centered);
-                        let camera = view::Camera::new(me.x + jitter.0, me.y + jitter.1, game.camera_angle, scale, cx, cy);
+                        let camera = view::Camera::new(me.x + jitter.0, me.y + jitter.1, game.camera_angle, scale, cx, cy).snapped();
                         // The farthest corner of the view from us, in tiles.
                         let vw = lay.view_w() as f64;
                         let far = [(0.0, 0.0), (vw, 0.0), (0.0, h as f64), (vw, h as f64)]
@@ -2022,6 +2028,26 @@ impl App {
                 prof::mark("overlay");
             }
         }
+        // The crosshair, over the world while nothing else has the mouse; the pointer hides
+        // while it shows.
+        let crosshair = self.settings.crosshair
+            && matches!(&self.phase, Phase::Playing(g) if g.world.is_some())
+            && !lay.on_panel(mouse.0, mouse.1)
+            && !self.game_menu
+            && !self.options_ui.open
+            && !self.changelog.open
+            && !self.market.open
+            && self.npcs.window.is_none()
+            && self.hud.drag.is_none();
+        if crosshair {
+            draw_crosshair(renderer, mouse, lay.s);
+        }
+        if crosshair != self.cursor_hidden {
+            self.cursor_hidden = crosshair;
+            if let Some(window) = &self.window {
+                window.set_cursor_visible(!crosshair);
+            }
+        }
         if self.game_menu {
             let (w, h) = renderer.size();
             let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
@@ -2116,6 +2142,29 @@ impl App {
             self.fps_since = Instant::now();
         }
     }
+}
+
+/// The crosshair at the mouse: four short arms around a gap and a dot in the accent colour, each
+/// edged in black so it shows on any ground. Whole pixels, so it stays sharp.
+fn draw_crosshair(renderer: &mut bsk_render::Renderer, mouse: (f64, f64), s: f32) {
+    let (cx, cy) = (mouse.0.round() as f32, mouse.1.round() as f32);
+    let u = s.max(0.75);
+    let (gap, len, t) = ((4.0 * u).round(), (7.0 * u).round(), (2.0 * u).round().max(2.0));
+    let half = (t / 2.0).floor();
+    let arms = [
+        [cx - gap - len, cy - half, len, t],
+        [cx + gap, cy - half, len, t],
+        [cx - half, cy - gap - len, t, len],
+        [cx - half, cy + gap, t, len],
+    ];
+    let dot = [cx - half, cy - half, t, t];
+    for r in arms.iter().chain([&dot]) {
+        renderer.fill(r[0] - 1.0, r[1] - 1.0, r[2] + 2.0, r[3] + 2.0, 0x000000, 0.75);
+    }
+    for r in arms {
+        renderer.fill(r[0], r[1], r[2], r[3], 0xFFFFFF, 0.95);
+    }
+    renderer.fill(dot[0], dot[1], dot[2], dot[3], theme::color::ACCENT, 1.0);
 }
 
 impl ApplicationHandler<UserEvent> for App {
@@ -2471,6 +2520,7 @@ fn main() {
         ctrl_held: false,
         right_clicks: Vec::new(),
         hud: Default::default(),
+        cursor_hidden: false,
         clicks: Vec::new(),
         map_colors: Default::default(),
         walk_to: walk_to_arg().first().copied(),

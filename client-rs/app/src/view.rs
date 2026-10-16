@@ -40,6 +40,16 @@ impl Camera {
         Camera { x, y, angle, scale, cx, cy, sin, cos }
     }
 
+    /// The same view moved by under a pixel so the world's origin is on a whole pixel: the
+    /// ground's pixels then keep their places as the camera follows us, instead of shimmering
+    /// with every fraction of a pixel it moves.
+    pub fn snapped(self) -> Self {
+        let (o, _, _) = self.affine();
+        let (dx, dy) = ((self.cx - o[0].round()) / self.scale, (self.cy - o[1].round()) / self.scale);
+        let (s, c) = (self.sin, self.cos);
+        Camera { x: dx * c - dy * s, y: dx * s + dy * c, ..self }
+    }
+
     pub fn to_screen(&self, x: f64, y: f64, z: f64) -> [f32; 2] {
         let (s, c) = (self.sin, self.cos);
         let (dx, dy) = (x - self.x, y - self.y);
@@ -156,6 +166,11 @@ pub struct Show {
     pub bubbles: bool,
     /// Other players' projectiles (`allyShots`).
     pub ally_shots: bool,
+    /// Other players' pets' projectiles.
+    pub pet_shots: bool,
+    /// How opaque other players and other players' pets are.
+    pub player_alpha: f32,
+    pub pet_alpha: f32,
     pub damage_numbers: bool,
 }
 
@@ -406,6 +421,11 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         if ally && !scene.show.ally_shots {
             continue;
         }
+        // A pet's shots are its owner's, fired from the pet (a Character, where a player's
+        // come from a weapon or ability).
+        if ally && !scene.show.pet_shots && scene.data.objects.get(&p.container_type).is_some_and(|c| c.class == ObjectClass::Character) {
+            continue;
+        }
         if (p.x - cam.x).abs() <= radius && (p.y - cam.y).abs() <= radius {
             items.push((cam.to_screen(p.x, p.y, 0.0)[1], Item::Projectile(p)));
         }
@@ -436,7 +456,11 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
             let s = size / 100.0 * (desc.shadow_size as f32 / 100.0);
             let (sw, sh) = (30.0 * s * k, 15.0 * s * k);
             let [px, py] = cam.to_screen(obj.x, obj.y, 0.0);
-            renderer.sprite(shadow, Quad::rect(px - sw, py - sh, 2.0 * sw, 2.0 * sh), Tint::color(desc.shadow_color, 1.0));
+            let alpha = fade(scene, obj, desc);
+            if alpha <= 0.0 {
+                continue;
+            }
+            renderer.sprite(shadow, Quad::rect(px - sw, py - sh, 2.0 * sw, 2.0 * sh), Tint::color(desc.shadow_color, alpha));
         }
     }
     for (_, item) in items.iter().filter(|(_, i)| !under(i)) {
@@ -484,7 +508,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
     // HP bars (`GameObject.drawHpBar`) under monsters and players.
     for (_, item) in items.iter().filter(|_| scene.show.hp_bars) {
         let Item::Sprite { obj, desc } = item else { continue };
-        if !(desc.enemy || desc.player) || desc.no_mini_map {
+        if !(desc.enemy || desc.player) || desc.no_mini_map || fade(scene, obj, desc) <= 0.0 {
             continue;
         }
         let c = obj.conditions();
@@ -567,7 +591,7 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
         let player = desc.player && Some(obj.id) != world.me;
         // Portal.draw: the Nexus's realm portals show their name and player count.
         let realm_portal = desc.class == ObjectClass::Portal && desc.xml.has("NexusPortal");
-        if !(desc.show_name || player || realm_portal) {
+        if !(desc.show_name || player || realm_portal) || fade(scene, obj, desc) <= 0.0 {
             continue;
         }
         let Some(name) = obj.name() else { continue };
@@ -600,8 +624,24 @@ pub fn draw(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, gro
 }
 
 /// `GameObject.draw` for sprite objects. Returns where the sprite's top centre is drawn.
+/// How opaque the options draw this object: other players and other players' pets can be
+/// faded (1 for everything else).
+fn fade(scene: &Scene, obj: &GameObj, desc: &ObjectDesc) -> f32 {
+    if desc.player && Some(obj.id) != scene.world.me {
+        scene.show.player_alpha
+    } else if scene.world.others_pet(obj) {
+        scene.show.pet_alpha
+    } else {
+        1.0
+    }
+}
+
 fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, ground: &mut Ground, obj: &GameObj, desc: &ObjectDesc) -> Option<[f32; 2]> {
     let cam = scene.camera;
+    let alpha = fade(scene, obj, desc);
+    if alpha <= 0.0 {
+        return None;
+    }
     let mut look = scene.look(obj, desc)?;
     if desc.draw_on_ground {
         // Flat on its square, like a tile.
@@ -642,7 +682,8 @@ fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, 
     } else {
         0.0
     };
-    let quad = Quad::rect(px - sw / 2.0 + shift, py - sh + sink * k, sw, sh * cut);
+    // On a whole pixel, so the art keeps its shape as the object moves.
+    let quad = Quad::rect((px - sw / 2.0 + shift).round(), (py - sh + sink * k).round(), sw, sh * cut);
     let mut tint = scene.particles.flash_tint(obj.id, scene.time).unwrap_or(Tint::NONE);
     // Conditions (Player.getTexture, GameObject.getTexture): grey in stasis (and, for players,
     // paused or petrified), red when cursed, faint when invisible; a player low on health
@@ -668,8 +709,9 @@ fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, 
     } else if has(c, condition::STASIS) {
         filter = Filter::Grey;
     }
+    tint.mul[3] *= alpha;
     renderer.sprite_filtered(sprite.rect, [0.0, 0.0, 1.0, cut], quad, tint, filter);
-    Some([px + shift, py - sh + sink * k])
+    Some([quad.origin[0] + sw / 2.0, quad.origin[1]])
 }
 
 /// `Projectile.draw` with projOutline (the AIR client's default): the outlined texture centred
@@ -922,6 +964,19 @@ mod tests {
         let cam = Camera::new(10.0, 10.0, std::f64::consts::FRAC_PI_2, 50.0, 400.0, 300.0);
         let p = cam.to_screen(11.0, 10.0, 0.0);
         assert!((p[0] - 400.0).abs() < 1e-3 && (p[1] - 250.0).abs() < 1e-3, "{p:?}");
+    }
+
+    #[test]
+    fn camera_snaps_to_pixels() {
+        for angle in [0.0, 0.7, std::f64::consts::FRAC_PI_2] {
+            let cam = Camera::new(10.123, 7.871, angle, 47.3, 400.4, 300.0);
+            let snapped = cam.snapped();
+            let (o, _, _) = snapped.affine();
+            assert!((o[0] - o[0].round()).abs() < 1e-6 && (o[1] - o[1].round()).abs() < 1e-6, "{o:?}");
+            // Moved by under a pixel.
+            let moved = (snapped.x - cam.x).hypot(snapped.y - cam.y) * cam.scale;
+            assert!(moved <= 0.75, "{moved}");
+        }
     }
 
     #[test]

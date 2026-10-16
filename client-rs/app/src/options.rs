@@ -160,6 +160,9 @@ pub enum Toggle {
     HpBars,
     Bubbles,
     AllyShots,
+    PetShots,
+    PetEffects,
+    Crosshair,
     DamageNumbers,
     Rotation,
     Centered,
@@ -170,12 +173,15 @@ pub enum Toggle {
     Music,
 }
 
-const GRAPHICS: [(Toggle, &str); 10] = [
+const GRAPHICS: [(Toggle, &str); 13] = [
     (Toggle::Particles, "Particles and effects"),
     (Toggle::Shadows, "Shadows"),
     (Toggle::HpBars, "Health bars"),
     (Toggle::Bubbles, "Speech balloons"),
     (Toggle::AllyShots, "Other players' shots"),
+    (Toggle::PetShots, "Other players' pets' shots"),
+    (Toggle::PetEffects, "Other players' pets' effects"),
+    (Toggle::Crosshair, "Crosshair"),
     (Toggle::DamageNumbers, "Damage numbers"),
     (Toggle::Rotation, "Camera rotation"),
     (Toggle::Centered, "Center on player"),
@@ -194,6 +200,14 @@ pub struct Settings {
     pub hp_bars: bool,
     pub bubbles: bool,
     pub ally_shots: bool,
+    /// Other players' pets' projectiles, and their pets' particle effects.
+    pub pet_shots: bool,
+    pub pet_effects: bool,
+    /// A crosshair at the mouse over the world, instead of the pointer.
+    pub crosshair: bool,
+    /// How opaque other players, and other players' pets, are drawn (0 to 1).
+    pub player_alpha: f32,
+    pub pet_alpha: f32,
     pub damage_numbers: bool,
     pub rotation: bool,
     /// `centerOnPlayer`: the player a little below the middle of the view (on), or three
@@ -236,6 +250,11 @@ impl Default for Settings {
             hp_bars: true,
             bubbles: true,
             ally_shots: true,
+            pet_shots: true,
+            pet_effects: true,
+            crosshair: true,
+            player_alpha: 1.0,
+            pet_alpha: 1.0,
             damage_numbers: true,
             rotation: true,
             centered: true,
@@ -285,6 +304,9 @@ impl Settings {
             Toggle::HpBars => &mut self.hp_bars,
             Toggle::Bubbles => &mut self.bubbles,
             Toggle::AllyShots => &mut self.ally_shots,
+            Toggle::PetShots => &mut self.pet_shots,
+            Toggle::PetEffects => &mut self.pet_effects,
+            Toggle::Crosshair => &mut self.crosshair,
             Toggle::DamageNumbers => &mut self.damage_numbers,
             Toggle::Rotation => &mut self.rotation,
             Toggle::Centered => &mut self.centered,
@@ -314,6 +336,9 @@ impl Settings {
         flag("hpBars", self.hp_bars);
         flag("textBubbles", self.bubbles);
         flag("allyShots", self.ally_shots);
+        flag("petShots", self.pet_shots);
+        flag("petEffects", self.pet_effects);
+        flag("crosshair", self.crosshair);
         flag("damageNumbers", self.damage_numbers);
         flag("allowRotation", self.rotation);
         flag("cameraCentered", self.centered);
@@ -324,6 +349,7 @@ impl Settings {
         flag("playMusic", self.sound.music);
         out += &format!("sfxVolume={}\nmusicVolume={}\n", self.sound.sfx_volume, self.sound.music_volume);
         out += &format!("worldZoom={}\n", self.zoom);
+        out += &format!("playerOpacity={}\npetOpacity={}\n", self.player_alpha, self.pet_alpha);
         out += &format!("maxFps={}\n", self.max_fps);
         if let Some(a) = self.camera_angle {
             out += &format!("cameraAngle={a}\n");
@@ -365,6 +391,11 @@ impl Settings {
                 "hpBars" => s.hp_bars = on,
                 "textBubbles" => s.bubbles = on,
                 "allyShots" => s.ally_shots = on,
+                "petShots" => s.pet_shots = on,
+                "petEffects" => s.pet_effects = on,
+                "crosshair" => s.crosshair = on,
+                "playerOpacity" => s.player_alpha = vol().unwrap_or(1.0),
+                "petOpacity" => s.pet_alpha = vol().unwrap_or(1.0),
                 "damageNumbers" => s.damage_numbers = on,
                 "allowRotation" => s.rotation = on,
                 "cameraCentered" => s.centered = on,
@@ -418,6 +449,8 @@ enum Slider {
     Music,
     Zoom,
     MaxFps,
+    PlayerAlpha,
+    PetAlpha,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -482,6 +515,8 @@ impl OptionsUi {
                     Slider::Music => settings.sound.music_volume = v,
                     Slider::Sfx => settings.sound.sfx_volume = v,
                     Slider::Zoom => settings.zoom = ZOOM_MIN + v * (ZOOM_MAX - ZOOM_MIN),
+                    Slider::PlayerAlpha => settings.player_alpha = v,
+                    Slider::PetAlpha => settings.pet_alpha = v,
                     Slider::MaxFps => {
                         let i = (((pos.0 as f32 - track[0]) / track[2]).clamp(0.0, 1.0) * (MAX_FPS.len() - 1) as f32).round() as usize;
                         settings.max_fps = MAX_FPS[i];
@@ -499,6 +534,8 @@ impl OptionsUi {
                         }
                         settings.zoom = d.zoom;
                         settings.max_fps = d.max_fps;
+                        settings.player_alpha = d.player_alpha;
+                        settings.pet_alpha = d.pet_alpha;
                     }
                     Tab::Sound => settings.sound = d.sound,
                 }
@@ -593,9 +630,13 @@ impl OptionsUi {
             }
             Tab::Graphics | Tab::Sound => {
                 let list: &[(Toggle, &str)] = if self.tab == Tab::Graphics { &GRAPHICS } else { &SOUNDS };
-                let mut y = body[1];
-                for (t, label) in list {
-                    let row = [body[0], y, body[2], 34.0 * s];
+                // The Graphics tab's switches go in two columns.
+                let cols = if list.len() > 6 { 2 } else { 1 };
+                let per_col = list.len().div_ceil(cols);
+                let colw = (body[2] - 20.0 * s * (cols - 1) as f32) / cols as f32;
+                for (i, (t, label)) in list.iter().enumerate() {
+                    let (col, line) = (i / per_col, i % per_col);
+                    let row = [body[0] + col as f32 * (colw + 20.0 * s), body[1] + line as f32 * 38.0 * s, colw, 34.0 * s];
                     if inside(row, mouse) {
                         theme::fill(ui.renderer, row, 6.0 * s, 0xFFFFFF, 0.05);
                     }
@@ -608,8 +649,8 @@ impl OptionsUi {
                     let kx = if on { sw[0] + sw[2] - knob - 2.0 * s } else { sw[0] + 2.0 * s };
                     theme::fill(ui.renderer, [kx, sw[1] + 2.0 * s, knob, knob], knob / 2.0, 0xFFFFFF, 1.0);
                     self.hits.push((Hit::Toggle(*t), row));
-                    y += 38.0 * s;
                 }
+                let mut y = body[1] + per_col as f32 * 38.0 * s;
                 let sliders: Vec<(Slider, &str, f32, String)> = if self.tab == Tab::Sound {
                     let (sv, mv) = (settings.sound.sfx_volume, settings.sound.music_volume);
                     vec![
@@ -622,9 +663,12 @@ impl OptionsUi {
                     let i = MAX_FPS.iter().position(|&f| f == settings.max_fps).unwrap_or(0);
                     let fv = i as f32 / (MAX_FPS.len() - 1) as f32;
                     let fps = if settings.max_fps == 0 { "No limit".to_owned() } else { settings.max_fps.to_string() };
+                    let pct = |a: f32| format!("{}%", (a * 100.0).round() as i32);
                     vec![
                         (Slider::Zoom, "World zoom", v, format!("{}%", (settings.zoom * 100.0).round() as i32)),
                         (Slider::MaxFps, "Max frame rate", fv, fps),
+                        (Slider::PlayerAlpha, "Other players", settings.player_alpha, pct(settings.player_alpha)),
+                        (Slider::PetAlpha, "Other players' pets", settings.pet_alpha, pct(settings.pet_alpha)),
                     ]
                 };
                 if !sliders.is_empty() {
@@ -678,7 +722,11 @@ mod tests {
         s.zoom = 1.2;
         s.max_fps = 144;
         s.camera_angle = Some(1.5);
-        s.preferred_server = "Localhost".into();
+        s.preferred_server = "Europe".into();
+        s.pet_shots = false;
+        s.crosshair = false;
+        s.player_alpha = 0.35;
+        s.pet_alpha = 0.0;
         let back = Settings::from_text(&s.to_text());
         assert_eq!(back, s);
         // Lines another version wrote stay, and its keys don't take a key this one gives.

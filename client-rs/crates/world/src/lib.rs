@@ -73,6 +73,11 @@ impl GameObj {
         self.stat_str(stat::NAME).filter(|n| !n.is_empty())
     }
 
+    /// Whose pet this is (`PetOwner`, a player's object id), if it's a pet.
+    pub fn pet_owner(&self) -> Option<i32> {
+        self.stat_int(143)
+    }
+
     /// Condition effects, first and second batch.
     pub fn conditions(&self) -> [u32; 2] {
         [self.stat_int(29).unwrap_or(0) as u32, self.stat_int(120).unwrap_or(0) as u32]
@@ -183,6 +188,16 @@ impl World {
 
     pub fn player(&self) -> Option<&GameObj> {
         self.me.and_then(|id| self.objects.get(&id))
+    }
+
+    /// Another player's pet (ours is ours).
+    pub fn others_pet(&self, obj: &GameObj) -> bool {
+        obj.pet_owner().is_some_and(|owner| Some(owner) != self.me)
+    }
+
+    /// Whether `id` is another player's pet.
+    pub fn is_others_pet(&self, id: i32) -> bool {
+        self.objects.get(&id).is_some_and(|o| self.others_pet(o))
     }
 
     /// `Update`: new tiles, new objects, removed objects.

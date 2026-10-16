@@ -112,6 +112,13 @@ pub struct Particles {
     rng: u64,
     /// Options: particles off.
     pub disabled: bool,
+    /// Options: other players' pets' effects off.
+    pub hide_pets: bool,
+    /// The last heal burst (`ShowEffect` 1): when, its colour, and its particles in `list`. A
+    /// pet's heal or strike sends one beside the line from the pet, so it goes with that line.
+    last_burst: Option<(i32, u32, std::ops::Range<usize>)>,
+    /// A hidden pet's line (when, colour): the burst that follows it is hidden too.
+    pet_line: Option<(i32, u32)>,
     /// Objects' own effects (`<Effect>`), by object id.
     emitters: HashMap<i32, Emitter>,
 }
@@ -271,10 +278,27 @@ impl Particles {
         let at = |id: i32| world.objects.get(&id).map(|o| (o.x, o.y));
         let (p1, p2) = ((e.pos1.x as f64, e.pos1.y as f64), (e.pos2.x as f64, e.pos2.y as f64));
         let go = at(e.target_object_id);
+        // Other players' pets' effects (Doomed pets: PetHeal, PetStrike): the line from the pet,
+        // and the burst on whoever it healed or hit, sent with it.
+        if self.hide_pets {
+            if e.effect_type == 7 && world.is_others_pet(e.target_object_id) {
+                if let Some((_, _, range)) = self.last_burst.take().filter(|b| b.0 == now && b.1 == color) {
+                    if range.end <= self.list.len() {
+                        self.list.drain(range);
+                    }
+                }
+                self.pet_line = Some((now, color));
+                return;
+            }
+            if e.effect_type == 1 && self.pet_line.take() == Some((now, color)) {
+                return;
+            }
+        }
         match e.effect_type {
             // HealEffect: ten rising squares around the object.
             1 => {
                 let Some(_) = go else { return };
+                let start = self.list.len();
                 for i in 0..10 {
                     let angle = 2.0 * PI * i as f64 / 10.0;
                     let size = (3 + (self.random() * 5.0) as i32) as f64 * 20.0;
@@ -283,6 +307,7 @@ impl Particles {
                     let motion = Motion::Follow { id: e.target_object_id, angle, dist };
                     self.add(Particle::new(0.0, 0.0, z, color, size, 1000, motion).moving(0.0, 0.0, vz * 0.008));
                 }
+                self.last_burst = Some((now, color, start..self.list.len()));
             }
             // TeleportEffect: blue squares rising where it happened.
             2 => {
@@ -557,6 +582,7 @@ impl Particles {
             .objects
             .values()
             .filter(|o| (o.x - mx).hypot(o.y - my) <= EFFECT_RANGE)
+            .filter(|o| !(self.hide_pets && world.others_pet(o)))
             .filter_map(|o| {
                 let d = data.objects.get(&o.object_type)?;
                 d.effect.as_ref().map(|e| (o.id, o.x, o.y, e, d.z))

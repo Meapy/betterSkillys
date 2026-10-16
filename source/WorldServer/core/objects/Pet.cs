@@ -1,4 +1,7 @@
-﻿namespace WorldServer.core.objects
+﻿using System.Collections.Generic;
+using WorldServer.core.net.stats;
+
+namespace WorldServer.core.objects
 {
     public class Pet : Entity, IPlayer
     {
@@ -9,5 +12,12 @@
         public void Damage(int dmg, Entity src) { }
 
         public bool IsVisibleToEnemy() => false;
+
+        protected override void ExportStats(IDictionary<StatDataType, object> stats, bool isOtherPlayer)
+        {
+            base.ExportStats(stats, isOtherPlayer);
+            if (PlayerOwner != null)
+                stats[StatDataType.PetOwner] = PlayerOwner.Id;
+        }
     }
 }

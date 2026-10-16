@@ -16,6 +16,12 @@ version number itself is in `client-rs/Cargo.toml`.
 - Dr Terrible (25,000 health, was 55,000) and the Horrific Creation (35,000, was 60,000) in the
   Mad Lab, and the Ghost of Skuld at the end of the Haunted Cemetery (50,000, was 130,000), are
   much quicker to kill. Dr Terrible's and the Creation's armour is a little lower too.
+- A crosshair marks where you aim over the world (the pointer hides while it shows). Options,
+  Graphics, "Crosshair" turns it off.
+- New Graphics options: hide other players' pets' shots, hide other players' pets' effects, and
+  sliders to make other players and other players' pets see-through (or hide them at 0%).
+- Moving looks steadier: the ground and characters stay on whole pixels, so their pixel art no
+  longer shimmers or wobbles as the view follows you.
 
 ## 1.2.1 (2026-10-16)
 - The desktop game now signs in and plays over an encrypted connection (https), like the

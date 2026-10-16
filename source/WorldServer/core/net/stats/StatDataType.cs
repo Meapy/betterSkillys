@@ -108,6 +108,8 @@
         BackPackData6 = 140,
         BackPackData7 = 141,
         SpeedMult = 142,
+        // A pet's owner (object id), so clients can tell their own pet from others'.
+        PetOwner = 143,
         None = 255
     }
 }
