@@ -743,7 +743,9 @@ namespace WorldServer.core.objects
                 }, this);
             }
 
-            var x = new Placeholder(GameServer, eff.ThrowTime * 1000);
+            // ThrowTime is already in ms: * 1000 left an invisible object in the world for 25 minutes
+            // after every throw, which every nearby player was sent and every tick went through.
+            var x = new Placeholder(GameServer, eff.ThrowTime + 1000);
             x.Move(target.X, target.Y);
             World.EnterWorld(x);
 
@@ -1325,7 +1327,9 @@ namespace WorldServer.core.objects
                 Duration = eff.ThrowTime
             }, this);
 
-            var x = new Placeholder(GameServer, eff.ThrowTime * 1000);
+            // ThrowTime is already in ms: * 1000 left an invisible object in the world for 25 minutes
+            // after every throw, which every nearby player was sent and every tick went through.
+            var x = new Placeholder(GameServer, eff.ThrowTime + 1000);
             x.Move(target.X, target.Y);
             World.EnterWorld(x);
 
@@ -1472,7 +1476,8 @@ namespace WorldServer.core.objects
                 Duration = eff.ThrowTime
             }, this);
 
-            World.StartNewTimer(1500, (world, t) =>
+            // lands when the throw does (1.5 s unless the item says)
+            World.StartNewTimer(eff.ThrowTime, (world, t) =>
             {
                 var trap = new Trap(this, eff.Radius, eff.TotalDamage, eff.ConditionEffect ?? ConditionEffectIndex.Slowed, eff.EffectDuration);
                 trap.Move(target.X, target.Y);

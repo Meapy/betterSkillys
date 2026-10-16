@@ -36,6 +36,9 @@ version number itself is in `client-rs/Cargo.toml`.
   Septavius, Stheno, Thessal, the Grand Sphinx, Horrific Creation and the other boss pets shoot
   that boss's projectiles in its patterns (without its stuns and other effects). Their item
   tooltips show the new damage.
+- Less lag around Assassins and thrown items: every poison vial and every thrown object left an
+  invisible marker on the map for 25 minutes, and they piled up for everyone nearby. They now
+  vanish once the throw lands. Huntress traps land when the throw does.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is
