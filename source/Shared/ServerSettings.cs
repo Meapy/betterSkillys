@@ -24,6 +24,9 @@ namespace Shared
         // range (1000000 for slot a, 2000000 for b), so the proxy knows which one has a world.
         public int worldIdBase { get; set; } = 0;
         public string version { get; set; } = "undefined";
+        // An event's maps, such as "Halloween": a world whose map is "<map>.jm" plays
+        // "<map> <mapEvent>.jm" instead where there is one (tools/build_castle_maps.py). Empty: none.
+        public string mapEvent { get; set; } = "";
         public int[] whitelist { get; set; } = new int[] { };
     }
 }

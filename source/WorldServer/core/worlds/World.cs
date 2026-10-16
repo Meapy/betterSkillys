@@ -455,6 +455,13 @@ namespace WorldServer.core.worlds
         public bool LoadMapFromData(WorldResource worldResource)
         {
             var map = worldResource.MapJM[Random.Shared.Next(0, worldResource.MapJM.Count)];
+            var mapEvent = GameServer.Configuration.serverSettings.mapEvent;
+            if (!string.IsNullOrEmpty(mapEvent) && map.EndsWith(".jm"))
+            {
+                var eventMap = $"{map[..^3]} {mapEvent}.jm";
+                if (GameServer.Resources.GameData.GetWorldData(eventMap) != null)
+                    map = eventMap;
+            }
             var data = GameServer.Resources.GameData.GetWorldData(map);
             if (data == null)
                 return false;

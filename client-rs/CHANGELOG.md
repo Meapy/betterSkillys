@@ -9,6 +9,13 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- The Nexus is rebuilt as the courtyard of a castle, much smaller than before: you arrive by the
+  fountains, the realm portals are in the keep's great hall just north, and the shops are in two
+  market wards either side behind colonnades. The Vault and guild portals are beside the spawn;
+  the arena portals, the Wine Cellar, the class memorial and the shared chests are in the south
+  yard.
+- Your Vault is now a cellar under the castle, with your chests in its great hall and your gifts
+  in the gallery below.
 - The server is called Europe in the server list instead of Localhost.
 - You no longer sometimes enter the realm right beside the Avatar of the Forgotten King's arena.
 - Bosses fought alone have their normal health: the extra health for a group now starts with

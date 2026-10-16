@@ -33,12 +33,12 @@ namespace WorldServer.core.worlds.impl.doomed
             }
         }
 
-        // Battle Arena portals under the Guild Hall and Vault portals beside the nexus spawn
-        // (Doomed Realms only opened them for 30 seconds with its /arena command)
+        // Battle Arena portals in the nexus's south yard, under their banners (tools/build_castle_maps.py,
+        // ARENA_PORTALS; Doomed Realms only opened them for 30 seconds with its /arena command)
         private static readonly (string Portal, float X, float Y)[] NexusPortals =
         {
-            ("Battle Arena Portal", 106.5f, 74.5f),
-            ("Free Battle Arena Portal", 116.5f, 74.5f),
+            ("Battle Arena Portal", 42.5f, 68.5f),
+            ("Free Battle Arena Portal", 54.5f, 68.5f),
         };
 
         public static void AddNexusPortals(World nexus)

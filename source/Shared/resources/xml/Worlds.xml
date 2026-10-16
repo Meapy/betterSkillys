@@ -16,10 +16,10 @@
 		<Persists/>
 	</World>
 	<World id="Nexus">
-		<Width>256</Width>
-		<Height>256</Height>
+		<Width>97</Width>
+		<Height>92</Height>
 		<Capacity>300</Capacity>
-		<MapJM>Exalt/Nexus New Auru.jm</MapJM>
+		<MapJM>Exalt/Nexus Castle.jm</MapJM>
 		<Instance enum="nexus"/>
 		<Music>
 			<Track>wanderlust</Track>
@@ -31,10 +31,10 @@
 		<DisableTeleport/>
 	</World>
 	<World id="Vault">
-		<Width>256</Width>
-		<Height>256</Height>
+		<Width>52</Width>
+		<Height>50</Height>
 		<Capacity>1</Capacity>
-		<MapJM>Exalt/Vault New Auru.jm</MapJM>
+		<MapJM>Exalt/Vault Castle.jm</MapJM>
 		<Instance enum="vault"/>
 		<CreateInstance/>
 		<Persists/>
