@@ -10,6 +10,10 @@ version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
 - The Native White Demons in the Abyss of Demons now chase you and shoot back instead of standing still.
+- Passwords are stored more safely on the server. Your password doesn't change, and nothing
+  needs doing.
+- After 10 wrong passwords for one account, signing in to it is blocked for 15 minutes, so
+  nobody can keep guessing.
 
 ## 1.2.0 (2026-10-16)
 - Signing in with an email that has no account, or with the wrong password, now stops at the
