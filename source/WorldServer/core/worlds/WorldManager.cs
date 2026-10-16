@@ -106,6 +106,44 @@ namespace WorldServer.core.worlds
 
         public World CreateNewWorld(string dungeonName, int? id = null, World parent = null)
         {
+            var world = BuildWorld(dungeonName, id, parent);
+            if (world != null)
+                AttachWorld(world, parent);
+            return world;
+        }
+
+        /// <summary>
+        /// Builds a world (its map, random layout and entities) on a pool thread, so a slow build
+        /// doesn't freeze the world the player is in and every dungeon under it; then, on
+        /// <paramref name="from"/>'s world thread, adds it under that world and calls
+        /// <paramref name="done"/> with it (null if it couldn't be built).
+        /// </summary>
+        public void CreateNewWorldAsync(string dungeonName, World from, Action<World> done)
+        {
+            _ = Task.Run(() =>
+            {
+                World world = null;
+                try
+                {
+                    world = BuildWorld(dungeonName, null, from);
+                }
+                catch (Exception e)
+                {
+                    StaticLogger.Instance.Error($"Building {dungeonName}: {e}");
+                }
+
+                from.Post(() =>
+                {
+                    if (world != null)
+                        AttachWorld(world, from);
+                    done(world);
+                });
+            });
+        }
+
+        /// <summary>A new world, loaded but not yet running (nothing else can see it).</summary>
+        private World BuildWorld(string dungeonName, int? id, World parent)
+        {
             //Console.WriteLine($"CreateNewWorld({dungeonName}, {id ?? null}, {(parent == null ? "null" : parent.IdName)}");
             var worldResource = GameServer.Resources.GameData.GetWorld(dungeonName);
             if (worldResource == null)
@@ -142,6 +180,12 @@ namespace WorldServer.core.worlds
             }
 
             world.Init();
+            return world;
+        }
+
+        /// <summary>Starts a built world: its own thread, or a branch of its parent's (on the parent's thread).</summary>
+        private void AttachWorld(World world, World parent)
+        {
             _ = Worlds.TryAdd(world.Id, world);
             // null parents are threaded as they get treated as the root
             if (parent == null)
@@ -150,7 +194,6 @@ namespace WorldServer.core.worlds
                     Threads.Add(world.Id, new RootWorldThread(this, world));
                 }
             parent?.WorldBranch.AddBranch(world);
-            return world;
         }
 
         public void AddGuildInstance(int guildId, World world)

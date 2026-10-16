@@ -28,6 +28,10 @@ version number itself is in `client-rs/Cargo.toml`.
 - Monsters and other players move smoothly: they no longer stop and start, slide past where
   they are and back, or jump when the server's updates arrive a little late or bunched up.
 - Effects that flash "forever" (some monsters' glows) no longer stop at once.
+- Less stutter on the server: opening a dungeon no longer freezes the realm (and every dungeon
+  opened from it) for up to a second, the server's memory clean-ups no longer pause the whole
+  game, and moves and shots in dungeons and vaults are handled at once instead of up to a tenth
+  of a second later.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is

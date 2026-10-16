@@ -501,7 +501,23 @@ namespace WorldServer.core.worlds
         // instead of polling for messages.
         private readonly System.Threading.ManualResetEventSlim IOSignal = new System.Threading.ManualResetEventSlim(false, 0);
 
-        public void SignalIO() => IOSignal.Set();
+        // A branch world runs on its root's thread, which waits on the root's signal.
+        public void SignalIO()
+        {
+            if (ParentWorld != null)
+                ParentWorld.SignalIO();
+            else
+                IOSignal.Set();
+        }
+
+        private readonly System.Collections.Concurrent.ConcurrentQueue<Action> Posted = new System.Collections.Concurrent.ConcurrentQueue<Action>();
+
+        /// <summary>Runs <paramref name="action"/> on this world's thread, before its players' next messages.</summary>
+        public void Post(Action action)
+        {
+            Posted.Enqueue(action);
+            SignalIO();
+        }
 
         public void WaitForIO(int timeoutMs)
         {
@@ -511,6 +527,16 @@ namespace WorldServer.core.worlds
 
         public void ProcessPlayerIO(ref TickTime time)
         {
+            while (Posted.TryDequeue(out var action))
+                try
+                {
+                    action();
+                }
+                catch (Exception e)
+                {
+                    StaticLogger.Instance.Error($"[{IdName} {Id}] {e}");
+                }
+
             foreach (var player in Players.Values)
                 player.HandleIO(ref time);
             WorldBranch.HandleIO(ref time);
@@ -548,14 +574,19 @@ namespace WorldServer.core.worlds
             return ret;
         }
 
+        /// <summary>Where this world's ticks spend their time (logged as "Tick stats").</summary>
+        public readonly TickProfile Profile = new TickProfile();
+
         protected virtual void UpdateLogic(ref TickTime time)
         {
+            Profile.Mark(TickProfile.Phase.World);
             foreach (var player in Players.Values)
             {
                 player.Tick(ref time);
                 if (player.Dead)
                     EntitiesToRemove.Add(player);
             }
+            Profile.Mark(TickProfile.Phase.Players);
 
             foreach (var sellable in SellableObjects.Values)
             {
@@ -592,6 +623,8 @@ namespace WorldServer.core.worlds
                     EntitiesToRemove.Add(pet);
             }
 
+            Profile.Mark(TickProfile.Phase.Objects);
+
             if (EnemiesCollision != null)
             {
                 foreach (var entity in EnemiesCollision.GetActiveChunks(PlayersCollision))
@@ -611,6 +644,8 @@ namespace WorldServer.core.worlds
                 }
             }
 
+            Profile.Mark(TickProfile.Phase.Enemies);
+
             for (var i = Timers.Count - 1; i >= 0; i--)
                 try
                 {
@@ -623,6 +658,8 @@ namespace WorldServer.core.worlds
                     Timers.RemoveAt(i);
                 }
 
+            Profile.Mark(TickProfile.Phase.Timers);
+
             foreach (var entity in EntitiesToAdd)
                 AddToWorld(entity);
             EntitiesToAdd.Clear();
@@ -631,8 +668,11 @@ namespace WorldServer.core.worlds
                 RemoveFromWorld(removed);
             EntitiesToRemove.Clear();
 
+            Profile.Mark(TickProfile.Phase.AddRemove);
+
             foreach (var player in Players.Values)
                 player.UpdateState(time.ElapsedMsDelta);
+            Profile.Mark(TickProfile.Phase.Updates);
         }
 
         public void FlagForClose()

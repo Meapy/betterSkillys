@@ -1,4 +1,5 @@
-﻿using Shared;
+﻿using System.Collections.Generic;
+using Shared;
 using Shared.resources;
 using WorldServer.core.objects;
 using WorldServer.core.worlds;
@@ -135,12 +136,47 @@ namespace WorldServer.core.net.handlers
                 return;
             }
 
-            world = portal.GameServer.WorldManager.CreateNewWorld(dungeonName, null, player.World);
-            if (world == null)
+            // The world is built off this thread (CreateNewWorldAsync), so opening a dungeon no
+            // longer freezes everyone here. Players who use the portal meanwhile go in with the
+            // first, unless everyone gets their own instance.
+            var resource = player.GameServer.Resources.GameData.GetWorld(dungeonName);
+            var shared = resource != null && !resource.CreateInstance && resource.Instance != WorldResourceInstanceType.Vault;
+            if (shared && portal.Opening != null)
             {
-                player.SendError($"[Bug] Unable to create: {dungeonName}");
+                if (!portal.Opening.Contains(player))
+                    portal.Opening.Add(player);
                 return;
             }
+
+            var waiting = new List<Player> { player };
+            if (shared)
+                portal.Opening = waiting;
+
+            portal.GameServer.WorldManager.CreateNewWorldAsync(dungeonName, player.World, built =>
+            {
+                if (shared)
+                    portal.Opening = null;
+
+                if (built == null)
+                {
+                    foreach (var p in waiting)
+                        p.SendError($"[Bug] Unable to create: {dungeonName}");
+                    return;
+                }
+
+                if (shared && !built.CreateInstance)
+                    portal.WorldInstance = built;
+
+                foreach (var p in waiting)
+                    Enter(p, built, portal);
+            });
+        }
+
+        /// <summary>Into a world just built for this portal, if the player is still beside it.</summary>
+        private static void Enter(Player player, World world, Portal portal)
+        {
+            if (player.Client == null || player.Dead || player.World != portal.World)
+                return;
 
             if (world.IdName == "Trial of Souls")
             {
@@ -159,8 +195,6 @@ namespace WorldServer.core.net.handlers
 
             if (world.InstanceType == WorldResourceInstanceType.Vault)
                 (world as VaultWorld).SetOwner(player.AccountId);
-            else if (!world.CreateInstance)
-                portal.WorldInstance = world;
             player.Reconnect(world);
 
             if (player.Pet != null)

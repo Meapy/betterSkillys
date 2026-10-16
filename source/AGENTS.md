@@ -31,7 +31,10 @@ dotnet build source\WorldServer\WorldServer.csproj -c Debug -o build\wscheck   #
   live data), account 8081 and world 2052. See client/AGENTS.md for the test client that connects
   to it, and stop the stack with `iso_stack.py stop` when done.
 - **Logs** are in `build/live/<slot>/logs/wServer/<date>/info.txt` (and `error.txt`), and
-  `App/bin/Debug/net8.0/logs/app/`. Ticks slower than 200 ms are logged as "Slow tick".
+  `App/bin/Debug/net8.0/logs/app/`. Ticks slower than 200 ms are logged as "Slow tick", and passes
+  over players' messages slower than 100 ms as "Slow messages". Every 30 s each world with players
+  logs "Tick stats" (`core/worlds/TickProfile.cs`): its ticks' work, the gaps between them (what
+  players feel), the time per part of the tick, and the garbage collections. Measure with those.
 - **Deploying a world server change:** `Run Server.bat` or `python tools\rolling_restart.py update` / `deploy` (still ask the
   owner first: it changes what players run). It kicks nobody: see "Rolling deploys" below and
   SETUP-LOCAL.md. Account server changes still mean restarting `App`, which doesn't kick players
@@ -68,6 +71,14 @@ dotnet build source\WorldServer\WorldServer.csproj -c Debug -o build\wscheck   #
 - **World threads:** each world runs on a world thread (`core/worlds/RootWorldThread.cs`) at 100 ms
   ticks. The thread sleeps until a player's message arrives or the next tick is due; it doesn't
   spin. `Program.cs` asks Windows for 1 ms timer precision.
+- **Branches:** a world made from inside another (a dungeon from a realm, a vault from the Nexus)
+  has no thread of its own: it's a branch, updated and fed its players' messages on its root's
+  thread (`WorldBranch`), and it wakes that thread when its players send something
+  (`World.SignalIO`). `World.Post` runs code on a world's thread.
+- **New worlds:** build them with `WorldManager.CreateNewWorldAsync` from a world thread (portals,
+  `/vault`, `/dungeon`): the map, random layout and entities are built on a pool thread, then the
+  world is attached and the callback runs on the caller's world thread. Building one inline froze
+  the realm and every dungeon under it for hundreds of ms.
 - **Sending:** messages a thread sends during one pass of its loop are queued and sent together at
   the end (`BeginBatch`/`FlushBatch` in `core/connection/NetworkHandler.cs`). A message that
   doesn't fit in the send buffer goes first in the next send, so the order is kept.

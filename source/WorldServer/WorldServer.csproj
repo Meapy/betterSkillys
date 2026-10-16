@@ -9,6 +9,12 @@
 	<Platforms>AnyCPU;x64</Platforms>
 	<!-- optimise the Debug build too: it is the one Run Server.bat builds and runs -->
 	<Optimize>true</Optimize>
+	<!-- Garbage collection on every core, alongside the world threads, so a full collection of the
+	     ~1 GB heap (millions of map tiles) doesn't stop every world for a second or two. DATAS (.NET 8)
+	     sizes the heaps to the load, so memory stays near the single-heap collector's. -->
+	<ServerGarbageCollection>true</ServerGarbageCollection>
+	<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+	<GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>
   </PropertyGroup>
 
   <ItemGroup>

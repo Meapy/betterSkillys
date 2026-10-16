@@ -1450,14 +1450,19 @@ namespace WorldServer.core.commands.player
                 return true;
             }
 
-            var world = player.GameServer.WorldManager.CreateNewWorld("Vault", null, player.World);
-            (world as VaultWorld).SetOwner(player.AccountId);
-            if (world == null)
+            // built off the world thread: the Nexus doesn't stop while a vault loads
+            var from = player.World;
+            player.GameServer.WorldManager.CreateNewWorldAsync("Vault", from, world =>
             {
-                player.SendInfo("Unable to enter vault.");
-                return true;
-            }
-            player.Reconnect(world);
+                if (world == null)
+                {
+                    player.SendInfo("Unable to enter vault.");
+                    return;
+                }
+                (world as VaultWorld).SetOwner(player.AccountId);
+                if (player.World == from && player.Client != null)
+                    player.Reconnect(world);
+            });
             return true;
         }
     }

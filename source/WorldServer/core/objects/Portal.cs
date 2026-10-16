@@ -11,6 +11,9 @@ namespace WorldServer.core.objects
     {
         public World WorldInstance;
 
+        /// <summary>Players waiting while its world is being built (UsePortalHandler), or null.</summary>
+        public System.Collections.Generic.List<Player> Opening;
+
         private StatTypeValue<bool> _usable;
         public readonly PortalDesc PortalDescr;
         public bool GuildHallPortal;

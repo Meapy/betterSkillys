@@ -36,12 +36,22 @@ namespace WorldServer.core.worlds
                 var realmTime = new TickTime();
 
                 var elapsed = 0L;
+                var lastTick = 0L;
+                var lastReport = 0L;
+                var profile = World.Profile;
 
                 // messages sent by this thread go out together at the end of each pass
                 NetworkSendHandler.BeginBatch();
                 while (!Stopped)
                 {
+                    var ioStart = watch.ElapsedMilliseconds;
+                    profile.Begin();
                     World.ProcessPlayerIO(ref realmTime);
+                    profile.Mark(TickProfile.Phase.Io);
+                    // players' messages hold up the tick too (a command, a login)
+                    var ioMs = watch.ElapsedMilliseconds - ioStart;
+                    if (ioMs > 100)
+                        StaticLogger.Instance.Warn($"[{World.IdName} {World.Id}] Slow messages: {ioMs} ms, {World.Players.Count} players");
 
                     var currentMS = realmTime.TotalElapsedMs = watch.ElapsedMilliseconds;
                     var dt = currentMS - lastMS;
@@ -54,6 +64,8 @@ namespace WorldServer.core.worlds
                         realmTime.ElapsedMsDelta = (int)elapsed;
 
                         var tickStart = watch.ElapsedMilliseconds;
+                        var gap = lastTick == 0 ? TICK_TIME_MS : tickStart - lastTick;
+                        lastTick = tickStart;
                         try
                         {
                             if (World.Update(ref realmTime))
@@ -71,11 +83,23 @@ namespace WorldServer.core.worlds
                         var tickMs = watch.ElapsedMilliseconds - tickStart;
                         if (tickMs > 200)
                             StaticLogger.Instance.Warn($"[{World.IdName} {World.Id}] Slow tick: {tickMs} ms, {World.Players.Count} players");
+                        profile.Tick(tickMs, gap);
+
+                        // every 30 s while anyone is here: where the time went
+                        if (tickStart - lastReport >= 30000)
+                        {
+                            var report = profile.Report();
+                            if (World.Players.Count > 0 && lastReport != 0)
+                                StaticLogger.Instance.Info($"[{World.IdName} {World.Id}] Tick stats, {World.Players.Count} players, {World.Enemies.Count} enemies: {report}");
+                            lastReport = tickStart;
+                        }
 
                         elapsed = 0;
                     }
 
+                    profile.Begin();
                     NetworkSendHandler.FlushBatch();
+                    profile.Mark(TickProfile.Phase.Send);
 
                     if (World.Players.Count == 0)
                         Thread.Sleep(TICK_TIME_MS);

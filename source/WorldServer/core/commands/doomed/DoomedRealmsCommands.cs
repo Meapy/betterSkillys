@@ -479,13 +479,14 @@ namespace WorldServer.core.commands.doomed
                 player.SendError($"No dungeon called '{name}'.");
                 return false;
             }
-            var instance = player.GameServer.WorldManager.CreateNewWorld(world.IdName, null, player.World);
-            if (instance == null)
+            var from = player.World;
+            player.GameServer.WorldManager.CreateNewWorldAsync(world.IdName, from, instance =>
             {
-                player.SendError($"Couldn't open {world.IdName}.");
-                return false;
-            }
-            player.Reconnect(instance);
+                if (instance == null)
+                    player.SendError($"Couldn't open {world.IdName}.");
+                else if (player.World == from && player.Client != null)
+                    player.Reconnect(instance);
+            });
             return true;
         }
     }

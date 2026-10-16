@@ -237,7 +237,10 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
   - Fixed byte counting when a send needs more than two chunks, which could drop data and corrupt the stream. A message that doesn't fit in the send buffer now goes first in the next send, so messages stay in order.
   - Quick Edit is turned off in the World Server console window. Clicking in it no longer pauses the server.
   - Per-hit debug prints are gone from the console.
-  - Ticks slower than 200 ms are logged as "Slow tick" in `logs/wServer`.
+  - Ticks slower than 200 ms are logged as "Slow tick" in `logs/wServer`, slow passes over players' messages as "Slow messages", and every 30 s each world with players logs "Tick stats" (work, gaps between ticks, time per part, garbage collections).
+  - New dungeons, vaults and `/dungeon` worlds are built on a pool thread (`WorldManager.CreateNewWorldAsync`). Built inline, a dungeon froze the realm it was opened from, and every dungeon of that realm, for up to a second (measured: a 1070 ms gap with four players while one opened six dungeons; afterwards no slow passes). Players who use a portal while its dungeon is being built go in with the first.
+  - Players in a dungeon or vault (a branch world, run on its realm's or the Nexus's thread) now wake that thread when they send something; their moves and shots used to wait for the next tick, up to 100 ms.
+  - The world server uses the server garbage collector with DATAS (`WorldServer.csproj`): collections run on every core and are rare. With the default collector a full collection of the ~1 GB heap stopped every world for up to 1.8 s; measured afterwards, at most 137 ms. It uses about 300 MB more memory; remove the three GC lines from the project to go back.
   - The WorldServer and Shared projects are compiled with optimisation, in the Debug build that `Run Server.bat` uses too.
 - `wServer.json`: port 2051 instead of 2050, and the public address.
 - **Client rendering**, ported from the Doomed Realms client's optimisations and adapted to the GPU (Stage3D) renderer. In the nexus this took the test client from 110 to 191 fps.
