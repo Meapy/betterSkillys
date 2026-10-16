@@ -147,7 +147,7 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
 
       | Stage | Boss | Health (solo) | +per extra player | Defense | Typical shot |
       |---|---|---|---|---|---|
-      | 1 | Stone Guardians (each) | 35,000 | 25% | 30 | 115-150 |
+      | 1 | Stone Guardians (each) | 35,000 | 25% | 30 | 85-110 |
       | 2 | Janus the Doorwarden | 70,000 | 25% | 25 | 120 |
       | 3 | Oryx 1 | 100,000 | 30% | 35 | 90-210 |
       | 4 | Oryx 2 | 130,000 | 30% | 40 | 135-240 |
