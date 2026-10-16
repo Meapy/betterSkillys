@@ -10,6 +10,8 @@ version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
 - The Native White Demons in the Abyss of Demons now chase you and shoot back instead of standing still.
+
+## 1.2.0 (2026-10-16)
 - Signing in with an email that has no account, or with the wrong password, now stops at the
   sign-in screen with a message. It used to show an empty character list that couldn't play.
 - Clearer messages when signing in or creating an account fails: wrong password, unknown
