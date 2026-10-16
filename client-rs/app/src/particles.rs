@@ -539,7 +539,8 @@ impl Particles {
             let (dx, dy) = (self.pm(1.0), self.pm(1.0));
             self.spark(x, y, z, color, size, life, dx, dy);
         }
-        self.flashes.retain(|_, f| now <= f.start + f.period * f.repeats);
+        // In i64: a flash that repeats "forever" (a huge count) overflowed i32.
+        self.flashes.retain(|_, f| now as i64 <= f.start as i64 + f.period as i64 * f.repeats as i64);
     }
 
     /// Objects' own effects (`ParticleEffect.fromProps`): start them for objects near us, give

@@ -27,6 +27,7 @@ version number itself is in `client-rs/Cargo.toml`.
   the Nexus merchants.
 - Monsters and other players move smoothly: they no longer stop and start, slide past where
   they are and back, or jump when the server's updates arrive a little late or bunched up.
+- Effects that flash "forever" (some monsters' glows) no longer stop at once.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is
