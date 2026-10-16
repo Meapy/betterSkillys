@@ -16,6 +16,8 @@ version number itself is in `client-rs/Cargo.toml`.
   yard.
 - Your Vault is now a cellar under the castle, with your chests in its great hall and your gifts
   in the gallery below.
+- Halloween has come to the castle: jack-o'-lanterns, green candles, fallen leaves, dead trees
+  and a witch's cauldron in the Nexus and your Vault, until the end of the season.
 - The server is called Europe in the server list instead of Localhost.
 - You no longer sometimes enter the realm right beside the Avatar of the Forgotten King's arena.
 - Bosses fought alone have their normal health: the extra health for a group now starts with
