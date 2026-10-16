@@ -93,11 +93,122 @@ impl Endpoint {
 }
 
 pub fn parse_char_list(response: http::Response) -> Result<CharList, String> {
-    account::parse_char_list(&response?)
+    account::parse_char_list(&reached(response)?).map_err(|e| explain(&e))
 }
 
 pub fn parse_success(response: http::Response) -> Result<(), String> {
-    account::success(&response?)
+    account::success(&reached(response)?).map_err(|e| explain(&e))
+}
+
+/// The answer's body, or why the account server couldn't be asked, in words for players (the
+/// raw error, with its URL, goes to the log).
+pub fn reached(response: http::Response) -> Result<String, String> {
+    response.map_err(|e| {
+        log::warn!("account server: {e}");
+        unreachable_text(&e)
+    })
+}
+
+/// A failed request (no answer, or an error status) in words for players.
+pub fn unreachable_text(e: &str) -> String {
+    // ureq says "<url>: status code 503", the browser "HTTP 503".
+    let code = e.rsplit_once("status code ").or_else(|| e.rsplit_once("HTTP ")).map(|(_, c)| c.trim());
+    match code {
+        Some(c) => format!("The server couldn't do that right now (error {c}). Try again in a minute."),
+        None => "Can't reach the server. Check your internet connection and try again.".into(),
+    }
+}
+
+/// The account server's `<Error>` text in plain words: today's and older servers' wording.
+pub fn explain(e: &str) -> String {
+    let l = e.trim().trim_end_matches('.').to_ascii_lowercase();
+    let text = match l.as_str() {
+        "no account uses that email" => "No account uses that email. Check it, or create an account.",
+        "wrong password" => "Wrong password. Check it and try again.",
+        "bad login" | "account credentials not valid" | "email or password is incorrect" => "Wrong email or password.",
+        "duplicated name" => "That name is taken. Choose another.",
+        "duplicate email" => "An account already uses that email. Sign in instead.",
+        "invalid email" => "That isn't a valid email address.",
+        "invalid name" => "That name can't be used. Names are up to 10 letters, A to Z.",
+        "account in use" => "That account is in the game right now. Try again in a moment.",
+        "account banned" => "This account is banned.",
+        "" => "Something went wrong. Try again.",
+        _ => return e.trim().to_owned(),
+    };
+    text.to_owned()
+}
+
+/// What's wrong with a sign-in form, before asking the server.
+pub fn check_sign_in(email: &str, password: &str) -> Option<&'static str> {
+    if email.is_empty() && password.is_empty() {
+        Some("Enter your email and password.")
+    } else if email.is_empty() {
+        Some("Enter your email.")
+    } else if password.is_empty() {
+        Some("Enter your password.")
+    } else {
+        None
+    }
+}
+
+/// The fewest characters a new password may have.
+pub const MIN_PASSWORD: usize = 6;
+
+/// What's wrong with a registration form, before asking the server (which checks the same).
+pub fn check_register(name: &str, email: &str, password: &str, confirm: &str) -> Option<&'static str> {
+    if name.is_empty() {
+        Some("Choose a name.")
+    } else if name.len() > 10 || !name.chars().all(|c| c.is_ascii_alphabetic()) {
+        Some("Names are up to 10 letters, A to Z, with no spaces.")
+    } else if email.is_empty() {
+        Some("Enter your email.")
+    } else if !valid_email(email) {
+        Some("That isn't a valid email address.")
+    } else if password.chars().count() < MIN_PASSWORD {
+        Some("Passwords need at least 6 characters.")
+    } else if password != confirm {
+        Some("The passwords don't match.")
+    } else {
+        None
+    }
+}
+
+/// Roughly what the server's `Utils.IsValidEmail` accepts: something@something.tld, no spaces.
+pub fn valid_email(email: &str) -> bool {
+    let Some((user, domain)) = email.split_once('@') else { return false };
+    !user.is_empty()
+        && !domain.contains('@')
+        && !email.chars().any(char::is_whitespace)
+        && domain.split('.').count() >= 2
+        && domain.split('.').all(|p| !p.is_empty())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn errors_in_plain_words() {
+        assert_eq!(explain("Bad Login"), "Wrong email or password.");
+        assert_eq!(explain("Duplicated name"), "That name is taken. Choose another.");
+        assert_eq!(explain("Something new"), "Something new");
+        assert!(unreachable_text("http://1.2.3.4:8080/char/list: Connection Failed: Connect error").starts_with("Can't reach the server"));
+        assert!(unreachable_text("http://x/char/list: status code 502").contains("error 502"));
+        assert!(unreachable_text("HTTP 500").contains("error 500"));
+    }
+
+    #[test]
+    fn form_checks() {
+        assert!(valid_email("a.b@example.com"));
+        for bad in ["", "ab", "a@b", "a@b.", "@b.com", "a b@c.com", "a@b@c.com"] {
+            assert!(!valid_email(bad), "{bad}");
+        }
+        assert_eq!(check_register("Bob", "bob@x.com", "secret1", "secret1"), None);
+        assert!(check_register("Bob1", "bob@x.com", "secret1", "secret1").is_some());
+        assert!(check_register("Bob", "bob@x.com", "short", "short").is_some());
+        assert!(check_register("Bob", "bob@x.com", "secret1", "secret2").is_some());
+        assert_eq!(check_sign_in("", "pw"), Some("Enter your email."));
+    }
 }
 
 /// What the command line or page asked for.

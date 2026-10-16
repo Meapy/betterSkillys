@@ -11,6 +11,10 @@ version number itself is in `client-rs/Cargo.toml`.
 ## Unreleased
 - Signing in with an email that has no account, or with the wrong password, now stops at the
   sign-in screen with a message. It used to show an empty character list that couldn't play.
+- Clearer messages when signing in or creating an account fails: wrong password, unknown
+  email, name or email already taken, an email that isn't valid, a password that's too short
+  (6 characters at least), or no connection to the server. Long messages now wrap instead of
+  running off the screen.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is

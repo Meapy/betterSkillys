@@ -643,8 +643,8 @@ impl App {
 
     fn sign_in(&mut self, auto_play: bool) {
         let (email, password) = (self.front.fields[screens::EMAIL].trim().to_owned(), self.front.fields[screens::PASSWORD].clone());
-        if email.is_empty() || password.is_empty() {
-            self.front.message = Some(("Enter your email and password.".into(), true));
+        if let Some(problem) = login::check_sign_in(&email, &password) {
+            self.front.message = Some((problem.into(), true));
             self.front.show(screens::Screen::Login);
             return;
         }
@@ -919,16 +919,7 @@ impl App {
             Action::Register => {
                 let f = &self.front.fields;
                 let (name, email, password) = (f[screens::NAME].trim().to_owned(), f[screens::EMAIL].trim().to_owned(), f[screens::PASSWORD].clone());
-                let problem = if name.is_empty() || email.is_empty() || password.is_empty() {
-                    Some("Fill in every field.")
-                } else if password != f[screens::CONFIRM] {
-                    Some("The passwords don't match.")
-                } else if !name.chars().all(|c| c.is_ascii_alphabetic()) || name.len() > 10 {
-                    Some("Names are up to 10 letters, A to Z.")
-                } else {
-                    None
-                };
-                if let Some(p) = problem {
+                if let Some(p) = login::check_register(&name, &email, &password, &f[screens::CONFIRM]) {
                     self.front.message = Some((p.into(), true));
                     return;
                 }
@@ -955,8 +946,8 @@ impl App {
                     Some("Fill in every field.")
                 } else if new != f[screens::NEW_CONFIRM] {
                     Some("The new passwords don't match.")
-                } else if new.chars().count() < 6 {
-                    Some("Use at least 6 characters.")
+                } else if new.chars().count() < login::MIN_PASSWORD {
+                    Some("Passwords need at least 6 characters.")
                 } else {
                     None
                 };
@@ -1082,7 +1073,7 @@ impl App {
             };
         }
         let Some((_, pending)) = &self.npc_request else { return };
-        let Some(response) = pending.take() else { return };
+        let Some(response) = pending.take().map(login::reached) else { return };
         let Some((kind, _)) = self.npc_request.take() else { return };
         use bsk_net::account as acc;
         match (kind, &mut self.npcs.window) {
@@ -1210,7 +1201,7 @@ impl App {
                 }
                 Err(e) => self.front.message = Some((e, true)),
             },
-            Request::Legends => match bsk_net::account::parse_fame_list(&response.unwrap_or_default()) {
+            Request::Legends => match login::reached(response).and_then(|xml| bsk_net::account::parse_fame_list(&xml)) {
                 Ok(list) => self.front.legends = Some(list),
                 Err(e) => {
                     self.front.legends = Some(Vec::new());
@@ -1218,7 +1209,7 @@ impl App {
                 }
             },
             Request::Fame => {
-                match response.and_then(|xml| bsk_net::account::parse_char_fame(&xml)) {
+                match login::reached(response).and_then(|xml| bsk_net::account::parse_char_fame(&xml)) {
                     Ok(summary) => {
                         self.front.death = Some(summary);
                         self.front.show(Screen::Death);

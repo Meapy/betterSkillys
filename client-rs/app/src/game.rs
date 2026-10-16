@@ -251,7 +251,14 @@ impl Game {
             match event {
                 SocketEvent::Connected => self.status = "Connected, entering the game…".into(),
                 SocketEvent::Closed(why) => {
-                    self.status = format!("Disconnected: {why}");
+                    log::info!("disconnected: {why}");
+                    // A connection that never opened: say so plainly, not with the socket's
+                    // error and address.
+                    self.status = if why.starts_with("can't connect") || why.contains("/ws/") {
+                        "Can't reach the game server. Check your internet connection and try again.".into()
+                    } else {
+                        format!("Disconnected: {why}")
+                    };
                     self.ended = true;
                 }
                 SocketEvent::Message(msg) => self.handle(&msg, now, data),

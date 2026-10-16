@@ -126,12 +126,22 @@ namespace App.Controllers
         //    Response.CreateError("Internal Server Error.");
         //}
 
+        private const string PasswordRule = "Passwords need at least 6 characters.";
+
+        private static bool IsValidPassword(string password) => password != null && password.Length >= 6;
+
         [HttpPost("changePassword")]
         public void ChangePassword([FromForm] string guid, [FromForm] string password, [FromForm] string newPassword)
         {
             var status = _core.Database.Verify(guid, password, out var acc);
             if (status == DbLoginStatus.OK)
             {
+                if (!IsValidPassword(newPassword))
+                {
+                    Response.CreateError(PasswordRule);
+                    return;
+                }
+
                 _core.Database.ChangePassword(guid, newPassword);
                 _core.Logger.Info($"Password changed for <{acc.Name}-{acc.AccountId}>");
                 Response.CreateSuccess();
@@ -207,6 +217,12 @@ namespace App.Controllers
             if (!Utils.IsValidEmail(newGuid))
             {
                 Response.CreateError("Invalid email");
+                return;
+            }
+
+            if (!IsValidPassword(newPassword))
+            {
+                Response.CreateError(PasswordRule);
                 return;
             }
 

@@ -534,10 +534,19 @@ impl Front {
     fn message_line(&self, ui: &mut Ui, cx: f32, y: f32, max_w: f32, s: f32) {
         if let Some((text, error)) = &self.message {
             let size = (14.0 * s).round().max(9.0);
-            let tw = ui.measure(text, size, true).min(max_w);
+            // Wrapped to the width, so a long message stays on the screen.
+            let lines = wrap(ui, text, size, max_w - 24.0 * s);
+            let tw = lines.iter().map(|l| ui.measure(l, size, true)).fold(0.0, f32::max);
+            let line_h = size * 1.3;
             let c = if *error { color::DANGER } else { color::GOOD };
-            theme::fill(ui.renderer, [cx - tw / 2.0 - 12.0 * s, y - 4.0 * s, tw + 24.0 * s, size * 1.25 + 8.0 * s], 6.0 * s, c, 0.16);
-            ui.label(text, cx - tw / 2.0, y, size, true, theme::shade(c, 0.35));
+            let r = [cx - tw / 2.0 - 12.0 * s, y - 4.0 * s, tw + 24.0 * s, line_h * lines.len() as f32 + 8.0 * s];
+            // Dark under the tint, so it reads over the bright parts of the sky.
+            theme::fill(ui.renderer, r, 6.0 * s, color::PANEL_BOTTOM, 0.92);
+            theme::fill(ui.renderer, r, 6.0 * s, c, 0.16);
+            for (i, line) in lines.iter().enumerate() {
+                let lw = ui.measure(line, size, true);
+                ui.label(line, cx - lw / 2.0, y + i as f32 * line_h, size, true, theme::shade(c, 0.35));
+            }
         }
     }
 
@@ -1310,6 +1319,35 @@ fn draw_logo(ui: &mut Ui, w: f32, h: f32, s: f32, card_x: f32) {
     let size = (16.0 * s).round().max(10.0);
     let tw = ui.measure(tagline, size, false);
     ui.label(tagline, cx - tw / 2.0, top + lh + 8.0 * s, size, false, color::TEXT);
+}
+
+/// `text` broken into lines no wider than `max_w` (bold), at spaces where it can, else
+/// anywhere (a long address).
+fn wrap(ui: &mut Ui, text: &str, size: f32, max_w: f32) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut line = String::new();
+    for word in text.split_whitespace() {
+        let next = if line.is_empty() { word.to_owned() } else { format!("{line} {word}") };
+        if ui.measure(&next, size, true) <= max_w || line.is_empty() && ui.measure(word, size, true) <= max_w {
+            line = next;
+            continue;
+        }
+        if !line.is_empty() {
+            lines.push(std::mem::take(&mut line));
+        }
+        // A word wider than the line on its own: cut it.
+        for c in word.chars() {
+            line.push(c);
+            if ui.measure(&line, size, true) > max_w && line.chars().count() > 1 {
+                line.pop();
+                lines.push(std::mem::replace(&mut line, c.to_string()));
+            }
+        }
+    }
+    if !line.is_empty() || lines.is_empty() {
+        lines.push(line);
+    }
+    lines
 }
 
 fn ui_time() -> i32 {
