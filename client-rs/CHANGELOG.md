@@ -9,6 +9,9 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- The desktop game now signs in and plays over an encrypted connection (https), like the
+  browser version, so your password and what you do in game can't be read on the way to the
+  server. Your game switches over by itself when it updates.
 - Signing in with an email that has no account, or with the wrong password, now stops at the
   sign-in screen with a message. It used to show an empty character list that couldn't play.
 - Clearer messages when signing in or creating an account fails: wrong password, unknown

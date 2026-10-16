@@ -13,7 +13,10 @@ tools/rolling_restart.py starts it and keeps its state, <state folder>/state.jso
   serverSettings.worldIdBase), so a client changing worlds inside the old server stays there.
   The Nexus (-2), the other negative ids and anything unknown go to the active server.
 - Before the Hello it sends a PROXY_INFO message (id 250) with the client's address, as the
-  servers would otherwise see every player as 127.0.0.1 (IP bans, the account's IP).
+  servers would otherwise see every player as 127.0.0.1 (IP bans, the account's IP). A client's
+  own PROXY_INFO before its Hello is dropped, except from this machine: the gateway
+  (`bsk-gateway --forward-address`, for players in a browser or on wss) sends the player's
+  address that way, and the proxy passes that one on instead of the gateway's.
 - It reads the state again whenever the file changes: a deploy only rewrites it.
 - When the active server asks for its scheduled restart (restart.request in its folder), it runs
   `rolling_restart.py deploy --reuse`, so the 2-hourly restart kicks nobody either.
@@ -92,6 +95,29 @@ def hello_game_id(body):
         return None
 
 
+def parse_proxy_info(body):
+    try:
+        (n,) = struct.unpack_from(">h", body)
+        return body[2:2 + n].decode("utf-8") if 0 < n <= 64 and len(body) >= 2 + n else None
+    except (struct.error, UnicodeDecodeError):
+        return None
+
+
+def is_local(address):
+    return address == "::1" or address.startswith("127.")
+
+
+async def read_first(creader):
+    """The connection's next message (or the Flash policy request), as bytes."""
+    first = await asyncio.wait_for(creader.readexactly(4), 30)
+    if first != POLICY:
+        (length,) = struct.unpack(">i", first)
+        if not 5 <= length <= MAX_FIRST:
+            raise ValueError("bad length")
+        first += await asyncio.wait_for(creader.readexactly(length - 4), 30)
+    return first
+
+
 def proxy_info(address):
     data = address.encode("utf-8")
     body = struct.pack(">h", len(data)) + data
@@ -131,16 +157,17 @@ async def handle(creader, cwriter):
     if address.startswith("::ffff:"):
         address = address[7:]
     try:
-        first = await asyncio.wait_for(creader.readexactly(4), 30)
+        first = await read_first(creader)
+        if first != POLICY and first[4] == PROXY_INFO:
+            # the gateway's word for its player's address; anyone else's is dropped
+            forwarded = parse_proxy_info(first[5:]) if is_local(address) else None
+            if forwarded:
+                address = forwarded
+            first = await read_first(creader)
         game_id = None
-        if first != POLICY:
-            (length,) = struct.unpack(">i", first)
-            if 5 <= length <= MAX_FIRST:
-                rest = await asyncio.wait_for(creader.readexactly(length - 4), 30)
-                first += rest
-                if rest[0] == HELLO:
-                    game_id = hello_game_id(rest[1:])
-    except (asyncio.TimeoutError, asyncio.IncompleteReadError, OSError):
+        if first != POLICY and first[4] == HELLO:
+            game_id = hello_game_id(first[5:])
+    except (asyncio.TimeoutError, asyncio.IncompleteReadError, OSError, ValueError):
         cwriter.close()
         return
 

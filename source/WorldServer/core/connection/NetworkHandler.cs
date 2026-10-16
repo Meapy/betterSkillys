@@ -193,6 +193,8 @@ namespace WorldServer.core.connection
     {
         private readonly Client Client;
         private readonly SocketAsyncEventArgs SocketAsyncEventArgs;
+        // whether this connection has sent a message yet: only its first may be a PROXY_INFO
+        private bool MessageSeen;
 
         public NetworkReceiveHandler(Client client, SocketAsyncEventArgs e)
         {
@@ -204,6 +206,7 @@ namespace WorldServer.core.connection
 
         public void SetSocket(Socket socket)
         {
+            MessageSeen = false;
             SocketAsyncEventArgs.AcceptSocket = socket;
             StartReceive(SocketAsyncEventArgs);
         }
@@ -285,10 +288,13 @@ namespace WorldServer.core.connection
                     {
                         var id = r.GetPacketId();
                         var payload = r.GetPacketBody();
+                        var first = !MessageSeen;
+                        MessageSeen = true;
                         if (id == MessageId.PROXY_INFO)
                         {
-                            // the real address of a client the world proxy forwards (it connects from this PC)
-                            if (Client.Account == null && Client.GameServer.ConnectionListener.BehindProxy)
+                            // the real address of a client the world proxy forwards (it connects from this PC);
+                            // only as the connection's first message, which the proxy sends, so a client can't pick its own
+                            if (first && Client.Account == null && Client.GameServer.ConnectionListener.BehindProxy)
                                 try
                                 {
                                     using var rdr = new NetworkReader(new MemoryStream(payload));

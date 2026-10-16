@@ -8,8 +8,8 @@ use bsk_proto::{ClientMessage, FrameDecoder, ServerMessage};
 pub struct Target {
     pub host: String,
     pub port: u16,
-    /// Browsers only: the gateway's WebSocket base, e.g. `ws://example.org:8095/ws`. The
-    /// connection goes to `<gateway>/<host>:<port>`.
+    /// The gateway's WebSocket base, e.g. `wss://example.org/ws` (always set in a browser). The
+    /// connection goes to `<gateway>/<host>:<port>`; without one, TCP to `host:port`.
     pub gateway: Option<String>,
 }
 
@@ -42,9 +42,13 @@ mod imp {
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
 
+    /// How long a WebSocket read waits before sending what's queued: the most a message waits.
+    const WS_POLL: Duration = Duration::from_millis(5);
+
     pub struct GameSocket {
         events: Receiver<SocketEvent>,
         out: Sender<Vec<u8>>,
+        /// The TCP socket underneath, to shut it down from here.
         stream: Arc<Mutex<Option<TcpStream>>>,
     }
 
@@ -54,44 +58,16 @@ mod imp {
             let (out, out_rx) = channel::<Vec<u8>>();
             let stream_slot = Arc::new(Mutex::new(None));
             let slot = stream_slot.clone();
-            let (host, port) = (target.host.clone(), target.port);
+            let target = target.clone();
             std::thread::Builder::new()
                 .name("game-socket".into())
                 .spawn(move || {
-                    let stream = match open(&host, port) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let _ = event_tx.send(SocketEvent::Closed(format!("can't connect to {host}:{port}: {e}")));
-                            return;
+                    let reason = match &target.gateway {
+                        Some(gateway) => {
+                            let url = format!("{}/{}:{}", gateway.trim_end_matches('/'), target.host, target.port);
+                            run_ws(&url, &slot, &event_tx, out_rx).err().unwrap_or_else(|| "closed".into())
                         }
-                    };
-                    let (Ok(mut reader), Ok(mut writer)) = (stream.try_clone(), stream.try_clone()) else {
-                        let _ = event_tx.send(SocketEvent::Closed("socket clone failed".into()));
-                        return;
-                    };
-                    *slot.lock().unwrap() = Some(stream);
-                    let _ = event_tx.send(SocketEvent::Connected);
-                    std::thread::spawn(move || {
-                        for frame in out_rx {
-                            if writer.write_all(&frame).is_err() {
-                                break;
-                            }
-                        }
-                    });
-                    let mut decoder = FrameDecoder::default();
-                    let mut buf = vec![0u8; 64 * 1024];
-                    let reason = loop {
-                        match reader.read(&mut buf) {
-                            Ok(0) => break "the server closed the connection".to_owned(),
-                            Ok(n) => {
-                                if let Err(e) = decode_into(&mut decoder, &buf[..n], |ev| {
-                                    let _ = event_tx.send(ev);
-                                }) {
-                                    break e;
-                                }
-                            }
-                            Err(e) => break e.to_string(),
-                        }
+                        None => run_tcp(&target.host, target.port, &slot, &event_tx, out_rx),
                     };
                     let _ = event_tx.send(SocketEvent::Closed(reason));
                 })
@@ -117,6 +93,99 @@ mod imp {
     impl Drop for GameSocket {
         fn drop(&mut self) {
             self.close();
+        }
+    }
+
+    /// Straight to the world server; returns why it ended.
+    fn run_tcp(
+        host: &str,
+        port: u16,
+        slot: &Mutex<Option<TcpStream>>,
+        event_tx: &Sender<SocketEvent>,
+        out_rx: Receiver<Vec<u8>>,
+    ) -> String {
+        let stream = match open(host, port) {
+            Ok(s) => s,
+            Err(e) => return format!("can't connect to {host}:{port}: {e}"),
+        };
+        let (Ok(mut reader), Ok(mut writer)) = (stream.try_clone(), stream.try_clone()) else {
+            return "socket clone failed".into();
+        };
+        *slot.lock().unwrap() = Some(stream);
+        let _ = event_tx.send(SocketEvent::Connected);
+        std::thread::spawn(move || {
+            for frame in out_rx {
+                if writer.write_all(&frame).is_err() {
+                    break;
+                }
+            }
+        });
+        let mut decoder = FrameDecoder::default();
+        let mut buf = vec![0u8; 64 * 1024];
+        loop {
+            match reader.read(&mut buf) {
+                Ok(0) => return "the server closed the connection".to_owned(),
+                Ok(n) => {
+                    if let Err(e) = decode_into(&mut decoder, &buf[..n], |ev| {
+                        let _ = event_tx.send(ev);
+                    }) {
+                        return e;
+                    }
+                }
+                Err(e) => return e.to_string(),
+            }
+        }
+    }
+
+    /// Through the gateway's WebSocket bridge (wss: encrypted), as the browser client goes. One
+    /// thread reads with a short timeout and sends what's queued in between, since the
+    /// connection can't be split between a reader and a writer.
+    fn run_ws(
+        url: &str,
+        slot: &Mutex<Option<TcpStream>>,
+        event_tx: &Sender<SocketEvent>,
+        out_rx: Receiver<Vec<u8>>,
+    ) -> Result<(), String> {
+        use tungstenite::{http::Uri, Connector, Message};
+        let uri: Uri = url.parse().map_err(|e| format!("{url}: {e}"))?;
+        let host = uri.host().ok_or(format!("{url}: no host"))?;
+        let port = uri.port_u16().unwrap_or(if uri.scheme_str() == Some("wss") { 443 } else { 80 });
+        let tcp = open(host, port).map_err(|e| format!("can't connect to {host}:{port}: {e}"))?;
+        tcp.set_read_timeout(Some(Duration::from_secs(15))).map_err(|e| e.to_string())?;
+        // A second handle, to shut the connection down from `close`. (Read timeouts go on the
+        // stream itself: on Windows a clone is a handle of its own, with its own timeout.)
+        *slot.lock().unwrap() = Some(tcp.try_clone().map_err(|e| e.to_string())?);
+        let (mut ws, _) = tungstenite::client_tls_with_config(url, tcp, None, Some(Connector::Rustls(crate::tls::config())))
+            .map_err(|e| format!("{url}: {e}"))?;
+        let stream = match ws.get_mut() {
+            tungstenite::stream::MaybeTlsStream::Plain(s) => s,
+            tungstenite::stream::MaybeTlsStream::Rustls(s) => s.get_mut(),
+            _ => return Err("unexpected stream".into()),
+        };
+        stream.set_read_timeout(Some(WS_POLL)).map_err(|e| e.to_string())?;
+        let _ = event_tx.send(SocketEvent::Connected);
+        let mut decoder = FrameDecoder::default();
+        loop {
+            loop {
+                match out_rx.try_recv() {
+                    Ok(frame) => ws.send(Message::Binary(frame)).map_err(|e| e.to_string())?,
+                    Err(std::sync::mpsc::TryRecvError::Empty) => break,
+                    Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                        let _ = ws.close(None);
+                        return Ok(());
+                    }
+                }
+            }
+            match ws.read() {
+                Ok(Message::Binary(bytes)) => decode_into(&mut decoder, &bytes, |ev| {
+                    let _ = event_tx.send(ev);
+                })?,
+                Ok(Message::Close(_)) => return Err("the server closed the connection".into()),
+                Ok(_) => {}
+                Err(tungstenite::Error::Io(e))
+                    if matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut) => {}
+                Err(e) => return Err(e.to_string()),
+            }
         }
     }
 

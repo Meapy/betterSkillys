@@ -1,8 +1,10 @@
 //! Talking to the servers, the same way on the desktop and in a browser:
 //!
 //! - [`http::post_form`]: account server requests (login, character list...).
-//! - [`GameSocket`]: the world server connection. TCP on the desktop; in a browser a WebSocket to
-//!   the gateway (`client-rs/gateway`), which forwards the bytes to the world server.
+//! - [`GameSocket`]: the world server connection. A WebSocket to the gateway (`client-rs/gateway`),
+//!   which forwards the bytes to the world server: always in a browser, and on the desktop when
+//!   the account server is a site's `/api` (wss, through its Caddy). Otherwise TCP straight to the
+//!   world server.
 //! - [`login::encrypt`]: the RSA encryption Hello needs for the account name and password.
 //!
 //! Nothing here blocks: requests and sockets are polled once per frame.
@@ -11,6 +13,8 @@ pub mod account;
 pub mod http;
 pub mod login;
 mod socket;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod tls;
 
 pub use socket::{GameSocket, SocketEvent, Target};
 

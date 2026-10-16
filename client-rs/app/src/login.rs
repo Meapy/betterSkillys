@@ -2,7 +2,10 @@
 //!
 //! Desktop: the account server is `--account <url>`, else the `BSK_ACCOUNT` environment
 //! variable, else the address built in (`BSK_ACCOUNT` at build time, or this PC's
-//! `http://127.0.0.1:8080`). `--credentials <file>` (with `email:` and `password:` lines, like
+//! `http://127.0.0.1:8080`). An address ending in `/api` is a site's gateway (`https://<site>/api`
+//! through its Caddy): the game then goes over its WebSocket bridge, `wss://<site>/ws`, so that
+//! both are encrypted. Any other address is the account server itself, and the game goes by TCP
+//! straight to the world server. `--credentials <file>` (with `email:` and `password:` lines, like
 //! test-account.local.txt) signs in straight away, for tests.
 //! Browser: everything goes through the gateway that serves the page (`api/` and `ws/`); a page
 //! may set `window.bskLogin = {email, password}` to sign in straight away.
@@ -15,7 +18,7 @@ use bsk_net::{account, http, Pending, Target};
 pub struct Endpoint {
     /// Account server base URL, without a trailing slash.
     pub account: String,
-    /// Browsers: the gateway's WebSocket base.
+    /// The gateway's WebSocket base: always in a browser, and on the desktop for a site.
     pub gateway: Option<String>,
 }
 
@@ -238,6 +241,14 @@ mod tests {
         assert!(unreachable_text("HTTP 500").contains("error 500"));
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn gateway_from_account() {
+        assert_eq!(gateway_for("https://dodmg.com/api").as_deref(), Some("wss://dodmg.com/ws"));
+        assert_eq!(gateway_for("http://127.0.0.1:8095/api").as_deref(), Some("ws://127.0.0.1:8095/ws"));
+        assert_eq!(gateway_for("http://dodmg.com:8080"), None);
+    }
+
     #[test]
     fn form_checks() {
         assert!(valid_email("a.b@example.com"));
@@ -299,7 +310,23 @@ pub fn startup() -> Result<Startup, String> {
         }
         None => None,
     };
-    Ok(Startup { endpoint: Endpoint { account: account.trim_end_matches('/').to_owned(), gateway: None }, login })
+    let account = account.trim_end_matches('/').to_owned();
+    let gateway = gateway_for(&account);
+    log::info!("account server {account}, game {}", gateway.as_deref().unwrap_or("over TCP"));
+    Ok(Startup { endpoint: Endpoint { account, gateway }, login })
+}
+
+/// The gateway's WebSocket base for an account address that is a gateway's `/api`
+/// (`https://example.org/api` -> `wss://example.org/ws`).
+#[cfg(not(target_arch = "wasm32"))]
+fn gateway_for(account: &str) -> Option<String> {
+    let base = account.strip_suffix("/api")?;
+    let ws = if let Some(rest) = base.strip_prefix("https://") {
+        format!("wss://{rest}")
+    } else {
+        format!("ws://{}", base.strip_prefix("http://")?)
+    };
+    Some(format!("{ws}/ws"))
 }
 
 #[cfg(target_arch = "wasm32")]

@@ -432,10 +432,13 @@ dependencies = [
  "rand",
  "roxmltree",
  "rsa",
+ "rustls",
+ "tungstenite",
  "ureq",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+ "webpki-roots 0.26.11",
 ]
 
 [[package]]
@@ -3593,9 +3596,12 @@ dependencies = [
  "httparse",
  "log",
  "rand",
+ "rustls",
+ "rustls-pki-types",
  "sha1",
  "thiserror 1.0.69",
  "utf-8",
+ "webpki-roots 0.26.11",
 ]
 
 [[package]]

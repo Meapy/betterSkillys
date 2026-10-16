@@ -18,6 +18,10 @@ The settings are in deploy/vps.local.json (copy deploy/vps.example.json; --confi
     public_address  the host players' clients connect to: the world server address in the server
                     list, and the account server is http://<public_address>:<account port>
     ports           redis, account, world, gateway (the gateway only listens on 127.0.0.1)
+    forward_address true: the gateway tells the world servers each player's address (players in
+                    a browser, and desktop clients on https). Needs the world proxy from
+                    2026-10-16 or later running (bsk-world restarted since): an older one sends
+                    those connections to the active world server whatever their Hello asks for
     build_wsl       on Windows: the WSL distro (with Rust) that builds the Linux gateway
 
 What it builds (in build/vps/bundle), then unpacks into /opt/bsk/incoming and installs with
@@ -158,8 +162,9 @@ def build(cfg, args):
     write_lf(os.path.join(STAGE, "bsk.env"),
              "# Written by deploy/deploy.py from %s: change it there.\n"
              "BSK_PUBLIC_ADDRESS=%s\nBSK_REDIS_PORT=%d\nBSK_ACCOUNT_PORT=%d\nBSK_WORLD_PORT=%d\nBSK_GATEWAY_PORT=%d\n"
+             "BSK_GATEWAY_FLAGS=%s\n"
              % (os.path.basename(args.config), cfg["public_address"], ports["redis"], ports["account"],
-                ports["world"], ports["gateway"]))
+                ports["world"], ports["gateway"], "--forward-address" if cfg.get("forward_address") else ""))
     if cfg["site"]:
         # Caddy gets the certificate for the site by itself (ports 80 and 443 must be open);
         # WebSockets pass through reverse_proxy as they are. The website is the site's root. The

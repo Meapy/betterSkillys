@@ -13,5 +13,6 @@
     "world": 2051,
     "gateway": 8095
   },
+  "forward_address": false,
   "build_wsl": "Ubuntu-24.04"
 }

@@ -13,7 +13,11 @@ roxmltree = "0.20"
 rsa = { version = "0.9", features = ["pem"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# The account server over http(s), the game over wss through the gateway, with one rustls setup.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
 ureq = { version = "2", default-features = false, features = ["tls"] }
+webpki-roots = "0.26"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }

@@ -10,9 +10,16 @@
 //!   the machine: `--allow play.example.com:2051=127.0.0.1:2051`.
 //!
 //!     bsk-gateway --web build/client-rs/web --account http://127.0.0.1:8080 --allow 127.0.0.1:2051
-//!                 [--bind 127.0.0.1:8095]
+//!                 [--bind 127.0.0.1:8095] [--forward-address]
 //!
-//! It binds to 127.0.0.1 unless `--bind` says otherwise.
+//! It binds to 127.0.0.1 unless `--bind` says otherwise. The desktop client comes this way too
+//! when its account address is a site's `/api` (https and wss through Caddy).
+//!
+//! `--forward-address`: each bridged connection starts with a PROXY_INFO message (250) carrying
+//! the player's address (from `X-Forwarded-For` when the request comes from this machine, i.e.
+//! Caddy), so the world server doesn't see everyone as 127.0.0.1 (IP bans, mutes). Only for a
+//! world proxy (`tools/world_proxy.py`) that takes it in place of its own: an older one routes
+//! such a connection to the active world server whatever its Hello asks for.
 
 use axum::body::Bytes;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
@@ -22,7 +29,9 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{any, get};
 use axum::Router;
 use futures::{SinkExt, StreamExt};
+use axum::extract::ConnectInfo;
 use std::collections::HashMap;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
@@ -31,6 +40,7 @@ struct Config {
     account: String,
     /// Target asked for -> address connected to.
     allowed: HashMap<String, String>,
+    forward_address: bool,
     http: reqwest::Client,
 }
 
@@ -42,6 +52,7 @@ fn parse_args() -> Result<(String, String, Config), String> {
     let mut bind = "127.0.0.1:8095".to_owned();
     let mut account = None;
     let mut allowed = HashMap::new();
+    let mut forward_address = false;
     let mut it = std::env::args().skip(1);
     while let Some(a) = it.next() {
         let mut value = || it.next().ok_or(format!("{a} needs a value"));
@@ -54,15 +65,16 @@ fn parse_args() -> Result<(String, String, Config), String> {
                 let (target, to) = v.split_once('=').unwrap_or((&v, &v));
                 allowed.insert(target.to_owned(), to.to_owned());
             }
+            "--forward-address" => forward_address = true,
             _ => return Err(format!("unknown argument {a}")),
         }
     }
-    let usage = "usage: bsk-gateway --web <dir> --account <url> --allow <host:port>[=<host:port>]... [--bind <addr:port>]";
+    let usage = "usage: bsk-gateway --web <dir> --account <url> --allow <host:port>[=<host:port>]... [--bind <addr:port>] [--forward-address]";
     let (Some(web), Some(account)) = (web, account) else { return Err(usage.into()) };
     if allowed.is_empty() {
         return Err(format!("no --allow world server given\n{usage}"));
     }
-    Ok((web, bind, Config { account, allowed, http: reqwest::Client::new() }))
+    Ok((web, bind, Config { account, allowed, forward_address, http: reqwest::Client::new() }))
 }
 
 #[tokio::main]
@@ -85,12 +97,13 @@ async fn main() {
         eprintln!("{bind}: {e}");
         std::process::exit(1);
     });
-    axum::serve(listener, app).await.expect("server");
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await.expect("server");
 }
 
 async fn api(
     State(config): State<Arc<Config>>,
     Path(path): Path<String>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
     method: Method,
     uri: Uri,
     headers: HeaderMap,
@@ -105,10 +118,9 @@ async fn api(
     if let Some(ct) = headers.get("content-type") {
         request = request.header("content-type", ct);
     }
-    // The player's address from the proxy in front (Caddy), for the account server's limits.
-    if let Some(f) = headers.get("x-forwarded-for") {
-        request = request.header("x-forwarded-for", f);
-    }
+    // The player's address, for the account server's limits: the one the proxy in front (Caddy)
+    // forwarded, else the peer's own, so a player reaching the gateway directly can't pick one.
+    request = request.header("x-forwarded-for", player_address(peer, &headers));
     match request.send().await {
         Ok(r) => {
             let status = StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY);
@@ -129,15 +141,43 @@ async fn api(
     }
 }
 
-async fn bridge(State(config): State<Arc<Config>>, Path(target): Path<String>, ws: WebSocketUpgrade) -> Response {
+async fn bridge(
+    State(config): State<Arc<Config>>,
+    Path(target): Path<String>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+    ws: WebSocketUpgrade,
+) -> Response {
     let Some(to) = config.allowed.get(&target).cloned() else {
         log::warn!("refused WebSocket to {target}");
         return StatusCode::FORBIDDEN.into_response();
     };
-    ws.on_upgrade(move |socket| relay(socket, to))
+    let address = config.forward_address.then(|| player_address(peer, &headers));
+    ws.on_upgrade(move |socket| relay(socket, to, address))
 }
 
-async fn relay(socket: WebSocket, target: String) {
+/// The player's address: the one Caddy (on this machine) forwarded, else the peer's.
+fn player_address(peer: SocketAddr, headers: &HeaderMap) -> String {
+    let forwarded = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok());
+    // The nearest proxy adds its client's address last.
+    match forwarded.and_then(|f| f.rsplit(',').next()).map(str::trim).filter(|a| !a.is_empty()) {
+        Some(a) if peer.ip().is_loopback() => a.to_owned(),
+        _ => peer.ip().to_canonical().to_string(),
+    }
+}
+
+/// PROXY_INFO (250): the world proxy's message telling the world server the player's address.
+fn proxy_info(address: &str) -> Vec<u8> {
+    let data = address.as_bytes();
+    let mut frame = Vec::with_capacity(7 + data.len());
+    frame.extend_from_slice(&(7 + data.len() as i32).to_be_bytes());
+    frame.push(250);
+    frame.extend_from_slice(&(data.len() as i16).to_be_bytes());
+    frame.extend_from_slice(data);
+    frame
+}
+
+async fn relay(socket: WebSocket, target: String, address: Option<String>) {
     let tcp = match TcpStream::connect(&target).await {
         Ok(t) => t,
         Err(e) => {
@@ -148,8 +188,13 @@ async fn relay(socket: WebSocket, target: String) {
         }
     };
     let _ = tcp.set_nodelay(true);
-    log::info!("bridge open to {target}");
+    log::info!("bridge open to {target}{}", address.as_deref().map(|a| format!(" for {a}")).unwrap_or_default());
     let (mut tcp_read, mut tcp_write) = tcp.into_split();
+    if let Some(a) = &address {
+        if tcp_write.write_all(&proxy_info(a)).await.is_err() {
+            return;
+        }
+    }
     let (mut ws_send, mut ws_recv) = socket.split();
 
     let up = async {

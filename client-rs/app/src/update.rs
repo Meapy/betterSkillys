@@ -109,7 +109,7 @@ impl Updater {
 }
 
 fn agent() -> ureq::Agent {
-    ureq::AgentBuilder::new().timeout_connect(Duration::from_secs(10)).timeout_read(Duration::from_secs(30)).build()
+    bsk_net::tls::agent_builder().timeout_connect(Duration::from_secs(10)).timeout_read(Duration::from_secs(30)).build()
 }
 
 fn get(agent: &ureq::Agent, url: &str) -> Result<Vec<u8>, String> {

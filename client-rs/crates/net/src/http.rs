@@ -45,9 +45,16 @@ fn escape(s: &str, out: &mut String) {
 
 #[cfg(not(target_arch = "wasm32"))]
 mod imp {
+    use std::sync::OnceLock;
+
+    fn agent() -> &'static ureq::Agent {
+        static AGENT: OnceLock<ureq::Agent> = OnceLock::new();
+        AGENT.get_or_init(|| crate::tls::agent_builder().build())
+    }
+
     pub fn get(url: String, done: impl FnOnce(Result<Vec<u8>, String>) + Send + 'static) {
         std::thread::spawn(move || {
-            let result = match ureq::get(&url).timeout(std::time::Duration::from_secs(30)).call() {
+            let result = match agent().get(&url).timeout(std::time::Duration::from_secs(30)).call() {
                 Ok(r) => {
                     let mut bytes = Vec::new();
                     std::io::Read::read_to_end(&mut r.into_reader(), &mut bytes).map(|_| bytes).map_err(|e| e.to_string())
@@ -60,7 +67,7 @@ mod imp {
 
     pub fn post(url: String, body: String, done: impl FnOnce(super::Response) + Send + 'static) {
         std::thread::spawn(move || {
-            let result = match ureq::post(&url)
+            let result = match agent().post(&url)
                 .set("Content-Type", "application/x-www-form-urlencoded")
                 .timeout(std::time::Duration::from_secs(20))
                 .send_string(&body)

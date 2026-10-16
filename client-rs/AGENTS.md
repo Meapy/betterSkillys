@@ -114,7 +114,10 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
 - **Signing in:** the client opens on its main menu (`Screen::Home`: Play, Sign in, Register,
   Options, Changelog, Quit), checking a remembered login behind it; then the sign-in screen,
   register, character select, new character, delete. The account server is `--account <url>`, else `BSK_ACCOUNT` from the
-  environment or the build, else `http://127.0.0.1:8080`. "Remember me" keeps the login in
+  environment or the build, else `http://127.0.0.1:8080`. An address ending in `/api` is a
+  gateway (`https://<site>/api` through Caddy): the game then goes over its WebSocket bridge
+  (`wss://<site>/ws`), encrypted, instead of TCP to the world server. `BSK_CA=<pem>` trusts a test
+  CA as well (`tools/testclient/tls_front.py`; see SETUP-LOCAL.md, "Encrypted connections"). "Remember me" keeps the login in
   `%APPDATA%\betterSkillys-rs\login.txt` (`~/.config/...` on Linux and macOS, local storage in a
   browser), as the AIR client keeps it in its shared object.
 - **Look:** the website's (`website/`). `theme.rs` holds the shared style (its palette: dark

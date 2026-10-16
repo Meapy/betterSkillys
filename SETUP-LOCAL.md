@@ -88,7 +88,10 @@ The same servers run on a Linux VPS (Ubuntu 24.04, x86_64; 4 GB of RAM is enough
 comfortable), so this PC doesn't have to stay on. Everything is built on this PC by
 `deploy/deploy.py` and copied over ssh; the VPS only runs it. Players open `https://<site>`, the
 website, and play from there in the browser (`https://<site>/play/`), or download the desktop
-client, which uses `http://<public_address>:8080` as its account server.
+client. A desktop client built with `--account https://<site>/api` goes the browser's way too:
+sign-in over https and the game over wss, through Caddy and the gateway, so passwords and game
+traffic are encrypted (see "Encrypted connections" below). Older desktop clients use
+`http://<public_address>:8080` and TCP 2051, unencrypted; those stay open for them.
 
 | Service (systemd) | What | Port |
 |---|---|---|
@@ -104,7 +107,7 @@ client, which uses `http://<public_address>:8080` as its account server.
   full changelog page. The game's name on it is `site_name` in the VPS config.
 - **Deploying:** `deploy.py` builds it into the bundle on every deploy.
 - **Downloads:** the site offers the zips in `dist\` (`Do-Damage-<os>.zip`). Build them for
-  the VPS first: `python tools\build_client_rs.py --account http://<public_address>:8080 --package`.
+  the VPS first: `python tools\build_client_rs.py --account https://<site>/api --package`.
 - **Trying it on this PC:** `.claude/launch.json` has `site`, which serves `build\site` on port
   8097. The server status reads "unavailable" there, as nothing answers `/api`.
 
@@ -132,7 +135,7 @@ client, which uses `http://<public_address>:8080` as its account server.
    base of its new AOF (tried with a copy of the live data: all 139 keys loaded). It refuses to overwrite data already on the VPS; `--force-data`
    replaces it (the old folder is kept as `data.before-import.<time>`).
 5. Point players at the VPS: publish the desktop client for the new address
-   (`python tools\build_client_rs.py --account http://<public_address>:8080 --publish`, then run
+   (`python tools\build_client_rs.py --account https://<site>/api --publish`, then run
    `deploy\deploy.py` again so the VPS serves it at `/client/`) and send the `--package` zip to
    anyone who needs it. Clients built for the old address keep updating from this PC until it
    stops, so publish the new-address build from this PC once as well.
@@ -143,6 +146,42 @@ this PC are stopped and `Run Server.bat` asks before starting them. Desktop clie
 the move still look for updates at this PC's address: `python tools\update_relay.py` serves them
 the releases (and nothing else) on port 8080, so they switch to `dodmg.com` by themselves. Leave
 it running for a while; it doesn't survive a restart of this PC.
+
+**Encrypted connections (desktop client):**
+- **How:** a desktop client whose account address ends in `/api` treats it as a site's gateway:
+  account requests go to `https://<site>/api/...` and the game to `wss://<site>/ws/<host>:<port>`,
+  the WebSocket bridge the browser client uses (`client-rs/crates/net`: `tls.rs`, `socket.rs`).
+  Caddy holds the certificate; nothing new listens on the VPS. Any other address (`http://...:8080`)
+  is the account server itself, with the game over plain TCP, as before.
+- **Switching players over:** publish with `--account https://<site>/api` (step 5 above) and run
+  `deploy\deploy.py`. Older clients still update from `http://<public_address>:8080/client/`
+  (releases are signed, so that's safe over http), and the new version has the https address
+  built in, so they switch by themselves. Once nobody plays an old version, ports 8080 and 2051
+  can be closed in the VPS firewall; until then they carry old clients' passwords in the clear.
+- **Players' addresses:** through the gateway, the world servers would see every player as
+  127.0.0.1, so IP bans and mutes would hit everyone at once. With `"forward_address": true` in
+  the deploy config, the gateway sends the player's address (from Caddy's `X-Forwarded-For`) as a
+  PROXY_INFO message, which `world_proxy.py` passes on in place of its own. Turn it on only after
+  `bsk-world` has restarted with the world proxy from 2026-10-16 (that restart kicks everyone, so
+  pick a quiet moment and tell players): the old proxy, still running until then, would route
+  such connections to the active world server whatever their Hello asks for. Until it's on,
+  players on https show as 127.0.0.1 in game, as browser players already do.
+- **Trying it on this PC:** start a test stack, a gateway in front of it and
+  `tools/testclient/tls_front.py` (a stand-in for Caddy with a test certificate), then point the
+  client at it with `BSK_CA` naming the test CA (only for that run):
+
+  ```
+  python tools\testclient\iso_stack.py --slot 3 start --rolling --data-from <main>\source\Redis\data
+  client-rs\target\debug\bsk-gateway --web build\iso3\web --account http://127.0.0.1:8084 --allow 127.0.0.1:2055 --bind 127.0.0.1:8198 --forward-address
+  python tools\testclient\tls_front.py --listen 8443 --to 8198 --dir build\iso3\tls --forwarded-for 203.0.113.7
+  set BSK_CA=build\iso3\tls\ca.pem
+  client-rs\target\debug\betterskillys --account https://127.0.0.1:8443/api --credentials test-account.local.txt
+  ```
+
+  Without `BSK_CA` the client refuses the test certificate ("UnknownIssuer"), as it should.
+- **The RSA key** that encrypts the password in the Hello (`source/WorldServer/networking/RSA.cs`)
+  is the well-known upstream pair, so it hides nothing from anyone who looks it up. Over wss it
+  doesn't matter (TLS covers the Hello); it was left as it is so old clients keep working.
 
 **Updating:** `python deploy\deploy.py`. It replaces only what changed: a new world server goes in
 with a rolling deploy (nobody is kicked, as on this PC); a changed account server restarts (logins
@@ -354,6 +393,7 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
   - Enabled for the Tomb of the Ancients (the boss room is the hub and each of the five sarcophagus rooms ends a branch), Pirate Cave, Spider Den, Snake Pit, Forest Maze, Undead Lair, Abyss of Demons, Toxic Sewers, Woodland Labyrinth, Ocean Trench and Ancient Ruins.
   - Left fixed: Mountain Temple (Daichi moves to fixed map positions), Parasite Chambers (its blockades seal the rooms from the corridors), Cave of a Thousand Treasures (the boulder corridor would be lost), and the Mad Lab, Crawling Depths and Davy Jones' Locker (their bosses sit behind doors and walls their scripts open). Open maps (Sprite World, the Hive, the Ice Cave) don't split into rooms, and the multi-stage dungeons (Oryx's Castle, Lost Halls, the Shatters and so on) depend on their layouts.
 - **Rolling world server updates:** the world proxy (`tools/world_proxy.py`) owns port 2051 and forwards each connection by the game id in its Hello: world ids from 1000000 belong to world server slot a, from 2000000 to slot b (`serverSettings.worldIdBase`), anything else goes to the active one. `tools/rolling_restart.py deploy` starts a new world server beside the old one, which then hands its players over at their next Nexus or realm trip (`GameServer.DrainTick`; `Client.Reconnect` sends them to the Nexus with no key, so the proxy picks the new server); see "Updating the world server without kicking anyone" above. The proxy passes on each player's address (message 250, `PROXY_INFO`), and a world server behind it listens on 127.0.0.1 only (`serverInfo.listenPort`). A login whose account another world server still holds asks it to sign the account out (Redis channel `Kick`) and waits up to 5 seconds before "Account in Use". The account server lists world servers that share an address and port as one.
+- **Encrypted connections** (Rust desktop client, gateway, world proxy, world server): an account address ending in `/api` makes the desktop client sign in over https and play over wss through the site's Caddy and gateway, as the browser client does (see "Encrypted connections" under "Running on a VPS"). `BSK_CA=<pem>` adds a test CA. The gateway's `--forward-address` sends the player's address as a PROXY_INFO before the game bytes; `world_proxy.py` takes one from this machine in place of its own and drops one from anyone else, and the world server takes a PROXY_INFO only as a connection's first message, so a player can't choose the address IP bans see. The gateway also no longer passes on an `X-Forwarded-For` a player sent it directly.
 - **Sign-in checks** (account server): `/char/list` no longer makes a throwaway guest list (account 0) for an email it doesn't know; it answers "No account uses that email", and a wrong password "Wrong password". Registering and changing a password need at least 6 characters.
 - **Guest accounts** (account server, Rust client): `/account/guest` makes a real account with a made-up login (`guest-<32 hex>` and a random password, `guest` flag set) and a unique name ("Guest" and four random letters, so the world server lets it in and finds it by name). At most 10 an hour per address and 300 an hour in all; behind the gateway or Caddy the address comes from `X-Forwarded-For`, which only a request from this machine may set. The client keeps the login on the device (`guest.txt` in `betterSkillys-rs`, or local storage), apart from "Remember me", and Play on the main menu uses it. Guests play like anyone else, except that Nexus merchants don't sell to them (an upstream rule). `/account/register` with the guest's `guid` and `password` turns the guest's account into a normal one (`RenameUUID`, `RenameIGN`), keeping its characters, vault and fame. A guest whose device forgets the login loses that account; unused guest accounts stay in Redis.
 
