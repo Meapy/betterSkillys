@@ -86,8 +86,9 @@ python tools\rolling_restart.py status          # which slot is active, and how 
 
 The same servers run on a Linux VPS (Ubuntu 24.04, x86_64; 4 GB of RAM is enough, 8 GB is
 comfortable), so this PC doesn't have to stay on. Everything is built on this PC by
-`deploy/deploy.py` and copied over ssh; the VPS only runs it. Players open `https://<site>` in a
-browser, or use the desktop client with `http://<public_address>:8080` as its account server.
+`deploy/deploy.py` and copied over ssh; the VPS only runs it. Players open `https://<site>`, the
+website, and play from there in the browser (`https://<site>/play/`), or download the desktop
+client, which uses `http://<public_address>:8080` as its account server.
 
 | Service (systemd) | What | Port |
 |---|---|---|
@@ -95,7 +96,17 @@ browser, or use the desktop client with `http://<public_address>:8080` as its ac
 | `bsk-account` | Account server, `/opt/bsk/app` | 8080 |
 | `bsk-world` | World proxy and world servers (`rolling_restart.py serve`), `/opt/bsk/build/live` | 2051 (slots 12051 / 22051, VPS only) |
 | `bsk-gateway` | Browser client and its WebSocket bridge, `/opt/bsk/web` | 8095, VPS only |
-| `caddy` | https for the site (its own Let's Encrypt certificate), forwards to the gateway | 80, 443 |
+| `caddy` | https for the site (its own Let's Encrypt certificate): the website from `/opt/bsk/site`, and `/play/`, `/api/` and `/ws/` to the gateway | 80, 443 |
+
+**The website** (`website/`, built by `python tools\build_site.py` into `build\site`):
+- **What it shows:** the home page with the server's live player count (from `/api/app/serverList`),
+  the downloads, the controls and the two newest versions from `client-rs/CHANGELOG.md`, plus a
+  full changelog page. The game's name on it is `site_name` in the VPS config.
+- **Deploying:** `deploy.py` builds it into the bundle on every deploy.
+- **Downloads:** the site offers the zips in `dist\` (`betterSkillys-rs-<os>.zip`). Build them for
+  the VPS first: `python tools\build_client_rs.py --account http://<public_address>:8080 --package`.
+- **Trying it on this PC:** `.claude/launch.json` has `site`, which serves `build\site` on port
+  8097. The server status reads "unavailable" there, as nothing answers `/api`.
 
 **First time:**
 

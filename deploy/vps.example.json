@@ -4,6 +4,7 @@
   "ssh": "ubuntu@vps-1234abcd.vps.ovh.net",
   "ssh_options": [],
   "site": "play.example.com",
+  "site_name": "betterSkillys",
   "public_address": "play.example.com",
   "ports": {
     "redis": 6379,

@@ -114,6 +114,12 @@ fi
 rm -rf $ROOT/web.new && cp -r $IN/web $ROOT/web.new
 [ -d $ROOT/web ] && mv $ROOT/web $ROOT/web.old
 mv $ROOT/web.new $ROOT/web && rm -rf $ROOT/web.old
+if [ -d $IN/site ]; then
+    # the website, which Caddy serves at the site's root
+    rm -rf $ROOT/site.new && cp -r $IN/site $ROOT/site.new
+    [ -d $ROOT/site ] && mv $ROOT/site $ROOT/site.old
+    mv $ROOT/site.new $ROOT/site && rm -rf $ROOT/site.old
+fi
 gateway_changed=0
 if ! cmp -s $IN/bin/bsk-gateway $ROOT/bin/bsk-gateway; then
     install -m 755 $IN/bin/bsk-gateway $ROOT/bin/bsk-gateway.new

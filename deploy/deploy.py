@@ -13,6 +13,7 @@ The settings are in deploy/vps.local.json (copy deploy/vps.example.json; --confi
     ssh_options     extra ssh arguments, such as ["-i", "C:/Users/me/.ssh/vps", "-p", "22"]
     site            Caddy's site address: the domain players open in a browser (https), or ""
                     for no Caddy
+    site_name       the game's name on the website (default betterSkillys)
     public_address  the host players' clients connect to: the world server address in the server
                     list, and the account server is http://<public_address>:<account port>
     ports           redis, account, world, gateway (the gateway only listens on 127.0.0.1)
@@ -24,6 +25,7 @@ deploy/remote/install.sh as root:
                 install.sh puts on the server), with server.json set to the ports
 - worldserver/  the same for source/WorldServer, with wServer.json set to the ports and address
 - web/          tools/build_client_rs.py --web
+- site/         tools/build_site.py: the website at the site's root (the browser client is /play/)
 - bin/          bsk-gateway, built for Linux (in WSL when run on Windows)
 - tools/        world_proxy.py and rolling_restart.py; deploy/: the units, redis.conf, install.sh
 - client/       dist/client, the published desktop client releases (unless --no-releases)
@@ -142,6 +144,8 @@ def build(cfg, args):
     run([sys.executable, os.path.join(ROOT, "tools", "build_client_rs.py"), "--web"])
     shutil.copytree(os.path.join(ROOT, "build", "client-rs", "web"), os.path.join(STAGE, "web"))
     build_gateway(cfg)
+    run([sys.executable, os.path.join(ROOT, "tools", "build_site.py"),
+         "--name", cfg.get("site_name") or "betterSkillys", "--out", os.path.join(STAGE, "site")])
 
     for name in ("world_proxy.py", "rolling_restart.py"):
         copy_lf(os.path.join(ROOT, "tools", name), os.path.join(STAGE, "tools", name))
@@ -157,10 +161,20 @@ def build(cfg, args):
                 ports["world"], ports["gateway"]))
     if cfg["site"]:
         # Caddy gets the certificate for the site by itself (ports 80 and 443 must be open);
-        # WebSockets pass through reverse_proxy as they are
+        # WebSockets pass through reverse_proxy as they are. The website is the site's root. The
+        # browser client is the gateway's page at /play/: it asks for play/api (beside its page)
+        # and /ws (from the root), which both reach the gateway as /api and /ws. The website's
+        # server status asks /api too.
         write_lf(os.path.join(STAGE, "Caddyfile"),
-                 "# Written by deploy/deploy.py: the browser client over https (wss for the game).\n"
-                 "%s {\n\tencode zstd gzip\n\treverse_proxy 127.0.0.1:%d\n}\n" % (cfg["site"], ports["gateway"]))
+                 "# Written by deploy/deploy.py: the website, and the browser client over https (wss for the game).\n"
+                 "%(site)s {\n"
+                 "\tencode zstd gzip\n"
+                 "\tredir /play /play/\n"
+                 "\thandle_path /play/* {\n\t\treverse_proxy 127.0.0.1:%(gw)d\n\t}\n"
+                 "\thandle /api/* {\n\t\treverse_proxy 127.0.0.1:%(gw)d\n\t}\n"
+                 "\thandle /ws/* {\n\t\treverse_proxy 127.0.0.1:%(gw)d\n\t}\n"
+                 "\thandle {\n\t\troot * %(root)s/site\n\t\tfile_server\n\t}\n"
+                 "}\n" % {"site": cfg["site"], "gw": ports["gateway"], "root": REMOTE})
 
     releases = os.path.join(ROOT, "dist", "client")
     if not args.no_releases and os.path.isdir(releases):

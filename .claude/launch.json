@@ -11,6 +11,12 @@
         "--bind", "127.0.0.1:8095"
       ],
       "port": 8095
+    },
+    {
+      "name": "site",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8097", "--bind", "127.0.0.1", "--directory", "build/site"],
+      "port": 8097
     }
   ]
 }
