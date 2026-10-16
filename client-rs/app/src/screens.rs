@@ -17,6 +17,8 @@ use winit::keyboard::KeyCode;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Screen {
+    /// The main menu: Play, sign in or register, options, the changelog, quit.
+    Home,
     Login,
     Register,
     /// Waiting on the account server.
@@ -89,6 +91,11 @@ enum Target {
     Logout,
     /// The Changelog window.
     Changelog,
+    /// Home's buttons.
+    Play,
+    ToHome,
+    ToOptions,
+    Quit,
 }
 
 /// What the player asked for.
@@ -110,6 +117,10 @@ pub enum Action {
     ViewDeath(i32),
     /// Open the Changelog window.
     Changelog,
+    /// Open the Options window.
+    Options,
+    /// Close the game.
+    Quit,
 }
 
 pub struct Front {
@@ -149,6 +160,8 @@ pub struct Front {
     pub version_line: String,
     /// The character list's first row shown, when it's longer than the window.
     chars_row: usize,
+    /// A remembered login is being checked in the background (Home says so).
+    pub signing_in: bool,
     /// The night sky behind it all.
     sky: crate::sky::Sky,
 }
@@ -156,7 +169,7 @@ pub struct Front {
 impl Default for Front {
     fn default() -> Self {
         Front {
-            screen: Screen::Login,
+            screen: Screen::Home,
             fields: std::array::from_fn(|_| LineEdit::new("", 128)),
             focus: EMAIL,
             remember: true,
@@ -176,6 +189,7 @@ impl Default for Front {
             endpoint_label: String::new(),
             version_line: String::new(),
             chars_row: 0,
+            signing_in: false,
             sky: Default::default(),
         }
     }
@@ -288,7 +302,7 @@ impl Front {
     pub fn at_rest(&self) -> bool {
         self.confirm.is_none()
             && match self.screen {
-                Screen::Chars => true,
+                Screen::Chars | Screen::Home => true,
                 Screen::Login => self.fields[EMAIL].text.is_empty() && self.fields[PASSWORD].text.is_empty(),
                 _ => false,
             }
@@ -356,7 +370,10 @@ impl Front {
                 _ => {}
             },
             KeyCode::Escape => match self.screen {
-                Screen::Register => self.show(Screen::Login),
+                Screen::Login | Screen::Register | Screen::Chars => {
+                    self.message = None;
+                    self.show(Screen::Home);
+                }
                 Screen::Death if self.death_from_graveyard => self.show(Screen::Graveyard),
                 Screen::NewChar | Screen::Legends | Screen::Graveyard | Screen::Account | Screen::Death | Screen::Servers => self.show(Screen::Chars),
                 Screen::Class(_) => self.show(Screen::NewChar),
@@ -455,6 +472,17 @@ impl Front {
             }
             Target::Logout => return Some(Action::Logout),
             Target::Changelog => return Some(Action::Changelog),
+            // Signed in: the characters; else sign in first.
+            Target::Play => {
+                self.message = None;
+                self.show(if self.list.is_some() { Screen::Chars } else { Screen::Login });
+            }
+            Target::ToHome => {
+                self.message = None;
+                self.show(Screen::Home);
+            }
+            Target::ToOptions => return Some(Action::Options),
+            Target::Quit => return Some(Action::Quit),
         }
         None
     }
@@ -477,10 +505,12 @@ impl Front {
         draw_shade(ui, w, h, self.screen);
         match self.screen {
             Screen::Login | Screen::Register => draw_logo(ui, w, h, s, Self::card_rect(w, h, 380.0 * s, 420.0 * s)[0]),
+            Screen::Home => {}
             Screen::Busy => draw_logo(ui, w, h, s, w),
             _ => {}
         }
         match self.screen {
+            Screen::Home => self.draw_home(ui, w, h, s, mouse, now),
             Screen::Login => self.draw_login(ui, w, h, s, mouse, now),
             Screen::Register => self.draw_register(ui, w, h, s, mouse, now),
             Screen::Busy => {
@@ -605,7 +635,63 @@ impl Front {
         }
     }
 
+    /// The main menu: the game's name, who's signed in, then a column of buttons.
+    fn draw_home(&mut self, ui: &mut Ui, w: f32, h: f32, s: f32, mouse: (f64, f64), now: i32) {
+        let name = crate::TITLE;
+        let cell = (w * 0.7 / sky::logo_width(name, 1.0)).min(11.0 * s).floor().max(2.0);
+        let top = (h * 0.12).max(16.0 * s);
+        let lh = sky::logo(ui, name, w / 2.0, top, cell);
+        let size = (16.0 * s).round().max(10.0);
+        let tagline = "A Realm of the Mad God private server";
+        let tw = ui.measure(tagline, size, false);
+        ui.label(tagline, (w - tw) / 2.0, top + lh + 8.0 * s, size, false, color::TEXT);
+        let bw = 320.0 * s;
+        let (bh, gap) = (46.0 * s, 12.0 * s);
+        let x = (w - bw) / 2.0;
+        let mut y = top + lh + 56.0 * s;
+        // Who's signed in, if anyone.
+        let who = match (&self.list, self.signing_in) {
+            (Some(list), _) => Some(format!("Signed in as {}", list.name)),
+            (None, true) => Some("Signing in\u{2026}".to_owned()),
+            _ => None,
+        };
+        let ws = (14.0 * s).round().max(9.0);
+        if let Some(who) = who {
+            let ww = ui.measure(&who, ws, false);
+            ui.label(&who, (w - ww) / 2.0, y, ws, false, color::TEXT_DIM);
+        }
+        y += ws * 1.6 + 6.0 * s;
+        let half = (bw - gap) / 2.0;
+        self.button(ui, Target::Play, [x, y, bw, bh + 6.0 * s], "Play", Kind::Primary, s, mouse);
+        y += bh + 6.0 * s + gap;
+        if self.list.is_some() {
+            self.button(ui, Target::Logout, [x, y, bw, bh], "Log out", Kind::Secondary, s, mouse);
+        } else {
+            self.button(ui, Target::ToLogin, [x, y, half, bh], "Sign in", Kind::Secondary, s, mouse);
+            self.button(ui, Target::ToRegister, [x + half + gap, y, half, bh], "Register", Kind::Secondary, s, mouse);
+        }
+        y += bh + gap;
+        self.button(ui, Target::ToOptions, [x, y, half, bh], "Options", Kind::Secondary, s, mouse);
+        self.button(ui, Target::Changelog, [x + half + gap, y, half, bh], "Changelog", Kind::Secondary, s, mouse);
+        y += bh + gap;
+        // A browser tab is closed by the browser.
+        if cfg!(not(target_arch = "wasm32")) {
+            self.button(ui, Target::Quit, [x, y, bw, bh], "Quit", Kind::Secondary, s, mouse);
+            y += bh + gap;
+        }
+        self.message_line(ui, w / 2.0, y + 8.0 * s, (w - 32.0).min(560.0 * s), s);
+        let _ = now;
+        let small = (12.0 * s).round().max(9.0);
+        ui.label(&self.endpoint_label, 12.0 * s, h - small * 1.7, small, false, color::TEXT_MUTED);
+    }
+
+    /// "Back" to the main menu, top left of the sign-in and register screens.
+    fn back_home(&mut self, ui: &mut Ui, s: f32, mouse: (f64, f64)) {
+        self.button(ui, Target::ToHome, [16.0 * s, 16.0 * s, 110.0 * s, 38.0 * s], "\u{2039} Back", Kind::Secondary, s, mouse);
+    }
+
     fn draw_login(&mut self, ui: &mut Ui, w: f32, h: f32, s: f32, mouse: (f64, f64), now: i32) {
+        self.back_home(ui, s, mouse);
         let r = Self::card_rect(w, h, 380.0 * s, 420.0 * s);
         let [x, y, bw, bh] = r;
         theme::panel(ui.renderer, r, s);
@@ -632,6 +718,7 @@ impl Front {
     }
 
     fn draw_register(&mut self, ui: &mut Ui, w: f32, h: f32, s: f32, mouse: (f64, f64), now: i32) {
+        self.back_home(ui, s, mouse);
         let r = Self::card_rect(w, h, 380.0 * s, 520.0 * s);
         let [x, y, bw, bh] = r;
         theme::panel(ui.renderer, r, s);
@@ -687,7 +774,7 @@ impl Front {
         let bw = 104.0 * s;
         let right = w - pad - money_w - 22.0 * s;
         let buttons = [
-            (Target::Logout, "Log out"),
+            (Target::ToHome, "Main menu"),
             (Target::ToAccount, "Account"),
             (Target::ToServers, "Servers"),
             (Target::ToLegends, "Legends"),
@@ -1331,7 +1418,7 @@ impl Front {
 /// Over the sky: darker behind lists, so they read easily, and a little darker at the top.
 fn draw_shade(ui: &mut Ui, w: f32, h: f32, screen: Screen) {
     let dark = match screen {
-        Screen::Login | Screen::Register | Screen::Busy => 0.0,
+        Screen::Home | Screen::Login | Screen::Register | Screen::Busy => 0.0,
         Screen::Death => 0.6,
         _ => 0.4,
     };
@@ -1534,10 +1621,10 @@ mod tests {
         f.key(KeyCode::Backspace, None, false, false);
         assert_eq!(f.fields[EMAIL].text, "");
         assert_eq!(f.key(KeyCode::Enter, None, false, false), Some(Action::SignIn));
-        // Escape from Register goes back to Login.
+        // Escape from Register goes back to the main menu, whose Play asks to sign in first.
         f.show(Screen::Register);
         f.key(KeyCode::Escape, None, false, false);
-        assert_eq!(f.screen, Screen::Login);
+        assert_eq!(f.screen, Screen::Home);
     }
 
     #[test]

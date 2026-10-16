@@ -443,6 +443,8 @@ pub struct OptionsUi {
     hits: Vec<(Hit, [f32; 4])>,
     /// "Return home" was pressed: back to the Nexus.
     pub go_home: bool,
+    /// Opened in the game (not the main menu), where "Return home" means something.
+    pub in_game: bool,
 }
 
 fn inside(r: [f32; 4], (x, y): (f64, f64)) -> bool {
@@ -651,9 +653,11 @@ impl OptionsUi {
         ui.button(reset, "Defaults", Kind::Secondary, inside(reset, mouse), s);
         self.hits.push((Hit::Defaults, reset));
         // Home: back to the Nexus.
-        let home = [r[0] + 22.0 * s, done[1], 150.0 * s, 38.0 * s];
-        ui.button(home, "Return home", Kind::Secondary, inside(home, mouse), s);
-        self.hits.push((Hit::Home, home));
+        if self.in_game {
+            let home = [r[0] + 22.0 * s, done[1], 150.0 * s, 38.0 * s];
+            ui.button(home, "Return home", Kind::Secondary, inside(home, mouse), s);
+            self.hits.push((Hit::Home, home));
+        }
     }
 }
 

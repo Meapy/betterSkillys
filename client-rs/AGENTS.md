@@ -111,8 +111,9 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
 - **Atlas:** pages are 4096², or the GPU's limit (WebGL2 can be 2048). Sheets bigger than a page
   are cut into pieces on tile boundaries (`Sheet::rect`).
 - **Colours:** the surface is non-sRGB and the atlas premultiplied, so blending matches Flash.
-- **Signing in:** the client opens on its own sign-in screen (register, character select, new
-  character, delete). The account server is `--account <url>`, else `BSK_ACCOUNT` from the
+- **Signing in:** the client opens on its main menu (`Screen::Home`: Play, Sign in, Register,
+  Options, Changelog, Quit), checking a remembered login behind it; then the sign-in screen,
+  register, character select, new character, delete. The account server is `--account <url>`, else `BSK_ACCOUNT` from the
   environment or the build, else `http://127.0.0.1:8080`. "Remember me" keeps the login in
   `%APPDATA%\betterSkillys-rs\login.txt` (`~/.config/...` on Linux and macOS, local storage in a
   browser), as the AIR client keeps it in its shared object.

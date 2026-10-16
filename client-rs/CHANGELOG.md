@@ -18,6 +18,9 @@ version number itself is in `client-rs/Cargo.toml`.
 - The sign-in, register and account boxes work like normal text boxes: Ctrl+A, copy, cut and
   paste, undo, the arrow keys, Home and End, Shift to select, Shift+Tab to go back a box, and a
   click puts the cursor where you click. Passwords can't be copied out.
+- The game opens on a main menu: Play, Sign in, Register, Options, Changelog and Quit. If you
+  stay signed in, it says who you are and Play takes you straight to your characters. Options
+  can be changed before you play, and Escape or "Main menu" brings you back to it.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is

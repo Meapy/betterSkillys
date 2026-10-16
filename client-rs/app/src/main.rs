@@ -630,14 +630,15 @@ impl App {
                 } else if let Some((email, password)) = login::remembered() {
                     self.front.set_field(screens::EMAIL, email);
                     self.front.set_field(screens::PASSWORD, password);
-                    self.sign_in(false);
+                    self.front.show(screens::Screen::Home);
+                    self.sign_in_quietly();
                 } else {
-                    self.front.show(screens::Screen::Login);
+                    self.front.show(screens::Screen::Home);
                 }
             }
             Err(e) => {
                 self.front.message = Some((e, true));
-                self.front.show(screens::Screen::Login);
+                self.front.show(screens::Screen::Home);
             }
         }
     }
@@ -655,6 +656,19 @@ impl App {
         self.front.busy = "Signing in…".into();
         self.front.message = None;
         self.front.show(screens::Screen::Busy);
+    }
+
+    /// Check the remembered login while the main menu shows (Play then goes straight to the
+    /// characters).
+    fn sign_in_quietly(&mut self) {
+        let (email, password) = (self.front.fields[screens::EMAIL].text.trim().to_owned(), self.front.fields[screens::PASSWORD].text.clone());
+        let Some(endpoint) = &self.endpoint else { return };
+        if login::check_sign_in(&email, &password).is_some() {
+            return;
+        }
+        self.request = Some((Request::CharList { auto_play: false }, endpoint.char_list(&email, &password)));
+        self.account = Some((email, password));
+        self.front.signing_in = true;
     }
 
     /// Carry on where the version before left off (`--resume`): signed in, and through the
@@ -707,7 +721,7 @@ impl App {
                 self.refresh();
             }
             (_, _, Some(_)) => self.sign_in(false),
-            _ => self.front.show(screens::Screen::Login),
+            _ => self.front.show(screens::Screen::Home),
         }
     }
 
@@ -890,7 +904,7 @@ impl App {
             return;
         }
         let ready = match &self.phase {
-            Phase::Menu => self.front.screen == screens::Screen::Chars,
+            Phase::Menu => matches!(self.front.screen, screens::Screen::Chars | screens::Screen::Home),
             Phase::Playing(game) => game.world.as_ref().is_some_and(|w| w.player().is_some()),
         };
         if !ready {
@@ -981,6 +995,8 @@ impl App {
             }
             Action::Logout => self.logout(),
             Action::Changelog => self.changelog.show(),
+            Action::Options => self.options_ui.show(),
+            Action::Quit => self.quit = true,
         }
     }
 
@@ -990,7 +1006,7 @@ impl App {
         self.front.set_field(screens::PASSWORD, String::new());
         self.front.message = None;
         login::remember(None);
-        self.front.show(screens::Screen::Login);
+        self.front.show(screens::Screen::Home);
     }
 
     /// Into the game with this character (or a new one), on the chosen server.
@@ -1116,6 +1132,7 @@ impl App {
         let Some(response) = pending.take() else { return };
         let Some((kind, _)) = self.request.take() else { return };
         use screens::Screen;
+        self.front.signing_in = false;
         match kind {
             Request::CharList { auto_play } => match login::parse_char_list(response) {
                 // Older account servers answered an unknown email with a made-up guest list
@@ -1123,7 +1140,9 @@ impl App {
                 Ok(list) if list.account_id <= 0 && self.front.list.is_none() => {
                     self.account = None;
                     self.front.message = Some(("No account uses that email.".into(), true));
-                    self.front.show(Screen::Login);
+                    if self.front.screen != Screen::Home {
+                        self.front.show(Screen::Login);
+                    }
                 }
                 Ok(list) => {
                     if let Some((email, password)) = &self.account {
@@ -1153,13 +1172,14 @@ impl App {
                     }
                 }
                 Err(e) => {
-                    if self.front.list.is_some() {
-                        self.front.message = Some((e, true));
-                    } else {
+                    if self.front.list.is_none() {
                         self.account = None;
-                        self.front.message = Some((e, true));
-                        self.front.show(Screen::Login);
+                        // A remembered login that failed behind the main menu says so there.
+                        if self.front.screen != Screen::Home {
+                            self.front.show(Screen::Login);
+                        }
                     }
+                    self.front.message = Some((e, true));
                 }
             },
             Request::Register => match login::parse_success(response) {
@@ -1369,8 +1389,8 @@ impl App {
                 }
             }
         }
-        // A mouse script can also start on the character list (tests of the screens).
-        if self.holds_from.is_none() && !self.mouse_script.is_empty() && matches!(self.phase, Phase::Menu) && self.front.screen == screens::Screen::Chars {
+        // A mouse script can also start on the character list or the main menu (tests of the screens).
+        if self.holds_from.is_none() && !self.mouse_script.is_empty() && matches!(self.phase, Phase::Menu) && matches!(self.front.screen, screens::Screen::Chars | screens::Screen::Home) {
             self.holds_from = Some(now);
         }
         if self.holds_from.is_none() && !(self.holds.is_empty() && self.mouse_script.is_empty()) && self.walk_to.is_none() {
@@ -1434,14 +1454,25 @@ impl App {
                 actions.extend(self.front.key(code, text.as_deref(), ctrl, shift));
             }
             for (down, pos) in std::mem::take(&mut self.clicks) {
-                if down {
+                if !down {
+                    continue;
+                }
+                if self.options_ui.open {
+                    if self.options_ui.click(pos, &mut self.settings) {
+                        self.settings.save();
+                    }
+                } else {
                     actions.extend(self.front.click(pos));
                 }
             }
+            // Its "Return home" means nothing out here.
+            self.options_ui.go_home = false;
             renderer.begin();
             let (w, h) = renderer.size();
             let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
             self.front.draw(&mut ui, w as f32, h as f32, mouse, now);
+            self.options_ui.in_game = false;
+            self.options_ui.draw(&mut ui, &lay, &self.settings, mouse);
             let s = screens::scale(w as f32, h as f32);
             self.changelog.draw_note(&mut ui, 16.0 * s, 16.0 * s, s, mouse, now);
             self.changelog.draw(&mut ui, w as f32, h as f32, &cl_entries, version::VERSION, cl_coming.as_deref(), mouse);
@@ -1926,6 +1957,7 @@ impl App {
         }
         if self.options_ui.open {
             let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
+            self.options_ui.in_game = true;
             self.options_ui.draw(&mut ui, &lay, &self.settings, mouse);
         }
         {
@@ -2118,6 +2150,12 @@ impl ApplicationHandler<UserEvent> for App {
                         self.changelog.key(code);
                     }
                     self.keys.remove(&code);
+                    return;
+                }
+                if self.options_ui.open && matches!(self.phase, Phase::Menu) {
+                    if pressed && self.options_ui.key(code, &mut self.settings) {
+                        self.settings.save();
+                    }
                     return;
                 }
                 if matches!(self.phase, Phase::Menu) {
