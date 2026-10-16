@@ -66,6 +66,10 @@ python tools\rolling_restart.py status          # which slot is active, and how 
   `deploy --now` moves its players to the new Nexus first.
 - **Only the world server is deployed this way.** The account server can be restarted without
   kicking anyone in game. A message change still needs the client and server shipped together.
+- **A world server that stops by itself** (a crash, or the system out of memory) is replaced:
+  after 5 seconds the proxy runs `rolling_restart.py up --no-build` (output in
+  `build/live/recover.log`), retrying later if it won't start. To stop the world servers, use
+  `rolling_restart.py stop` (or stop the service on Linux), not by closing the world server alone.
 - **Logs:** `build/live/<slot>/logs/wServer/`, and the proxy's in `build/live/proxy.log`.
 - **Switching over the first time:** the world server started by the old `Run Server.bat` holds
   port 2051 itself. Stop it (this kicks everyone, so ask first), then run `Run Server.bat` again

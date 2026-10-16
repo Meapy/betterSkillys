@@ -20,6 +20,9 @@ tools/rolling_restart.py starts it and keeps its state, <state folder>/state.jso
 - It runs the command in deploy.request (a JSON list of rolling_restart.py arguments, written by
   `rolling_restart.py request`), its output in deploy.log and its exit code in deploy.result: on
   Linux the world servers it starts then belong to the proxy's service, as the first one does.
+- When the active world server stops by itself (a crash, or the system running out of memory),
+  it starts a new one (`rolling_restart.py up --no-build`), so nobody has to restart the service.
+  A new one that won't start is tried again later, waiting longer each time (up to 10 minutes).
 """
 import asyncio
 import json
@@ -29,6 +32,8 @@ import struct
 import subprocess
 import sys
 import time
+
+from rolling_restart import alive
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 WINDOWS = os.name == "nt"
@@ -196,6 +201,9 @@ async def supervise():
     command a deploy asks for (deploy.request)."""
     restarting = None
     deploying = None
+    recovering = None
+    dead_since = None
+    retry_at, retry_wait = 0, 30
     while True:
         load_state()
         collect_stopped()
@@ -210,6 +218,28 @@ async def supervise():
             with open(os.path.join(STATE_DIR, "deploy.result"), "w", encoding="utf-8") as f:
                 json.dump({"code": deploying.returncode}, f)
             deploying = None
+        if recovering is not None and recovering.poll() is not None:
+            log("starting a new world server finished (exit code %s)" % recovering.returncode)
+            if recovering.returncode == 0:
+                retry_wait = 30
+            else:
+                retry_at, retry_wait = time.time() + retry_wait, min(retry_wait * 2, 600)
+            recovering = None
+        busy = restarting is not None or deploying is not None or recovering is not None
+        # the active world server stopped by itself: start a new one (a deploy in progress
+        # changes the active one itself, so wait for it)
+        down = not busy and (not active or not alive(state.get("backends", {}).get(active, {}).get("pid")))
+        if not down:
+            dead_since = None
+        elif dead_since is None:
+            dead_since = time.time()
+        elif time.time() - dead_since >= 5 and time.time() >= retry_at:
+            log("world server %s isn't running: starting a new one (output in recover.log)" % active)
+            recovering = run_tool(["up", "--no-build"], "recover.log")
+            dead_since = None
+        if recovering is not None:
+            await asyncio.sleep(1)
+            continue
         if request and os.path.exists(request) and restarting is None and deploying is None:
             try:
                 os.remove(request)

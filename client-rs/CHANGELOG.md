@@ -9,6 +9,8 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- If the game server stops by itself, a new one starts within seconds instead of the server
+  list staying empty until someone restarts it by hand.
 - The game has a website: play straight from your browser, download the desktop client, see
   how many players are online, look up the controls and read every change.
 
