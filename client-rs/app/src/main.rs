@@ -1985,9 +1985,12 @@ impl App {
                 game.use_ability(now, x, y, angle, data);
             }
         }
-        // The frame rate, top right of the view (L), under the gold and fame.
-        if self.settings.show_fps && matches!(self.phase, Phase::Playing(_)) {
-            let t = format!("{:.0} fps", self.fps_shown);
+        // The frame rate and the ping, top right of the view (L), under the gold and fame.
+        if let (true, Phase::Playing(game)) = (self.settings.show_fps, &self.phase) {
+            let t = match game.ping {
+                Some(ms) => format!("{:.0} fps  ·  {ms} ms", self.fps_shown),
+                None => format!("{:.0} fps", self.fps_shown),
+            };
             let style = text::Style { size: (13.0 * lay.s).round().max(10.0), bold: true, color: 0xB0FFB0 };
             let w = text.measure(fonts, renderer, &t, style);
             text.draw(fonts, renderer, &t, lay.view_w() - w - 10.0 * lay.s, credits_bottom + 4.0 * lay.s, style);

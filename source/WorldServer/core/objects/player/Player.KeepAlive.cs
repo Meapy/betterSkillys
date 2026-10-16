@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using WorldServer.core.structures;
 using WorldServer.core.worlds;
 using WorldServer.core.worlds.impl;
@@ -31,6 +32,9 @@ namespace WorldServer.core.objects
         private ConcurrentQueue<long> _updateAckTimeout = new ConcurrentQueue<long>();
 
         public int Latency { get; private set; }
+
+        /// <summary>The recent round trip to the player's client, ms (sent in each Ping for its ping display).</summary>
+        public int RoundTrip { get; private set; } = -1;
         public long TimeMap { get; private set; }
 
         public void AwaitGotoAck(long serverTime) => _gotoAckTimeout.Enqueue(serverTime + DcThresold);
@@ -114,6 +118,10 @@ namespace WorldServer.core.objects
             _latSum += (tickTime.TotalElapsedMs - serial) / 2;
             Latency = (int)_latSum / _cnt;
 
+            // the Ping's serial is when it was sent: a moving average of the last few round trips
+            var rtt = (int)Math.Max(0, tickTime.TotalElapsedMs - serial);
+            RoundTrip = RoundTrip < 0 ? rtt : (RoundTrip * 3 + rtt) / 4;
+
             _pongTime = tickTime.TotalElapsedMs;
         }
 
@@ -179,7 +187,8 @@ namespace WorldServer.core.objects
             Client.SendPacket(new Ping()
             {
                 Serial = (int)time.TotalElapsedMs,
-                RTT = Latency//(int)(_pingTime - _pongTime) - PingPeriod
+                // was Latency, an all-time average of half the round trip; no client used it
+                RTT = RoundTrip // -1 until the first Pong
             });
             return UpdateOnPing();
         }

@@ -31,6 +31,8 @@ pub struct Game {
     pub world: Option<World>,
     /// What to show while there's no world yet, or why the game ended.
     pub status: String,
+    /// The round trip to the world server, ms, as its last Ping said (none from older servers).
+    pub ping: Option<i32>,
     pub ended: bool,
     /// The character died (the game ended with its death).
     pub died: bool,
@@ -164,6 +166,7 @@ impl Game {
             socket,
             session,
             status: format!("Connecting to {}:{}…", target.host, target.port),
+            ping: None,
             target,
             hello,
             char_id,
@@ -273,6 +276,11 @@ impl Game {
         // The session answers first (a NewTick's Move goes out before its statuses apply, as
         // GameServerConnection.onNewTick does).
         let event = self.session.handle(msg, now, &mut self.out);
+        // Newer servers put the recent round trip in each Ping, -1 until they've measured one
+        // (older ones sent a lifetime average of half of it).
+        if let ServerMessage::Ping(p) = msg {
+            self.ping = (p.round_trip_time >= 0).then_some(p.round_trip_time);
+        }
         // Shots from an owner we don't know (or that died) are acknowledged with -1, as
         // GameServerConnection.onEnemyShoot / onServerPlayerShoot do.
         let unknown_owner = |id: i32| self.world.as_ref().and_then(|w| w.objects.get(&id)).is_none_or(|o| o.dead);

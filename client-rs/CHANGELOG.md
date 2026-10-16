@@ -42,6 +42,7 @@ version number itself is in `client-rs/Cargo.toml`.
 - Ability tooltips show what the ability does and its numbers for every class: the
   Necromancer's skull, the Huntress's trap, the Mystic's orb, the Sorcerer's scepter, auras,
   boosts, decoys, teleports and the rest, instead of just a code name like "VampireBlast".
+- With the frame rate on (L), the ping to the server shows beside it.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is

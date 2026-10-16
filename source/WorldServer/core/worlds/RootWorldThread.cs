@@ -46,6 +46,8 @@ namespace WorldServer.core.worlds
                 {
                     var ioStart = watch.ElapsedMilliseconds;
                     profile.Begin();
+                    // the time now, for the messages (a Pong's round trip): it was last set before the last pass
+                    realmTime.TotalElapsedMs = watch.ElapsedMilliseconds;
                     World.ProcessPlayerIO(ref realmTime);
                     profile.Mark(TickProfile.Phase.Io);
                     // players' messages hold up the tick too (a command, a login)
