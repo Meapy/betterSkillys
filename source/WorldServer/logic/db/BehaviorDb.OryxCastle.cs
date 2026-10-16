@@ -50,14 +50,16 @@ namespace WorldServer.logic
                         new Shoot(0, count: 3, fixedAngle: 0, rotateAngle: 11, projectileIndex: 0, coolDown: 200)
                     )
                  ),
-                 new Threshold(0.03,
+                 new Threshold(0.01,
+                    new ItemLoot("Potion of Defense", 0.3),
+                    new ItemLoot("Potion of Attack", 0.15),
                     new ItemLoot("Ancient Stone Sword", 0.003)
                 ),
                 new Threshold(.005,
-                    LootTemplates.BasicDrop()
-                ),
-                new Threshold(0.0001,
-                    new ItemLoot("Potion of Defense", 1)
+                    new TierLoot(10, ItemType.Weapon, 0.04),
+                    new TierLoot(11, ItemType.Armor, 0.04),
+                    new TierLoot(4, ItemType.Ability, 0.04),
+                    new TierLoot(4, ItemType.Ring, 0.04)
                 )
             )
             .Init("Oryx Stone Guardian Left",
@@ -98,11 +100,15 @@ namespace WorldServer.logic
                         new Shoot(0, count: 10, fixedAngle: 0, rotateAngle: 11, projectileIndex: 2, coolDown: 3000)
                     )
                  ),
-                new Threshold(.005,
-                    LootTemplates.BasicDrop()
+                new Threshold(0.01,
+                    new ItemLoot("Potion of Defense", 0.3),
+                    new ItemLoot("Potion of Attack", 0.15)
                 ),
-                new Threshold(0.0001,
-                    new ItemLoot("Potion of Defense", 1)
+                new Threshold(.005,
+                    new TierLoot(10, ItemType.Weapon, 0.04),
+                    new TierLoot(11, ItemType.Armor, 0.04),
+                    new TierLoot(4, ItemType.Ability, 0.04),
+                    new TierLoot(4, ItemType.Ring, 0.04)
                 )
             )
             .Init("Oryx Guardian TaskMaster",
@@ -176,11 +182,17 @@ namespace WorldServer.logic
                     )
                 ),
                 new Threshold(0.01,
-                    new ItemLoot("Potion of Defense", 1),
-                    new ItemLoot("Potion of Attack", 0.5)
+                    new ItemLoot("Potion of Defense", 0.5),
+                    new ItemLoot("Potion of Attack", 0.5),
+                    new ItemLoot("Potion of Wisdom", 0.2)
                 ),
                 new Threshold(.005,
-                    LootTemplates.BasicDrop()
+                    new TierLoot(10, ItemType.Weapon, 0.06),
+                    new TierLoot(11, ItemType.Weapon, 0.04),
+                    new TierLoot(4, ItemType.Ability, 0.06),
+                    new TierLoot(11, ItemType.Armor, 0.06),
+                    new TierLoot(12, ItemType.Armor, 0.03),
+                    new TierLoot(4, ItemType.Ring, 0.06)
                 )
             )
             .Init("md LightKey",

@@ -393,8 +393,23 @@ MINIGAME_SPAWNS = {"Zombie", "Hell Hound", "Crawler", "Zombie of Draconis", "Reg
 SPRITE_DONORS = {"Elder Beach Portal": "Beachzone Portal"}
 
 
+# Loot bags (<BagType>): Doomed Realms numbered its bags differently, so its rarest items dropped
+# in brown or blue bags. Here 6 is the white bag (announced to the server) and 7 the bag of special
+# consumables. These are the Oryx chain's top drops (BehaviorDb.OryxDoomed.cs).
+BAG_TYPES = {
+    "Ring of Oryx": 6, "Oryx Scale Armor": 6, "Oryx Hide Armor": 6, "Oryx Hide Robe": 6,
+    "Oryx Tooth Sword": 6, "Doom Dirk": 6, "Flying Doom Daggers": 6, "Tome of Noble Assault": 6,
+    "Doom Poison": 6, "Sword of Dark Enchantment": 6,
+    "Potion of Oryx": 7, "Potion of Power": 7,
+}
+
+
 def fix_doomed_data(dr):
     """Mistakes in the Doomed Realms data, fixed before porting."""
+    for oid, bag in BAG_TYPES.items():
+        o = dr.get(oid)
+        if o is not None and o.find("BagType") is not None:
+            o.find("BagType").text = str(bag)
     key = dr.get("Elder Beach Key")
     if key is not None:  # it opened the Elder Jungle
         for a in key.iter("Activate"):

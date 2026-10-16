@@ -89,24 +89,25 @@ namespace WorldServer.logic
                 ),
                 new Threshold(0.01,
                     new ItemLoot("Potion of Life", 1),
-                    new ItemLoot("Potion of Mana", 0.5)
+                    new ItemLoot("Potion of Mana", 0.3)
                 ),
                 new Threshold(0.05,
-                    new ItemLoot("Potion of Vitality", 0.5),
-                    new ItemLoot("Potion of Attack", 0.4),
-                    new ItemLoot("Potion of Defense", 0.4),
-                    new ItemLoot("Potion of Wisdom", 0.4),
-                    new ItemLoot("Wine Cellar Incantation", 0.05),
-                    new ItemLoot("Seal of Blasphemous Prayer", 0.008)
+                    new ItemLoot("Potion of Vitality", 0.38),
+                    new ItemLoot("Potion of Wisdom", 0.38),
+                    new ItemLoot("Potion of Attack", 0.38),
+                    new ItemLoot("Potion of Defense", 0.38),
+                    new ItemLoot("Wine Cellar Incantation", 0.04),
+                    new ItemLoot("Seal of Blasphemous Prayer", 0.006)
                 ),
                 new Threshold(0.1,
                     new TierLoot(11, ItemType.Weapon, 0.08),
-                    new TierLoot(12, ItemType.Weapon, 0.06),
+                    new TierLoot(12, ItemType.Weapon, 0.05),
                     new TierLoot(5, ItemType.Ability, 0.08),
-                    new TierLoot(6, ItemType.Ability, 0.05),
+                    new TierLoot(6, ItemType.Ability, 0.04),
                     new TierLoot(12, ItemType.Armor, 0.08),
-                    new TierLoot(13, ItemType.Armor, 0.05),
-                    new TierLoot(5, ItemType.Ring, 0.07)
+                    new TierLoot(13, ItemType.Armor, 0.04),
+                    new TierLoot(5, ItemType.Ring, 0.07),
+                    new TierLoot(6, ItemType.Ring, 0.03)
                 )
             )
             // Stage 3: cycles through five phases; below 20% he grows and chases.
@@ -216,13 +217,13 @@ namespace WorldServer.logic
                     )
                 ),
                 new Threshold(0.01,
-                    new ItemLoot("Potion of Attack", 0.6),
-                    new ItemLoot("Potion of Defense", 0.6)
+                    new ItemLoot("Potion of Attack", 0.45),
+                    new ItemLoot("Potion of Defense", 0.45)
                 ),
                 new Threshold(0.05,
-                    new ItemLoot("Potion of Dexterity", 0.4),
-                    new ItemLoot("Potion of Speed", 0.3),
-                    new ItemLoot("Potion of Life", 0.1)
+                    new ItemLoot("Potion of Dexterity", 0.25),
+                    new ItemLoot("Potion of Speed", 0.25),
+                    new ItemLoot("Potion of Life", 0.08)
                 ),
                 new Threshold(0.1,
                     new TierLoot(10, ItemType.Weapon, 0.08),

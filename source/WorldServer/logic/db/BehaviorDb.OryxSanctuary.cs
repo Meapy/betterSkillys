@@ -189,18 +189,19 @@ namespace WorldServer.logic
                 ),
                 new Threshold(0.01,
                     new ItemLoot("Potion of Life", 1),
-                    new ItemLoot("Potion of Mana", 1),
-                    new ItemLoot("Potion of Oryx", 0.15)
+                    new ItemLoot("Potion of Mana", 0.7),
+                    new ItemLoot("Potion of Oryx", 0.04)
                 ),
                 new Threshold(0.05,
-                    new ItemLoot("Potion of Attack", 0.4),
-                    new ItemLoot("Potion of Defense", 0.4),
-                    new ItemLoot("Potion of Speed", 0.4),
-                    new ItemLoot("Potion of Dexterity", 0.4),
-                    new ItemLoot("Potion of Vitality", 0.4),
-                    new ItemLoot("Potion of Wisdom", 0.4),
-                    new ItemLoot("Shattered Rune of Oryx", 0.25),
-                    new ItemLoot("Oryx Scroll", 0.02)
+                    new ItemLoot("Potion of Attack", 0.27),
+                    new ItemLoot("Potion of Defense", 0.27),
+                    new ItemLoot("Potion of Speed", 0.27),
+                    new ItemLoot("Potion of Dexterity", 0.27),
+                    new ItemLoot("Potion of Vitality", 0.27),
+                    new ItemLoot("Potion of Wisdom", 0.27),
+                    new ItemLoot("Shattered Rune of Oryx", 0.2),
+                    new ItemLoot("Oryx Scroll", 0.015),
+                    new ItemLoot("Oryx's Escutcheon", 0.01)
                 ),
                 new Threshold(0.1,
                     new TierLoot(12, ItemType.Weapon, 0.08),
@@ -393,7 +394,7 @@ namespace WorldServer.logic
         {
             new ItemLoot("Potion of Defense", 0.04),
             new ItemLoot("Potion of Attack", 0.04),
-            new ItemLoot("Greater Potion of Life", 0.01),
+            new ItemLoot("Greater Potion of Life", 0.005),
             new TierLoot(11, ItemType.Weapon, 0.04),
             new TierLoot(12, ItemType.Armor, 0.04)
         };

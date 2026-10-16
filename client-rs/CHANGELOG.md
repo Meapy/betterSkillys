@@ -25,6 +25,13 @@ version number itself is in `client-rs/Cargo.toml`.
   have less health and defense.
 - In Oryx's dungeons the quest arrow points at Oryx, and the portals he drops sit beside his loot
   instead of under it. The Realm Portal after each Oryx stays open for two minutes.
+- Oryx's loot was rebalanced to rise with each stage: more stat potions, Life and Mana and
+  higher-tier gear the further you go. Potion of Oryx and the Oryx set are now real rarities
+  (Oryx 3 to 5), and Oryx 3 can drop Oryx's Escutcheon.
+- The Oryx set, Doom Poison and Sword of Dark Enchantment now drop in white bags and are announced
+  to everyone; Potion of Oryx and Potion of Power drop in the special bag.
+- The 30% weekend loot boost only applies on weekends now. It was quietly applied every day,
+  so drops on weekdays are a little lower than before.
 
 ## 1.1.4 (2026-10-15)
 - Assassin poisons work properly: they ignore the monster's defense, deal their full damage over

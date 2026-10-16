@@ -1504,7 +1504,7 @@
 		<Activate stat="3" amount="5">IncrementStat</Activate>
 		<Consumable />
 		<Potion />
-		<BagType>3</BagType>
+		<BagType>7</BagType>
 	</Object>
 	<Object type="0xD05F" id="Potion of Maxy">
 		<Class>Equipment</Class>
@@ -3950,7 +3950,7 @@
 			<MultiHit />
 		</Projectile>
 		<Secret />
-		<BagType>7</BagType>
+		<BagType>6</BagType>
 		<ActivateOnEquip stat="26" amount="10">IncrementStat</ActivateOnEquip>
 		<FameBonus>7</FameBonus>
 		<OldSound>weapon/wand_of_death</OldSound>
@@ -4221,7 +4221,7 @@
 			<Size>50</Size>
 			<Wavy />
 		</Projectile>
-		<BagType>4</BagType>
+		<BagType>6</BagType>
 		<FameBonus>6</FameBonus>
 		<NumProjectiles>1</NumProjectiles>
 		<OldSound>daggerSwing</OldSound>
@@ -4238,7 +4238,7 @@
 		<SlotType>18</SlotType>
 		<Description>A poison made from the sweat of Doomleader and XVolmoreX themselves.</Description>
 		<Usable />
-		<BagType>4</BagType>
+		<BagType>6</BagType>
 		<FameBonus>6</FameBonus>
 		<MpCost>250</MpCost>
 		<Activate totalDamage="300" duration="1.5">StasisBlast</Activate>
@@ -4266,7 +4266,7 @@
 		<ActivateOnEquip stat="28" amount="6">IncrementStat</ActivateOnEquip>
 		<ActivateOnEquip stat="0" amount="66">IncrementStat</ActivateOnEquip>
 		<ActivateOnEquip stat="3" amount="66">IncrementStat</ActivateOnEquip>
-		<BagType>2</BagType>
+		<BagType>6</BagType>
 		<FameBonus>7</FameBonus>
 	</Object>
 	<Object type="0xD10C" id="Oryx Scale Armor">
@@ -4287,7 +4287,7 @@
 		<ActivateOnEquip stat="28" amount="2">IncrementStat</ActivateOnEquip>
 		<ActivateOnEquip stat="0" amount="50">IncrementStat</ActivateOnEquip>
 		<ActivateOnEquip stat="3" amount="20">IncrementStat</ActivateOnEquip>
-		<BagType>0</BagType>
+		<BagType>6</BagType>
 		<FameBonus>7</FameBonus>
 	</Object>
 	<Object type="0xD10D" id="Oryx Hide Robe">
@@ -4308,7 +4308,7 @@
 		<ActivateOnEquip stat="28" amount="2">IncrementStat</ActivateOnEquip>
 		<ActivateOnEquip stat="0" amount="20">IncrementStat</ActivateOnEquip>
 		<ActivateOnEquip stat="3" amount="50">IncrementStat</ActivateOnEquip>
-		<BagType>0</BagType>
+		<BagType>6</BagType>
 		<FameBonus>7</FameBonus>
 	</Object>
 	<Object type="0xD10E" id="Rain Bow">
@@ -4358,7 +4358,7 @@
 			<LifetimeMS>350</LifetimeMS>
 		</Projectile>
 		<OldSound>monster/sprite_god_hit</OldSound>
-		<BagType>4</BagType>
+		<BagType>6</BagType>
 		<FameBonus>7</FameBonus>
 		<NumProjectiles>2</NumProjectiles>
 	</Object>
@@ -4382,7 +4382,7 @@
 			<Size>150</Size>
 			<MultiHit />
 		</Projectile>
-		<BagType>4</BagType>
+		<BagType>6</BagType>
 		<FameBonus>6</FameBonus>
 		<NumProjectiles>1</NumProjectiles>
 		<OldSound>daggerSwing</OldSound>
@@ -5563,7 +5563,7 @@
 		<ActivateOnEquip stat="28" amount="2">IncrementStat</ActivateOnEquip>
 		<ActivateOnEquip stat="0" amount="30">IncrementStat</ActivateOnEquip>
 		<ActivateOnEquip stat="3" amount="30">IncrementStat</ActivateOnEquip>
-		<BagType>0</BagType>
+		<BagType>6</BagType>
 		<FameBonus>7</FameBonus>
 	</Object>
 	<Object type="0xD14E" id="Wavesss">
@@ -6879,7 +6879,7 @@
 		<Activate effect="Invulnerable" duration="2">ConditionEffectSelf</Activate>
 		<Consumable />
 		<Potion />
-		<BagType>0</BagType>
+		<BagType>7</BagType>
 	</Object>
 	<Object type="0xD194" id="Ent Ancient Quiver">
 		<Class>Equipment</Class>
@@ -11691,7 +11691,7 @@
 		<Description>A legendary tome designed by grand priests to damage their foes.</Description>
 		<Sound>spell/major_heal</Sound>
 		<Usable />
-		<BagType>4</BagType>
+		<BagType>6</BagType>
 		<FameBonus>5</FameBonus>
 		<MpCost>100</MpCost>
 		<ActivateOnEquip stat="26" amount="2">IncrementStat</ActivateOnEquip>

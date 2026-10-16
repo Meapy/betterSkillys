@@ -155,7 +155,21 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
       | 6 | Oryx 4 | 240,000 | 30% | 50 | 140-280, rare 410-500 |
       | 7 | Oryx 5 | 320,000 | 35% | 55 | 270-350 |
 
-      Loot climbs with it: Oryx 1 drops attack and defense potions and T10-12 gear; Oryx 2 Life, the other stat potions and T11-13; Oryx 3 Life and Mana, all stat potions, Potion of Oryx (15%) and T12-14; Oryx 4 and 5 add the Doomed Realms Oryx set (Ring of Oryx, Oryx Hide/Scale armour and robe, Oryx Tooth Sword, Doom Dirk, Flying Doom Daggers, Tome of Noble Assault) at 1.5-2% and 3.5-4%, and Oryx 5 Doom Poison, Sword of Dark Enchantment and Crown as its rarest drops.
+      **Loot** rises the same way. `python tools/oryx_loot_report.py` works out what one player can expect per kill from the tables, as `Loot.Handle` rolls them: each entry is rolled at its chance times 1 + the player's share of the damage + the loot boosts, so a solo player rolls at double the listed chance and each of three equal players at about 1.6 times (with the 25% server-wide event). For a player in a group of three:
+
+      | Stage | Stat potions | Life / Mana | Potion of Oryx | Gear (tier) | White bag |
+      |---|---|---|---|---|---|
+      | 1 Stone Guardians (both) | 1.4 | - | - | 0.5 (T10-12) | 0.5% (Ancient Stone Sword) |
+      | 2 Janus | 1.9 | - | - | 0.5 (T10-12) | - |
+      | 3 Oryx 1 | 2.2 | 0.1 / - | - | 0.6 (T10-12) | - |
+      | 4 Oryx 2 | 2.4 | 1 / 0.5 | - | 0.7 (T11-13) | 0.9% (Seal of Blasphemous Prayer) |
+      | 5 Oryx 3 | 2.6 | 1 / 1 | 6% | 0.6 (T12-14) | 1.6% (Oryx's Escutcheon) |
+      | 6 Oryx 4 | 2.9 | 1.1 / 1 | 13% | 0.6 (T13-15) | 7% (the Oryx set) |
+      | 7 Oryx 5 | 3.8 | 1.2 / 1.2 | 24% | 0.6 (T14-15) | 18% (Oryx set, Doom Poison, Sword of Dark Enchantment, Crown) |
+
+      Gear stays at about one piece every two kills while its tier rises. A Potion of Oryx counts as all eight potions (`/forge` makes one from them), so it stays rare. Each piece of the Oryx set (Ring of Oryx, Oryx Hide Armor, Oryx Hide Robe, Oryx Scale Armor, Oryx Tooth Sword, Doom Dirk, Flying Doom Daggers, Tome of Noble Assault) is 0.6% from Oryx 4 and 1.4% from Oryx 5 before the multiplier. Oryx 4 and 5 also drop the Oryx forge materials. The first tables were far richer: with the weekday boost bug below, Oryx 5 gave each of three players a Potion of Oryx every kill and an Oryx set piece or other special item about half the time.
+    - **White bags for the Oryx set:** Doomed Realms numbered its loot bags differently, so the Oryx set dropped in brown and blue bags without an announcement. `tools/port_doomed.py` (`BAG_TYPES`) now gives the set, Doom Poison and Sword of Dark Enchantment the white bag (6) and Potion of Oryx and Potion of Power the special-consumable bag (7). Only those lines of the generated XML were updated: a full regeneration also rewrites unrelated parts (Native White Demon moves from ElderObjects.xml to DoomedRealms.xml, Elder Abyss.jm changes), so the committed generated files have drifted from the generator.
+    - **Weekend loot boost:** `Loot.Handle` added `wkndBoost` (+30%) to every roll every day, while `/boosts` and the login message only claim it on weekends. It now applies only when `World.isWeekend`. This lowers drop rates everywhere on weekdays, back to what players are told.
     - **Castle:** the Stone Guardians' ring attacks never fired: `RingAttack` only shoots when its radius is 0, and theirs was 20. They now use `Shoot` rings. (Other monsters' `RingAttack`s with a radius are left as they are.)
     - **Oryx 1** cycles minions, an invulnerable dance with ring elements and a spiral, his artifacts, his gaze and a second dance; his second dance used to loop forever with him invulnerable three quarters of the time. Below 20% he grows and chases.
     - **Oryx 2** gains a call for guards at 55% (henchmen and vintners under silencing and weakening spinners) and a faster second phase.
