@@ -152,7 +152,7 @@ pub fn key_label(k: Option<KeyCode>) -> String {
     }
 }
 
-/// What can be switched on and off on the Graphics tab, by name in the file.
+/// What can be switched on and off on the Graphics, Visuals and Sound tabs, by name in the file.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Toggle {
     Particles,
@@ -173,7 +173,8 @@ pub enum Toggle {
     Music,
 }
 
-const GRAPHICS: [(Toggle, &str); 13] = [
+/// What's shown in the world.
+const VISUALS: [(Toggle, &str); 9] = [
     (Toggle::Particles, "Particles and effects"),
     (Toggle::Shadows, "Shadows"),
     (Toggle::HpBars, "Health bars"),
@@ -183,6 +184,10 @@ const GRAPHICS: [(Toggle, &str); 13] = [
     (Toggle::PetEffects, "Other players' pets' effects"),
     (Toggle::Crosshair, "Crosshair"),
     (Toggle::DamageNumbers, "Damage numbers"),
+];
+
+/// The camera and the display.
+const GRAPHICS: [(Toggle, &str); 4] = [
     (Toggle::Rotation, "Camera rotation"),
     (Toggle::Centered, "Center on player"),
     (Toggle::ShowFps, "Show frame rate"),
@@ -439,10 +444,11 @@ pub enum Tab {
     #[default]
     Controls,
     Graphics,
+    Visuals,
     Sound,
 }
 
-/// A slider on the Sound or Graphics tab.
+/// A slider on the Graphics, Visuals or Sound tab.
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Slider {
     Sfx,
@@ -472,6 +478,8 @@ pub struct OptionsUi {
     tab: Tab,
     /// The binding waiting for its new key.
     listening: Option<Bind>,
+    /// The slider held down, and its track: it follows the mouse until the button comes up.
+    dragging: Option<(Slider, [f32; 4])>,
     rect: Option<[f32; 4]>,
     hits: Vec<(Hit, [f32; 4])>,
     /// "Return home" was pressed: back to the Nexus.
@@ -483,6 +491,20 @@ pub struct OptionsUi {
 fn inside(r: [f32; 4], (x, y): (f64, f64)) -> bool {
     let (x, y) = (x as f32, y as f32);
     x >= r[0] && y >= r[1] && x < r[0] + r[2] && y < r[1] + r[3]
+}
+
+/// A slider set to where the mouse is along its track (in steps of 5%, or one frame rate limit).
+fn set_slider(slider: Slider, track: [f32; 4], x: f64, settings: &mut Settings) {
+    let f = ((x as f32 - track[0]) / track[2]).clamp(0.0, 1.0);
+    let v = (f * 20.0).round() / 20.0;
+    match slider {
+        Slider::Music => settings.sound.music_volume = v,
+        Slider::Sfx => settings.sound.sfx_volume = v,
+        Slider::Zoom => settings.zoom = ZOOM_MIN + v * (ZOOM_MAX - ZOOM_MIN),
+        Slider::PlayerAlpha => settings.player_alpha = v,
+        Slider::PetAlpha => settings.pet_alpha = v,
+        Slider::MaxFps => settings.max_fps = MAX_FPS[(f * (MAX_FPS.len() - 1) as f32).round() as usize],
+    }
 }
 
 impl OptionsUi {
@@ -509,19 +531,8 @@ impl OptionsUi {
                 return true;
             }
             Hit::Slider(slider, track) => {
-                let v = ((pos.0 as f32 - track[0]) / track[2]).clamp(0.0, 1.0);
-                let v = (v * 20.0).round() / 20.0;
-                match slider {
-                    Slider::Music => settings.sound.music_volume = v,
-                    Slider::Sfx => settings.sound.sfx_volume = v,
-                    Slider::Zoom => settings.zoom = ZOOM_MIN + v * (ZOOM_MAX - ZOOM_MIN),
-                    Slider::PlayerAlpha => settings.player_alpha = v,
-                    Slider::PetAlpha => settings.pet_alpha = v,
-                    Slider::MaxFps => {
-                        let i = (((pos.0 as f32 - track[0]) / track[2]).clamp(0.0, 1.0) * (MAX_FPS.len() - 1) as f32).round() as usize;
-                        settings.max_fps = MAX_FPS[i];
-                    }
-                }
+                set_slider(slider, track, pos.0, settings);
+                self.dragging = Some((slider, track));
                 return true;
             }
             Hit::Defaults => {
@@ -534,6 +545,11 @@ impl OptionsUi {
                         }
                         settings.zoom = d.zoom;
                         settings.max_fps = d.max_fps;
+                    }
+                    Tab::Visuals => {
+                        for (t, _) in VISUALS {
+                            *settings.toggle(t) = *d.clone().toggle(t);
+                        }
                         settings.player_alpha = d.player_alpha;
                         settings.pet_alpha = d.pet_alpha;
                     }
@@ -548,6 +564,20 @@ impl OptionsUi {
             }
         }
         false
+    }
+
+    /// The mouse while the button is down: a held slider follows it. True if the settings
+    /// changed (they're saved when the button comes up).
+    pub fn drag(&mut self, pos: (f64, f64), settings: &mut Settings) -> bool {
+        let Some((slider, track)) = self.dragging.filter(|_| self.open) else { return false };
+        let before = settings.clone();
+        set_slider(slider, track, pos.0, settings);
+        *settings != before
+    }
+
+    /// The button came up. True if a slider was let go (save the settings).
+    pub fn release(&mut self) -> bool {
+        self.dragging.take().is_some()
     }
 
     /// A key while the window is open. True if the settings changed.
@@ -582,6 +612,7 @@ impl OptionsUi {
         self.hits.clear();
         if !self.open {
             self.rect = None;
+            self.dragging = None;
             return;
         }
         let (w, h) = (lay.w, lay.h);
@@ -596,7 +627,7 @@ impl OptionsUi {
         ui.label("Options", r[0] + 22.0 * s, r[1] + 16.0 * s, font(22.0), true, color::TEXT);
         // Tabs, as pills.
         let mut x = r[0] + 150.0 * s;
-        for (tab, label) in [(Tab::Controls, "Controls"), (Tab::Graphics, "Graphics"), (Tab::Sound, "Sound")] {
+        for (tab, label) in [(Tab::Controls, "Controls"), (Tab::Graphics, "Graphics"), (Tab::Visuals, "Visuals"), (Tab::Sound, "Sound")] {
             let tr = [x, r[1] + 18.0 * s, 104.0 * s, 28.0 * s];
             let on = tab == self.tab;
             let bg = if on { color::ACCENT } else if inside(tr, mouse) { color::SECONDARY } else { color::CHIP };
@@ -628,9 +659,13 @@ impl OptionsUi {
                     self.hits.push((Hit::Bind(*b), kr));
                 }
             }
-            Tab::Graphics | Tab::Sound => {
-                let list: &[(Toggle, &str)] = if self.tab == Tab::Graphics { &GRAPHICS } else { &SOUNDS };
-                // The Graphics tab's switches go in two columns.
+            Tab::Graphics | Tab::Visuals | Tab::Sound => {
+                let list: &[(Toggle, &str)] = match self.tab {
+                    Tab::Graphics => &GRAPHICS,
+                    Tab::Visuals => &VISUALS,
+                    _ => &SOUNDS,
+                };
+                // A long list of switches goes in two columns.
                 let cols = if list.len() > 6 { 2 } else { 1 };
                 let per_col = list.len().div_ceil(cols);
                 let colw = (body[2] - 20.0 * s * (cols - 1) as f32) / cols as f32;
@@ -651,11 +686,14 @@ impl OptionsUi {
                     self.hits.push((Hit::Toggle(*t), row));
                 }
                 let mut y = body[1] + per_col as f32 * 38.0 * s;
+                let pct = |a: f32| format!("{}%", (a * 100.0).round() as i32);
                 let sliders: Vec<(Slider, &str, f32, String)> = if self.tab == Tab::Sound {
                     let (sv, mv) = (settings.sound.sfx_volume, settings.sound.music_volume);
+                    vec![(Slider::Sfx, "Effects volume", sv, pct(sv)), (Slider::Music, "Music volume", mv, pct(mv))]
+                } else if self.tab == Tab::Visuals {
                     vec![
-                        (Slider::Sfx, "Effects volume", sv, format!("{}%", (sv * 100.0).round() as i32)),
-                        (Slider::Music, "Music volume", mv, format!("{}%", (mv * 100.0).round() as i32)),
+                        (Slider::PlayerAlpha, "Other players", settings.player_alpha, pct(settings.player_alpha)),
+                        (Slider::PetAlpha, "Other players' pets", settings.pet_alpha, pct(settings.pet_alpha)),
                     ]
                 } else {
                     // Lower shows more of the world (the mouse wheel over the world does it too).
@@ -663,13 +701,7 @@ impl OptionsUi {
                     let i = MAX_FPS.iter().position(|&f| f == settings.max_fps).unwrap_or(0);
                     let fv = i as f32 / (MAX_FPS.len() - 1) as f32;
                     let fps = if settings.max_fps == 0 { "No limit".to_owned() } else { settings.max_fps.to_string() };
-                    let pct = |a: f32| format!("{}%", (a * 100.0).round() as i32);
-                    vec![
-                        (Slider::Zoom, "World zoom", v, format!("{}%", (settings.zoom * 100.0).round() as i32)),
-                        (Slider::MaxFps, "Max frame rate", fv, fps),
-                        (Slider::PlayerAlpha, "Other players", settings.player_alpha, pct(settings.player_alpha)),
-                        (Slider::PetAlpha, "Other players' pets", settings.pet_alpha, pct(settings.pet_alpha)),
-                    ]
+                    vec![(Slider::Zoom, "World zoom", v, pct(settings.zoom)), (Slider::MaxFps, "Max frame rate", fv, fps)]
                 };
                 if !sliders.is_empty() {
                     y += 10.0 * s;
@@ -708,6 +740,27 @@ impl OptionsUi {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sliders_drag() {
+        let mut ui = OptionsUi { open: true, ..Default::default() };
+        let mut s = Settings::default();
+        let track = [100.0, 0.0, 200.0, 8.0];
+        // Not held: moving does nothing.
+        assert!(!ui.drag((150.0, 0.0), &mut s));
+        ui.dragging = Some((Slider::PlayerAlpha, track));
+        assert!(ui.drag((150.0, 0.0), &mut s));
+        assert_eq!(s.player_alpha, 0.25);
+        // Past the end it stops at the end; the same place again changes nothing.
+        assert!(ui.drag((900.0, 0.0), &mut s));
+        assert_eq!(s.player_alpha, 1.0);
+        assert!(!ui.drag((901.0, 0.0), &mut s));
+        assert!(ui.release());
+        assert!(!ui.drag((100.0, 0.0), &mut s), "let go");
+        assert!(!ui.release());
+        set_slider(Slider::MaxFps, track, 300.0, &mut s);
+        assert_eq!(s.max_fps, *MAX_FPS.last().unwrap());
+    }
 
     #[test]
     fn settings_round_trip() {

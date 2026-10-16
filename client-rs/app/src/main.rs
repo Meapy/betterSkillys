@@ -1529,6 +1529,9 @@ impl App {
             }
             for (down, pos) in std::mem::take(&mut self.clicks) {
                 if !down {
+                    if self.options_ui.release() {
+                        self.settings.save();
+                    }
                     continue;
                 }
                 if self.options_ui.open {
@@ -1539,6 +1542,7 @@ impl App {
                     actions.extend(self.front.click(pos));
                 }
             }
+            self.options_ui.drag(mouse, &mut self.settings);
             // Its "Return home" means nothing out here.
             self.options_ui.go_home = false;
             renderer.begin();
@@ -1700,10 +1704,11 @@ impl App {
             // The options window takes the mouse while it's open.
             if self.options_ui.open {
                 for (down, pos) in std::mem::take(&mut self.clicks) {
-                    if down && self.options_ui.click(pos, &mut self.settings) {
+                    if if down { self.options_ui.click(pos, &mut self.settings) } else { self.options_ui.release() } {
                         self.settings.save();
                     }
                 }
+                self.options_ui.drag(self.mouse, &mut self.settings);
                 self.mouse_down = false;
             }
             game.particles.disabled = !self.settings.particles;
