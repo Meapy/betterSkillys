@@ -14,7 +14,8 @@ namespace Shared.database
     {
         OK,
         AccountNotExists,
-        InvalidCredentials
+        InvalidCredentials,
+        TooManyAttempts
     }
 
     [Flags]

@@ -9,6 +9,10 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- Passwords are stored more safely on the server. Your password doesn't change, and nothing
+  needs doing.
+- After 10 wrong passwords for one account, signing in to it is blocked for 15 minutes, so
+  nobody can keep guessing.
 - Signing in with an email that has no account, or with the wrong password, now stops at the
   sign-in screen with a message. It used to show an empty character list that couldn't play.
 - Clearer messages when signing in or creating an account fails: wrong password, unknown
