@@ -8,7 +8,7 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
-## Unreleased
+## 1.2.0 (2026-10-16)
 - Signing in with an email that has no account, or with the wrong password, now stops at the
   sign-in screen with a message. It used to show an empty character list that couldn't play.
 - Clearer messages when signing in or creating an account fails: wrong password, unknown
