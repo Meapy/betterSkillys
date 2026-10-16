@@ -1,4 +1,11 @@
-# Client development
+# Client development (deprecated)
+
+**This client is deprecated.** Players use the Rust client ([../client-rs/AGENTS.md](../client-rs/AGENTS.md)),
+and the live servers are on the VPS (dodmg.com), not the `188.141.12.3` address below. Don't build,
+test or change this client unless the owner asks; for in-game testing use the Rust client's
+scripted flags. Its `src/` is still where the Rust client reads its art and data from
+(`tools/gen_rs_manifest.py`), so leave those files in place. The notes below are kept for
+reference.
 
 The client is an Adobe AIR desktop app written in ActionScript 3 (`src/`). It is decompiled 7.0
 client code, so many files use names like `_arg_1` and `_local_2`. Match the style of the file

@@ -21,24 +21,34 @@ dotnet build source\betterSkillys.sln -c Debug          # what Run Server.bat do
 dotnet build source\WorldServer\WorldServer.csproj -c Debug -o build\wscheck   # while the live server runs
 ```
 
-- **The live account server runs from `App/bin/Debug/net8.0`**, and its files are locked while
-  it runs. The live world servers run from `build/live/a` and `build/live/b` (below). To check
-  that something compiles, build into another folder with `-o`, as above.
+- **The live servers are on the VPS** (dodmg.com), installed under `/opt/bsk` by
+  `deploy/deploy.py` (SETUP-LOCAL.md, "Running on a VPS"): the account server in `/opt/bsk/app`,
+  the world servers in `/opt/bsk/build/live/<slot>`. The copies on this PC (`App/bin/Debug/net8.0`,
+  `build/live/a` and `b`) are the old live servers, stopped since the move. To check that
+  something compiles, build into another folder with `-o`, as above.
 - **`Optimize` is on for `WorldServer` and `Shared` in Debug too**, because Debug is what
   `Run Server.bat` builds and runs.
 - **To try a change in game,** use the isolated stack, `tools/testclient/iso_stack.py start`. It
   builds App and WorldServer from the current source into `build/iso`, on Redis 6380 (a copy of the
-  live data), account 8081 and world 2052. See client/AGENTS.md for the test client that connects
-  to it, and stop the stack with `iso_stack.py stop` when done.
+  live data), account 8081 and world 2052; `--slot N` adds N to each, and in a worktree pass
+  `--data-from <main checkout>\source\Redis\data` or it starts empty. Play on it with the Rust
+  client's scripted flags or the bot (client-rs/AGENTS.md, "Testing against the servers"), and
+  stop the stack with `iso_stack.py stop` when done.
 - **Logs** are in `build/live/<slot>/logs/wServer/<date>/info.txt` (and `error.txt`), and
   `App/bin/Debug/net8.0/logs/app/`. Ticks slower than 200 ms are logged as "Slow tick", and passes
   over players' messages slower than 100 ms as "Slow messages". Every 30 s each world with players
   logs "Tick stats" (`core/worlds/TickProfile.cs`): its ticks' work, the gaps between them (what
   players feel), the time per part of the tick, and the garbage collections. Measure with those.
-- **Deploying a world server change:** `Run Server.bat` or `python tools\rolling_restart.py update` / `deploy` (still ask the
-  owner first: it changes what players run). It kicks nobody: see "Rolling deploys" below and
-  SETUP-LOCAL.md. Account server changes still mean restarting `App`, which doesn't kick players
-  in game but stops logins while it's down. A message change ships with the client, as before.
+- **Deploying a server change:** `python deploy\deploy.py` from the main checkout (ask the owner
+  first: it changes what players run). A new world server goes in with a rolling deploy and kicks
+  nobody (see "Rolling deploys" below); a changed account server restarts, which pauses logins for
+  a few seconds. A message change ships with the client, as before.
+- **On the VPS:** logs are in `/opt/bsk/build/live/<slot>/logs/wServer/`,
+  `/opt/bsk/app/logs/` and the journal (`journalctl -u bsk-world`); Redis is `redis-cli -p 6379`
+  there. `python deploy\deploy.py --status` shows the services and the world server slots.
+- **Stopping a world server** saves everyone on Ctrl+C (Windows) or SIGTERM (Linux): `GameServer.Stop`
+  ends the loop and `ConnectionListener.Shutdown` disconnects each player, which saves them.
+  A forced kill (`taskkill /F`, which `rolling_restart.py stop` uses on Windows) skips that.
 
 ## Rolling deploys (world proxy)
 

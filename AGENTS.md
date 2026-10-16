@@ -1,72 +1,107 @@
 # betterSkillys: working notes
 
-A Realm of the Mad God private server (C#, .NET 8) and its Adobe AIR client (ActionScript 3), run
-on this PC for a small group of players. Read the guide for the part you're changing:
+A Realm of the Mad God private server (C#, .NET 8) and its clients, for a small group of players.
+Players know the game as **Do Damage**: that's the name in the client, on the website and in
+anything players read; `betterSkillys` stays the repository's and the code's name. The live game
+runs on a Linux VPS at **dodmg.com**. Read the guide for the part you're changing:
 
-- [client/AGENTS.md](client/AGENTS.md): the AIR client (rendering, UI, messages, test client).
-- [client-rs/AGENTS.md](client-rs/AGENTS.md): the Rust rewrite of the client (desktop and
-  browser), in progress.
+- [client-rs/AGENTS.md](client-rs/AGENTS.md): the client players use, in Rust (desktop and
+  browser), and the gateway that serves browser play.
 - [source/AGENTS.md](source/AGENTS.md): the servers (account server, world server, behaviours,
   worlds, Redis data).
-- [SETUP-LOCAL.md](SETUP-LOCAL.md): how to run and share the game, and the list of changes made
-  here. Add to its "Changes from upstream" or "Content ported from Doomed Realms" section when you
-  change behaviour or add content.
+- [SETUP-LOCAL.md](SETUP-LOCAL.md): how to run, deploy and share the game ("Running on a VPS"),
+  and the list of changes made here. Add to its "Changes from upstream" or "Content ported from
+  Doomed Realms" section when you change behaviour or add content.
+- [client/AGENTS.md](client/AGENTS.md): the old Adobe AIR client. **Deprecated**: don't build,
+  test or change it unless the owner asks.
+- `website/` is the site at dodmg.com (built by `tools/build_site.py`); `deploy/` puts
+  everything on the VPS.
 
 ## What runs where
 
+**Live, on the VPS** (dodmg.com, 169.58.244.146, Ubuntu 24.04; systemd services, see
+SETUP-LOCAL.md):
+
 | Part | Port | Notes |
 |---|---|---|
-| Redis | 6379 (this PC only) | `source/Redis`, data in `source/Redis/data/` |
-| Account server (`source/App`) | 8080 | |
-| World proxy (`tools/world_proxy.py`) | 2051 | forwards to the world servers; see source/AGENTS.md |
-| World servers (`source/WorldServer`, from `build/live/a` and `b`) | 12051 / 22051 (this PC only) | public address in `wServer.json`; deploy with `tools/rolling_restart.py` |
-| Isolated test servers | 6380 / 8081 / 2052 | `tools/testclient/iso_stack.py`, under `build/iso/` |
+| Caddy | 80, 443 | https for everything: the website at `/`, browser play at `/play/`, and `/api` and `/ws` to the gateway |
+| Gateway (`bsk-gateway`) | 8095, VPS only | web client, account requests and the game over WebSocket |
+| Account server (`bsk-account`) | 8080 | open for older desktop clients |
+| World proxy and world servers (`bsk-world`) | 2051 (slots 12051 / 22051, VPS only) | rolling deploys, as on Windows |
+| Redis (`bsk-redis`) | 6379, VPS only | data in `/opt/bsk/redis/data` |
 
-The same stack also runs on a Linux VPS under systemd: `deploy/deploy.py` builds it here and
-installs it there (SETUP-LOCAL.md, "Running on a VPS"). The tools in `tools/` that it uses
-(`world_proxy.py`, `rolling_restart.py`) must keep working on both Windows and Linux.
+**On this PC:** the old live servers are **stopped** (the game moved to the VPS on 2026-10-16;
+this PC's `source/Redis/data` is the data as it was then, not live). `tools/update_relay.py` may
+be running on 8080: it hands the client releases to desktop clients built for this PC's address
+so they switch to dodmg.com. Isolated test servers use 6380 / 8081 / 2052, slot N adding N
+(`tools/testclient/iso_stack.py`, under `build/iso*/`).
 
-Doomed Realms, another server on this PC, uses 8888, 2050 and 843. Don't take those ports.
-
-`Run Server.bat` builds and starts Redis, the account server and the world server (behind the world
-proxy), each in its own window; run while they're up, it deploys the world server without kicking
-anyone (`tools/rolling_restart.py update`). It skips any of them whose process name (`redis-server.exe`, `App.exe`,
-`WorldServer.exe`) is already running, so never run test copies under those names
-(`iso_stack.py` doesn't). Players use `Play Client.bat` on this PC, or the packaged client in
-`dist/` (`dist/betterSkillys-Client.zip` for friends).
+The tools the VPS uses (`world_proxy.py`, `rolling_restart.py`) must keep working on both Windows
+and Linux. Doomed Realms, another server on this PC, uses 8888, 2050 and 843: don't take those
+ports. `Run Server.bat` would start a separate copy of the servers on this PC, on its old data, so
+it asks first; never run test copies under the live process names (`redis-server.exe`,
+`App.exe`, `WorldServer.exe`; `iso_stack.py` doesn't).
 
 ## Ground rules
 
-- **Real people play on the live servers.** Restarting or stopping them disconnects everyone:
-  ask first, every time. Test on the isolated stack instead.
-- **Never drive the real client window** (title "betterSkillys"); it may be someone's game. The
-  test client has its own window ("betterSkillys port test") and its own settings.
+- **Real people play on the live servers.** Anything that changes what they run (a deploy, a
+  publish, a restart) is the owner's call: ask first, every time, unless they just asked for it.
+  Test on an isolated stack instead. What disconnects whom:
+  - a world server deploy (`deploy/deploy.py` or a rolling deploy) kicks nobody;
+  - restarting `bsk-world` itself kicks everyone (they're saved first);
+  - restarting the gateway drops browser players; the account server pauses logins.
+- **Stopping a world server cleanly:** it saves everyone on Ctrl+C (Windows) or SIGTERM (Linux,
+  `systemctl stop`). `taskkill /F`, which `rolling_restart.py stop` uses on Windows, skips the
+  save. To stop one from a script on Windows, attach to its console and send Ctrl+C
+  (`AttachConsole` and `GenerateConsoleCtrlEvent`).
+- **Never drive a player's window**: the clients' titles are "Do Damage" (the Rust client) and
+  "betterSkillys" (the old AIR client). Test with the Rust client's scripted flags, in its own
+  window, on an isolated stack (client-rs/AGENTS.md).
 - **The client and server ship together** when a message changes (ids, fields). An old client
   must keep working with a new server where possible. Note in the commit which side needs
   redeploying.
-- **Secrets** stay in git-ignored `*.local.txt` files (`test-account.local.txt`) and `build/`
-  (signing key). `build/`, `dist/`, `client/bin/`, `tools/airsdk/` and `source/Redis/data/` are
-  not tracked.
-- **Changelog:** every change players can notice (client, servers, content, fixes) gets a line
-  in [client-rs/CHANGELOG.md](client-rs/CHANGELOG.md) under `## Unreleased` at the top, in the
-  same commit as the change. Write it in plain words for players, not code names; the game's
-  Changelog window shows it. Start the section if it isn't there. Publishing a client version
-  renames it to that version.
+- **Client releases are published from the main checkout only.** It holds the signing key
+  (`build/client-update.key`) and `dist/client`. Clients only take releases signed with that key,
+  so publishing from a worktree or a fresh clone makes a new key and strands every player.
+- **Secrets** stay in git-ignored files: `*.local.txt` (`test-account.local.txt`),
+  `deploy/*.local.json` (the VPS config), `build/` (signing key) and `~/.ssh/dodmg_ed25519` (the
+  VPS key). Never sign in anywhere with a password pasted into a chat: ask the owner to set up a
+  key instead. `build/`, `dist/`, `client/bin/`, `tools/airsdk/` and `source/Redis/data/` are not
+  tracked.
+- **Changelog:** every change players can notice (client, servers, content, website, fixes) gets a
+  line in [client-rs/CHANGELOG.md](client-rs/CHANGELOG.md) under `## Unreleased` at the top, in
+  the same commit as the change. Write it in plain words for players, not code names; the game's
+  Changelog window and the website show it. Start the section if it isn't there. Publishing a
+  client version renames it to that version, so only release lines that are true for players by
+  then: hold back a line whose change isn't live yet (put it back under `Unreleased`).
 - **Generated files** come from the `tools/port_doomed*.py` scripts (see source/AGENTS.md). Change
   the script and regenerate rather than editing the output by hand.
+- **DNS:** dodmg.com's records live at Register365 with a TTL of a day, so a change can take that
+  long to reach everyone. Check several resolvers (1.1.1.1, 8.8.8.8, 9.9.9.9) before relying on
+  one.
 
 ## Git
 
-- Work on the `local` branch. It is HaloCelsius/betterSkillys merged with Aurusenth/betterSkillys
-  (remote `aurusenth`), plus the local setup and the Doomed Realms port.
+- `main` is the working branch (`local` is older and no longer used). Sessions work in worktrees
+  under `.claude/worktrees/` and bring each finished piece into `main` as they go:
+  `git -C <main checkout> merge --ff-only <branch>`, after merging `main` in first if it moved.
+  A hook stops edits into the main checkout from a worktree session.
 - Another session may be editing the same tree. Stage and commit explicit paths only (never
   `git add -A` or `git commit -a`), and check `git status` for changes that aren't yours.
 - `core.autocrlf` is on: the repository stores LF, while many working files are CRLF. Scripts
-  that patch source text should detect and keep each file's line endings.
+  that patch source text should detect and keep each file's line endings; `sed -i` in Git Bash
+  can turn a CRLF file into LF.
+- The remote `aurusenth` is Aurusenth/betterSkillys, merged in earlier (SETUP-LOCAL.md, "Code
+  history").
 
 ## Tools
 
-- Python 3 for the scripts in `tools/`.
+- Python 3 for the scripts in `tools/` and `deploy/`.
 - The .NET 8 SDK for the servers.
-- AIR SDK 32 for the client, unzipped into `tools/airsdk/`.
-- Rust (stable, with the `wasm32-unknown-unknown` target) for `client-rs/`.
+- Rust (stable, with the `wasm32-unknown-unknown` target and `wasm-bindgen-cli`) for
+  `client-rs/`, and WSL with Ubuntu 24.04 and Rust inside it, which builds the Linux gateway for
+  the VPS.
+- Git Bash rewrites arguments that start with `/` into Windows paths: prefix
+  `MSYS_NO_PATHCONV=1` for slash commands, and give Windows programs Windows paths
+  (`C:/Users/...`, not `/c/Users/...`).
+- AIR SDK 32, only for the deprecated AIR client, unzipped into `tools/airsdk/`.
