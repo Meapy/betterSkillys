@@ -25,6 +25,8 @@ version number itself is in `client-rs/Cargo.toml`.
   Your characters stay on this computer or browser; Register ("Save progress") at any time
   turns them into a full account, characters, items and fame included. Guests can't buy from
   the Nexus merchants.
+- Monsters and other players move smoothly: they no longer stop and start, slide past where
+  they are and back, or jump when the server's updates arrive a little late or bunched up.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is

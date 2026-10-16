@@ -111,11 +111,37 @@ fn others_glide_to_their_tick_position() {
     w.apply_update(&Update { new_objs: vec![other].into(), ..Default::default() }, &d, 0);
     let status = ObjectStatus { object_id: 3, pos: WorldPos { x: 3.0, y: 2.0 }, stats: Default::default() };
     w.apply_new_tick(&NewTick { tick_id: 1, tick_time: 200, statuses: vec![status].into() }, 1000);
-    w.update(1100, 100, &MoveInput::default(), &d);
+    // The glide takes 1.3 ticks (260 ms).
+    w.update(1130, 130, &MoveInput::default(), &d);
     let o = &w.objects[&3];
-    assert!((o.x - 2.5).abs() < 1e-9 && o.moving, "halfway after half the tick: {}", o.x);
-    w.update(1200, 100, &MoveInput::default(), &d);
+    assert!((o.x - 2.5).abs() < 1e-9 && o.moving, "halfway after half the glide: {}", o.x);
+    w.update(1260, 130, &MoveInput::default(), &d);
     assert!((w.objects[&3].x - 3.0).abs() < 1e-9);
+    // A late tick: it waits at the target instead of running past it.
+    w.update(1400, 140, &MoveInput::default(), &d);
+    let o = &w.objects[&3];
+    assert!((o.x - 3.0).abs() < 1e-9 && !o.moving, "{}", o.x);
+}
+
+#[test]
+fn a_new_tick_glides_on_from_where_it_is() {
+    let d = data();
+    let mut w = world(&d);
+    let mut other = obj(3, PLAYER, 2.0, 2.0, 0);
+    other.status.stats = Default::default();
+    w.apply_update(&Update { new_objs: vec![other].into(), ..Default::default() }, &d, 0);
+    let to = |x: f32| ObjectStatus { object_id: 3, pos: WorldPos { x, y: 2.0 }, stats: Default::default() };
+    w.apply_new_tick(&NewTick { tick_id: 1, tick_time: 100, statuses: vec![to(3.0)].into() }, 1000);
+    w.update(1065, 65, &MoveInput::default(), &d);
+    let mid = w.objects[&3].x;
+    // The next tick comes early, and another without this object: no jump either time.
+    w.apply_new_tick(&NewTick { tick_id: 2, tick_time: 100, statuses: vec![to(4.0)].into() }, 1065);
+    w.update(1066, 1, &MoveInput::default(), &d);
+    assert!((w.objects[&3].x - mid).abs() < 0.02, "{mid} -> {}", w.objects[&3].x);
+    w.apply_new_tick(&NewTick { tick_id: 3, tick_time: 100, statuses: vec![].into() }, 1100);
+    w.update(1101, 35, &MoveInput::default(), &d);
+    let x = w.objects[&3].x;
+    assert!(x > mid && x < 4.0, "still gliding toward 4: {x}");
 }
 
 #[test]
@@ -142,4 +168,32 @@ fn dropped_objects_free_their_square() {
     assert!(w.occupant(6, 5).is_none());
     let (x, _) = walk(&mut w, &d, 1.0, 0.0, 100);
     assert!(x > 6.0, "the wall is gone, so we cross into square 6: {x}");
+}
+
+#[test]
+fn a_steady_walker_never_stops_or_backs_up_when_ticks_come_late() {
+    let d = data();
+    let mut w = world(&d);
+    let mut other = obj(3, PLAYER, 2.0, 2.0, 0);
+    other.status.stats = Default::default();
+    w.apply_update(&Update { new_objs: vec![other].into(), ..Default::default() }, &d, 0);
+    // The server moves it 0.4 tiles a 100 ms tick; each tick reaches us 0 to 25 ms late.
+    let late = [0, 25, 5, 20, 0, 15, 25, 10, 0, 20];
+    let mut next = 0;
+    let mut last_x = 2.0;
+    for frame in 0..60 {
+        let now = 1000 + frame * 16;
+        while next < late.len() && 1000 + next as i32 * 100 + late[next] <= now {
+            let x = 2.4 + 0.4 * next as f32;
+            let status = ObjectStatus { object_id: 3, pos: WorldPos { x, y: 2.0 }, stats: Default::default() };
+            w.apply_new_tick(&NewTick { tick_id: next as i32 + 1, tick_time: 100, statuses: vec![status].into() }, now);
+            next += 1;
+        }
+        w.update(now, 16, &MoveInput::default(), &d);
+        let x = w.objects[&3].x;
+        if frame > 0 && next < late.len() {
+            assert!(x > last_x, "frame {frame}: stopped or went back ({last_x} -> {x})");
+        }
+        last_x = x;
+    }
 }

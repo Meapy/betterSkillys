@@ -17,6 +17,10 @@ pub use combat::{Hit, Impact, Projectile};
 pub use movement::{move_speed, MoveInput};
 pub use random::Random;
 
+/// Other objects glide to a tick's positions over this much of the tick's time, so one that
+/// moves every tick is still moving when the next tick comes a little late.
+const GLIDE_SLACK: f64 = 1.3;
+
 /// The tile type of a square nothing has been sent for (`Square.tileType_` default).
 pub const NO_TILE: u16 = 255;
 
@@ -32,7 +36,8 @@ pub struct GameObj {
     move_x: f64,
     move_y: f64,
     last_tick_update_time: i32,
-    my_last_tick_id: i32,
+    /// How long the glide to the tick position takes, ms.
+    glide_ms: f64,
     /// Every stat the server has sent, latest value.
     pub stats: HashMap<u8, StatValue>,
     /// Whether it moved during the last update (for walk animation).
@@ -100,6 +105,8 @@ pub struct World {
     /// Our player's object id.
     pub me: Option<i32>,
     pub last_tick_id: i32,
+    /// When other objects were last moved (`update`): where a new tick's glide starts from.
+    last_update: Option<i32>,
     /// The ground's effect on our speed (`Player.moveMultiplier_`), and sinking.
     move_multiplier: f64,
     sink_level: i32,
@@ -129,6 +136,7 @@ impl World {
             objects: Default::default(),
             me: None,
             last_tick_id: -1,
+            last_update: None,
             move_multiplier: 1.0,
             sink_level: 0,
             projectiles: Vec::new(),
@@ -206,7 +214,7 @@ impl World {
             move_x: 0.0,
             move_y: 0.0,
             last_tick_update_time: time,
-            my_last_tick_id: self.last_tick_id,
+            glide_ms: 0.0,
             stats: HashMap::new(),
             moving: false,
             facing: 0.0,
@@ -250,25 +258,26 @@ impl World {
     }
 
     /// `NewTick`: other objects head for their new positions over the tick; stats change.
+    ///
+    /// Unlike `GameObject.onTickPos`, the glide starts wherever the object is drawn (no jump back
+    /// to the last target), takes a little longer than the tick (`GLIDE_SLACK`), and stops at
+    /// the target. So a monster walking steadily keeps moving when the next tick is a few ms
+    /// late, never runs past where the server has it and then back, and never jumps.
     pub fn apply_new_tick(&mut self, tick: &NewTick, time: i32) {
+        // The glide starts from where objects were last drawn, at the time they were drawn there.
+        let start = self.last_update.unwrap_or(time).min(time);
         for s in tick.statuses.iter() {
             let is_me = Some(s.object_id) == self.me;
-            let last_tick_id = self.last_tick_id;
             let Some(obj) = self.objects.get_mut(&s.object_id) else { continue };
             if tick.tick_time != 0 && !is_me {
-                // GameObject.onTickPos
-                if obj.my_last_tick_id < last_tick_id {
-                    obj.x = obj.tick_x;
-                    obj.y = obj.tick_y;
-                }
-                obj.last_tick_update_time = time;
+                obj.last_tick_update_time = start;
                 obj.tick_x = s.pos.x as f64;
                 obj.tick_y = s.pos.y as f64;
                 obj.pos_at_tick_x = obj.x;
                 obj.pos_at_tick_y = obj.y;
-                obj.move_x = (obj.tick_x - obj.pos_at_tick_x) / tick.tick_time as f64;
-                obj.move_y = (obj.tick_y - obj.pos_at_tick_y) / tick.tick_time as f64;
-                obj.my_last_tick_id = tick.tick_id;
+                obj.glide_ms = tick.tick_time as f64 * GLIDE_SLACK;
+                obj.move_x = (obj.tick_x - obj.pos_at_tick_x) / obj.glide_ms;
+                obj.move_y = (obj.tick_y - obj.pos_at_tick_y) / obj.glide_ms;
             }
             obj.apply_stats(&s.stats);
         }
@@ -290,19 +299,20 @@ impl World {
     /// Returns our new position if it changed.
     pub fn update(&mut self, time: i32, dt: i32, input: &MoveInput, data: &GameData) -> Option<(f64, f64)> {
         self.animate(time, data);
+        self.last_update = Some(time);
         let ids: Vec<i32> = self.objects.keys().copied().filter(|&id| Some(id) != self.me).collect();
         for id in ids {
-            let last_tick_id = self.last_tick_id;
             let Some(o) = self.objects.get_mut(&id) else { continue };
             o.moving = false;
             if o.move_x == 0.0 && o.move_y == 0.0 {
                 continue;
             }
-            let (nx, ny) = if o.my_last_tick_id < last_tick_id {
+            let tick_dt = (time - o.last_tick_update_time).max(0) as f64;
+            let (nx, ny) = if tick_dt >= o.glide_ms {
+                // Arrived: it waits there for the next tick.
                 (o.move_x, o.move_y) = (0.0, 0.0);
                 (o.tick_x, o.tick_y)
             } else {
-                let tick_dt = (time - o.last_tick_update_time) as f64;
                 o.moving = true;
                 o.facing = o.move_y.atan2(o.move_x);
                 (o.pos_at_tick_x + tick_dt * o.move_x, o.pos_at_tick_y + tick_dt * o.move_y)
