@@ -1717,34 +1717,11 @@ pub fn item_tooltip(data: &GameData, item: i32, me: Option<&GameObj>, kind: Slot
             }
             continue;
         }
-        let detail = match effect {
-            "Heal" | "HealNova" => a.attr("amount").map(|v| format!("{effect}: {v} HP")),
-            "Magic" | "MagicNova" => a.attr("amount").map(|v| format!("{effect}: {v} MP")),
-            "IncrementStat" => Some(format!("Permanently +{} {}", a.attr_int("amount", 0), stat_name(a.attr_int("stat", -1)))),
-            // Poison ignores defense (the server's `PoisonEnemy`).
-            "PoisonGrenade" => {
-                let mut s = format!(
-                    "Poison: {} damage over {} secs, within {} sqrs",
-                    a.attr_int("totalDamage", 0),
-                    a.attr_number("duration", 0.0),
-                    a.attr_number("radius", 0.0)
-                );
-                let impact = a.attr_int("impactDamage", 0);
-                if impact > 0 {
-                    s += &format!(", plus {impact} on impact");
-                }
-                if a.attr("useWisMod") == Some("true") {
-                    s += " (raised by Wisdom)";
-                }
-                Some(s)
-            }
-            "ConditionEffectSelf" | "ConditionEffectAura" => a.attr("effect").map(|e| {
-                let secs = a.attr_number("duration", 0.0);
-                format!("{e} for {secs} secs")
-            }),
-            _ => None,
-        };
-        out.push(Line::new(&detail.unwrap_or_else(|| effect.to_owned()), 13.0, false, VALUE));
+        // Bullet and shot activations some items mark as not for the tooltip.
+        if a.attr("ignoreOnTooltip") == Some("true") {
+            continue;
+        }
+        out.push(Line::new(&activate_detail(a), 13.0, false, VALUE));
     }
     // Restrictions.
     let mut note = |t: &str, c: u32| out.push(Line::new(t, 13.0, false, c));
@@ -1774,6 +1751,97 @@ pub fn item_tooltip(data: &GameData, item: i32, me: Option<&GameObj>, kind: Slot
         }
     }
     out
+}
+
+/// What an `<Activate>` does, in words, with its numbers (`EquipmentToolTip`'s effect lines). Every
+/// ability the items use is covered; anything else shows its name with spaces.
+fn activate_detail(a: &bsk_data::xml::Element) -> String {
+    let effect = a.text.trim();
+    let num = |k: &str| a.attr_number(k, 0.0);
+    let has = |k: &str| a.attr(k).is_some();
+    let text = |k: &str| a.attr(k).unwrap_or("").to_owned();
+    // Most abilities have a radius in "radius", some in "range".
+    let area = || if has("radius") { num("radius") } else { num("range") };
+    let mut s = match effect {
+        "Heal" => format!("Heals {} HP", num("amount")),
+        "Magic" => format!("Restores {} MP", num("amount")),
+        "HealNova" => format!("Heals {} HP to you and allies within {} sqrs", num("amount"), num("range")),
+        "MagicNova" => format!("Restores {} MP to you and allies within {} sqrs", num("amount"), num("range")),
+        "IncrementStat" => format!("Permanently +{} {}", a.attr_int("amount", 0), stat_name(a.attr_int("stat", -1))),
+        // Poison ignores defense (the server's `PoisonEnemy`).
+        "PoisonGrenade" => {
+            let mut s = format!("Poison: {} damage over {} secs, within {} sqrs", num("totalDamage"), num("duration"), num("radius"));
+            if num("impactDamage") > 0.0 {
+                s += &format!(", plus {} on impact", num("impactDamage"));
+            }
+            s
+        }
+        "VampireBlast" => format!("Steals {} HP from each enemy within {} sqrs, healing you and allies nearby", num("totalDamage"), num("radius")),
+        "Trap" => format!(
+            "Trap: {} damage within {} sqrs, and {} for {} secs",
+            num("totalDamage"),
+            num("radius"),
+            a.attr("condEffect").unwrap_or("Slowed"),
+            if has("condDuration") { num("condDuration") } else { 5.0 }
+        ),
+        "Lightning" => {
+            let mut s = format!("Lightning: {} damage, to up to {} enemies", num("totalDamage"), num("maxTargets"));
+            if num("decrDamage") > 0.0 {
+                s += &format!(", {} less for each after the first", num("decrDamage"));
+            }
+            s
+        }
+        "StasisBlast" => format!("Puts enemies within {} sqrs in stasis for {} secs", if has("radius") { num("radius") } else { 3.0 }, num("duration")),
+        "Decoy" | "MultiDecoy" => format!("A decoy that draws enemies for {} secs", num("duration")),
+        "Teleport" => format!("Teleports you up to {} sqrs", num("maxDistance")),
+        "StatBoostSelf" => format!("+{} {} for {} secs", num("amount"), stat_name(a.attr_int("stat", -1)), num("duration")),
+        "StatBoostAura" => format!("+{} {} to you and allies within {} sqrs for {} secs", num("amount"), stat_name(a.attr_int("stat", -1)), num("range"), num("duration")),
+        "ConditionEffectSelf" => format!("{} for {} secs", text("effect"), num("duration")),
+        "ConditionEffectAura" => format!("{} to you and allies within {} sqrs for {} secs", text("effect"), num("range"), num("duration")),
+        "GenericActivate" => {
+            let who = if a.attr("target") == Some("enemy") { "enemies" } else { "allies" };
+            format!("{} to {who} within {} sqrs for {} secs", text("effect"), num("range"), num("duration"))
+        }
+        "Halo" => format!("Heals {} HP to allies within {} sqrs, for {} secs", num("amount"), num("range"), num("duration")),
+        "BulletNova" => format!("Fires a ring of {} shots", if has("numShots") { num("numShots") } else { 20.0 }),
+        "BulletCreate" => format!("Fires {} shots", num("numShots")),
+        "Shoot" => "Fires its shots".to_owned(),
+        "SamuraiAbility" | "DazeBlast" | "TomeDamage" => format!("{} damage within {} sqrs", num("totalDamage"), area()),
+        "ObjectToss" => format!("Throws a {}", text("objectId")),
+        "MonsterToss" => format!("Throws a {} to fight for you", text("objectId")),
+        "Summon" => format!("Summons a {} for {} secs", text("objectId"), num("duration")),
+        "BuildTower" => format!("Builds a {} for {} secs ({} damage)", text("objectId"), num("duration"), num("totalDamage")),
+        "PearlAbility" => format!("Summons a {}", text("objectId")),
+        "Pet" => format!("Summons the pet {}", text("objectId")),
+        "RemoveNegativeConditions" => format!("Removes negative conditions from allies within {} sqrs", num("range")),
+        "RemoveNegativeConditionsSelf" => "Removes your negative conditions".to_owned(),
+        "ClearConditionEffectAura" => format!("Removes {} from allies within {} sqrs", text("effect"), num("range")),
+        "ClearConditionEffectSelf" => format!("Removes {}", text("effect")),
+        "Fame" => format!("+{} fame", num("amount")),
+        "Gold" => format!("+{} gold", num("amount")),
+        "CreatePortal" | "Create" => format!("Opens {}", text("id")),
+        "Backpack" => "Gives you a backpack".to_owned(),
+        "UnlockSkin" => "Unlocks a skin".to_owned(),
+        "UnlockPetSkin" => "Unlocks a pet skin".to_owned(),
+        _ => {
+            // "VampireBlast" -> "Vampire Blast"
+            let mut words = String::new();
+            for (i, c) in effect.chars().enumerate() {
+                if i > 0 && c.is_uppercase() {
+                    words.push(' ');
+                }
+                words.push(c);
+            }
+            words
+        }
+    };
+    if let (Some(cond), false) = (a.attr("condEffect"), effect == "Trap") {
+        s += &format!(", and {cond} for {} secs", num("condDuration"));
+    }
+    if a.attr("useWisMod") == Some("true") {
+        s += " (raised by Wisdom)";
+    }
+    s
 }
 
 /// A tooltip box beside the mouse, kept inside the window: the item's icon and title on top,
