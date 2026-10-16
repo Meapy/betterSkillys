@@ -5,6 +5,7 @@
   "ssh_options": [],
   "site": "play.example.com",
   "site_name": "Do Damage",
+  "site_redirects": ["www.play.example.com"],
   "public_address": "play.example.com",
   "ports": {
     "redis": 6379,

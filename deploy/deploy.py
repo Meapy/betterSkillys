@@ -14,6 +14,7 @@ The settings are in deploy/vps.local.json (copy deploy/vps.example.json; --confi
     site            Caddy's site address: the domain players open in a browser (https), or ""
                     for no Caddy
     site_name       the game's name on the website (default Do Damage)
+    site_redirects  other names that redirect to the site, such as ["www.example.com"]
     public_address  the host players' clients connect to: the world server address in the server
                     list, and the account server is http://<public_address>:<account port>
     ports           redis, account, world, gateway (the gateway only listens on 127.0.0.1)
@@ -174,7 +175,10 @@ def build(cfg, args):
                  "\thandle /api/* {\n\t\treverse_proxy 127.0.0.1:%(gw)d\n\t}\n"
                  "\thandle /ws/* {\n\t\treverse_proxy 127.0.0.1:%(gw)d\n\t}\n"
                  "\thandle {\n\t\troot * %(root)s/site\n\t\tfile_server\n\t}\n"
-                 "}\n" % {"site": cfg["site"], "gw": ports["gateway"], "root": REMOTE})
+                 "}\n" % {"site": cfg["site"], "gw": ports["gateway"], "root": REMOTE}
+                 # other names for the site (www.) send visitors to it, each with its own certificate
+                 + "".join("%s {\n\tredir https://%s{uri} permanent\n}\n" % (alias, cfg["site"])
+                           for alias in cfg.get("site_redirects", [])))
 
     releases = os.path.join(ROOT, "dist", "client")
     if not args.no_releases and os.path.isdir(releases):
