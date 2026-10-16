@@ -8,7 +8,7 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
-## Unreleased
+## 1.2.1 (2026-10-16)
 - The desktop game now signs in and plays over an encrypted connection (https), like the
   browser version, so your password and what you do in game can't be read on the way to the
   server. Your game switches over by itself when it updates.
