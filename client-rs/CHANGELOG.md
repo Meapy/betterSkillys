@@ -8,6 +8,10 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
+## Unreleased
+- Signing in with an email that has no account, or with the wrong password, now stops at the
+  sign-in screen with a message. It used to show an empty character list that couldn't play.
+
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is
   off. Your client switches over by itself, and your account, characters and vault came along.

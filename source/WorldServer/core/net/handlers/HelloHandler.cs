@@ -100,7 +100,7 @@ namespace WorldServer.core.net.handlers
 
             if (s1 == DbLoginStatus.AccountNotExists)
             {
-                client.SendFailure("Bad Login", FailureMessage.MessageWithDisconnect);
+                client.SendFailure("No account uses that email.", FailureMessage.MessageWithDisconnect);
                 return null;
             }
 

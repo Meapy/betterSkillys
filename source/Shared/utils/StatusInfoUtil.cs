@@ -10,10 +10,10 @@ namespace Shared.utils
             switch (status)
             {
                 case DbLoginStatus.InvalidCredentials:
-                    return "Bad Login";
+                    return "Wrong password";
 
                 case DbLoginStatus.AccountNotExists:
-                    return "Bad Login";
+                    return "No account uses that email";
 
                 case DbLoginStatus.OK:
                     return "OK";

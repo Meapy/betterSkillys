@@ -68,12 +68,11 @@ namespace App.Controllers
         [HttpPost("list")]
         public void List([FromForm] string guid, [FromForm] string password, [FromForm]string secret)
         {
+            // Only real accounts with the right password: an unknown email used to get a made-up
+            // guest list here, which looked like a sign-in but couldn't play.
             var status = _core.Database.Verify(guid, password, out var acc);
-            if (status == DbLoginStatus.OK || status == DbLoginStatus.AccountNotExists)
+            if (status == DbLoginStatus.OK)
             {
-                if (status == DbLoginStatus.AccountNotExists)
-                    acc = _core.Database.CreateGuestAccount(guid);
-
                 var list = CharList.FromDb(_core, acc);
                 list.Servers = _core.GetServerList(HttpContext.Connection.RemoteIpAddress);
                 Response.CreateXml(list.ToXml(_core).ToString());

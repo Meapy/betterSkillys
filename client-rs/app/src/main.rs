@@ -1126,6 +1126,13 @@ impl App {
         use screens::Screen;
         match kind {
             Request::CharList { auto_play } => match login::parse_char_list(response) {
+                // Older account servers answered an unknown email with a made-up guest list
+                // (account 0) that couldn't play: that's no sign-in.
+                Ok(list) if list.account_id <= 0 && self.front.list.is_none() => {
+                    self.account = None;
+                    self.front.message = Some(("No account uses that email.".into(), true));
+                    self.front.show(Screen::Login);
+                }
                 Ok(list) => {
                     if let Some((email, password)) = &self.account {
                         if !self.test_login {
