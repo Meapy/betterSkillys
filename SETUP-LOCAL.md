@@ -137,6 +137,13 @@ client, which uses `http://<public_address>:8080` as its account server.
    anyone who needs it. Clients built for the old address keep updating from this PC until it
    stops, so publish the new-address build from this PC once as well.
 
+**The live game moved here on 2026-10-16:** `dodmg.com` (Contabo, 169.58.244.146, ssh as root
+with `~/.ssh/dodmg_ed25519`; the config is `deploy/vps.local.json`, not tracked). The servers on
+this PC are stopped and `Run Server.bat` asks before starting them. Desktop clients from before
+the move still look for updates at this PC's address: `python tools\update_relay.py` serves them
+the releases (and nothing else) on port 8080, so they switch to `dodmg.com` by themselves. Leave
+it running for a while; it doesn't survive a restart of this PC.
+
 **Updating:** `python deploy\deploy.py`. It replaces only what changed: a new world server goes in
 with a rolling deploy (nobody is kicked, as on this PC); a changed account server restarts (logins
 pause for a few seconds); a changed gateway restarts, which disconnects browser players; the web
