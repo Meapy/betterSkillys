@@ -24,9 +24,14 @@ version number itself is in `client-rs/Cargo.toml`.
   Mad Lab, and the Ghost of Skuld at the end of the Haunted Cemetery (50,000, was 130,000), are
   much quicker to kill. Dr Terrible's and the Creation's armour is a little lower too.
 - A crosshair marks where you aim over the world (the pointer hides while it shows). Options,
-  Graphics, "Crosshair" turns it off.
-- New Graphics options: hide other players' pets' shots, hide other players' pets' effects, and
+  Visuals, "Crosshair" turns it off.
+- Options has a new Visuals tab for what you see in the world: particles, shadows, health bars,
+  speech balloons, shots, damage numbers and the crosshair. Graphics keeps the camera, zoom and
+  frame rate.
+- New Visuals options: hide other players' pets' shots, hide other players' pets' effects, and
   sliders to make other players and other players' pets see-through (or hide them at 0%).
+- The sliders in Options can be dragged: hold the button and slide, instead of clicking where
+  you want them.
 - Moving looks steadier: the ground and characters stay on whole pixels, so their pixel art no
   longer shimmers or wobbles as the view follows you.
 
