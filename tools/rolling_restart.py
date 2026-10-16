@@ -1,6 +1,7 @@
 """Deploys a new world server build without disconnecting anyone, behind the world proxy.
 
     python tools/rolling_restart.py up              # proxy + a world server, if they aren't running
+    python tools/rolling_restart.py update          # up if nothing runs, else deploy (Run Server.bat)
     python tools/rolling_restart.py deploy          # build the current source and switch to it
     python tools/rolling_restart.py deploy --reuse  # same build again (the scheduled restart)
     python tools/rolling_restart.py status
@@ -276,6 +277,22 @@ def cmd_deploy(args):
         os.remove(path)
 
 
+def cmd_update(args):
+    """What Run Server.bat does: start the proxy and a world server if none is running, otherwise
+    deploy the current source to them without kicking anyone. A deploy started while the previous
+    one is still handing over moves that one's last players to the Nexus rather than waiting up to
+    an hour."""
+    st = read_state()
+    prune(st)
+    if not st["active"]:
+        args.no_build = False
+        cmd_up(args)
+        return
+    ensure_proxy(st)
+    args.reuse, args.now = False, True
+    cmd_deploy(args)
+
+
 def cmd_status(_):
     st = read_state()
     pid_file = os.path.join(LIVE, "proxy.pid")
@@ -318,11 +335,13 @@ def main():
     d.add_argument("--reuse", action="store_true", help="copy the running build instead of building the source")
     d.add_argument("--minutes", type=float, default=60, help="how long players get to reach the Nexus (60)")
     d.add_argument("--now", action="store_true", help="if the other slot is still handing over, move its players now")
+    upd = sub.add_parser("update")
+    upd.add_argument("--minutes", type=float, default=60, help="how long players get to reach the Nexus (60)")
     sub.add_parser("status")
     sub.add_parser("stop")
     args = ap.parse_args()
     configure(args.iso)
-    {"up": cmd_up, "deploy": cmd_deploy, "status": cmd_status, "stop": cmd_stop}[args.cmd](args)
+    {"up": cmd_up, "update": cmd_update, "deploy": cmd_deploy, "status": cmd_status, "stop": cmd_stop}[args.cmd](args)
 
 
 if __name__ == "__main__":

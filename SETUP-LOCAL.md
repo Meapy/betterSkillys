@@ -11,7 +11,7 @@ Runs alongside Doomed Realms (which uses ports 8888, 2050 and 843).
 
 ## Play
 
-1. `Run Server.bat`. It rebuilds the servers (needs the .NET 8 SDK) unless one is already running, then opens Redis, Account Server, World Proxy and World Server windows. Close those windows to stop the servers (or `python tools\rolling_restart.py stop` for the proxy and world servers).
+1. `Run Server.bat`. It rebuilds the servers (needs the .NET 8 SDK) unless one is already running, then opens Redis, Account Server, World Proxy and World Server windows. Run again while they're up, it updates the world server without kicking anyone (see below); the account server keeps running its old build. Close those windows to stop the servers (or `python tools\rolling_restart.py stop` for the proxy and world servers).
 2. `Play Client.bat`. This runs the client with the AIR runtime from `tools/airsdk`.
 
 ## Client
@@ -44,9 +44,11 @@ Players only need the zip once. Its client keeps itself up to date from `dist\cl
 
 The world proxy owns port 2051 and forwards each player to one of two world servers on this PC,
 slot a (port 12051) or slot b (22051), each run from its own build in `build/live/<slot>`.
-To put a new world server build live:
+To put a new world server build live, run `Run Server.bat` again: with the servers running it builds the
+current source and switches to it (`rolling_restart.py update`), publishing the client first. By hand:
 
 ```
+python tools\rolling_restart.py update          # start them if they aren't running, else deploy (what Run Server.bat runs)
 python tools\rolling_restart.py deploy          # build source/WorldServer into the free slot and switch to it
 python tools\rolling_restart.py status          # which slot is active, and how many players the old one still has
 ```

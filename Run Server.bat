@@ -22,8 +22,7 @@ TASKLIST /FI "IMAGENAME eq App.exe" /NH | FINDSTR /B /I "App.exe" >NUL || (
 )
 REM The world proxy owns port 2051 and forwards players to a world server in build\live\a or b,
 REM so "python tools\rolling_restart.py deploy" updates the world server without kicking anyone.
-REM This starts whichever of them isn't running (building the world server first).
+REM If they aren't running this starts them; if they are, it builds the current source and
+REM switches to it without kicking anyone (players move over at their next trip to the Nexus).
 CD ..
-python tools\rolling_restart.py up || ECHO The world server didn't start; see the message above.
-CD source
-CD ..
+python tools\rolling_restart.py update || ECHO The world server didn't start or update; see the message above.

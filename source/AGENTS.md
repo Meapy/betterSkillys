@@ -32,7 +32,7 @@ dotnet build source\WorldServer\WorldServer.csproj -c Debug -o build\wscheck   #
   to it, and stop the stack with `iso_stack.py stop` when done.
 - **Logs** are in `build/live/<slot>/logs/wServer/<date>/info.txt` (and `error.txt`), and
   `App/bin/Debug/net8.0/logs/app/`. Ticks slower than 200 ms are logged as "Slow tick".
-- **Deploying a world server change:** `python tools\rolling_restart.py deploy` (still ask the
+- **Deploying a world server change:** `Run Server.bat` or `python tools\rolling_restart.py update` / `deploy` (still ask the
   owner first: it changes what players run). It kicks nobody: see "Rolling deploys" below and
   SETUP-LOCAL.md. Account server changes still mean restarting `App`, which doesn't kick players
   in game but stops logins while it's down. A message change ships with the client, as before.
