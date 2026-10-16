@@ -19,6 +19,7 @@ mod options;
 mod redraw;
 mod screens;
 #[allow(dead_code)] // lookups the game screens will use
+mod sky;
 mod sprites;
 mod stars;
 mod text;
@@ -56,8 +57,6 @@ struct Loaded {
     fonts: text::Fonts,
     text: text::Text,
     ground: ground::Ground,
-    /// The title screen's background and its size.
-    title: Option<(bsk_render::AtlasRect, u32, u32)>,
 }
 
 enum UserEvent {
@@ -585,13 +584,6 @@ async fn load(window: Arc<Window>) -> Result<Box<Loaded>, String> {
     );
     let (regular, bold) = futures::join!(source.load(&manifest.fonts.regular), source.load(&manifest.fonts.bold));
     let fonts = text::Fonts::new(regular.map_err(|e| e.to_string())?, bold.map_err(|e| e.to_string())?)?;
-    let mut title = None;
-    if let Some(path) = &manifest.screens.title {
-        match source.load(path).await.map_err(|e| e.to_string()).and_then(|b| bsk_assets::decode_image(path, &b).map_err(|e| e.to_string())) {
-            Ok(img) => title = renderer.add_image(&img).map(|r| (r, img.width(), img.height())),
-            Err(e) => log::warn!("{path}: {e}"),
-        }
-    }
     Ok(Box::new(Loaded {
         renderer,
         sprites,
@@ -600,7 +592,6 @@ async fn load(window: Arc<Window>) -> Result<Box<Loaded>, String> {
         fonts,
         text: Default::default(),
         ground: Default::default(),
-        title,
     }))
 }
 
@@ -1411,7 +1402,7 @@ impl App {
         let wants_fire_scripted = self.autofire || scripted_fire;
         let (mouse, script_aim) = (self.mouse, self.script_aim);
         let Some(loaded) = self.loaded.as_mut() else { return };
-        let Loaded { renderer, sprites, data, redrawer, fonts, text, title, .. } = &mut **loaded;
+        let Loaded { renderer, sprites, data, redrawer, fonts, text, .. } = &mut **loaded;
         renderer.set_vsync(!(self.settings.unlock_fps || self.bench.is_some()));
         #[cfg(not(target_arch = "wasm32"))]
         if self.settings.max_fps > 0 && self.bench.is_none() {
@@ -1447,7 +1438,7 @@ impl App {
             renderer.begin();
             let (w, h) = renderer.size();
             let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
-            self.front.draw(&mut ui, w as f32, h as f32, *title, mouse, now);
+            self.front.draw(&mut ui, w as f32, h as f32, mouse, now);
             let s = screens::scale(w as f32, h as f32);
             self.changelog.draw_note(&mut ui, 16.0 * s, 16.0 * s, s, mouse, now);
             self.changelog.draw(&mut ui, w as f32, h as f32, &cl_entries, version::VERSION, cl_coming.as_deref(), mouse);

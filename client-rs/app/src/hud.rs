@@ -991,7 +991,7 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
         let Button::Zoom(d) = button else { continue };
         let usable = if *d < 0 { state.minimap_zoom > 0 } else { state.minimap_zoom + 1 < levels };
         let over = usable && inside(*r, mouse);
-        theme::fill(ui.renderer, *r, 4.0 * s, if over { 0x4A5266 } else { 0x262A33 }, if usable { 0.9 } else { 0.45 });
+        theme::fill(ui.renderer, *r, 4.0 * s, if over { color::CHIP_HI } else { color::CHIP }, if usable { 0.9 } else { 0.45 });
         let label = if *d < 0 { "+" } else { "-" };
         let size = lay.font(13.0);
         let w = ui.measure(label, size, true);
@@ -1033,7 +1033,7 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
 
     // Sections: equipment, inventory, stats, potions.
     let section = |ui: &mut Ui, r: [f32; 4]| {
-        theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::BORDER, 0.9), ((0x1C2029, 0.9), (0x16191F, 0.9)));
+        theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::BORDER, 0.9), ((color::INSET_TOP, 0.9), (color::INSET_BOTTOM, 0.9)));
     };
     section(ui, lay.rect(8.0, 302.0, 184.0, 50.0));
     section(ui, lay.rect(8.0, 376.0, 184.0, 94.0));
@@ -1045,7 +1045,7 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
         let Button::Page(p) = button else { continue };
         let on = *p == state.page;
         let over = inside(*r, mouse);
-        let bg = if on { color::ACCENT } else if over { 0x3A4050 } else { 0x262A33 };
+        let bg = if on { color::ACCENT } else if over { color::SECONDARY } else { color::CHIP };
         theme::fill(ui.renderer, *r, r[3] / 2.0, bg, 1.0);
         let label = if *p == Page::Inventory { "Inventory" } else { "Backpack" };
         let size = lay.font(11.0);
@@ -1056,7 +1056,7 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
     // The interact area's box goes under its slots (a bag's).
     if panel.interact.is_some() {
         let r = lay.rect(8.0, 588.0, 184.0, 108.0);
-        theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::ACCENT, 0.55), ((0x231E16, 0.92), (0x17150F, 0.92)));
+        theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::ACCENT, 0.55), ((color::WARM_TOP, 0.92), (color::WARM_BOTTOM, 0.92)));
     }
     let hover_target = if state.drag.is_some() { panel.slot_at(mouse) } else { None };
     for slot in &panel.slots {
@@ -1106,7 +1106,7 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
     if panel.interact.is_none() {
         let r = lay.rect(8.0, 588.0, 184.0, 108.0);
         if let Some(invite) = social.invite {
-            theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::ACCENT, 0.7), ((0x231E16, 0.92), (0x17150F, 0.92)));
+            theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::ACCENT, 0.7), ((color::WARM_TOP, 0.92), (color::WARM_BOTTOM, 0.92)));
             let (title, detail) = match invite {
                 crate::game::Invite::Trade { name } => (name.clone(), "wants to trade with you".to_owned()),
                 crate::game::Invite::Party { name, .. } => (name.clone(), "invites you to a party".to_owned()),
@@ -1119,7 +1119,7 @@ pub fn draw_panel(ui: &mut Ui, lay: &Layout, world: &World, camera_angle: f64, c
             let dw = ui.measure(&detail, small, false);
             ui.label(&detail, lay.panel_x + (PANEL_W * s - dw) / 2.0, 622.0 * s, small, false, color::TEXT_DIM);
         } else if !panel.members.is_empty() {
-            theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::BORDER, 0.9), ((0x1C2029, 0.9), (0x16191F, 0.9)));
+            theme::frame(ui.renderer, r, 7.0 * s, s.max(1.0), (color::BORDER, 0.9), ((color::INSET_TOP, 0.9), (color::INSET_BOTTOM, 0.9)));
             ui.label("Nearby players", lay.panel_x + 14.0 * s, 591.0 * s, lay.font(11.0), true, color::TEXT_MUTED);
             for (id, name, level, starred) in &panel.members {
                 let br = panel.buttons.iter().find(|(b, _)| *b == Button::Member(*id)).map(|(_, r)| *r).unwrap_or([0.0; 4]);
@@ -1209,7 +1209,7 @@ fn draw_slot(ui: &mut Ui, lay: &Layout, slot: &Slot, dragged: bool, target: bool
     if empty {
         if let SlotKind::Equip(t) = slot.kind {
             if let Some((set, index)) = slot_type_icon(t) {
-                ui.silhouette(set, index, x + 6.0 * s, y + 6.0 * s, 28.0 * s, 0x3C4250);
+                ui.silhouette(set, index, x + 6.0 * s, y + 6.0 * s, 28.0 * s, color::SILHOUETTE);
             }
         }
     }
@@ -1219,7 +1219,7 @@ fn draw_slot(ui: &mut Ui, lay: &Layout, slot: &Slot, dragged: bool, target: bool
         // An empty stack shows its potion as a shadow.
         if let Some(src) = ui.data.objects.get(&(slot.item as u16)).and_then(|d| ui.src(&d.texture)) {
             if let Some(rect) = ui.sprites.atlas(src) {
-                let add = bsk_render::rgb_f32(0x3C4250);
+                let add = bsk_render::rgb_f32(color::SILHOUETTE);
                 ui.renderer.sprite(rect, Quad::rect(x + 6.0 * s, y + 6.0 * s, 28.0 * s, 28.0 * s), Tint { mul: [0.0, 0.0, 0.0, 1.0], add });
             }
         }
@@ -1233,7 +1233,7 @@ fn draw_slot(ui: &mut Ui, lay: &Layout, slot: &Slot, dragged: bool, target: bool
             ui.label(key, x + 4.0 * s, y + 2.0 * s, small, true, color::TEXT_MUTED);
             let c = count.to_string();
             let bw = ui.measure(&c, small, true) + 8.0 * s;
-            let bg = if count > 0 { color::ACCENT } else { 0x3A4050 };
+            let bg = if count > 0 { color::ACCENT } else { color::SECONDARY };
             let fg = if count > 0 { color::ACCENT_TEXT } else { color::TEXT_DIM };
             theme::fill(ui.renderer, [x + w - bw - 2.0 * s, y + h - small * 1.3 - 2.0 * s, bw, small * 1.3], small * 0.65, bg, 0.95);
             ui.label(&c, x + w - bw + 2.0 * s, y + h - small * 1.3 - 2.0 * s, small, true, fg);

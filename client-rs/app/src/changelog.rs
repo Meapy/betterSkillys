@@ -106,7 +106,7 @@ impl ChangelogUi {
         let c = [r[0] + r[2] - 44.0 * s, r[1] + 16.0 * s, 28.0 * s, 28.0 * s];
         self.close = c;
         let over = inside(c, mouse);
-        theme::fill(ui.renderer, c, 14.0 * s, if over { color::DANGER } else { 0x3A4050 }, 0.95);
+        theme::fill(ui.renderer, c, 14.0 * s, if over { color::DANGER } else { color::SECONDARY }, 0.95);
         theme::cross(ui.renderer, c[0] + c[2] / 2.0, c[1] + c[3] / 2.0, 5.0 * s, (2.0 * s).max(1.5), 0xFFFFFF);
         theme::fill(ui.renderer, [r[0] + pad, r[1] + 80.0 * s, r[2] - 2.0 * pad, s.max(1.0)], 0.0, color::BORDER, 1.0);
 
@@ -165,7 +165,7 @@ impl ChangelogUi {
                         let ts = (12.0 * s).round().max(8.0);
                         let tw = ui.measure(tag, ts, true);
                         let pill = [x, y + 3.0 * s, tw + 16.0 * s, ts * 1.5];
-                        let (bg, fg) = if *tag == "Installed" { (0x3A4050, color::TEXT_DIM) } else { (color::GOOD, 0x0B2414) };
+                        let (bg, fg) = if *tag == "Installed" { (color::SECONDARY, color::TEXT_DIM) } else { (color::GOOD, 0x0B2414) };
                         theme::fill(ui.renderer, pill, pill[3] / 2.0, bg, 0.95);
                         ui.label(tag, pill[0] + 8.0 * s, pill[1] + ts * 0.18, ts, true, fg);
                     }

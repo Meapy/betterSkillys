@@ -116,8 +116,11 @@ For example, the Battle Arena (its monsters come 60 s after you enter):
   environment or the build, else `http://127.0.0.1:8080`. "Remember me" keeps the login in
   `%APPDATA%\betterSkillys-rs\login.txt` (`~/.config/...` on Linux and macOS, local storage in a
   browser), as the AIR client keeps it in its shared object.
-- **Look:** `theme.rs` holds the shared style (glass panels, shadows, gradients, the gold accent,
-  buttons, fields, slots edged by item tier); the HUD and the screens draw with it.
+- **Look:** the website's (`website/`). `theme.rs` holds the shared style (its palette: dark
+  violet glass panels, the ember accent; shadows, gradients, buttons, fields, slots edged by item
+  tier); the HUD and the screens draw with it, so use `color::` names rather than new hex
+  values for interface colours. `sky.rs` draws the screens' night sky (a port of the site's
+  hero) and the game's name in a 5×7 pixel font.
 - **Controls:** WASD move, Q/E turn, Z resets the view, mouse fires (I toggles autofire), Space
   uses the ability at the mouse, 1-8 equip or use an inventory slot, F/V drink a stacked potion,
   0 enters a portal (or opens the NPC beside you), R goes to the Nexus, Enter or / chats, Tab

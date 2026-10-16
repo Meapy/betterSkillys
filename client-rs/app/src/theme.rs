@@ -1,28 +1,47 @@
-//! The look shared by the HUD and the screens: dark glass panels with soft shadows, rounded
-//! corners and gentle gradients, a warm gold accent that matches the title art, and buttons,
+//! The look shared by the HUD and the screens, the same as the website's: dark violet glass
+//! panels with soft shadows, rounded corners and gentle gradients, an ember accent, and buttons,
 //! fields and slots that answer the mouse. Everything takes the caller's scale `s`.
 
 use crate::hud::Ui;
 use bsk_render::Renderer;
 
-/// The palette.
+/// The palette: the website's (website/style.css), a pixel night of dark violets with ember for
+/// what can be pressed and gold for what's precious.
 pub mod color {
-    pub const PANEL_TOP: u32 = 0x232733;
-    pub const PANEL_BOTTOM: u32 = 0x15171D;
-    pub const BORDER: u32 = 0x3A4150;
-    pub const BORDER_HI: u32 = 0x59627A;
-    pub const TEXT: u32 = 0xF2F2F2;
-    pub const TEXT_DIM: u32 = 0xA9B0BE;
-    pub const TEXT_MUTED: u32 = 0x6C7484;
-    pub const ACCENT: u32 = 0xF0AE3A;
-    pub const ACCENT_HI: u32 = 0xFFD27A;
-    pub const ACCENT_TEXT: u32 = 0x2A1A04;
-    pub const DANGER: u32 = 0xE5534B;
-    pub const GOOD: u32 = 0x5BD17A;
-    pub const SLOT_TOP: u32 = 0x313644;
-    pub const SLOT_BOTTOM: u32 = 0x22262F;
-    pub const FIELD: u32 = 0x0E1015;
-    pub const TRACK: u32 = 0x0D0F13;
+    /// Behind everything on the screens outside the game.
+    pub const BACKGROUND: u32 = 0x0C0915;
+    pub const PANEL_TOP: u32 = 0x1F1733;
+    pub const PANEL_BOTTOM: u32 = 0x161025;
+    pub const BORDER: u32 = 0x2C2244;
+    pub const BORDER_HI: u32 = 0x44365F;
+    pub const TEXT: u32 = 0xF1ECFF;
+    pub const TEXT_DIM: u32 = 0xB3A9CC;
+    pub const TEXT_MUTED: u32 = 0x7A7096;
+    /// Ember: the main thing to do, and what's switched on.
+    pub const ACCENT: u32 = 0xFF7A3D;
+    pub const ACCENT_HI: u32 = 0xFFA36B;
+    pub const ACCENT_TEXT: u32 = 0x1F0A02;
+    pub const GOLD: u32 = 0xFFC65C;
+    pub const DANGER: u32 = 0xFF3D5A;
+    pub const GOOD: u32 = 0x5BE3A0;
+    pub const SLOT_TOP: u32 = 0x2A2042;
+    pub const SLOT_BOTTOM: u32 = 0x1A1329;
+    pub const FIELD: u32 = 0x0C0915;
+    pub const FIELD_BOTTOM: u32 = 0x150F24;
+    pub const TRACK: u32 = 0x08060F;
+    /// Quiet buttons, and switches and toggles that are off.
+    pub const SECONDARY: u32 = 0x2E2448;
+    /// Small buttons and chips at rest, and under the mouse.
+    pub const CHIP: u32 = 0x221A36;
+    pub const CHIP_HI: u32 = 0x4A3A6A;
+    /// Inner boxes inside a panel (cards, lists), top and bottom.
+    pub const INSET_TOP: u32 = 0x1A1430;
+    pub const INSET_BOTTOM: u32 = 0x120C20;
+    /// An inner box that's lit (chosen, or on offer), top and bottom.
+    pub const WARM_TOP: u32 = 0x2A1A1C;
+    pub const WARM_BOTTOM: u32 = 0x1A0F12;
+    /// An empty slot's picture of what goes in it.
+    pub const SILHOUETTE: u32 = 0x3A2E55;
 }
 
 fn rgba(rgb: u32, a: f32) -> [f32; 4] {
@@ -113,7 +132,7 @@ pub fn panel(renderer: &mut Renderer, r: [f32; 4], s: f32) {
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Kind {
-    /// Gold, for the main thing to do.
+    /// Ember, for the main thing to do.
     Primary,
     /// Quiet.
     Secondary,
@@ -127,7 +146,7 @@ impl Ui<'_> {
         let radius = 6.0 * s;
         let (base, text) = match kind {
             Kind::Primary => (color::ACCENT, color::ACCENT_TEXT),
-            Kind::Secondary => (0x3A4050, color::TEXT),
+            Kind::Secondary => (color::SECONDARY, color::TEXT),
             Kind::Danger => (color::DANGER, 0xFFFFFF),
         };
         let base = if hover { shade(base, 0.15) } else { base };

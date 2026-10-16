@@ -560,7 +560,7 @@ impl OptionsUi {
         for (tab, label) in [(Tab::Controls, "Controls"), (Tab::Graphics, "Graphics"), (Tab::Sound, "Sound")] {
             let tr = [x, r[1] + 18.0 * s, 104.0 * s, 28.0 * s];
             let on = tab == self.tab;
-            let bg = if on { color::ACCENT } else if inside(tr, mouse) { 0x3A4050 } else { 0x262A33 };
+            let bg = if on { color::ACCENT } else if inside(tr, mouse) { color::SECONDARY } else { color::CHIP };
             theme::fill(ui.renderer, tr, tr[3] / 2.0, bg, 1.0);
             let ts = font(13.0);
             let lw = ui.measure(label, ts, true);
@@ -601,7 +601,7 @@ impl OptionsUi {
                     let on = *settings.clone().toggle(*t);
                     // A switch.
                     let sw = [row[0] + row[2] - 56.0 * s, row[1] + 7.0 * s, 44.0 * s, 20.0 * s];
-                    theme::fill(ui.renderer, sw, sw[3] / 2.0, if on { color::ACCENT } else { 0x3A4050 }, 1.0);
+                    theme::fill(ui.renderer, sw, sw[3] / 2.0, if on { color::ACCENT } else { color::SECONDARY }, 1.0);
                     let knob = sw[3] - 4.0 * s;
                     let kx = if on { sw[0] + sw[2] - knob - 2.0 * s } else { sw[0] + 2.0 * s };
                     theme::fill(ui.renderer, [kx, sw[1] + 2.0 * s, knob, knob], knob / 2.0, 0xFFFFFF, 1.0);

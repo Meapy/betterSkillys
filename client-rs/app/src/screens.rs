@@ -1,16 +1,17 @@
 //! The screens outside the game (the AIR client's `TitleView`/`AccountScreen`,
 //! `CharacterSelectionAndNewsScreen`, `NewCharacterScreen`): sign in or register, then pick,
-//! make or delete a character and choose a server. They're drawn over the title art in the
+//! make or delete a character and choose a server. They're drawn over the night sky (`sky.rs`) in the
 //! shared theme, scaled to the window and laid out from its shape each frame. Also the small
 //! menu Escape opens in the game.
 
 use crate::hud::Ui;
 use crate::redraw::Dye;
+use crate::sky;
 use crate::stars;
 use crate::theme::{self, color, Kind};
 use bsk_data::{ObjectClass, ObjectDesc, TextureRef};
 use bsk_net::account::{CharList, CharSummary, FameSummary, Legend};
-use bsk_render::{AtlasRect, Quad, Tint};
+use bsk_render::{Quad, Tint};
 use winit::keyboard::KeyCode;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -144,6 +145,8 @@ pub struct Front {
     pub version_line: String,
     /// The character list's first row shown, when it's longer than the window.
     chars_row: usize,
+    /// The night sky behind it all.
+    sky: crate::sky::Sky,
 }
 
 impl Default for Front {
@@ -168,6 +171,7 @@ impl Default for Front {
             endpoint_label: String::new(),
             version_line: String::new(),
             chars_row: 0,
+            sky: Default::default(),
         }
     }
 }
@@ -439,11 +443,17 @@ impl Front {
         }
     }
 
-    /// Draw the current screen. `title` is the background art and its size.
-    pub fn draw(&mut self, ui: &mut Ui, w: f32, h: f32, title: Option<(AtlasRect, u32, u32)>, mouse: (f64, f64), now: i32) {
+    /// Draw the current screen.
+    pub fn draw(&mut self, ui: &mut Ui, w: f32, h: f32, mouse: (f64, f64), now: i32) {
         self.targets.clear();
         let s = scale(w, h);
-        draw_backdrop(ui, w, h, title, self.screen, now);
+        self.sky.draw(ui, w, h, s, now);
+        draw_shade(ui, w, h, self.screen);
+        match self.screen {
+            Screen::Login | Screen::Register => draw_logo(ui, w, h, s, Self::card_rect(w, h, 380.0 * s, 420.0 * s)[0]),
+            Screen::Busy => draw_logo(ui, w, h, s, w),
+            _ => {}
+        }
         match self.screen {
             Screen::Login => self.draw_login(ui, w, h, s, mouse, now),
             Screen::Register => self.draw_register(ui, w, h, s, mouse, now),
@@ -555,7 +565,7 @@ impl Front {
         // Remember me, as a switch.
         let size = (14.0 * s).round().max(9.0);
         let sw = [x + pad, fy + 2.0 * s, 36.0 * s, 20.0 * s];
-        theme::fill(ui.renderer, sw, sw[3] / 2.0, if self.remember { color::ACCENT } else { 0x3A4050 }, 1.0);
+        theme::fill(ui.renderer, sw, sw[3] / 2.0, if self.remember { color::ACCENT } else { color::SECONDARY }, 1.0);
         let knob_x = if self.remember { sw[0] + sw[2] - sw[3] } else { sw[0] };
         theme::fill(ui.renderer, [knob_x + 2.0 * s, sw[1] + 2.0 * s, sw[3] - 4.0 * s, sw[3] - 4.0 * s], sw[3], 0xFFFFFF, 1.0);
         ui.label("Remember me", sw[0] + sw[2] + 10.0 * s, sw[1] + 1.0 * s, size, false, color::TEXT_DIM);
@@ -674,7 +684,7 @@ impl Front {
             let r = cell(last);
             let over = inside(r, mouse) && self.confirm.is_none();
             let edge = if over { color::ACCENT } else { color::BORDER };
-            theme::frame(ui.renderer, r, 10.0 * s, s.max(1.0), (edge, 0.9), ((0x1A1D24, 0.6), (0x14161B, 0.6)));
+            theme::frame(ui.renderer, r, 10.0 * s, s.max(1.0), (edge, 0.9), ((color::INSET_TOP, 0.6), (color::INSET_BOTTOM, 0.6)));
             let (price, fame) = (list.next_slot_price, list.next_slot_currency == 1);
             let label = "Buy another character slot";
             let size = (17.0 * s).round();
@@ -691,7 +701,7 @@ impl Front {
             let r = cell(last);
             let over = inside(r, mouse) && self.confirm.is_none();
             let edge = if over { color::ACCENT } else { color::BORDER };
-            theme::frame(ui.renderer, r, 10.0 * s, s.max(1.0), (edge, 0.9), ((0x1A1D24, 0.6), (0x14161B, 0.6)));
+            theme::frame(ui.renderer, r, 10.0 * s, s.max(1.0), (edge, 0.9), ((color::INSET_TOP, 0.6), (color::INSET_BOTTOM, 0.6)));
             let plus = (30.0 * s).round();
             let label = "New character";
             let size = (17.0 * s).round();
@@ -745,7 +755,7 @@ impl Front {
         self.targets.push((Target::Char(c.id), r));
         // The portrait in a dark well.
         let well = [r[0] + 10.0 * s, r[1] + 10.0 * s, r[3] - 20.0 * s, r[3] - 20.0 * s];
-        theme::rounded(ui.renderer, well, 8.0 * s, (0x0E1015, 0.9), (0x1A1E26, 0.9));
+        theme::rounded(ui.renderer, well, 8.0 * s, (color::FIELD, 0.9), (color::FIELD_BOTTOM, 0.9));
         let class = ui.data.objects.get(&c.object_type);
         let skin = (c.skin != 0).then(|| ui.data.objects.get(&(c.skin as u16))).flatten();
         if let Some(d) = skin.or(class) {
@@ -787,7 +797,7 @@ impl Front {
         let d = [r[0] + r[2] - 30.0 * s, r[1] + 6.0 * s, 24.0 * s, 24.0 * s];
         if over || inside(d, mouse) {
             let over_d = inside(d, mouse);
-            theme::fill(ui.renderer, d, 12.0 * s, if over_d { color::DANGER } else { 0x3A4050 }, 0.95);
+            theme::fill(ui.renderer, d, 12.0 * s, if over_d { color::DANGER } else { color::SECONDARY }, 0.95);
             theme::cross(ui.renderer, d[0] + d[2] / 2.0, d[1] + d[3] / 2.0, 4.5 * s, (2.0 * s).max(1.5), 0xFFFFFF);
             self.targets.push((Target::Delete(c.id), d));
         }
@@ -833,7 +843,7 @@ impl Front {
             let edge = if over { color::ACCENT } else { color::BORDER_HI };
             theme::frame(ui.renderer, r, 10.0 * k, k.max(1.0), (edge, 1.0), ((color::PANEL_TOP, 0.95), (color::PANEL_BOTTOM, 0.97)));
             let well = [r[0] + 14.0 * k, r[1] + 12.0 * k, r[2] - 28.0 * k, r[2] - 28.0 * k];
-            theme::rounded(ui.renderer, well, 8.0 * k, (0x0E1015, 0.85), (0x1A1E26, 0.85));
+            theme::rounded(ui.renderer, well, 8.0 * k, (color::FIELD, 0.85), (color::FIELD_BOTTOM, 0.85));
             portrait(ui, d, 0, 0, well[0] + well[2] / 2.0, well[1] + well[3] / 2.0, k * 1.15);
             // Its class quests, along the bottom of the well.
             if need.is_none() {
@@ -924,7 +934,7 @@ impl Front {
         ui.label(&desc.display_id, left[0] + 22.0 * s, left[1] + 18.0 * s, ts, true, color::TEXT);
         let shown = if self.skin != 0 { ui.data.objects.get(&self.skin).unwrap_or(desc) } else { desc };
         let well = [left[0] + 22.0 * s, left[1] + 64.0 * s, left[2] - 44.0 * s, left[2] - 44.0 * s];
-        theme::rounded(ui.renderer, well, 10.0 * s, (0x0E1015, 0.9), (0x1C2029, 0.9));
+        theme::rounded(ui.renderer, well, 10.0 * s, (color::FIELD, 0.9), (color::INSET_TOP, 0.9));
         portrait(ui, shown, 0, 0, well[0] + well[2] / 2.0, well[1] + well[3] / 2.0, s * 3.0);
         let skin_name = if self.skin != 0 { shown.display_id.clone() } else { "Classic".to_owned() };
         let ss = (16.0 * s).round();
@@ -1029,7 +1039,7 @@ impl Front {
             let r = [x0 + i as f32 * (pw + 10.0 * s), pad + 46.0 * s, pw, 30.0 * s];
             let on = i == self.timespan;
             let over = inside(r, mouse);
-            theme::fill(ui.renderer, r, r[3] / 2.0, if on { color::ACCENT } else if over { 0x3A4050 } else { 0x262A33 }, 0.95);
+            theme::fill(ui.renderer, r, r[3] / 2.0, if on { color::ACCENT } else if over { color::SECONDARY } else { color::CHIP }, 0.95);
             let size = (14.0 * s).round();
             let lw = ui.measure(label, size, true);
             ui.label(label, r[0] + (r[2] - lw) / 2.0, r[1] + (r[3] - size * 1.22) / 2.0, size, true, if on { color::ACCENT_TEXT } else { color::TEXT_DIM });
@@ -1114,9 +1124,9 @@ impl Front {
             theme::fill(ui.renderer, r, 6.0 * s, 0xFFFFFF, if over { 0.08 } else if i % 2 == 0 { 0.03 } else { 0.0 });
             // A tombstone.
             let (gx, gy) = (r[0] + 14.0 * s, r[1] + 9.0 * s);
-            theme::fill(ui.renderer, [gx, gy, 26.0 * s, 32.0 * s], 11.0 * s, 0x6C7484, 1.0);
-            theme::fill(ui.renderer, [gx + 11.0 * s, gy + 7.0 * s, 4.0 * s, 16.0 * s], 1.0, 0x3A4150, 1.0);
-            theme::fill(ui.renderer, [gx + 6.0 * s, gy + 12.0 * s, 14.0 * s, 4.0 * s], 1.0, 0x3A4150, 1.0);
+            theme::fill(ui.renderer, [gx, gy, 26.0 * s, 32.0 * s], 11.0 * s, color::TEXT_MUTED, 1.0);
+            theme::fill(ui.renderer, [gx + 11.0 * s, gy + 7.0 * s, 4.0 * s, 16.0 * s], 1.0, color::BORDER, 1.0);
+            theme::fill(ui.renderer, [gx + 6.0 * s, gy + 12.0 * s, 14.0 * s, 4.0 * s], 1.0, color::BORDER, 1.0);
             ui.label(&g.title, r[0] + 56.0 * s, r[1] + 7.0 * s, (16.0 * s).round(), true, color::TEXT);
             ui.label(&g.tagline, r[0] + 56.0 * s, r[1] + 29.0 * s, (13.0 * s).round(), false, color::ACCENT);
             let days = (now - g.date).max(0) / 86_400;
@@ -1265,26 +1275,41 @@ impl Front {
     }
 }
 
-/// The title art covering the window, slowly drifting, with a vignette; darker behind lists.
-fn draw_backdrop(ui: &mut Ui, w: f32, h: f32, title: Option<(AtlasRect, u32, u32)>, screen: Screen, now: i32) {
-    ui.rect(0.0, 0.0, w, h, 0x07080A, 1.0);
-    if let Some((rect, iw, ih)) = title {
-        // A slow zoom in and out keeps the screen alive.
-        let breathe = 1.03 + 0.02 * ((now as f32) / 9000.0).sin();
-        let k = (w / iw as f32).max(h / ih as f32) * breathe;
-        let (dw, dh) = (iw as f32 * k, ih as f32 * k);
-        ui.renderer.sprite(rect, Quad::rect((w - dw) / 2.0, (h - dh) / 2.0, dw, dh), Tint::NONE);
-    }
+/// Over the sky: darker behind lists, so they read easily, and a little darker at the top.
+fn draw_shade(ui: &mut Ui, w: f32, h: f32, screen: Screen) {
     let dark = match screen {
-        Screen::Login | Screen::Register | Screen::Busy => 0.15,
-        Screen::Death => 0.75,
-        _ => 0.62,
+        Screen::Login | Screen::Register | Screen::Busy => 0.0,
+        Screen::Death => 0.6,
+        _ => 0.4,
     };
-    ui.rect(0.0, 0.0, w, h, 0x000000, dark);
-    // Vignette: darker toward the top and bottom edges.
-    let band = h * 0.28;
-    theme::rounded(ui.renderer, [0.0, 0.0, w, band], 0.0, (0x000000, 0.55), (0x000000, 0.0));
-    theme::rounded(ui.renderer, [0.0, h - band, w, band], 0.0, (0x000000, 0.0), (0x000000, 0.6));
+    if dark > 0.0 {
+        ui.rect(0.0, 0.0, w, h, color::BACKGROUND, dark);
+    }
+    theme::rounded(ui.renderer, [0.0, 0.0, w, h * 0.2], 0.0, (0x000000, 0.35), (0x000000, 0.0));
+}
+
+/// The game's name in pixel letters with a line under it, as the website's heading: in the
+/// space left of `card_x` (the sign-in card) on a wide window, else across the top.
+fn draw_logo(ui: &mut Ui, w: f32, h: f32, s: f32, card_x: f32) {
+    let name = crate::TITLE;
+    let tagline = "A Realm of the Mad God private server";
+    let wide = w >= 1.3 * h && card_x < w;
+    let (cx, room, top) = if wide {
+        (card_x / 2.0, card_x - 64.0 * s, h * 0.3)
+    } else if card_x < w {
+        (w / 2.0, w * 0.86, h * 0.1)
+    } else {
+        (w / 2.0, w * 0.7, h * 0.3)
+    };
+    let cell = (room / sky::logo_width(name, 1.0)).min(10.0 * s).floor().max(2.0);
+    let small = (11.0 * s).round().max(9.0);
+    let over = "ENTER";
+    let ow = ui.measure(over, small, true);
+    ui.label(over, cx - ow / 2.0, top - small * 2.0, small, true, color::TEXT_DIM);
+    let lh = sky::logo(ui, name, cx, top, cell);
+    let size = (16.0 * s).round().max(10.0);
+    let tw = ui.measure(tagline, size, false);
+    ui.label(tagline, cx - tw / 2.0, top + lh + 8.0 * s, size, false, color::TEXT);
 }
 
 fn ui_time() -> i32 {

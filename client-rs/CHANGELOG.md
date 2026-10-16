@@ -13,6 +13,9 @@ version number itself is in `client-rs/Cargo.toml`.
   downloads all say so. Your settings and saved login carry over.
 - The game has a website: play straight from your browser, download the desktop client, see
   how many players are online, look up the controls and read every change.
+- A new look to match the website: the sign-in and character screens open on a pixel night sky
+  over a castle, with the game's name in pixel letters, and every window, button and tooltip,
+  in the menus and in the game, is now dark violet with ember-orange buttons.
 
 ## 1.1.6 (2026-10-16)
 - Server updates and the 2-hourly restart no longer kick anyone. When an update is waiting, a

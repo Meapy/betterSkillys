@@ -331,7 +331,7 @@ impl Market {
         for (t, label) in [(Tab::Buy, "Buy"), (Tab::Sell, "Sell")] {
             let tr = [x, r[1] + 18.0 * s, 96.0 * s, 28.0 * s];
             let on = t == self.tab;
-            theme::fill(ui.renderer, tr, tr[3] / 2.0, if on { color::ACCENT } else if inside(tr, mouse) { 0x3A4050 } else { 0x262A33 }, 1.0);
+            theme::fill(ui.renderer, tr, tr[3] / 2.0, if on { color::ACCENT } else if inside(tr, mouse) { color::SECONDARY } else { color::CHIP }, 1.0);
             let ts = font(13.0);
             let lw = ui.measure(label, ts, true);
             ui.label(label, tr[0] + (tr[2] - lw) / 2.0, tr[1] + (tr[3] - ts * 1.22) / 2.0, ts, true, if on { color::ACCENT_TEXT } else { color::TEXT_DIM });
@@ -420,7 +420,7 @@ impl Market {
         ui.label(&page, left[0] + 140.0 * s, by + 6.0 * s, font(12.0), false, color::TEXT_MUTED);
 
         // The offers for the item picked.
-        theme::frame(ui.renderer, right, 8.0 * s, s.max(1.0), (color::BORDER, 1.0), ((0x1A1D24, 0.9), (0x15171D, 0.9)));
+        theme::frame(ui.renderer, right, 8.0 * s, s.max(1.0), (color::BORDER, 1.0), ((color::INSET_TOP, 0.9), (color::INSET_BOTTOM, 0.9)));
         let Some(item) = self.item else {
             ui.label("Pick an item to see its offers.", right[0] + 16.0 * s, right[1] + 16.0 * s, font(14.0), false, color::TEXT_MUTED);
             return;
@@ -495,7 +495,7 @@ impl Market {
         self.hits.push((Hit::Sell, sb));
 
         // Our offers.
-        theme::frame(ui.renderer, right, 8.0 * s, s.max(1.0), (color::BORDER, 1.0), ((0x1A1D24, 0.9), (0x15171D, 0.9)));
+        theme::frame(ui.renderer, right, 8.0 * s, s.max(1.0), (color::BORDER, 1.0), ((color::INSET_TOP, 0.9), (color::INSET_BOTTOM, 0.9)));
         ui.label("Your offers", right[0] + 16.0 * s, right[1] + 12.0 * s, font(16.0), true, color::TEXT);
         if self.mine.is_empty() {
             ui.label("You're not selling anything.", right[0] + 16.0 * s, right[1] + 50.0 * s, font(13.0), false, color::TEXT_MUTED);
