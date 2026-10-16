@@ -1,10 +1,17 @@
 @ECHO OFF
+REM The live game runs on the VPS (dodmg.com) since 2026-10-16; deploy it with deploy\deploy.py
+REM (SETUP-LOCAL.md, Running on a VPS). This script runs a separate copy on this PC, on this PC's
+REM own (old) data, so it asks first.
+ECHO The live game runs on the VPS (dodmg.com): update it with "python deploy\deploy.py".
+ECHO This starts a separate copy on this PC, with this PC's old data.
+CHOICE /M "Start the servers on this PC anyway"
+IF ERRORLEVEL 2 EXIT /B 0
 REM Starts Redis (the database, port 6379, this PC only), the account server (port 8080)
 REM and the world server (port 2051, behind the world proxy), each in its own window. Close those windows to stop.
 REM Build the Rust client for players (dist\Do-Damage-windows.zip, connecting to the public
 REM address) and publish it to dist\client, where players' clients update from; quick when nothing
 REM changed. A failed build doesn't stop the servers.
-python "%~dp0tools\build_client_rs.py" --account http://188.141.12.3:8080 --package --publish || ECHO The client build failed; starting the servers anyway.
+python "%~dp0tools\build_client_rs.py" --account http://dodmg.com:8080 --package --publish || ECHO The client build failed; starting the servers anyway.
 CD /D "%~dp0source"
 REM Rebuild first (quick when nothing changed) unless a server is already running.
 TASKLIST /FI "IMAGENAME eq App.exe" /NH | FINDSTR /B /I "App.exe" >NUL && GOTO START

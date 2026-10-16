@@ -11,6 +11,7 @@ publish = false
 # the game and its published releases call themselves. It must extend the version above; take it
 # out when that version is raised.
 [workspace.metadata]
+release = "1.1.7.1"
 
 [workspace.dependencies]
 bsk-assets = { path = "crates/assets" }
