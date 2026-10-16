@@ -181,12 +181,12 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
 
       | Oryx | Locked portal to | Incantation | Where to get it |
       |---|---|---|---|
-      | 1 | Wine Cellar | Wine Cellar Incantation | Janus (4%), and as before the Tomb, Ocean Trench, Snake Pit, Candyland and Ivory Wyvern bosses |
+      | 1 | Wine Cellar | Wine Cellar Incantation | Janus (4%), the Nexus Bazaar (125 fame), and as before the Tomb, Ocean Trench, Snake Pit, Candyland and Ivory Wyvern bosses |
       | 2 | Oryx's Sanctuary | Oryx's Sanctuary Incantation (`Oryx Sanctuary Key`) | Oryx 1 (4%), the Nexus Bazaar (300 fame) |
       | 3 | Hash Cellar | Hash Cellar Incantation | Oryx 2 (4%), the Nexus Bazaar (500 fame) |
       | 4 | Doomed Cellar | Doomed Cellar Incantation | Oryx 3 (4%), the Nexus Bazaar (1000 fame) |
 
-      The Oryx Sanctuary Key (a test item that opened the Sanctuary anywhere) became the Sanctuary's incantation in the prod XML (server and client copies). The Hash and Doomed Cellar Incantations opened their dungeon anywhere, like keys; `tools/port_doomed.py` (`INCANTATIONS`) makes them unlock the locked portal instead (only those items' lines of the generated XML were updated). The Bazaar's Wine Cellar Key and Oryx Chamber Key still open those dungeons directly.
+      The Oryx Sanctuary Key (a test item that opened the Sanctuary anywhere) became the Sanctuary's incantation in the prod XML (server and client copies). The Hash and Doomed Cellar Incantations opened their dungeon anywhere, like keys; `tools/port_doomed.py` (`INCANTATIONS`) makes them unlock the locked portal instead (only those items' lines of the generated XML were updated). The Wine Cellar Key no longer opens the Wine Cellar from anywhere: it works like a Wine Cellar Incantation (prod XML, server and client copies), and the Bazaar sells the incantation in its place. The Bazaar's Oryx Chamber Key still opens the Chamber directly.
     - **Quest arrow:** monsters with `<Oryx/>` now always win the quest choice (`Player.FindQuest`): the Doomed Cellar's Skull Shrine, an Encounter, outscored Oryx 5, and Oryx 3's XML level is 1.
     - Oryx 3's Protectors spawn on him and fly out to their orbits; tossed ones could fail to land (a toss needs a free target square) and leave the phase empty.
     - **Tested** on the isolated stack with the Rust client: realm close to the Castle, every stage's fight and phases (pushed through with `/smite`), each death's announcement and portals, and walking through Oryx 2's portal into the Sanctuary. Not yet played through by a group without admin help, so the numbers above are a first pass.

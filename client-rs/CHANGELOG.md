@@ -8,6 +8,11 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
+## Unreleased
+- The Wine Cellar Key no longer opens the Wine Cellar from anywhere: like a Wine Cellar
+  Incantation, it unlocks the portal Oryx 1 leaves behind. The Nexus Bazaar now sells the Wine
+  Cellar Incantation (125 fame) instead of the key.
+
 ## 1.1.5 (2026-10-16)
 - Cloth and dye items (and a few dungeon objects) show their real names instead of codes like "{textiles.Small_Vine_Cloth}".
 - The fight against Oryx now goes all the way: when a realm closes you can follow him from his

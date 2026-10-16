@@ -664,11 +664,11 @@
          <Index>0x5f</Index>
       </Texture>
       <SlotType>10</SlotType>
-      <Description>A key which opens an entrance to the Wine Cellar. For testing purposes.\n\nKeys can only be used once you have 10 or more stars!</Description>
+      <Description>Unlocks the portal Oryx leaves behind in his Chamber, leading to the Wine Cellar, like a Wine Cellar Incantation.</Description>
       <Sound>use_key</Sound>
       <Consumable/>
        
-      <Activate id="Wine Cellar Portal">CreatePortal</Activate>
+      <Activate radius="25" targetId="Locked Wine Cellar Portal" newId="Wine Cellar Portal" onlyInArea="Oryx's Chamber" customString="Wine Cellar unlocked by">ChangeObject</Activate>
       <feedPower>200</feedPower>
       <BagType>7</BagType>
       <Track/>
