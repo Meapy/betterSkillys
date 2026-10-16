@@ -153,10 +153,14 @@ namespace App
         public List<ServerItem> GetServerList(System.Net.IPAddress clientIp = null)
         {
             var ret = new List<ServerItem>();
-            foreach (var server in ISManager.GetServerList().ToList())
+            // World servers behind one world proxy (a new one taking over from an old one) share
+            // its public address and port: they are one server to players.
+            var groups = ISManager.GetServerList().Where(_ => _.type == ServerType.World).GroupBy(_ => (_.address, _.port));
+            foreach (var group in groups)
             {
-                if (server.type != ServerType.World)
-                    continue;
+                var server = group.First();
+                var players = group.Sum(_ => _.players);
+                var maxPlayers = group.Max(_ => _.maxPlayers);
 
                 ret.Add(new ServerItem()
                 {
@@ -165,9 +169,9 @@ namespace App
                     Long = server.longitude,
                     Port = server.port,
                     DNS = WorldAddressFor(clientIp, server.address),
-                    Usage = server.players / (double)server.maxPlayers,
+                    Usage = players / (double)maxPlayers,
                     AdminOnly = server.adminOnly,
-                    UsageText = server.IsJustStarted() ? "- NEW!" : $"{server.players}/{server.maxPlayers}"
+                    UsageText = group.All(_ => _.IsJustStarted()) ? "- NEW!" : $"{players}/{maxPlayers}"
                 });
             }
             ret = ret.OrderBy(_ => _.Port).ToList();

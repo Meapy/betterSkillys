@@ -19,6 +19,10 @@ namespace WorldServer.networking.packets.outgoing
             Key = Guid.NewGuid().ToByteArray();
         }
 
+        // An empty key: the client joins as from the character screen (the Nexus), so it can
+        // land on another world server than the one that sent this.
+        public void ClearKey() => Key = Array.Empty<byte>();
+
         public override void Write(NetworkWriter wtr)
         {
             wtr.WriteUTF16(Name);

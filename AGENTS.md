@@ -18,7 +18,8 @@ on this PC for a small group of players. Read the guide for the part you're chan
 |---|---|---|
 | Redis | 6379 (this PC only) | `source/Redis`, data in `source/Redis/data/` |
 | Account server (`source/App`) | 8080 | |
-| World server (`source/WorldServer`) | 2051 | public address in `wServer.json` |
+| World proxy (`tools/world_proxy.py`) | 2051 | forwards to the world servers; see source/AGENTS.md |
+| World servers (`source/WorldServer`, from `build/live/a` and `b`) | 12051 / 22051 (this PC only) | public address in `wServer.json`; deploy with `tools/rolling_restart.py` |
 | Isolated test servers | 6380 / 8081 / 2052 | `tools/testclient/iso_stack.py`, under `build/iso/` |
 
 Doomed Realms, another server on this PC, uses 8888, 2050 and 843. Don't take those ports.

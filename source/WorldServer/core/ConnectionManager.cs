@@ -2,7 +2,10 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Shared.database.account;
+using Shared.isc;
 using Shared.isc.data;
 using Shared.resources;
 using WorldServer.core.miscfile;
@@ -123,7 +126,7 @@ namespace WorldServer.core
                     otherClient.Disconnect("!client.Manager.Database.AcquireLock(acc)");
 
                 // try again...
-                if (!client.GameServer.Database.AcquireLock(acc))
+                if (!client.GameServer.Database.AcquireLock(acc) && !AwaitOtherServer(acc))
                 {
                     client.SendFailure("Account in Use (" + client.GameServer.Database.GetLockTime(acc)?.ToString("%s") + " seconds until timeout)");
                     return;
@@ -220,6 +223,30 @@ namespace WorldServer.core
             client.State = ProtocolState.Handshaked;
 
             _ = Connecting.TryAdd(client, DateTime.Now.AddSeconds(CONNECTING_TTL));
+        }
+
+        // The account is held by another world server: behind the world proxy, the one being
+        // replaced, which saves the character and lets go once the client has left it (a
+        // hand-over), or an older session there. Ask it to sign the account out and wait.
+        private bool AwaitOtherServer(DbAccount acc)
+        {
+            GameServer.InterServerManager.Publish(Channel.Kick, new KickMsg() { AccountId = acc.AccountId });
+            for (var i = 0; i < 50; i++)
+            {
+                Thread.Sleep(100);
+                if (GameServer.Database.AcquireLock(acc))
+                    return true;
+            }
+            return false;
+        }
+
+        // Another world server asks: sign this account out here, it is signing in there.
+        public void OnKick(object sender, InterServerEventArgs<KickMsg> e)
+        {
+            if (e.InstanceId == GameServer.InstanceId)
+                return;
+            foreach (var client in Clients.Keys.Where(_ => _.Account?.AccountId == e.Content.AccountId).ToArray())
+                Task.Run(() => client.Disconnect("Signed in on another world server"));
         }
 
         public int GetPlayerCount() => Clients.Count + ReconnectInfo.Count;

@@ -11,6 +11,7 @@ using WorldServer.core.connection;
 using WorldServer.core.miscfile;
 using WorldServer.core.net;
 using WorldServer.core.objects;
+using WorldServer.core.worlds;
 using WorldServer.core.worlds.impl;
 using WorldServer.networking.packets.outgoing;
 
@@ -42,7 +43,7 @@ namespace WorldServer.networking
         public DbAccount Account { get; internal set; }
         public DbChar Character { get; internal set; }
         public GameServer GameServer { get; private set; }
-        public string IpAddress { get; private set; }
+        public string IpAddress { get; internal set; }
         public Player Player { get; internal set; }
         public ClientRandom Random { get; internal set; }
         public Socket Socket { get; private set; }
@@ -121,6 +122,19 @@ namespace WorldServer.networking
             if (Account == null)
             {
                 Disconnect("Tried to reconnect an client with a null account...");
+                return;
+            }
+
+            // a world server that is being replaced hands its players over to the new one, behind
+            // the world proxy, when they go to the Nexus or a realm
+            if (GameServer.Draining && GameServer.HandsOver(pkt.GameId))
+            {
+                pkt.GameId = World.NEXUS_ID;
+                pkt.Name = "Nexus";
+                pkt.Host = "";
+                pkt.ClearKey();
+                Player?.SendInfo("Moving you to the updated server...");
+                SendPacket(pkt);
                 return;
             }
 

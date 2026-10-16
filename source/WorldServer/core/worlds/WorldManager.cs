@@ -32,6 +32,7 @@ namespace WorldServer.core.worlds
         public WorldManager(GameServer gameServer)
         {
             GameServer = gameServer;
+            NextWorldId = gameServer.Configuration.serverSettings.worldIdBase;
         }
 
         public void Initialize()

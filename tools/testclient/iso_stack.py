@@ -21,6 +21,9 @@ with --port 8081 to use it.
   redis-server.exe): Run Server.bat skips starting a server when a process with its name is
   already running, so a test stack with those names would stop the live servers from starting.
 - stop only stops the processes this script started (their ids are in build/iso/pids.json).
+- --rolling (with start) puts the world server behind the world proxy, as the live one is: the
+  proxy on the world port and world servers on slots a and b (tools/rolling_restart.py, under
+  build/iso<N>/live). Try a deploy with `rolling_restart.py --iso N deploy`. stop stops them too.
 """
 import argparse
 import json
@@ -36,10 +39,12 @@ SOURCE = os.path.join(ROOT, "source")
 ISO = os.path.join(ROOT, "build", "iso")
 PIDS = os.path.join(ISO, "pids.json")
 REDIS_PORT, APP_PORT, WORLD_PORT = 6380, 8081, 2052
+SLOT = 0
 
 
 def use_slot(slot):
-    global ISO, PIDS, REDIS_PORT, APP_PORT, WORLD_PORT
+    global ISO, PIDS, REDIS_PORT, APP_PORT, WORLD_PORT, SLOT
+    SLOT = slot
     if slot:
         ISO = os.path.join(ROOT, "build", "iso%d" % slot)
         PIDS = os.path.join(ISO, "pids.json")
@@ -82,7 +87,8 @@ def start(args):
 
     if not args.no_build:
         build(os.path.join("App", "App.csproj"), app_dir)
-        build(os.path.join("WorldServer", "WorldServer.csproj"), world_dir)
+        if not args.rolling:
+            build(os.path.join("WorldServer", "WorldServer.csproj"), world_dir)
 
     def app_cfg(d):
         d["dbInfo"]["port"] = REDIS_PORT
@@ -95,7 +101,8 @@ def start(args):
         d["dbInfo"]["port"] = REDIS_PORT
         d["serverInfo"]["port"] = WORLD_PORT
         d["serverInfo"]["address"] = "127.0.0.1"
-    set_json(os.path.join(world_dir, "wServer.json"), world_cfg)
+    if not args.rolling:
+        set_json(os.path.join(world_dir, "wServer.json"), world_cfg)
 
     flags = subprocess.CREATE_NO_WINDOW
     pids = {}
@@ -106,15 +113,22 @@ def start(args):
     pids["app"] = subprocess.Popen(["dotnet", "App.dll"], cwd=app_dir,
                                    stdout=open(os.path.join(app_dir, "app.out"), "w"),
                                    stderr=subprocess.STDOUT, creationflags=flags).pid
-    pids["world"] = subprocess.Popen(["dotnet", "WorldServer.dll"], cwd=world_dir,
-                                     stdout=open(os.path.join(world_dir, "ws.out"), "w"),
-                                     stderr=subprocess.STDOUT, creationflags=flags).pid
+    if args.rolling:
+        json.dump(pids, open(PIDS, "w"))
+        subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "rolling_restart.py"), "--iso", str(SLOT), "up"]
+                              + (["--no-build"] if args.no_build else []))
+    else:
+        pids["world"] = subprocess.Popen(["dotnet", "WorldServer.dll"], cwd=world_dir,
+                                         stdout=open(os.path.join(world_dir, "ws.out"), "w"),
+                                         stderr=subprocess.STDOUT, creationflags=flags).pid
     json.dump(pids, open(PIDS, "w"))
     print("started", pids, "- Redis %d, account %d, world %d; world log %s"
           % (REDIS_PORT, APP_PORT, WORLD_PORT, os.path.relpath(os.path.join(world_dir, "ws.out"), ROOT)))
 
 
 def stop(_):
+    if os.path.exists(os.path.join(ISO, "live", "state.json")):
+        subprocess.run([sys.executable, os.path.join(ROOT, "tools", "rolling_restart.py"), "--iso", str(SLOT), "stop"])
     if not os.path.exists(PIDS):
         print("not running")
         return
@@ -141,6 +155,7 @@ def main():
     s.add_argument("--fresh-data", action="store_true", help="copy the live database again")
     s.add_argument("--no-build", action="store_true", help="reuse the last build in build/iso")
     s.add_argument("--data-from", help="copy the Redis data from this folder")
+    s.add_argument("--rolling", action="store_true", help="the world server behind the world proxy (rolling_restart.py)")
     sub.add_parser("stop")
     sub.add_parser("status")
     args = ap.parse_args()

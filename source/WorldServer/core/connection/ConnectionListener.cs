@@ -97,7 +97,10 @@ namespace WorldServer.core.connection
         {
             GameServer = gameServer;
 
-            Port = GameServer.Configuration.serverInfo.port;
+            // behind the world proxy: its own port, on this PC only
+            var info = GameServer.Configuration.serverInfo;
+            BehindProxy = info.listenPort > 0;
+            Port = BehindProxy ? info.listenPort : info.port;
             MaxConnections = GameServer.Configuration.serverSettings.maxConnections;
 
             BuffManager = new BufferManager((MaxConnections + 1) * BUFFER_SIZE * OPS_TO_PRE_ALLOCATE, BUFFER_SIZE);
@@ -109,6 +112,7 @@ namespace WorldServer.core.connection
         private Socket ListenSocket { get; set; }
         private int MaxConnections { get; }
         private int Port { get; }
+        public bool BehindProxy { get; }
 
         public void Initialize()
         {
@@ -127,7 +131,7 @@ namespace WorldServer.core.connection
 
         public void Start()
         {
-            var localEndPoint = new IPEndPoint(IPAddress.Any, Port);
+            var localEndPoint = new IPEndPoint(BehindProxy ? IPAddress.Loopback : IPAddress.Any, Port);
             ListenSocket = new Socket(localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             ListenSocket.Bind(localEndPoint);
             ListenSocket.Listen(BACKLOG);

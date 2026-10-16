@@ -17,6 +17,9 @@ namespace Shared.isc
         Restart,
 
         [Description("Announce")]
-        Announce
+        Announce,
+
+        [Description("Kick")]
+        Kick
     }
 }

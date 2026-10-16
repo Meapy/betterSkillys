@@ -285,6 +285,19 @@ namespace WorldServer.core.connection
                     {
                         var id = r.GetPacketId();
                         var payload = r.GetPacketBody();
+                        if (id == MessageId.PROXY_INFO)
+                        {
+                            // the real address of a client the world proxy forwards (it connects from this PC)
+                            if (Client.Account == null && Client.GameServer.ConnectionListener.BehindProxy)
+                                try
+                                {
+                                    using var rdr = new NetworkReader(new MemoryStream(payload));
+                                    Client.IpAddress = rdr.ReadUTF16();
+                                }
+                                catch (Exception) { }
+                            r.Reset();
+                            continue;
+                        }
                         if (Client.Player == null) // read it instantly if there is no player otherwise we will append it to the world instance
                         {
                             if (id != MessageId.HELLO && id != MessageId.LOAD && id != MessageId.CREATE)

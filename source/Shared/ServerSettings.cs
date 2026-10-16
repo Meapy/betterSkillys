@@ -20,6 +20,9 @@ namespace Shared
         // server runs from.
         public string clientFolder { get; set; } = "";
         public int restartTime { get; set; } = 0;
+        // The first world id is worldIdBase + 1. Each world server behind the proxy gets its own
+        // range (1000000 for slot a, 2000000 for b), so the proxy knows which one has a world.
+        public int worldIdBase { get; set; } = 0;
         public string version { get; set; } = "undefined";
         public int[] whitelist { get; set; } = new int[] { };
     }

@@ -33,6 +33,9 @@ namespace Shared
         public PlayerList playerList { get; set; } = new PlayerList();
         public int players { get; set; } = 0;
         public int port { get; set; } = 2050;
+        // Behind the world proxy (tools/world_proxy.py): the port this server listens on, on
+        // 127.0.0.1 only, while `port` stays the public one the proxy owns. 0: listen on `port`.
+        public int listenPort { get; set; } = 0;
         public ServerType type { get; set; } = ServerType.Account;
 
         public bool IsJustStarted() => players == 0 && maxPlayers == 0;

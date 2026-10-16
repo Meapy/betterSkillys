@@ -9,6 +9,9 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- Server updates and the 2-hourly restart no longer kick anyone. When an update is waiting, a
+  chat message says so: you keep playing where you are (dungeons included) and switch to the
+  new version the next time you go to the Nexus, or after an hour at the latest.
 - The Wine Cellar Key no longer opens the Wine Cellar from anywhere: like a Wine Cellar
   Incantation, it unlocks the portal Oryx 1 leaves behind. The Nexus Bazaar now sells the Wine
   Cellar Incantation (125 fame) instead of the key.

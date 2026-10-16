@@ -1,6 +1,6 @@
 @ECHO OFF
 REM Starts Redis (the database, port 6379, this PC only), the account server (port 8080)
-REM and the world server (port 2051), each in its own window. Close those windows to stop.
+REM and the world server (port 2051, behind the world proxy), each in its own window. Close those windows to stop.
 REM Build the Rust client for players (dist\betterSkillys-rs-windows.zip, connecting to the public
 REM address) and publish it to dist\client, where players' clients update from; quick when nothing
 REM changed. A failed build doesn't stop the servers.
@@ -20,8 +20,10 @@ TASKLIST /FI "IMAGENAME eq App.exe" /NH | FINDSTR /B /I "App.exe" >NUL || (
     ECHO Starting the account server...
     START "Account Server" /D "App\bin\Debug\net8.0" App.exe
 )
-TASKLIST /FI "IMAGENAME eq WorldServer.exe" /NH | FINDSTR /B /I "WorldServer.exe" >NUL || (
-    ECHO Starting the world server...
-    START "World Server" /D "WorldServer\bin\Debug\net8.0" WorldServer.exe
-)
+REM The world proxy owns port 2051 and forwards players to a world server in build\live\a or b,
+REM so "python tools\rolling_restart.py deploy" updates the world server without kicking anyone.
+REM This starts whichever of them isn't running (building the world server first).
+CD ..
+python tools\rolling_restart.py up || ECHO The world server didn't start; see the message above.
+CD source
 CD ..

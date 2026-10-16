@@ -95,5 +95,8 @@ public enum MessageId : byte
     // The client asks for its quest's top damage dealers (once a connection); the AIR client
     // never asks, so it never gets QUEST_DAMAGE.
     QUEST_DAMAGE_SUBSCRIBE = 89,
-    QUEST_DAMAGE = 90
+    QUEST_DAMAGE = 90,
+    // From the world proxy (tools/world_proxy.py), before the client's first message: the
+    // client's address. Only taken on a connection from this PC; clients never send it.
+    PROXY_INFO = 250
 }

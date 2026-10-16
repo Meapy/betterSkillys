@@ -21,20 +21,47 @@ dotnet build source\betterSkillys.sln -c Debug          # what Run Server.bat do
 dotnet build source\WorldServer\WorldServer.csproj -c Debug -o build\wscheck   # while the live server runs
 ```
 
-- **The live servers run from `*/bin/Debug/net8.0`**, and their files are locked while they run.
-  To check that something compiles without stopping them, build into another folder with `-o`,
-  as above.
+- **The live account server runs from `App/bin/Debug/net8.0`**, and its files are locked while
+  it runs. The live world servers run from `build/live/a` and `build/live/b` (below). To check
+  that something compiles, build into another folder with `-o`, as above.
 - **`Optimize` is on for `WorldServer` and `Shared` in Debug too**, because Debug is what
   `Run Server.bat` builds and runs.
 - **To try a change in game,** use the isolated stack, `tools/testclient/iso_stack.py start`. It
   builds App and WorldServer from the current source into `build/iso`, on Redis 6380 (a copy of the
   live data), account 8081 and world 2052. See client/AGENTS.md for the test client that connects
   to it, and stop the stack with `iso_stack.py stop` when done.
-- **Logs** are in `WorldServer/bin/Debug/net8.0/logs/wServer/<date>/info.txt` (and `error.txt`), and
+- **Logs** are in `build/live/<slot>/logs/wServer/<date>/info.txt` (and `error.txt`), and
   `App/bin/Debug/net8.0/logs/app/`. Ticks slower than 200 ms are logged as "Slow tick".
-- **Deploying a change to the live server** means rebuilding and restarting it. Ask first, and
-  check that nobody is connected (the log shows connects and disconnects) or that the players are
-  fine with it.
+- **Deploying a world server change:** `python tools\rolling_restart.py deploy` (still ask the
+  owner first: it changes what players run). It kicks nobody: see "Rolling deploys" below and
+  SETUP-LOCAL.md. Account server changes still mean restarting `App`, which doesn't kick players
+  in game but stops logins while it's down. A message change ships with the client, as before.
+
+## Rolling deploys (world proxy)
+
+- **Layout:** `tools/world_proxy.py` owns the public port (2051) and forwards each connection to
+  world server slot a (12051) or b (22051), on 127.0.0.1 (`serverInfo.listenPort`).
+  `tools/rolling_restart.py` builds the slots into `build/live/<slot>` and keeps
+  `build/live/state.json`, which the proxy rereads when it changes.
+- **Routing:** by the game id in the Hello. Each slot has its own world id range
+  (`serverSettings.worldIdBase`: 1000000 for a, 2000000 for b), so a player moving between
+  worlds of the old server stays on it. The Nexus and other negative ids, new logins and unknown
+  ids go to the active slot. Don't hand out fixed positive world ids: the proxy can't place them.
+- **Hand-over (drain):** the tool writes `drain.request` (minutes allowed) into the old slot's
+  folder. `GameServer.DrainTick` then moves its Nexus players at once, and `Client.Reconnect`
+  turns any trip to the Nexus or a realm into a keyless Reconnect to the Nexus (`HandsOver`), which
+  the proxy sends to the new server. At the deadline everyone left is moved; empty, it stops. It
+  writes `drain.status` (players left) meanwhile, and stops the market sweeper.
+- **Account locks:** the old server saves the character and releases the lock when the client
+  leaves it, which can be just after the new server sees the Hello. `ConnectionManager` asks
+  other world servers to sign the account out (Redis channel `Kick`) and waits up to 5 s.
+- **Scheduled restart:** behind the proxy, `restartTime` writes `restart.request` instead of
+  kicking; the proxy runs `rolling_restart.py deploy --reuse`.
+- **Client addresses:** the proxy sends message 250 (`PROXY_INFO`) with the player's address
+  before the Hello. It's only taken by a server behind the proxy, before login.
+- **Testing:** `iso_stack.py --slot N start --rolling`, then `rolling_restart.py --iso N deploy`
+  (front port 2052+N, slots on 12052+N and 22052+N). The world servers of a test stack run as
+  `dotnet WorldServer.dll`, never as `WorldServer.exe`.
 
 ## How the world server works
 

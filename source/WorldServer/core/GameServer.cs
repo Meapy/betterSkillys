@@ -2,6 +2,7 @@
 using Shared;
 using Shared.database;
 using Shared.isc;
+using Shared.isc.data;
 using Shared.resources;
 using System;
 using System.Diagnostics;
@@ -14,6 +15,7 @@ using WorldServer.core.connection;
 using WorldServer.core.miscfile;
 using WorldServer.core.objects.vendors;
 using WorldServer.core.worlds;
+using WorldServer.core.worlds.impl;
 using WorldServer.logic;
 using WorldServer.logic.loot;
 using WorldServer.utils;
@@ -113,6 +115,7 @@ namespace WorldServer.core
             MerchantLists.Initialize(this);
             WorldManager.Initialize();
             InterServerManager.Initialize();
+            InterServerManager.AddHandler<KickMsg>(Channel.Kick, ConnectionManager.OnKick);
             ChatManager.Initialize();
             ConnectionListener.Initialize();
             MarketSweeper.Start();
@@ -127,12 +130,26 @@ namespace WorldServer.core
             var restartsIn = utcNow.Add(TimeSpan.FromMinutes(5));
 
             var restart = false;
+            var restartRequested = false;
 
             var watch = Stopwatch.StartNew();
             while (Running)
             {
+                // behind the world proxy: a restart starts a new world server beside this one
+                // (the proxy does it, tools/rolling_restart.py), which takes over without kicking
+                if (ConnectionListener.BehindProxy)
+                {
+                    if (!restartRequested && Configuration.serverSettings.restartTime > 0 && DateTime.UtcNow >= RestartCloseTime)
+                    {
+                        restartRequested = true;
+                        Log.Info("Asking the world proxy for a rolling restart.");
+                        TryWriteFile(RESTART_REQUEST, "");
+                    }
+                    if (DrainTick())
+                        break;
+                }
                 // server close event
-                if (!restart && DateTime.UtcNow >= RestartCloseTime)
+                else if (!restart && DateTime.UtcNow >= RestartCloseTime)
                 {
                     ChatManager.ServerAnnounce("The server will restart in 5 minutes.");
 
@@ -165,6 +182,143 @@ namespace WorldServer.core
 
             Log.Info("Program has been terminated.");
             Thread.Sleep(10000);
+        }
+
+        // Files in the working folder, between this server and the world proxy's tools.
+        private const string DRAIN_REQUEST = "drain.request"; // written by the tools: hand players over (its text: minutes to allow)
+        private const string RESTART_REQUEST = "restart.request"; // written here: the restart time came
+        private const string DRAIN_STATUS = "drain.status"; // written here while handing over: players left
+
+        // Being replaced by a newer world server behind the world proxy: players move to it the
+        // next time they go to the Nexus or a realm, and everyone left goes at the deadline.
+        public volatile bool Draining;
+        private DateTime DrainStarted;
+        private DateTime DrainDeadline;
+        private DateTime NextDrainCheck;
+        private DateTime NextDrainNotice;
+        private bool DeadlineWarned5, DeadlineWarned1, DeadlineReached;
+
+        // Where a draining server sends players to the new one instead (the Nexus there).
+        public bool HandsOver(int gameId) => gameId == World.NEXUS_ID || WorldManager.GetWorld(gameId) is RealmWorld;
+
+        private static void TryWriteFile(string path, string text)
+        {
+            try { File.WriteAllText(path, text); }
+            catch (Exception e) { Log.Error($"Couldn't write {path}: {e.Message}"); }
+        }
+
+        // Once a second: picks up a drain request and moves the hand-over along. True when this
+        // server is empty and can stop.
+        private bool DrainTick()
+        {
+            var now = DateTime.UtcNow;
+            if (now < NextDrainCheck)
+                return false;
+            NextDrainCheck = now.AddSeconds(1);
+
+            if (File.Exists(DRAIN_REQUEST))
+            {
+                var minutes = 60.0;
+                try
+                {
+                    if (double.TryParse(File.ReadAllText(DRAIN_REQUEST).Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var m))
+                        minutes = Math.Max(0, m);
+                    File.Delete(DRAIN_REQUEST);
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Couldn't read {DRAIN_REQUEST}: {e.Message}");
+                }
+                StartDrain(now, now.AddMinutes(minutes));
+            }
+
+            if (!Draining)
+                return false;
+
+            var left = ConnectionManager.Clients.Keys.Where(_ => _.Player != null).ToArray();
+            TryWriteFile(DRAIN_STATUS, ConnectionManager.GetPlayerCount().ToString());
+
+            var remaining = DrainDeadline - now;
+            if (!DeadlineReached && remaining <= TimeSpan.Zero)
+            {
+                DeadlineReached = true;
+                Log.Info($"Hand-over deadline: moving the last {left.Length} players to the new server.");
+                foreach (var client in left)
+                    MoveToNewServer(client);
+            }
+            else if (!DeadlineWarned1 && remaining <= TimeSpan.FromMinutes(1) && DrainDeadline - DrainStarted > TimeSpan.FromMinutes(1))
+            {
+                DeadlineWarned1 = DeadlineWarned5 = true;
+                ChatManager.ServerAnnounce("In 1 minute you'll be moved to the Nexus of the updated server. Finish up!");
+            }
+            else if (!DeadlineWarned5 && remaining <= TimeSpan.FromMinutes(5) && DrainDeadline - DrainStarted > TimeSpan.FromMinutes(5))
+            {
+                DeadlineWarned5 = true;
+                ChatManager.ServerAnnounce("In 5 minutes you'll be moved to the Nexus of the updated server.");
+            }
+            else if (now >= NextDrainNotice && !DeadlineReached)
+            {
+                NextDrainNotice = now.AddMinutes(10);
+                ChatManager.ServerAnnounce($"A server update is waiting. Go to the Nexus to switch to it; you'll be moved there in {Math.Ceiling(remaining.TotalMinutes)} minutes at the latest.");
+            }
+
+            // empty (nobody playing or on the way between worlds here): stop. Stragglers that
+            // didn't leave a minute after the deadline are let go.
+            var empty = ConnectionManager.GetPlayerCount() == 0 && now - DrainStarted > TimeSpan.FromSeconds(5);
+            if (empty || DeadlineReached && now - DrainDeadline > TimeSpan.FromMinutes(1))
+            {
+                Log.Info(empty ? "Handed every player over; stopping." : "Hand-over time is up; stopping.");
+                foreach (var client in ConnectionManager.Clients.Keys.ToArray())
+                    client.Disconnect("Hand-over time is up");
+                try { File.Delete(DRAIN_STATUS); } catch (Exception) { }
+                return true;
+            }
+            return false;
+        }
+
+        private void StartDrain(DateTime now, DateTime deadline)
+        {
+            if (Draining)
+            {
+                // asked again (rolling_restart.py --now): only ever sooner
+                if (deadline < DrainDeadline)
+                {
+                    DrainDeadline = deadline;
+                    NextDrainNotice = now;
+                }
+                return;
+            }
+
+            Draining = true;
+            DrainStarted = now;
+            DrainDeadline = deadline;
+            NextDrainNotice = now.AddMinutes(10);
+            Log.Info($"Handing players over to the new world server (deadline in {(deadline - now).TotalMinutes:0.#} minutes).");
+
+            // the new server sweeps the market now
+            MarketSweeper.Stop();
+
+            var minutes = Math.Ceiling((deadline - now).TotalMinutes);
+            if (minutes > 0)
+                ChatManager.ServerAnnounce($"The server has been updated! You'll switch to the new version the next time you go to the Nexus (in {minutes} minutes at the latest). Your current world stays as it is.");
+
+            // nobody is busy in the Nexus: those players switch now
+            foreach (var client in ConnectionManager.Clients.Keys.ToArray())
+                if (client.Player?.World is NexusWorld)
+                    MoveToNewServer(client);
+        }
+
+        private void MoveToNewServer(networking.Client client)
+        {
+            if (client.Player == null)
+                return;
+            client.Reconnect(new networking.packets.outgoing.Reconnect()
+            {
+                Host = "",
+                Port = Configuration.serverInfo.port,
+                GameId = World.NEXUS_ID,
+                Name = "Nexus"
+            });
         }
 
         public void Stop()
