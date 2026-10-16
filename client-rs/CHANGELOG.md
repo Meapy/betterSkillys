@@ -43,6 +43,9 @@ version number itself is in `client-rs/Cargo.toml`.
   Necromancer's skull, the Huntress's trap, the Mystic's orb, the Sorcerer's scepter, auras,
   boosts, decoys, teleports and the rest, instead of just a code name like "VampireBlast".
 - With the frame rate on (L), the ping to the server shows beside it.
+- Playing in the browser: a loading screen with a progress bar shows how much of the game is
+  left to download. The download is about a third of the size, the game's files load all at
+  once, and your browser keeps them, so the next visit starts much faster.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is

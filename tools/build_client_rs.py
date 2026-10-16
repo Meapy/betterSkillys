@@ -185,11 +185,38 @@ def build_web(release, out, account=None, key=None):
     os.makedirs(out, exist_ok=True)
     wasm = os.path.join(CRATE, "target", "wasm32-unknown-unknown", profile, BIN + ".wasm")
     run(["wasm-bindgen", "--target", "web", "--no-typescript", "--out-dir", out, wasm])
+    copy_assets(out)
+    # The page's loading bar: what a first visit downloads (the files, before compression).
+    wasm_bytes = os.path.getsize(os.path.join(out, BIN + "_bg.wasm"))
+    with open(MANIFEST, encoding="utf-8") as f:
+        unused = set(json.load(f).get("screens", {}).values())  # the old title screen's art isn't loaded
+    asset_bytes = os.path.getsize(MANIFEST) + sum(os.path.getsize(os.path.join(SRC, rel)) for rel in manifest_files() if rel not in unused)
     with open(os.path.join(CRATE, "web", "index.html"), encoding="utf-8") as f:
-        page = f.read().replace("BSK_BUILD", f"{version()}-{commit()}")
+        page = (f.read().replace("BSK_BUILD", f"{version()}-{commit()}")
+                .replace("BSK_WASM_BYTES", str(wasm_bytes)).replace("BSK_ASSET_BYTES", str(asset_bytes)))
     with open(os.path.join(out, "index.html"), "w", encoding="utf-8") as f:
         f.write(page)
-    copy_assets(out)
+    n = gzip_files(out)
+    print(f"{n} files gzipped beside themselves, for the gateway to send compressed")
+
+
+# Files worth compressing; images are compressed already.
+GZIP_TYPES = (".wasm", ".js", ".html", ".xml", ".json", ".dat", ".otf", ".ttf", ".txt")
+
+
+def gzip_files(out):
+    """A .gz copy of each compressible file (at the strongest level, once, at build time), which
+    the gateway sends to browsers that take gzip (ServeDir::precompressed_gzip)."""
+    import gzip
+    n = 0
+    for d, _, files in os.walk(out):
+        for f in files:
+            if f.endswith(GZIP_TYPES):
+                path = os.path.join(d, f)
+                with open(path, "rb") as src, gzip.open(path + ".gz", "wb", compresslevel=9) as dst:
+                    shutil.copyfileobj(src, dst)
+                n += 1
+    return n
 
 
 def main():

@@ -31,7 +31,11 @@ python tools\build_client_rs.py --account http://<ip>:8080 --publish   # dist\cl
   the test stack: `--account http://127.0.0.1:8082 --publish --publish-to build/iso1/client`.
 
 - **Web:** needs `rustup target add wasm32-unknown-unknown` and `wasm-bindgen-cli` at the
-  version in `Cargo.lock` (the script says which). Serve it with the gateway (below);
+  version in `Cargo.lock` (the script says which). The build writes a `.gz` beside each
+  compressible file, which the gateway sends to browsers (`precompressed_gzip`), and fills in the
+  page's loading bar totals; the gateway marks `?v=` files cacheable for good and the page
+  `no-cache`. The game reports each asset to the page (`window.bskAssetLoaded`) and says when
+  it can draw (`window.bskReady`). Serve it with the gateway (below);
   `.claude/launch.json` has `client-rs-web`, a gateway on port 8095 for isolated stack slot 1.
 - **Window title** is "Do Damage", the game's name for players, never "betterSkillys" (that's
   the AIR client's). Settings and the saved login stay in `betterSkillys-rs` folders, so the

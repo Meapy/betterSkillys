@@ -79,13 +79,30 @@ async fn main() {
     let app = Router::new()
         .route("/ws/:target", get(bridge))
         .route("/api/*path", any(api))
-        .fallback_service(tower_http::services::ServeDir::new(web))
+        // The build's .gz copies when the browser takes gzip (build_client_rs.py --web makes them).
+        .fallback_service(tower_http::services::ServeDir::new(web).precompressed_gzip())
+        .layer(axum::middleware::from_fn(cache_headers))
         .with_state(Arc::new(config));
     let listener = tokio::net::TcpListener::bind(&bind).await.unwrap_or_else(|e| {
         eprintln!("{bind}: {e}");
         std::process::exit(1);
     });
     axum::serve(listener, app).await.expect("server");
+}
+
+/// Files asked for with the build in the query (`?v=`, every file the page and the game load)
+/// never change: browsers keep them for good. Everything else (the page itself) is checked each
+/// time, so a new build is picked up at once.
+async fn cache_headers(req: axum::extract::Request, next: axum::middleware::Next) -> Response {
+    let path = req.uri().path();
+    let skip = path.starts_with("/api/") || path.starts_with("/ws/");
+    let versioned = req.uri().query().is_some_and(|q| q.split('&').any(|p| p.starts_with("v=")));
+    let mut response = next.run(req).await;
+    if !skip && response.status().is_success() {
+        let value = if versioned { "public, max-age=31536000, immutable" } else { "no-cache" };
+        response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static(value));
+    }
+    response
 }
 
 async fn api(
