@@ -370,6 +370,7 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
   - Remote textures are saved in `tools/doomed/remote`.
   - Pets whose id is already used in betterSkillys get a " (Doomed)" suffix and keep their display name.
   - Pet behaviour is in `BehaviorDb.DoomedPets.cs`: PetFollow, plus PetHeal and PetStrike (melee and thrown attacks) with the Doomed Realms amounts and cooldowns. Pets that fired projectiles use PetShoot: the same projectiles, counts and spreads, sent as the owner's server shots (`ServerPlayerShoot`), so the owner's client reports the hits and the damage is the owner's. `ServerPlayerShoot` has a trailing projectile-type byte for this (older clients ignore it and draw projectile 0).
+  - Boss pets: a pet with a betterSkillys boss's sprite (a `<Quest/>` monster with projectiles, or one in `EXTRA_BOSSES`) gets that boss's projectiles (without their condition effects) and a PetShoot for each distinct Shoot in the boss's behaviour (up to 4, at most one volley per 300 ms). `port_doomed_pets.find_bosses` matches them; the script prints "<pet> shoots like <boss>".
   - The port script writes each pet's damage per second on one enemy and its healing onto the generators' `PermaPet` activates (`petDps`, `petHp`/`petHpMs`, `petMp`/`petMpMs`); the Rust client's tooltip shows them.
   - Doomed Realms items are kept out of the random tier drops.
 - **Chat:** public chat no longer needs 2 stars (`PlayerTextHandler.cs`).

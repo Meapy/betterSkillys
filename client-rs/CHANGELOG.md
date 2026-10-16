@@ -32,6 +32,10 @@ version number itself is in `client-rs/Cargo.toml`.
   opened from it) for up to a second, the server's memory clean-ups no longer pause the whole
   game, and moves and shots in dungeons and vaults are handled at once instead of up to a tenth
   of a second later.
+- Pets that look like a boss now fight like it: Bes, Nut, Geb, the Cube God, Limon, Malphas,
+  Septavius, Stheno, Thessal, the Grand Sphinx, Horrific Creation and the other boss pets shoot
+  that boss's projectiles in its patterns (without its stuns and other effects). Their item
+  tooltips show the new damage.
 
 ## 1.1.7.1 (2026-10-16)
 - The game has moved to its own server at dodmg.com, so it's up even when the old host's PC is
