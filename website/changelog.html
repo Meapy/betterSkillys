@@ -5,32 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Changelog: {{NAME}}</title>
   <meta name="description" content="What changed in {{NAME}}, newest first.">
-  <meta name="theme-color" content="#07080a">
-  <link rel="icon" href="img/favicon.png">
+  <meta name="theme-color" content="#0c0915">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="style.css?v={{BUILD}}">
 </head>
-<body>
-  <header class="top">
-    <a class="brand" href="./"><img src="img/favicon.png" alt="" width="28" height="28"><span>{{NAME}}</span></a>
-    <nav>
-      <a href="./#features">Features</a>
-      <a href="./#start">Get started</a>
-      <a href="./#controls">Controls</a>
+<body class="sub-page">
+  <header class="bar">
+    <a class="logo" href="./"><i class="sprite" data-sprite="crown" data-px="2"></i><span>{{NAME}}</span></a>
+    <nav class="links">
+      <a href="./#descent">The descent</a>
+      <a href="./#realm">The realm</a>
+      <a href="./#get">Get the game</a>
       <a href="changelog.html" aria-current="page">Changelog</a>
     </nav>
-    <a class="btn btn-gold btn-small" href="play/">Play</a>
+    <a class="pill-play" href="play/">Play now</a>
   </header>
 
-  <main class="section page">
-    <h1 class="page-title">Changelog</h1>
-    <p class="muted">What changed in the game, newest first. The game's own Changelog window shows the same.</p>
-    <div class="changelog">{{CHANGELOG_ALL}}</div>
+  <main class="block page">
+    <header class="block-head">
+      <p class="eyebrow">Patch notes</p>
+      <h1>Changelog</h1>
+      <p class="sub">Every change to the game, newest first. The game's own Changelog window shows the same.</p>
+    </header>
+    <div class="notes timeline">{{CHANGELOG_ALL}}</div>
   </main>
 
   <footer class="foot">
-    <p>{{NAME}} {{VERSION}} · <a href="play/">Play</a> · <a href="./">Home</a></p>
-    <p class="muted">A fan-made private server, not affiliated with DECA Games or Kabam. Realm of the Mad God
-      is a trademark of its owners.</p>
+    <p><span class="mono">{{NAME}} {{VERSION}}</span> · <a href="play/">Play</a> · <a href="./">Home</a></p>
+    <p class="dim">A fan-made private server, not affiliated with DECA Games or Kabam. Realm of the Mad God is a trademark of its owners.</p>
   </footer>
+
+  <script src="site.js?v={{BUILD}}"></script>
 </body>
 </html>
