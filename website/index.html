@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{NAME}}: a Realm of the Mad God private server</title>
+  <meta name="description" content="{{NAME}} is a Realm of the Mad God private server. Play free in your browser, or download the desktop client.">
+  <meta property="og:title" content="{{NAME}}">
+  <meta property="og:description" content="A Realm of the Mad God private server. Play free in your browser, or download the client.">
+  <meta property="og:image" content="img/art.jpg">
+  <meta name="theme-color" content="#07080a">
+  <link rel="icon" href="img/favicon.png">
+  <link rel="stylesheet" href="style.css?v={{BUILD}}">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./"><img src="img/favicon.png" alt="" width="28" height="28"><span>{{NAME}}</span></a>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#start">Get started</a>
+      <a href="#controls">Controls</a>
+      <a href="changelog.html">Changelog</a>
+    </nav>
+    <a class="btn btn-gold btn-small" href="play/">Play</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <div class="hero-text">
+          <p class="status" id="status"><span class="dot"></span><span id="status-text">Checking the server…</span></p>
+          <h1>{{NAME}}</h1>
+          <p class="lead">A Realm of the Mad God private server. Fight through the realm, follow Oryx down five
+            stages to his Doomed Cellar, and loot it all with friends.</p>
+          <div class="actions">
+            <a class="btn btn-gold" href="play/" id="play">Play in your browser</a>
+            <a class="btn btn-glass" href="#download" id="download-main">Download the client</a>
+          </div>
+          <p class="note" id="play-note">Free. Works in Chrome, Edge, Firefox and Safari with a keyboard and mouse.</p>
+        </div>
+        <figure class="hero-art">
+          <img src="img/art.jpg" alt="The game's title screen: a knight, an archer and a wizard before Oryx's castle" width="800" height="600">
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <h2>What's in the realm</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>The full Oryx gauntlet</h3>
+          <p>When a realm closes, follow Oryx from his Castle through his Chamber, Wine Cellar, Sanctuary and
+            Hash Cellar to the Doomed Cellar. Every stage is harder, and the loot gets better all the way down.</p>
+        </article>
+        <article class="card">
+          <h3>Doomed Realms content</h3>
+          <p>Items, pets, classes, dungeons and minigames from Doomed Realms, alongside the classic game's
+            gear, with item tiers that glow.</p>
+        </article>
+        <article class="card">
+          <h3>Dungeons that work</h3>
+          <p>Dozens of dungeons made playable, random layouts, rebuilt Elder dungeons, and a Nexus Bazaar to
+            spend your fame in.</p>
+        </article>
+        <article class="card">
+          <h3>Updates without kicks</h3>
+          <p>Server updates never disconnect you. You keep playing, dungeon runs included, and switch to the new
+            version at your next trip to the Nexus.</p>
+        </article>
+        <article class="card">
+          <h3>Browser or desktop</h3>
+          <p>The same account and characters in both. Start in the browser now, and download the client
+            later if you want it.</p>
+        </article>
+        <article class="card">
+          <h3>Guilds, parties and trading</h3>
+          <p>Party up, run a guild, trade or sell on the marketplace, and keep your best gear in your vault
+            and pets at your side.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section split" id="start">
+      <div>
+        <h2>Get started</h2>
+        <ol class="steps">
+          <li><strong>Open the game.</strong> Press <a href="play/">Play in your browser</a>, or download the client.</li>
+          <li><strong>Register.</strong> The game opens on its sign-in screen: pick Register, choose a name and a password.</li>
+          <li><strong>Choose a class</strong> and you're in the Nexus. Take a realm portal and start leveling.</li>
+        </ol>
+      </div>
+      <div class="download" id="download">
+        <h2>Download</h2>
+        <p class="muted">The desktop client keeps itself up to date: new versions download in the background and
+          switch over at your next portal. You only download it once.</p>
+        <div class="dl-list" id="dl-list">{{DOWNLOADS}}</div>
+      </div>
+    </section>
+
+    <section class="section" id="controls">
+      <h2>Controls</h2>
+      <p class="muted">Every key can be rebound in the game's Options (<kbd>O</kbd>).</p>
+      <dl class="keys">
+        <div><dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Move</dd></div>
+        <div><dt><kbd>Mouse</kbd></dt><dd>Aim and shoot (<kbd>I</kbd> toggles autofire)</dd></div>
+        <div><dt><kbd>Space</kbd></dt><dd>Use your ability at the mouse</dd></div>
+        <div><dt><kbd>Q</kbd><kbd>E</kbd></dt><dd>Turn the view (<kbd>Z</kbd> resets it)</dd></div>
+        <div><dt><kbd>1</kbd>–<kbd>8</kbd></dt><dd>Equip or use an inventory slot</dd></div>
+        <div><dt><kbd>F</kbd><kbd>V</kbd></dt><dd>Drink a health or magic potion</dd></div>
+        <div><dt><kbd>0</kbd></dt><dd>Enter a portal, or talk to the NPC beside you</dd></div>
+        <div><dt><kbd>R</kbd></dt><dd>Back to the Nexus</dd></div>
+        <div><dt><kbd>Enter</kbd></dt><dd>Chat (<kbd>Tab</kbd> whispers, <kbd>G</kbd> guild, <kbd>P</kbd> party)</dd></div>
+        <div><dt><kbd>F11</kbd></dt><dd>Fullscreen</dd></div>
+        <div><dt><kbd>Esc</kbd></dt><dd>Menu: characters, log out</dd></div>
+      </dl>
+    </section>
+
+    <section class="section" id="news">
+      <div class="section-head">
+        <h2>Latest changes</h2>
+        <a class="more" href="changelog.html">Full changelog →</a>
+      </div>
+      <div class="changelog">{{CHANGELOG_LATEST}}</div>
+    </section>
+
+    <section class="section" id="faq">
+      <h2>Questions</h2>
+      <div class="faq">
+        <details><summary>Is it free?</summary><p>Yes. There's nothing to buy.</p></details>
+        <details><summary>Can I play on my phone?</summary><p>Not really: the game needs a keyboard and mouse. Any computer with a recent browser works.</p></details>
+        <details><summary>The browser version won't start.</summary><p>It needs WebGL 2. Update your browser and turn on hardware acceleration in its settings, or download the client instead.</p></details>
+        <details><summary>Are browser and desktop accounts the same?</summary><p>Yes. Sign in with the same name and password in either, and your characters, vault and fame are all there.</p></details>
+        <details><summary>Windows warns about the download.</summary><p>The client isn't signed with a paid certificate, so Windows SmartScreen may say it doesn't recognise it. Choose "More info", then "Run anyway".</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>{{NAME}} {{VERSION}} · <a href="play/">Play</a> · <a href="changelog.html">Changelog</a></p>
+    <p class="muted">A fan-made private server, not affiliated with DECA Games or Kabam. Realm of the Mad God
+      is a trademark of its owners.</p>
+  </footer>
+
+  <script src="site.js?v={{BUILD}}"></script>
+</body>
+</html>
