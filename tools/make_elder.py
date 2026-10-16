@@ -395,6 +395,11 @@ def referenced_elders(dr_ids):
     return out
 
 
+def regular_map_objects():
+    """The objects the Elder dungeons' regular betterSkillys maps place."""
+    return {oid for path, _ in DUNGEONS.values() for oid in map_ids(path)[1]}
+
+
 def lit_grounds():
     """The Elder grounds that have lit versions."""
     _, grounds = load(OUTPUTS["grounds"][:1])

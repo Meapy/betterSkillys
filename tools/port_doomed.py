@@ -740,6 +740,10 @@ def main():
     map_objs |= MINIGAME_SPAWNS
     # the Elder versions of what the Elder dungeons' (regular) behaviours spawn
     map_objs |= make_elder.referenced_elders(set(dr))
+    # what the regular maps of those dungeons place (Abyss of Demons' Native White Demon). Without
+    # this the port took them only while the Elder map still used the regular version, and
+    # make_elder copies only what the last port wrote, so each run undid the one before.
+    map_objs |= make_elder.regular_map_objects()
     portal_world = {pid: worlds[cls][0] for pid, cls in pw.portal_worlds().items()}
     dr_by_type = {int(o.get("type"), 16): oid for oid, o in dr.items() if o.get("type")}
     blocks = pm.load_blocks(args.dr)
