@@ -1,10 +1,11 @@
-# Rust client (in progress)
+# Rust client
 
-A rewrite of the AIR client in Rust that runs on Windows, Linux, macOS and in the browser. It
-uses the same art and the same server protocol, so the servers don't change; browsers reach them
-through the WebSocket bridge in `gateway`. The AIR client stays the real client until this one
-reaches parity. Read [../AGENTS.md](../AGENTS.md) first. [PARITY.md](PARITY.md) lists everything the AIR client does
-and what's still to port: keep it up to date.
+The game's client, "Do Damage" to players: a rewrite of the old AIR client in Rust that runs on
+Windows, Linux, macOS and in the browser. It's what players use; the AIR client is deprecated.
+It uses the same art and the same server protocol as the AIR client; browsers (and desktop
+clients built for `https://dodmg.com/api`) reach the servers through the WebSocket bridge in
+`gateway`. Read [../AGENTS.md](../AGENTS.md) first. [PARITY.md](PARITY.md) lists what the AIR client did and
+what's still to port.
 
 ## Build and run
 
@@ -13,9 +14,17 @@ python tools\gen_rs_manifest.py              # after the AIR client's asset list
 cd client-rs; cargo run                      # desktop, development layout
 python tools\build_client_rs.py              # build\client-rs\native: exe + assets\
 python tools\build_client_rs.py --web        # build\client-rs\web: index.html + wasm + assets/
-python tools\build_client_rs.py --account http://<ip>:8080 --package   # dist\Do-Damage-<os>.zip for players
-python tools\build_client_rs.py --account http://<ip>:8080 --publish   # dist\client, for players' clients to update to
+python tools\build_client_rs.py --account https://dodmg.com/api --package --publish   # a release for players (main checkout only)
 ```
+
+- **Releasing to players** (ask the owner first): in the **main checkout**, which holds the
+  signing key, raise the version and name the changelog section (below), then run the line above
+  with the live address. It writes `dist\Do-Damage-windows.zip` (the website's download) and a
+  signed release in `dist\client`; `python deploy\deploy.py` then puts both on the VPS, where
+  clients find it at `<account>/client/`. Desktop clients switch at their next portal, or straight
+  away on the menu, the character list or an empty sign-in screen; nobody is disconnected. Browser players get
+  the new build when they next load the page. Check `https://dodmg.com/api/client/windows/latest.json`
+  afterwards.
 
 - **Versions and updates:** the version is `[workspace.package] version` in `Cargo.toml`, or
   `[workspace.metadata] release` there for a four-part one between Cargo's (1.1.3.1; the build
@@ -90,6 +99,15 @@ The client itself can be scripted for tests (desktop only):
 | `--size WxH` | Open the window at this size (physical pixels), to check the layout |
 | `--mouse x,y` | Put the mouse there (window pixels) and ignore the real one: tooltips, aiming |
 | `--mouse-script "down@ms:x,y;move@ms:x,y;up@ms:x,y"` | Left-button steps after joining: drags and clicks on the HUD |
+
+- **Paths and slashes:** from Git Bash, run it with `MSYS_NO_PATHCONV=1` and give
+  `--credentials` a Windows path (`C:/Users/...`); a `/c/Users/...` path isn't found and the client
+  stays on the sign-in screen.
+- **Your login stays yours:** sign-ins from `--credentials` are never saved ("Remember me" is
+  skipped for them). But a run without `--credentials` signs in with the login saved on this PC,
+  which is the owner's own: its sign-in screen shows their email. Don't share those shots.
+- **No server needed** for the screens outside the game: `--account http://127.0.0.1:1` with
+  `--shot` shows the menu and sign-in screens over the sky, at any `--size`.
 
 For example, the Battle Arena (its monsters come 60 s after you enter):
 `--walk-to 106.5,75.4 --hold 0:200 --hold -:6000 --hold f:100000 --aim auto --shot a.png --shot-after 95`.
