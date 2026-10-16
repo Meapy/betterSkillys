@@ -1,14 +1,15 @@
 """Builds the website players land on (website/) into build/site: the home page with the server
 status, the downloads and the newest changes, and the full changelog page.
 
-    python tools/build_site.py [--name betterSkillys] [--out build/site]
+    python tools/build_site.py [--name "Do Damage"] [--out build/site]
 
 - {{NAME}}, {{VERSION}} and {{BUILD}} in the pages are filled in; {{CHANGELOG_LATEST}} and
   {{CHANGELOG_ALL}} come from client-rs/CHANGELOG.md (its Unreleased section is left out).
-- {{DOWNLOADS}} lists the desktop client zips in dist/ (betterSkillys-rs-<os>.zip, from
+- {{DOWNLOADS}} lists the desktop client zips in dist/ (Do-Damage-<os>.zip, from
   tools/build_client_rs.py --package), which are copied into downloads/. Build them with the
   account server the site's players use (--account http://<public address>:8080).
-- img/ is made from the client's title art (needs Pillow).
+- Everything else in website/ (style.css, site.js, favicon.svg) is copied as it is. The pictures
+  are pixel sprites drawn by site.js, so there are no image files to make.
 
 On the VPS, Caddy serves the result at the site's root, with the browser client at /play/ and the
 gateway's /api and /ws beside it (deploy/deploy.py writes the Caddyfile).
@@ -19,14 +20,10 @@ import html
 import os
 import re
 import shutil
-import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "website")
 CHANGELOG = os.path.join(ROOT, "client-rs", "CHANGELOG.md")
-ART = os.path.join(ROOT, "client", "src", "kabam", "rotmg", "ui", "view", "ProjectOryx1.png")
-# the knight's helmet in the title art, for the icon
-ICON_BOX = (372, 366, 436, 430)
 DOWNLOADS = [("windows", "Windows"), ("linux", "Linux"), ("macos", "macOS")]
 LATEST = 2
 
@@ -71,7 +68,7 @@ def releases_html(rel):
 def downloads(out):
     found = []
     for key, label in DOWNLOADS:
-        src = os.path.join(ROOT, "dist", "betterSkillys-rs-%s.zip" % key)
+        src = os.path.join(ROOT, "dist", "Do-Damage-%s.zip" % key)
         if not os.path.isfile(src):
             continue
         os.makedirs(os.path.join(out, "downloads"), exist_ok=True)
@@ -86,24 +83,9 @@ def downloads(out):
     return "\n".join(found)
 
 
-def images(out):
-    try:
-        from PIL import Image, ImageFilter
-    except ImportError:
-        sys.exit("build_site.py needs Pillow for the images: python -m pip install pillow")
-    dest = os.path.join(out, "img")
-    os.makedirs(dest, exist_ok=True)
-    art = Image.open(ART).convert("RGB")
-    art.save(os.path.join(dest, "art.jpg"), quality=86, optimize=True, progressive=True)
-    blur = art.resize((art.width // 4, art.height // 4), Image.LANCZOS).filter(ImageFilter.GaussianBlur(6))
-    blur.resize((art.width * 2, art.height * 2), Image.BICUBIC).save(
-        os.path.join(dest, "art-blur.jpg"), quality=70, optimize=True, progressive=True)
-    art.crop(ICON_BOX).resize((64, 64), Image.LANCZOS).save(os.path.join(dest, "favicon.png"), optimize=True)
-
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--name", default="betterSkillys", help="the game's name on the site")
+    ap.add_argument("--name", default="Do Damage", help="the game's name on the site")
     ap.add_argument("--out", default=os.path.join(ROOT, "build", "site"))
     args = ap.parse_args()
 
@@ -115,7 +97,6 @@ def main():
     rel = releases()
     version = rel[0][0] if rel else ""
     dl = downloads(out)
-    images(out)
 
     # ?v= on the stylesheet and script: a new build is never mixed with cached files
     h = hashlib.sha1()

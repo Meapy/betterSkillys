@@ -45,8 +45,8 @@ use winit::event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{Window, WindowId};
 
-/// Not "betterSkillys": that's the AIR client's window, which tools must never touch.
-const TITLE: &str = "betterSkillys-rs";
+/// The game's name. Not "betterSkillys": that's the AIR client's window, which tools must never touch.
+const TITLE: &str = "Do Damage";
 
 struct Loaded {
     renderer: Renderer,

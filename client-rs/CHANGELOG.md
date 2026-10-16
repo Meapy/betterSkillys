@@ -9,6 +9,8 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- The game is now called Do Damage: the window, the browser tab, the welcome message and the
+  downloads all say so. Your settings and saved login carry over.
 - The game has a website: play straight from your browser, download the desktop client, see
   how many players are online, look up the controls and read every change.
 

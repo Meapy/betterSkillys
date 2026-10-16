@@ -13,7 +13,7 @@ The settings are in deploy/vps.local.json (copy deploy/vps.example.json; --confi
     ssh_options     extra ssh arguments, such as ["-i", "C:/Users/me/.ssh/vps", "-p", "22"]
     site            Caddy's site address: the domain players open in a browser (https), or ""
                     for no Caddy
-    site_name       the game's name on the website (default betterSkillys)
+    site_name       the game's name on the website (default Do Damage)
     public_address  the host players' clients connect to: the world server address in the server
                     list, and the account server is http://<public_address>:<account port>
     ports           redis, account, world, gateway (the gateway only listens on 127.0.0.1)
@@ -145,7 +145,7 @@ def build(cfg, args):
     shutil.copytree(os.path.join(ROOT, "build", "client-rs", "web"), os.path.join(STAGE, "web"))
     build_gateway(cfg)
     run([sys.executable, os.path.join(ROOT, "tools", "build_site.py"),
-         "--name", cfg.get("site_name") or "betterSkillys", "--out", os.path.join(STAGE, "site")])
+         "--name", cfg.get("site_name") or "Do Damage", "--out", os.path.join(STAGE, "site")])
 
     for name in ("world_proxy.py", "rolling_restart.py"):
         copy_lf(os.path.join(ROOT, "tools", name), os.path.join(STAGE, "tools", name))

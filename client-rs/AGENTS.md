@@ -13,7 +13,7 @@ python tools\gen_rs_manifest.py              # after the AIR client's asset list
 cd client-rs; cargo run                      # desktop, development layout
 python tools\build_client_rs.py              # build\client-rs\native: exe + assets\
 python tools\build_client_rs.py --web        # build\client-rs\web: index.html + wasm + assets/
-python tools\build_client_rs.py --account http://<ip>:8080 --package   # dist\betterSkillys-rs-<os>.zip for players
+python tools\build_client_rs.py --account http://<ip>:8080 --package   # dist\Do-Damage-<os>.zip for players
 python tools\build_client_rs.py --account http://<ip>:8080 --publish   # dist\client, for players' clients to update to
 ```
 
@@ -33,7 +33,9 @@ python tools\build_client_rs.py --account http://<ip>:8080 --publish   # dist\cl
 - **Web:** needs `rustup target add wasm32-unknown-unknown` and `wasm-bindgen-cli` at the
   version in `Cargo.lock` (the script says which). Serve it with the gateway (below);
   `.claude/launch.json` has `client-rs-web`, a gateway on port 8095 for isolated stack slot 1.
-- **Window title** is "betterSkillys-rs", never "betterSkillys" (that's the AIR client's).
+- **Window title** is "Do Damage", the game's name for players, never "betterSkillys" (that's
+  the AIR client's). Settings and the saved login stay in `betterSkillys-rs` folders, so the
+  rename didn't lose anyone's.
 
 ## Gateway (browser play)
 

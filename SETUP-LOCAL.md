@@ -30,7 +30,7 @@ The account server address is compiled into `LocalhostSetup.as`, so the script c
 The Rust rewrite of the client (`client-rs/`, see its AGENTS.md) does everything the AIR client does and also runs in a browser. Its package is built the same way:
 
 ```
-python tools\build_client_rs.py --account http://188.141.12.3:8080 --package   # dist\betterSkillys-rs-windows.zip
+python tools\build_client_rs.py --account http://188.141.12.3:8080 --package   # dist\Do-Damage-windows.zip
 python tools\build_client_rs.py --account http://188.141.12.3:8080 --publish   # dist\client: players' clients update to it
 ```
 
@@ -103,7 +103,7 @@ client, which uses `http://<public_address>:8080` as its account server.
   the downloads, the controls and the two newest versions from `client-rs/CHANGELOG.md`, plus a
   full changelog page. The game's name on it is `site_name` in the VPS config.
 - **Deploying:** `deploy.py` builds it into the bundle on every deploy.
-- **Downloads:** the site offers the zips in `dist\` (`betterSkillys-rs-<os>.zip`). Build them for
+- **Downloads:** the site offers the zips in `dist\` (`Do-Damage-<os>.zip`). Build them for
   the VPS first: `python tools\build_client_rs.py --account http://<public_address>:8080 --package`.
 - **Trying it on this PC:** `.claude/launch.json` has `site`, which serves `build\site` on port
   8097. The server status reads "unavailable" there, as nothing answers `/api`.

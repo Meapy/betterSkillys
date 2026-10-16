@@ -37,7 +37,7 @@ The servers use these ports. Doomed Realms runs on the same PC with 8888, 2050 a
 To let friends play, forward TCP 8080 and 2051 on the router and give them a package:
 
 ```
-python tools\build_client_rs.py --account http://188.141.12.3:8080 --package   # dist\betterSkillys-rs-windows.zip
+python tools\build_client_rs.py --account http://188.141.12.3:8080 --package   # dist\Do-Damage-windows.zip
 python tools\build_client_rs.py --account http://188.141.12.3:8080 --publish   # update players' clients
 python tools\build_client.py 188.141.12.3 --package                           # dist\betterSkillys-Client.zip (AIR)
 ```
