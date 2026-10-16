@@ -8,6 +8,10 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
+## Unreleased
+- The game has a website: play straight from your browser, download the desktop client, see
+  how many players are online, look up the controls and read every change.
+
 ## 1.1.7 (2026-10-16)
 - The game is now called Do Damage: the window and the downloads say so. Your settings and
   saved login carry over.
