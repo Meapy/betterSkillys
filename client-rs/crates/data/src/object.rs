@@ -283,7 +283,7 @@ impl ObjectDesc {
         ObjectDesc {
             object_type: xml.attr_int("type", 0) as u16,
             id: xml.attr("id").unwrap_or("").to_owned(),
-            display_id: xml.text_of("DisplayId").or(xml.attr("id")).unwrap_or("").to_owned(),
+            display_id: display_name(xml.text_of("DisplayId"), xml.attr("id")),
             class: ObjectClass::parse(xml.text_of("Class").unwrap_or("")),
             texture: TextureData::from_xml(xml),
             top: xml.child("Top").map(TextureData::from_xml),
@@ -321,5 +321,14 @@ impl ObjectDesc {
             effect: xml.child("Effect").map(EffectProps::from_xml),
             xml: xml.clone(),
         }
+    }
+}
+
+/// The name shown to players. A `{lang.key}` DisplayId is a language-file key the
+/// client doesn't load, so the object's `id` (its plain English name) stands in.
+pub(crate) fn display_name(display_id: Option<&str>, id: Option<&str>) -> String {
+    match display_id {
+        Some(d) if !(d.starts_with('{') && d.ends_with('}')) => d.to_owned(),
+        _ => id.or(display_id).unwrap_or("").to_owned(),
     }
 }

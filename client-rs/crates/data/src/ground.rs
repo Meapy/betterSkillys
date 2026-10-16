@@ -1,5 +1,6 @@
 //! Ground tiles (`GroundProperties.as`, `GroundLibrary.as`).
 
+use crate::object::display_name;
 use crate::texture::TextureData;
 use crate::xml::Element;
 
@@ -66,7 +67,7 @@ impl Ground {
         Ground {
             tile_type: xml.attr_int("type", 0) as u16,
             id: xml.attr("id").unwrap_or("").to_owned(),
-            display_id: xml.text_of("DisplayId").or(xml.attr("id")).unwrap_or("").to_owned(),
+            display_id: display_name(xml.text_of("DisplayId"), xml.attr("id")),
             texture: TextureData::from_xml(xml),
             no_walk: xml.has("NoWalk"),
             min_damage: xml.int("MinDamage", 0),

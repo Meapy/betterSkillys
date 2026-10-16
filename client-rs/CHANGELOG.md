@@ -9,6 +9,7 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- Cloth and dye items (and a few dungeon objects) show their real names instead of codes like "{textiles.Small_Vine_Cloth}".
 - The fight against Oryx now goes all the way: when a realm closes you can follow him from his
   Castle through his Chamber (Oryx 1), his Wine Cellar (Oryx 2), the new Oryx's Sanctuary
   (Oryx 3), the Hash Cellar (Oryx 4) and finally the Doomed Cellar (Oryx 5). Each Oryx drops the
