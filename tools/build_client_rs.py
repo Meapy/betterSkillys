@@ -12,7 +12,7 @@ Usage:
     --debug builds without optimisation (much slower to run).
 
     python tools/build_client_rs.py --account http://188.141.12.3:8080 --package
-        As above with that account server built in, then dist/betterSkillys-rs-<os>.zip (the
+        As above with that account server built in, then dist/Do-Damage-<os>.zip (the
         game and a short readme) to hand to other players, as build_client.py --package does
         for the AIR client. With --web, the page's files go in the zip instead.
 
@@ -128,8 +128,8 @@ def cargo_env(account, key=None):
     return env
 
 
-README = """betterSkillys
-=============
+README = """Do Damage
+=========
 
 Run {exe} to play. Keep the assets folder beside it.
 
@@ -141,13 +141,13 @@ Settings and a remembered login are kept in {store}.
 
 
 def package(out, web, account):
-    """dist/betterSkillys-rs-<os>.zip: the built files and a readme."""
+    """dist/Do-Damage-<os>.zip: the built files and a readme, in a "Do Damage" folder."""
     import platform
     import zipfile
     name = "web" if web else {"Windows": "windows", "Darwin": "macos"}.get(platform.system(), "linux")
     dist = os.path.join(ROOT, "dist")
     os.makedirs(dist, exist_ok=True)
-    path = os.path.join(dist, f"betterSkillys-rs-{name}.zip")
+    path = os.path.join(dist, f"Do-Damage-{name}.zip")
     exe = BIN + (".exe" if os.name == "nt" and not web else "")
     store = {"windows": "%APPDATA%\\betterSkillys-rs", "macos": "~/Library/Application Support/betterSkillys-rs",
              "linux": "~/.config/betterSkillys-rs", "web": "the browser's storage"}[name]
@@ -155,9 +155,9 @@ def package(out, web, account):
         for dirpath, _, files in os.walk(out):
             for f in files:
                 full = os.path.join(dirpath, f)
-                z.write(full, os.path.join("betterSkillys", os.path.relpath(full, out)))
+                z.write(full, os.path.join("Do Damage", os.path.relpath(full, out)))
         if not web:
-            z.writestr("betterSkillys/README.txt", README.format(exe=exe, account=account or "this PC (127.0.0.1:8080)", store=store))
+            z.writestr("Do Damage/README.txt", README.format(exe=exe, account=account or "this PC (127.0.0.1:8080)", store=store))
     print("packaged", os.path.relpath(path, ROOT), f"({os.path.getsize(path) // 1024} KB)")
 
 

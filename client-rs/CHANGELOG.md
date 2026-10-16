@@ -8,6 +8,10 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
+## Unreleased
+- The game is now called Do Damage: the window, the browser tab, the welcome message and the
+  downloads all say so. Your settings and saved login carry over.
+
 ## 1.1.6 (2026-10-16)
 - Server updates and the 2-hourly restart no longer kick anyone. When an update is waiting, a
   chat message says so: you keep playing where you are (dungeons included) and switch to the

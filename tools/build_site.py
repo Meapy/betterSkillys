@@ -5,7 +5,7 @@ status, the downloads and the newest changes, and the full changelog page.
 
 - {{NAME}}, {{VERSION}} and {{BUILD}} in the pages are filled in; {{CHANGELOG_LATEST}} and
   {{CHANGELOG_ALL}} come from client-rs/CHANGELOG.md (its Unreleased section is left out).
-- {{DOWNLOADS}} lists the desktop client zips in dist/ (betterSkillys-rs-<os>.zip, from
+- {{DOWNLOADS}} lists the desktop client zips in dist/ (Do-Damage-<os>.zip, from
   tools/build_client_rs.py --package), which are copied into downloads/. Build them with the
   account server the site's players use (--account http://<public address>:8080).
 - Everything else in website/ (style.css, site.js, favicon.svg) is copied as it is. The pictures
@@ -68,7 +68,7 @@ def releases_html(rel):
 def downloads(out):
     found = []
     for key, label in DOWNLOADS:
-        src = os.path.join(ROOT, "dist", "betterSkillys-rs-%s.zip" % key)
+        src = os.path.join(ROOT, "dist", "Do-Damage-%s.zip" % key)
         if not os.path.isfile(src):
             continue
         os.makedirs(os.path.join(out, "downloads"), exist_ok=True)
