@@ -297,7 +297,7 @@
 		<DeathSound>monster/flayers_death</DeathSound>
 		<Size>120</Size>
 		<ShadowSize>60</ShadowSize>
-		<MaxHitPoints>130000</MaxHitPoints>
+		<MaxHitPoints>50000</MaxHitPoints>
 		<XpMult>0.85</XpMult>
 		<Defense>15</Defense>
 		<StasisImmune/>

@@ -63,7 +63,9 @@ namespace WorldServer.logic.behaviors
         private readonly double _range;
         private readonly int _scaleAfter;
 
-        public ScaleHP2(int amount, int scaleStart = 0, double range = 25.0)
+        // amount: percent of the base HP added for each player past the first scaleStart. Scaling
+        // starts with the second player, so a boss fought alone has the HP its XML gives.
+        public ScaleHP2(int amount, int scaleStart = 1, double range = 25.0)
         {
             _percentage = amount;
             _range = range;

@@ -151,8 +151,16 @@ namespace WorldServer.core.terrain
                     if (spTile.ObjId != 0)
                         tile.ObjId = world.GetNextEntityId();
 
+                    // A setpiece's own spawn tiles (the Avatar's arena has four) would make players
+                    // enter the world on it.
+                    if (tile.Region == TileRegion.Spawn)
+                        tile.Region = TileRegion.None;
+
+                    var at = new IntPoint(projX, projY);
                     if (tile.Region != 0)
-                        world.Map.Regions.Add(new IntPoint(projX, projY), spTile.Region);
+                        world.Map.Regions[at] = tile.Region;
+                    else
+                        world.Map.Regions.Remove(at);
                 }
 
             CreateEntities(pos);

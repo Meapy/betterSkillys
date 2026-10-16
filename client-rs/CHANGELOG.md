@@ -8,6 +8,15 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
+## Unreleased
+- The server is called Europe in the server list instead of Localhost.
+- You no longer sometimes enter the realm right beside the Avatar of the Forgotten King's arena.
+- Bosses fought alone have their normal health: the extra health for a group now starts with
+  the second player, not the first.
+- Dr Terrible (25,000 health, was 55,000) and the Horrific Creation (35,000, was 60,000) in the
+  Mad Lab, and the Ghost of Skuld at the end of the Haunted Cemetery (50,000, was 130,000), are
+  much quicker to kill. Dr Terrible's and the Creation's armour is a little lower too.
+
 ## 1.2.1 (2026-10-16)
 - The desktop game now signs in and plays over an encrypted connection (https), like the
   browser version, so your password and what you do in game can't be read on the way to the
