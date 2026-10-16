@@ -15,6 +15,9 @@ namespace Shared.utils
                 case DbLoginStatus.AccountNotExists:
                     return "No account uses that email";
 
+                case DbLoginStatus.TooManyAttempts:
+                    return "Too many wrong passwords. Wait 15 minutes, then try again.";
+
                 case DbLoginStatus.OK:
                     return "OK";
             }

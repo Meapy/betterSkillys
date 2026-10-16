@@ -1310,9 +1310,29 @@ namespace Shared.database
             if (info.IsNull)
                 return DbLoginStatus.AccountNotExists;
 
-            var pwd = GetHashedPassword(password);
-            if (pwd != info.HashedPassword)
+            // Too many wrong passwords lately: refuse without checking, so guessing is slow.
+            var failKey = LOGIN_FAILS_PREFIX + uuid.ToUpperInvariant();
+            if ((int?)_db.StringGet(failKey) >= MAX_LOGIN_FAILS)
+                return DbLoginStatus.TooManyAttempts;
+
+            if (!CheckPassword(password ?? "", info.HashedPassword, out var outdated))
+            {
+                var fails = _db.StringIncrement(failKey);
+                if (fails == 1)
+                    _db.KeyExpire(failKey, LoginFailWindow);
+                if (fails == MAX_LOGIN_FAILS)
+                    Log.Warn($"Sign-in for account {info.AccountId} blocked for {LoginFailWindow.TotalMinutes} minutes after {fails} wrong passwords");
                 return DbLoginStatus.InvalidCredentials;
+            }
+
+            _db.KeyDelete(failKey, CommandFlags.FireAndForget);
+
+            // Stored in the old unsalted MD5 form: store it the new way now we know the password.
+            if (outdated)
+            {
+                info.HashedPassword = GetHashedPassword(password);
+                info.Flush();
+            }
 
             acc = new DbAccount(_db, info.AccountId);
 
@@ -1399,7 +1419,68 @@ namespace Shared.database
 
         protected void UpdatePlayerGuildFame(DbAccount acc, int amount) => acc.GuildFame = (int)_db.HashIncrement(acc.Key, "guildFame", amount);
 
+        // Wrong passwords allowed for one account within LoginFailWindow, from anywhere (account
+        // and world servers count together, in Redis), before sign-in is refused for the rest of it.
+        private const string LOGIN_FAILS_PREFIX = "loginFails.";
+        private const int MAX_LOGIN_FAILS = 10;
+        private static readonly TimeSpan LoginFailWindow = TimeSpan.FromMinutes(15);
+
+        // Passwords are stored as "pbkdf2$<iterations>$<salt>$<hash>" (PBKDF2-SHA256, base64). The
+        // account and world servers check the password on every request, so the iteration count
+        // keeps one check to a few tens of milliseconds.
+        private const string HASH_PREFIX = "pbkdf2$";
+        private const int HASH_ITERATIONS = 100_000;
+        private const int SALT_BYTES = 16;
+        private const int HASH_BYTES = 32;
+
         public static string GetHashedPassword(string password)
+        {
+            var salt = RandomNumberGenerator.GetBytes(SALT_BYTES);
+            var hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, HASH_ITERATIONS, HashAlgorithmName.SHA256, HASH_BYTES);
+            return $"{HASH_PREFIX}{HASH_ITERATIONS}${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}";
+        }
+
+        /// <summary>
+        /// Whether the password matches the stored hash. <paramref name="outdated"/> says it matched
+        /// a hash in the old form (or with fewer iterations), which should be replaced.
+        /// </summary>
+        public static bool CheckPassword(string password, string stored, out bool outdated)
+        {
+            outdated = false;
+            if (string.IsNullOrEmpty(stored))
+                return false;
+
+            if (!stored.StartsWith(HASH_PREFIX))
+            {
+                var legacy = Encoding.ASCII.GetBytes(GetLegacyHashedPassword(password));
+                var match = CryptographicOperations.FixedTimeEquals(legacy, Encoding.ASCII.GetBytes(stored));
+                outdated = match;
+                return match;
+            }
+
+            var parts = stored.Split('$');
+            if (parts.Length != 4 || !int.TryParse(parts[1], out var iterations) || iterations <= 0)
+                return false;
+            byte[] salt, expected;
+            try
+            {
+                salt = Convert.FromBase64String(parts[2]);
+                expected = Convert.FromBase64String(parts[3]);
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
+
+            var actual = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, expected.Length);
+            var ok = CryptographicOperations.FixedTimeEquals(actual, expected);
+            outdated = ok && iterations < HASH_ITERATIONS;
+            return ok;
+        }
+
+        // The upstream form: MD5 of the password, then MD5 of its first half, unsalted. Only read
+        // now, for accounts that haven't signed in since the change.
+        private static string GetLegacyHashedPassword(string password)
         {
             var sb = new StringBuilder();
             using (var md5 = MD5.Create())

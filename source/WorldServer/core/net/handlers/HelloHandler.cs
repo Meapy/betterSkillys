@@ -104,7 +104,13 @@ namespace WorldServer.core.net.handlers
                 return null;
             }
 
-            if (s1 == DbLoginStatus.InvalidCredentials)
+            if (s1 == DbLoginStatus.TooManyAttempts)
+            {
+                client.SendFailure(Shared.utils.StatusInfoUtil.GetInfo(s1), FailureMessage.MessageWithDisconnect);
+                return null;
+            }
+
+            if (s1 != DbLoginStatus.OK)
             {
                 client.SendFailure("Email or Password is incorrect.", FailureMessage.MessageWithDisconnect);
                 return null;
