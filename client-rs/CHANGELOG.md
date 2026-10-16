@@ -11,8 +11,8 @@ version number itself is in `client-rs/Cargo.toml`.
 ## Unreleased
 - The fight against Oryx now goes all the way: when a realm closes you can follow him from his
   Castle through his Chamber (Oryx 1), his Wine Cellar (Oryx 2), the new Oryx's Sanctuary
-  (Oryx 3), the Hash Cellar (Oryx 4) and finally the Doomed Cellar (Oryx 5). Each Oryx drops the
-  portal to the next, and each kill is announced to the whole server.
+  (Oryx 3), the Hash Cellar (Oryx 4) and finally the Doomed Cellar (Oryx 5). Each Oryx opens
+  the way to the next, and each kill is announced to the whole server.
 - Oryx's Sanctuary is a new dungeon: fight through his nobles and his court until the Sanctum's
   gate opens, then face Oryx 3. Get far away when he shouts "KNEEL!", and kill his three
   Protectors at half health.
@@ -30,6 +30,12 @@ version number itself is in `client-rs/Cargo.toml`.
   (Oryx 3 to 5), and Oryx 3 can drop Oryx's Escutcheon.
 - The Oryx set, Doom Poison and Sword of Dark Enchantment now drop in white bags and are announced
   to everyone; Potion of Oryx and Potion of Power drop in the special bag.
+- Each Oryx now leaves a locked portal behind. To follow him, someone has to use the right
+  incantation beside it: a Wine Cellar Incantation after Oryx 1, an Oryx's Sanctuary Incantation
+  after Oryx 2, a Hash Cellar Incantation after Oryx 3 and a Doomed Cellar Incantation after
+  Oryx 4. Incantations drop from the stage before (and the Wine Cellar one from several dungeon
+  bosses), and the Nexus Bazaar sells the last three. The Hash and Doomed Cellar Incantations no
+  longer open their dungeons from anywhere.
 - The 30% weekend loot boost only applies on weekends now. It was quietly applied every day,
   so drops on weekdays are a little lower than before.
 

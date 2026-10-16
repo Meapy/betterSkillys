@@ -15,9 +15,10 @@ namespace WorldServer.logic
             .Init("Oryx the Mad God 4",
                 new State(
                     new BossStats(240000, 50, 1.0, 0.3),
-                    new DropPortalOnDeath("Doomed Cellar Portal", 1.0, timeout: 300, xAdjustment: 2),
+                    new DropPortalOnDeath("Locked Wine Cellar Portal", 1.0, timeout: 600, xAdjustment: 2,
+                        name: "Locked: Doomed Cellar", lockedHint: "This portal is locked. Use a Doomed Cellar Incantation beside it to open it."),
                     new DropPortalOnDeath("Realm Portal", 1.0, timeout: 120, xAdjustment: -2),
-                    new AnnounceOnDeath("{PL_LIST} burned Oryx the Mad God out of the Hash Cellar! He makes his last stand in the Doomed Cellar..."),
+                    new AnnounceOnDeath("{PL_LIST} burned Oryx the Mad God out of the Hash Cellar! He makes his last stand in the Doomed Cellar, sealed by a Doomed Cellar Incantation..."),
                     new State("Dormant",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new PlayerWithinTransition(15, "Awaken")

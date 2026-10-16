@@ -26,6 +26,8 @@ namespace WorldServer.core.objects
         }
 
         public bool Locked { get; private set; }
+        // what a player is told when they try to enter this portal while it is locked
+        public string LockedHint { get; set; }
         public bool Usable { get => _usable.GetValue(); set => _usable.SetValue(value); }
 
         protected override void ExportStats(IDictionary<StatDataType, object> stats, bool isOtherPlayer)

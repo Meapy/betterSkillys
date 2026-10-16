@@ -48,6 +48,12 @@ namespace Shared.resources
         public string LockedName;
         public string ObjectId;
         public string Target;
+        // ChangeObject (incantations): turns the nearest targetId within radius into newId, only in
+        // the worlds onlyInArea lists (comma separated); customString starts the announcement
+        public string TargetId;
+        public string NewId;
+        public string OnlyInArea;
+        public string CustomString;
 
         public float Proc;
         public int HealthThreshold;
@@ -102,6 +108,11 @@ namespace Shared.resources
 
             if (e.Attribute("target") != null)
                 Target = e.Attribute("target").Value;
+
+            TargetId = e.Attribute("targetId")?.Value;
+            NewId = e.Attribute("newId")?.Value;
+            OnlyInArea = e.Attribute("onlyInArea")?.Value;
+            CustomString = e.Attribute("customString")?.Value;
 
             if (e.Attribute("center") != null)
                 Center = e.Attribute("center").Value;

@@ -11,10 +11,17 @@ namespace WorldServer.logic.behaviors
         private readonly int? _timeout;
         private readonly float xAdjustment;
         private readonly float yAdjustment;
+        private readonly string _name;
+        private readonly string _lockedHint;
 
-        public DropPortalOnDeath(string target, double probability = 1, int? timeout = null, float xAdjustment = 0, float yAdjustment = 0)
+        // name: shown instead of the portal's own (a locked portal says where it leads);
+        // lockedHint: what a player trying to enter it while locked is told
+        public DropPortalOnDeath(string target, double probability = 1, int? timeout = null, float xAdjustment = 0, float yAdjustment = 0,
+            string name = null, string lockedHint = null)
         {
             _target = GetObjType(target);
+            _name = name;
+            _lockedHint = lockedHint;
             _probability = (float)probability;
             this.xAdjustment = xAdjustment;
             this.yAdjustment = yAdjustment;
@@ -49,6 +56,10 @@ namespace WorldServer.logic.behaviors
                 var entity = Entity.Resolve(manager, _target);
                 entity.Move(host.X, host.Y);
                 entity.Move(host.X + xAdjustment, host.Y + yAdjustment);
+                if (_name != null)
+                    entity.Name = _name;
+                if (entity is Portal portal && _lockedHint != null)
+                    portal.LockedHint = _lockedHint;
                 owner.EnterWorld(entity);
 
                 if (timeoutTime != 0)

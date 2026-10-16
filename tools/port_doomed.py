@@ -404,12 +404,37 @@ BAG_TYPES = {
 }
 
 
+# The Oryx chain's incantations: each unlocks the locked portal the Oryx before it drops, in that
+# Oryx's dungeon only (Player.AEChangeObject), instead of opening its dungeon anywhere like a key.
+# (incantation, the dungeon it works in, the portal it opens, what it says)
+INCANTATIONS = {
+    "Hash Cellar Incantation": ("Oryx's Sanctuary", "Hash Cellar Portal",
+                                "Unlocks the portal Oryx leaves behind in his Sanctuary, leading down to the Hash Cellar."),
+    "Doomed Cellar Incantation": ("Hash Cellar", "Doomed Cellar Portal",
+                                  "Unlocks the portal Oryx leaves behind in the Hash Cellar, leading to his last stand in the Doomed Cellar."),
+}
+
+
 def fix_doomed_data(dr):
     """Mistakes in the Doomed Realms data, fixed before porting."""
     for oid, bag in BAG_TYPES.items():
         o = dr.get(oid)
         if o is not None and o.find("BagType") is not None:
             o.find("BagType").text = str(bag)
+    for oid, (area, portal, text) in INCANTATIONS.items():
+        o = dr.get(oid)
+        if o is None or o.find("Activate") is None:
+            continue
+        act = o.find("Activate")
+        act.attrib.clear()
+        act.set("radius", "25")
+        act.set("targetId", "Locked Wine Cellar Portal")
+        act.set("newId", portal)
+        act.set("onlyInArea", area)
+        act.set("customString", portal.replace(" Portal", "") + " unlocked by")
+        act.text = "ChangeObject"
+        if o.find("Description") is not None:
+            o.find("Description").text = text
     key = dr.get("Elder Beach Key")
     if key is not None:  # it opened the Elder Jungle
         for a in key.iter("Activate"):

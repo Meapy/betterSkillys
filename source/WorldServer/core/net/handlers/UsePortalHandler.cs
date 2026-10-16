@@ -67,6 +67,12 @@ namespace WorldServer.core.net.handlers
                 return;
             }
 
+            if (portal.Locked)
+            {
+                player.SendError(portal.LockedHint ?? "This portal is locked. Use its incantation beside it to open it.");
+                return;
+            }
+
             if (!portal.Usable)
             {
                 player.SendInfo("Portal is unusable!");

@@ -5981,17 +5981,17 @@
    <Object type="0x1841" id="Oryx Sanctuary Key">
       <Class>Equipment</Class>
       <Item/>
-      <DisplayId>Oryx Sanctuary Key</DisplayId>
+      <DisplayId>Oryx's Sanctuary Incantation</DisplayId>
       <Texture>
          <File>oryxSanctuaryObjects8x8</File>
          <Index>0x48</Index>
       </Texture>
       <SlotType>10</SlotType>
-      <Description>A key which opens an entrance to Oryx's Sanctuary. For testing purposes.\n\nKeys can only be used once you have 10 or more stars!</Description>
+      <Description>Unlocks the portal Oryx leaves behind in his Wine Cellar, leading to Oryx's Sanctuary.</Description>
       <Sound>use_key</Sound>
-      <InvUse/>
+      <Consumable/>
       
-      <Activate id="Oryx Sanctuary Portal" cooldown="30">CreatePortal</Activate>
+      <Activate radius="25" targetId="Locked Wine Cellar Portal" newId="Oryx's Sanctuary Portal" onlyInArea="Wine Cellar" customString="Oryx's Sanctuary unlocked by">ChangeObject</Activate>
       <feedPower>200</feedPower>
       <BagType>7</BagType>
       <Track/>

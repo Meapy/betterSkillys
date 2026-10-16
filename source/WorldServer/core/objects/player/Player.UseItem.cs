@@ -127,6 +127,15 @@ namespace WorldServer.core.objects
                 return;
             }
 
+            // an incantation is only spent where it works: in its dungeon, beside its locked portal
+            foreach (var eff in item.ActivateEffects)
+                if (eff.Effect == ActivateEffects.ChangeObject && ChangeObjectTarget(eff, out var why) == null)
+                {
+                    SendError(why);
+                    Client.SendPacket(new InvResult() { Result = 1 });
+                    return;
+                }
+
             // use item
             var slotType = 10;
             if (slot < containerInventory.Length)
@@ -563,8 +572,10 @@ namespace WorldServer.core.objects
                     case ActivateEffects.MarkAndTeleport:
                     case ActivateEffects.SelfTransform:
                     case ActivateEffects.GroupTransform:
-                    case ActivateEffects.Exchange:
                     case ActivateEffects.ChangeObject:
+                        AEChangeObject(item, eff);
+                        break;
+                    case ActivateEffects.Exchange:
                     case ActivateEffects.UnlockPetSkin:
                     case ActivateEffects.CreatePet:
                     case ActivateEffects.TeleportToObject:
@@ -901,6 +912,79 @@ namespace WorldServer.core.objects
                 Message = openedByMsg
             });
             World.ForeachPlayer(_ => _.SendInfo(openedByMsg));
+        }
+
+        // The object an incantation (ChangeObject) would change: the nearest targetId within its
+        // radius, in one of its onlyInArea worlds. Null, with the reason, when there is none.
+        private Entity ChangeObjectTarget(ActivateEffect eff, out string why)
+        {
+            why = null;
+            var gameData = GameServer.Resources.GameData;
+            if (eff.TargetId == null || eff.NewId == null ||
+                !gameData.IdToObjectType.TryGetValue(eff.TargetId, out var targetType) ||
+                !gameData.IdToObjectType.ContainsKey(eff.NewId))
+            {
+                why = "This item can't be used.";
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(eff.OnlyInArea))
+            {
+                var areas = eff.OnlyInArea.Split(',').Select(a => a.Trim()).Where(a => a.Length > 0).ToArray();
+                if (!areas.Any(a => string.Equals(a, World.IdName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    why = $"This can only be used in {string.Join(" or ", areas)}.";
+                    return null;
+                }
+            }
+
+            var radius = eff.Radius > 0 ? eff.Radius : 25;
+            Entity best = null;
+            var bestDist = double.MaxValue;
+            // portals are kept apart from the other static objects
+            foreach (var o in World.Portals.Values.Cast<Entity>().Concat(World.StaticObjects.Values))
+            {
+                if (o.ObjectType != targetType)
+                    continue;
+                var d = this.DistTo(o);
+                if (d <= radius && d < bestDist)
+                {
+                    best = o;
+                    bestDist = d;
+                }
+            }
+
+            if (best == null)
+                why = $"There is no {eff.TargetId} nearby.";
+            return best;
+        }
+
+        private void AEChangeObject(Item item, ActivateEffect eff)
+        {
+            var target = ChangeObjectTarget(eff, out var why);
+            if (target == null)
+            {
+                SendError(why);
+                return;
+            }
+
+            var gameData = GameServer.Resources.GameData;
+            var newType = gameData.IdToObjectType[eff.NewId];
+            var entity = Resolve(GameServer, newType);
+            entity.Move(target.X, target.Y);
+            World.LeaveWorld(target);
+            World.EnterWorld(entity);
+            if (entity is Portal)
+                World.StartNewTimer(300 * 1000, (world, t) => world.LeaveWorld(entity));
+
+            var msg = $"{eff.CustomString ?? (eff.NewId + " opened by")} {Name}!";
+            World.Broadcast(new Notification
+            {
+                Color = new ARGB(0xFF00FF00),
+                ObjectId = Id,
+                Message = msg
+            });
+            World.ForeachPlayer(_ => _.SendInfo(msg));
         }
 
         private void AEDecoy(Item item, Position target, ActivateEffect eff)

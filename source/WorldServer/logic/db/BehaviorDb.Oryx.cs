@@ -14,9 +14,10 @@ namespace WorldServer.logic
                 new State(
                     new BossStats(130000, 40, 1.0, 0.3),
                     new DropPortalOnDeath("Realm Portal", 1.0, timeout: 120, xAdjustment: -2),
-                    new DropPortalOnDeath("Oryx's Sanctuary Portal", 1.0, timeout: 300, xAdjustment: 2),
+                    new DropPortalOnDeath("Locked Wine Cellar Portal", 1.0, timeout: 600, xAdjustment: 2,
+                        name: "Locked: Oryx's Sanctuary", lockedHint: "This portal is locked. Use an Oryx's Sanctuary Incantation beside it to open it."),
                     new DropPortalOnDeath("Lost Halls Portal", 0.1, timeout: 120, yAdjustment: 2),
-                    new AnnounceOnDeath("{PL_LIST} drove Oryx the Mad God out of his Wine Cellar! He flees to his Sanctuary..."),
+                    new AnnounceOnDeath("{PL_LIST} drove Oryx the Mad God out of his Wine Cellar! He flees to his Sanctuary, sealed by an Oryx's Sanctuary Incantation..."),
                     new State("Attack",
                         new Wander(.05),
                         new Shoot(25, projectileIndex: 0, count: 8, shootAngle: 45, coolDown: 1500, coolDownOffset: 1500),
@@ -96,7 +97,7 @@ namespace WorldServer.logic
                     new ItemLoot("Potion of Wisdom", 0.38),
                     new ItemLoot("Potion of Attack", 0.38),
                     new ItemLoot("Potion of Defense", 0.38),
-                    new ItemLoot("Wine Cellar Incantation", 0.04),
+                    new ItemLoot("Hash Cellar Incantation", 0.04),
                     new ItemLoot("Seal of Blasphemous Prayer", 0.006)
                 ),
                 new Threshold(0.1,
@@ -114,8 +115,9 @@ namespace WorldServer.logic
             .Init("Oryx the Mad God 1",
                 new State(
                     new BossStats(100000, 35, 1.0, 0.3),
-                    new DropPortalOnDeath("Wine Cellar Portal", 1.0, timeout: 300, xAdjustment: 2),
-                    new AnnounceOnDeath("{PL_LIST} defeated Oryx the Mad God in his Chamber! He retreats to his Wine Cellar..."),
+                    new DropPortalOnDeath("Locked Wine Cellar Portal", 1.0, timeout: 600, xAdjustment: 2,
+                        name: "Locked: Wine Cellar", lockedHint: "This portal is locked. Use a Wine Cellar Incantation beside it to open it."),
+                    new AnnounceOnDeath("{PL_LIST} defeated Oryx the Mad God in his Chamber! He retreats to his Wine Cellar, sealed by a Wine Cellar Incantation..."),
                     new State("Wait",
                         new ConditionEffectBehavior(ConditionEffectIndex.Invulnerable),
                         new PlayerWithinTransition(12, "Intro")
@@ -223,7 +225,8 @@ namespace WorldServer.logic
                 new Threshold(0.05,
                     new ItemLoot("Potion of Dexterity", 0.25),
                     new ItemLoot("Potion of Speed", 0.25),
-                    new ItemLoot("Potion of Life", 0.08)
+                    new ItemLoot("Potion of Life", 0.08),
+                    new ItemLoot("Oryx Sanctuary Key", 0.04)
                 ),
                 new Threshold(0.1,
                     new TierLoot(10, ItemType.Weapon, 0.08),
