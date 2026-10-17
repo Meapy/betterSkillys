@@ -13,6 +13,9 @@ version number itself is in `client-rs/Cargo.toml`.
   the updated server the next time you change worlds.
 - If your connection drops while you play, the game now takes you back to the Nexus by itself
   instead of sending you to the character list (it keeps trying for about two minutes).
+- The monsters that got their behaviour in 1.2.3 now drop loot to match: the heroes (Red Demon,
+  Phoenix, Oasis Giant, Ghost King, Deathmage) tiered weapons, armor, rings, abilities and
+  potions, and their minions potions and the odd low-tier item.
 
 ## 1.2.3 (2026-10-17)
 - Monsters that never had any behaviour now move, attack and taunt: the Red Demon, the Phoenix

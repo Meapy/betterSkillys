@@ -187,6 +187,6 @@ Fix problems in the scripts and regenerate; don't edit these files by hand. Type
 0xDFFF are kept stable in `tools/doomed/types.json`, because characters store items by type code:
 never renumber them.
 
-Behaviour that isn't generated: `DoomedRuntime.cs`, `core/worlds/impl/doomed/DoomedWorlds.cs` (arenas, zombies,
+Behaviour that isn't generated: `DoomedRuntime.cs`, `DoomedExtraLoot.cs` (loot added to monsters whose Doomed Realms loot is missing or thin), `core/worlds/impl/doomed/DoomedWorlds.cs` (arenas, zombies,
 herding, shop), `DoomedRealmsCommands.cs`, `DoomedEconomyCommands.cs`, `Player.UseItem.Doomed.cs`
 (class abilities) and `Halo.cs`. Doomed Realms' slot types 26 and 28 are 126 and 128 here.
