@@ -9,12 +9,17 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- The monsters that got their behaviour in 1.2.3 now drop loot to match: the heroes (Red Demon,
+  Phoenix, Oasis Giant, Ghost King, Deathmage) tiered weapons, armor, rings, abilities and
+  potions, and their minions potions and the odd low-tier item.
+
+## 1.2.3 (2026-10-17)
 - Monsters that never had any behaviour now move, attack and taunt: the Red Demon, the Phoenix
   Lord (which turns into an egg when it dies), the Lich, the Ent Ancient, the Ghost King and the
   Oasis Giant with their minions, the golems, skeletons, mummies and ghosts, the Abyss lava bomb,
-  Bonegrind the Butcher and the Beer God, among about 80 others. They drop loot to match: the
-  heroes tiered weapons, armor, rings, abilities and potions, their minions potions and the odd
-  low-tier item.
+  Bonegrind the Butcher and the Beer God, among about 80 others.
+- You can now see the Beer God in the high forest: it was invisible, with only its health bar
+  showing.
 - Smoother walking: your character no longer flickers to standing or shakes by a pixel while
   you walk (most noticeable with the frame rate unlocked), sliding along a wall no longer shakes
   the view, monsters and other players keep walking instead of flickering to standing between
