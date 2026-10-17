@@ -17,7 +17,8 @@ The settings are in deploy/vps.local.json (copy deploy/vps.example.json; --confi
     site_redirects  other names that redirect to the site, such as ["www.example.com"]
     public_address  the host players' clients connect to: the world server address in the server
                     list, and the account server is http://<public_address>:<account port>
-    ports           redis, account, world, gateway (the gateway only listens on 127.0.0.1)
+    ports           redis, account, world, gateway (the gateway only listens on 127.0.0.1; its
+                    three slots take that port and the next two)
     forward_address true: the gateway tells the world servers each player's address (players in
                     a browser, and desktop clients on https). Needs the world proxy from
                     2026-10-16 or later running (bsk-world restarted since): an older one sends
@@ -31,7 +32,8 @@ deploy/remote/install.sh as root:
 - worldserver/  the same for source/WorldServer, with wServer.json set to the ports and address
 - web/          tools/build_client_rs.py --web
 - site/         tools/build_site.py: the website at the site's root (the browser client is /play/)
-- bin/          bsk-gateway, built for Linux (in WSL when run on Windows)
+- bin/          bsk-gateway, built for Linux (in WSL when run on Windows); install.sh copies it and
+                web/ into the gateway slot it starts
 - tools/        world_proxy.py and rolling_restart.py; deploy/: the units, redis.conf, install.sh
 - client/       dist/client, the published desktop client releases (unless --no-releases)
 - redis-data/   with --import-data: dump.rdb and appendonly.aof from that folder
@@ -171,16 +173,38 @@ def build(cfg, args):
         # browser client is the gateway's page at /play/: it asks for play/api (beside its page)
         # and /ws (from the root), which both reach the gateway as /api and /ws. The website's
         # server status asks /api too.
+        #
+        # The gateway runs in three slots (bsk-gateway@a/b/c); a deploy starts the new one and the
+        # old one hands over, its /healthz turning 503. Caddy checks each slot's every second and
+        # sends requests to the first healthy one, retrying another while none answers, so a
+        # gateway swap needs no reload. stream_close_delay keeps open WebSockets (the game)
+        # through a reload, which would otherwise close them all (Caddy 2.7 or later). The slots
+        # that aren't running fail their checks every second: those lines stay out of the log.
+        gateways = " ".join("127.0.0.1:%d" % (ports["gateway"] + i) for i in range(3))
         write_lf(os.path.join(STAGE, "Caddyfile"),
                  "# Written by deploy/deploy.py: the website, and the browser client over https (wss for the game).\n"
+                 "{\n"
+                 "\tlog default {\n\t\texclude http.handlers.reverse_proxy.health_checker.active\n\t}\n"
+                 "}\n"
                  "%(site)s {\n"
                  "\tencode zstd gzip\n"
                  "\tredir /play /play/\n"
-                 "\thandle_path /play/* {\n\t\treverse_proxy 127.0.0.1:%(gw)d\n\t}\n"
-                 "\thandle /api/* {\n\t\treverse_proxy 127.0.0.1:%(gw)d\n\t}\n"
-                 "\thandle /ws/* {\n\t\treverse_proxy 127.0.0.1:%(gw)d\n\t}\n"
+                 "\t@gateway path /play/* /api/* /ws/*\n"
+                 "\thandle @gateway {\n"
+                 "\t\turi strip_prefix /play\n"
+                 "\t\treverse_proxy %(gateways)s {\n"
+                 "\t\t\tlb_policy first\n"
+                 "\t\t\tlb_try_duration 10s\n"
+                 "\t\t\tlb_try_interval 250ms\n"
+                 "\t\t\tfail_duration 5s\n"
+                 "\t\t\thealth_uri /healthz\n"
+                 "\t\t\thealth_interval 1s\n"
+                 "\t\t\thealth_timeout 2s\n"
+                 "\t\t\tstream_close_delay 3h\n"
+                 "\t\t}\n"
+                 "\t}\n"
                  "\thandle {\n\t\troot * %(root)s/site\n\t\tfile_server\n\t}\n"
-                 "}\n" % {"site": cfg["site"], "gw": ports["gateway"], "root": REMOTE}
+                 "}\n" % {"site": cfg["site"], "gateways": gateways, "root": REMOTE}
                  # other names for the site (www.) send visitors to it, each with its own certificate
                  + "".join("%s {\n\tredir https://%s{uri} permanent\n}\n" % (alias, cfg["site"])
                            for alias in cfg.get("site_redirects", [])))
@@ -227,7 +251,8 @@ def pack():
 def remote(cfg, script, stdin=None):
     """Runs a bash script as root on the server."""
     if cfg["target"] == "wsl":
-        cmd = ["wsl", "-d", cfg["wsl"], "-u", "root", "--", "bash", "-c", script]
+        # -e: run bash directly (with --, wsl hands the line to a shell first, which expands $)
+        cmd = ["wsl", "-d", cfg["wsl"], "-u", "root", "-e", "bash", "-c", script]
     else:
         quoted = "'" + script.replace("'", "'\\''") + "'"
         root = cfg["ssh"].split("@")[0] == "root"
@@ -253,9 +278,12 @@ def main():
     cfg = load_config(args.config)
 
     if args.status:
-        sys.exit(remote(cfg, "systemctl --no-pager --lines=0 status bsk-redis bsk-account bsk-world bsk-gateway caddy"
-                             " | grep -E '[.]service - |^ *Active'; runuser -u bsk -- python3 %s/tools/rolling_restart.py status"
-                        % REMOTE))
+        sys.exit(remote(cfg, "systemctl --no-pager --lines=0 status bsk-redis bsk-account bsk-world 'bsk-gateway@*' caddy"
+                             " | grep -E '[.]service - |^ *Active'; runuser -u bsk -- python3 %(r)s/tools/rolling_restart.py status;"
+                             " . %(r)s/bsk.env; echo \"active gateway slot: $(cat %(r)s/gateway/active 2>/dev/null)\";"
+                             " p=$BSK_GATEWAY_PORT; for s in a b c; do"
+                             " h=$(curl -s --max-time 2 http://127.0.0.1:$p/healthz) && echo \"gateway slot $s (port $p): $h\"; p=$((p + 1)); done"
+                        % {"r": REMOTE}))
     if not args.skip_build:
         build(cfg, args)
     elif not os.path.isdir(STAGE):

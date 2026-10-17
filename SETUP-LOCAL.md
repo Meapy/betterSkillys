@@ -107,8 +107,8 @@ traffic are encrypted (see "Encrypted connections" below). Older desktop clients
 | `bsk-redis` | Ubuntu's Redis 7, `deploy/remote/redis.conf`, data in `/opt/bsk/redis/data` | 6379, VPS only |
 | `bsk-account` | Account server, `/opt/bsk/app` | 8080 |
 | `bsk-world` | World proxy and world servers (`rolling_restart.py serve`), `/opt/bsk/build/live` | 2051 (slots 12051 / 22051, VPS only) |
-| `bsk-gateway` | Browser client and its WebSocket bridge, `/opt/bsk/web` | 8095, VPS only |
-| `caddy` | https for the site (its own Let's Encrypt certificate): the website from `/opt/bsk/site`, and `/play/`, `/api/` and `/ws/` to the gateway | 80, 443 |
+| `bsk-gateway@a`, `@b`, `@c` | Browser client and its WebSocket bridge, `/opt/bsk/gateway/<slot>`: one slot takes new players, another may be handing over (see "Deploys that kick nobody") | 8095, 8096, 8097, VPS only |
+| `caddy` | https for the site (its own Let's Encrypt certificate): the website from `/opt/bsk/site`, and `/play/`, `/api/` and `/ws/` to the gateway slot whose `/healthz` says ok. Caddy 2.7 or later, from Caddy's own apt repository | 80, 443 |
 
 **The website** (`website/`, built by `python tools\build_site.py` into `build\site`):
 - **What it shows:** the home page with the server's live player count (from `/api/app/serverList`),
@@ -192,17 +192,49 @@ it running for a while; it doesn't survive a restart of this PC.
   is the well-known upstream pair, so it hides nothing from anyone who looks it up. Over wss it
   doesn't matter (TLS covers the Hello); it was left as it is so old clients keep working.
 
-**Updating:** `python deploy\deploy.py`. It replaces only what changed: a new world server goes in
-with a rolling deploy (nobody is kicked, as on this PC); a changed account server restarts (logins
-pause for a few seconds); a changed gateway restarts, which disconnects browser players; the web
-client and the published desktop releases are swapped in place. `--skip-build` uploads the last
-build again, `--no-releases` leaves `dist\client` out, and `--status` shows the services and the
-world server slots.
+**Updating:** `python deploy\deploy.py`. It replaces only what changed, and nobody is disconnected
+(see below). `--skip-build` uploads the last build again, `--no-releases` leaves `dist\client`
+out, and `--status` shows the services, the world server slots and the gateway slots (each with
+its open connections).
+
+**Deploys that kick nobody** (`deploy/remote/install.sh`):
+- **World server:** a rolling deploy, as on this PC: players switch to the new one at their next
+  trip to the Nexus or a realm, an hour at most.
+- **Gateway** (which nearly every player goes through: the browser, and desktop clients on
+  https): a new build or a new web client starts in a free slot (`bsk-gateway@a`/`b`/`c`, ports
+  8095-8097, each with its own copy in `/opt/bsk/gateway/<slot>`), and once it answers, the old
+  slot gets SIGUSR1 and hands over. Caddy lists all three slots and checks each one's `/healthz`
+  every second (`lb_policy first`, retrying another slot while none answers), so new connections
+  go to the new slot without a reload. The old slot keeps its players' connections until they
+  close: every world change opens a new one, which goes to the new slot. It exits by itself once
+  it has none, or after 3 hours (`--drain-limit`), closing what's left. If both other slots are
+  still handing over, the one that started first is stopped. `/opt/bsk/gateway/active` names the
+  slot taking players; only it is enabled at boot. `curl 127.0.0.1:8095/healthz` (8096, 8097)
+  says `ok <connections>` or `draining <connections>`.
+- **Account server:** it restarts when its files or settings changed. Nobody in game notices;
+  sign-ins and account requests pause for the few seconds it takes to start, and the gateway holds
+  https ones (up to 20 s) until it answers. Older clients on port 8080 get an error meanwhile.
+- **Caddy** reloads only when the Caddyfile changed, and keeps open WebSockets through it
+  (`stream_close_delay 3h`). Ubuntu's Caddy 2.6.2 can't (it closes every WebSocket on a reload),
+  so `install.sh` replaces it with Caddy's own package (dl.cloudsmith.io/public/caddy/stable),
+  once: that restarts Caddy, which disconnects https players that one time.
+- **Units and settings:** a changed `bsk-gateway@` unit or `bsk.env` means a new gateway slot; a
+  changed `bsk-account` unit restarts the account server; a changed `bsk-world` or `bsk-redis`
+  unit waits for their next restart, which is never done by a deploy (restarting `bsk-world`
+  kicks everyone).
+- **Package upgrades** (unattended-upgrades) never restart the game's services or Caddy:
+  `install.sh` tells needrestart so in `/etc/needrestart/conf.d/bsk.conf`. They pick up new
+  libraries at their next deploy or restart.
+- **The first deploy with this layout** (from the single `bsk-gateway` service of before
+  2026-10-17) disconnects https players once: Caddy is replaced and its new config loaded, and the
+  old gateway can't hand over. Pick a quiet moment for it. Deploys after it kick nobody.
+- **If a connection drops anyway,** the Rust client (from the release after 1.2.3) takes the player back to the
+  Nexus by itself, trying for about two minutes; the bot follows Reconnects too.
 
 **On the VPS:**
 
 ```
-sudo systemctl status bsk-world                       # also bsk-redis, bsk-account, bsk-gateway, caddy
+sudo systemctl status bsk-world                       # also bsk-redis, bsk-account, 'bsk-gateway@*', caddy
 sudo journalctl -u bsk-world -f                       # the proxy and the world servers' console
 sudo -u bsk python3 /opt/bsk/tools/rolling_restart.py status
 sudo -u bsk python3 /opt/bsk/tools/rolling_restart.py request deploy --reuse   # a rolling restart
@@ -228,9 +260,15 @@ redis-cli -p 6379 hget names MEAPY                    # Redis, as on this PC
   account server about 250 MB. `install.sh` adds a 2 GB swap file when the VPS has no swap.
 - **Trying it on this PC:** `deploy/deploy.py` can install into a WSL distro instead of a VPS
   (`"target": "wsl"`). The test used Ubuntu-24.04 with ports kept clear of the live servers:
-  `{"target": "wsl", "wsl": "Ubuntu-24.04", "site": "localhost:8444", "public_address":
-  "127.0.0.1", "ports": {"redis": 6399, "account": 8099, "world": 2099, "gateway": 8097}}` in
-  `deploy/wsl-test.local.json`, then `python deploy\deploy.py --config deploy\wsl-test.local.json`.
+  `{"target": "wsl", "wsl": "Ubuntu-24.04", "site": "http://localhost:8444", "public_address":
+  "127.0.0.1", "ports": {"redis": 6399, "account": 8099, "world": 2099, "gateway": 8191},
+  "forward_address": true}` in `deploy/wsl-test.local.json`, then
+  `python deploy\deploy.py --config deploy\wsl-test.local.json`. Keep `wsl -d Ubuntu-24.04 -- sleep
+  14400` running meanwhile, or the distro shuts down. To check that deploys kick nobody, play the
+  bot through it (`bsk-bot --account http://localhost:8444/api --gateway ws://localhost:8444/ws
+  --credentials <main>\test-account.local.txt --seconds 600`) while deploying changed builds
+  (2026-10-17: a Caddyfile change, a gateway, an account server and a world server in turn; the
+  bot stayed in, and its connection after the world deploy went to the new gateway).
 
 ## Admin
 
@@ -411,6 +449,7 @@ In `PlayerShootHandler.cs`, the merge keeps HaloCelsius's rate-of-fire and proje
   - Left fixed: Mountain Temple (Daichi moves to fixed map positions), Parasite Chambers (its blockades seal the rooms from the corridors), Cave of a Thousand Treasures (the boulder corridor would be lost), and the Mad Lab, Crawling Depths and Davy Jones' Locker (their bosses sit behind doors and walls their scripts open). Open maps (Sprite World, the Hive, the Ice Cave) don't split into rooms, and the multi-stage dungeons (Oryx's Castle, Lost Halls, the Shatters and so on) depend on their layouts.
 - **Rolling world server updates:** the world proxy (`tools/world_proxy.py`) owns port 2051 and forwards each connection by the game id in its Hello: world ids from 1000000 belong to world server slot a, from 2000000 to slot b (`serverSettings.worldIdBase`), anything else goes to the active one. `tools/rolling_restart.py deploy` starts a new world server beside the old one, which then hands its players over at their next Nexus or realm trip (`GameServer.DrainTick`; `Client.Reconnect` sends them to the Nexus with no key, so the proxy picks the new server); see "Updating the world server without kicking anyone" above. The proxy passes on each player's address (message 250, `PROXY_INFO`), and a world server behind it listens on 127.0.0.1 only (`serverInfo.listenPort`). A login whose account another world server still holds asks it to sign the account out (Redis channel `Kick`) and waits up to 5 seconds before "Account in Use". The account server lists world servers that share an address and port as one. A new world server is in `state.json` (`starting`) before the tool waits for it, and is stopped again if it doesn't come up, so a failed start never leaves an untracked server on a slot; scheduled restart requests are retried (the server asks every 30 minutes) and logged rather than dropped silently.
 - **Encrypted connections** (Rust desktop client, gateway, world proxy, world server): an account address ending in `/api` makes the desktop client sign in over https and play over wss through the site's Caddy and gateway, as the browser client does (see "Encrypted connections" under "Running on a VPS"). `BSK_CA=<pem>` adds a test CA. The gateway's `--forward-address` sends the player's address as a PROXY_INFO before the game bytes; `world_proxy.py` takes one from this machine in place of its own and drops one from anyone else, and the world server takes a PROXY_INFO only as a connection's first message, so a player can't choose the address IP bans see. The gateway also no longer passes on an `X-Forwarded-For` a player sent it directly.
+- **Deploys that kick nobody** (gateway, deploy, Rust client, bot): the gateway runs in three systemd slots behind Caddy's health checks and hands over on SIGUSR1 (`/healthz` turns 503, it keeps its open bridges and exits when they've closed, 3 hours at most); it also holds account requests for up to 20 s while the account server restarts. `install.sh` starts a new gateway slot instead of restarting the gateway, restarts the account server only for its own changes, replaces Ubuntu's Caddy 2.6.2 (which closes every WebSocket on a reload) with Caddy's own 2.7+ package and sets `stream_close_delay`, and keeps needrestart off the game's services (see "Deploys that kick nobody" under "Running on a VPS"). The Rust client goes back to the Nexus by itself when its connection drops in the game without the server refusing it (a Failure), retrying "Account in Use" for about two minutes; `bsk-bot` follows Reconnects instead of exiting.
 - **Sign-in checks** (account server): `/char/list` no longer makes a throwaway guest list (account 0) for an email it doesn't know; it answers "No account uses that email", and a wrong password "Wrong password". Registering and changing a password need at least 6 characters.
 - **Guest accounts** (account server, Rust client): `/account/guest` makes a real account with a made-up login (`guest-<32 hex>` and a random password, `guest` flag set) and a unique name ("Guest" and four random letters, so the world server lets it in and finds it by name). At most 10 an hour per address and 300 an hour in all; behind the gateway or Caddy the address comes from `X-Forwarded-For`, which only a request from this machine may set. The client keeps the login on the device (`guest.txt` in `betterSkillys-rs`, or local storage), apart from "Remember me", and Play on the main menu uses it. Guests play like anyone else, except that Nexus merchants don't sell to them (an upstream rule). `/account/register` with the guest's `guid` and `password` turns the guest's account into a normal one (`RenameUUID`, `RenameIGN`), keeping its characters, vault and fame. A guest whose device forgets the login loses that account; unused guest accounts stay in Redis.
 - **Password storage and guessing limit** (`Shared/database/Database.cs`): passwords are stored as salted PBKDF2-SHA256, `pbkdf2$<iterations>$<salt>$<hash>` in the `logins` hash (100,000 iterations, about 15 ms a check; the servers check the password on every request). Upstream stored an unsalted MD5 of the password and of its first half, which a leaked `logins` hash gives away at once. Old hashes still work, and an account's hash is rewritten in the new form the first time it signs in. After 10 wrong passwords for one account within 15 minutes (counted in Redis key `loginFails.<EMAIL>`, by the account and world servers together), sign-in is refused for the rest of the 15 minutes, "Too many wrong passwords"; a right password clears the count. Delete the key to unblock an account early.

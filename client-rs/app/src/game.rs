@@ -99,7 +99,23 @@ pub struct Game {
     /// This connection follows a portal handed over by the version before: if its key no
     /// longer works, go to the Nexus instead.
     pub fallback_to_nexus: bool,
+    /// The connection dropped while we played, and we're trying to get back in (to the Nexus).
+    lost: Option<Lost>,
+    /// The server refused or ended this connection itself (a Failure): its closing is final.
+    refused: bool,
 }
+
+/// A connection that dropped in the game: how many times we've tried to get back, and when the
+/// next try is due (none while one is under way).
+struct Lost {
+    tries: u32,
+    next_at: Option<i32>,
+}
+
+/// How long to wait before each try at getting back in after a dropped connection, ms: about two
+/// minutes in all, long enough for a restarting server or the account lock of the dropped
+/// connection ("Account in Use") to clear.
+const RECONNECT_DELAYS: [i32; 12] = [500, 1000, 2000, 3000, 5000, 8000, 10_000, 15_000, 15_000, 20_000, 20_000, 20_000];
 
 /// A trade in progress (`TradePanel`): both sides' items and what each offers.
 #[derive(Clone, Debug)]
@@ -207,6 +223,8 @@ impl Game {
             hold_reconnect: false,
             held: None,
             fallback_to_nexus: false,
+            lost: None,
+            refused: false,
         };
         game.socket.send(&first);
         game
@@ -224,6 +242,7 @@ impl Game {
         self.hello.game_id = r.game_id;
         self.hello.key_time = r.key_time;
         self.hello.key = r.key.0.clone();
+        self.refused = false;
         self.socket = GameSocket::connect(&self.target);
         let (session, first) = Session::start(clone_hello(&self.hello), Join::Load { char_id: self.char_id });
         self.session = session;
@@ -231,6 +250,42 @@ impl Game {
         self.world = None;
         self.sent_view_radius = MIN_VIEW_RADIUS;
         self.status = format!("Entering {}…", r.name);
+    }
+
+    /// Connect again, to the Nexus.
+    fn go_to_nexus(&mut self) {
+        let nexus = Reconnect {
+            name: "Nexus".into(),
+            host: String::new(),
+            port: self.target.port as i32,
+            game_id: bsk_session::NEXUS_GAME_ID,
+            key_time: -1,
+            key: Default::default(),
+        };
+        self.reconnect(&nexus);
+    }
+
+    /// The connection closed without the server refusing it (a server or the network went
+    /// away): if we were in the game, schedule a try at getting back in, to the Nexus. Returns
+    /// whether one is scheduled; if not, the game ends as before.
+    fn retry_after_drop(&mut self, now: i32) -> bool {
+        let playing = self.world.as_ref().is_some_and(|w| w.me.is_some());
+        let tries = match &self.lost {
+            Some(lost) => lost.tries,
+            None if playing && !self.died && !self.refused => 0,
+            None => return false,
+        };
+        let Some(delay) = RECONNECT_DELAYS.get(tries as usize) else {
+            self.lost = None;
+            return false;
+        };
+        self.socket.close();
+        self.world = None;
+        self.trade = None;
+        self.invite = None;
+        self.status = "Connection lost: getting you back in…".into();
+        self.lost = Some(Lost { tries: tries + 1, next_at: Some(now + delay) });
+        true
     }
 
     /// Where a Reconnect goes: its own server, or this one when it names none.
@@ -250,11 +305,28 @@ impl Game {
         if self.held.is_some() {
             return;
         }
+        if let Some(Lost { tries, next_at: Some(at) }) = &self.lost {
+            if now < *at {
+                return;
+            }
+            let tries = *tries;
+            log::info!("reconnecting to the Nexus (try {tries})");
+            self.go_to_nexus();
+            self.status = "Connection lost: getting you back in…".into();
+            self.lost = Some(Lost { tries, next_at: None });
+        }
         while let Some(event) = self.socket.poll() {
             match event {
-                SocketEvent::Connected => self.status = "Connected, entering the game…".into(),
+                SocketEvent::Connected => {
+                    if self.lost.is_none() {
+                        self.status = "Connected, entering the game…".into();
+                    }
+                }
                 SocketEvent::Closed(why) => {
                     log::info!("disconnected: {why}");
+                    if self.retry_after_drop(now) {
+                        break;
+                    }
                     // A connection that never opened: say so plainly, not with the socket's
                     // error and address.
                     self.status = if why.starts_with("can't connect") || why.contains("/ws/") {
@@ -317,6 +389,10 @@ impl Game {
                 self.status = format!("Entering {}…", info.display_name);
             }
             Some(Event::Joined { object_id, char_id }) => {
+                if let Some(lost) = self.lost.take() {
+                    log::info!("back in after a dropped connection ({} tries)", lost.tries);
+                    self.add_chat("", "", "The connection dropped: you're back in the Nexus.", 0, 0, -1, now);
+                }
                 // A new character has its id now; reconnects load it.
                 self.char_id = char_id;
                 if let Some(w) = &mut self.world {
@@ -332,17 +408,18 @@ impl Game {
                 // A handed-over portal whose key ran out: the Nexus instead.
                 if std::mem::take(&mut self.fallback_to_nexus) && self.world.as_ref().is_none_or(|w| w.me.is_none()) {
                     log::info!("{description}: going to the Nexus instead");
-                    let nexus = Reconnect {
-                        name: "Nexus".into(),
-                        host: String::new(),
-                        port: self.target.port as i32,
-                        game_id: bsk_session::NEXUS_GAME_ID,
-                        key_time: -1,
-                        key: Default::default(),
-                    };
-                    self.reconnect(&nexus);
+                    self.go_to_nexus();
                     return;
                 }
+                // Getting back in after a dropped connection: the server may not have let go of
+                // the old one yet. Try again in a moment (when this connection's Closed comes).
+                if self.lost.is_some() && description.starts_with("Account in Use") {
+                    log::info!("{description}: trying again");
+                    self.socket.close();
+                    return;
+                }
+                self.lost = None;
+                self.refused = true;
                 self.status = description;
             }
             Some(Event::Reconnect(r)) => {

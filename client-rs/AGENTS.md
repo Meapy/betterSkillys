@@ -59,6 +59,10 @@ the world server's TCP stream. Only `--allow`ed world servers are reachable
 unless `--bind` says otherwise; sharing it with players means `--bind 0.0.0.0:<port>` and opening
 that port, which is the owner's call.
 
+On the VPS it runs in slots (`bsk-gateway@a`/`b`/`c`) so deploys kick nobody: `/healthz` answers
+`ok <bridges>`, and SIGUSR1 makes it hand over (503 there, keeps its bridges, exits when they've
+closed or after `--drain-limit` seconds). See SETUP-LOCAL.md, "Deploys that kick nobody".
+
 ```
 cargo run -p bsk-gateway -- --web build/client-rs/web --account http://127.0.0.1:8080 --allow 127.0.0.1:2051
 ```
@@ -77,7 +81,8 @@ python tools\testclient\iso_stack.py --slot 1 stop
 ```
 
 The bot logs in, joins the nexus with the first living character and answers the server as the
-AIR client does (`bsk-session`); it exits non-zero if it gets disconnected. The second form goes
+AIR client does (`bsk-session`), following Reconnects (world changes, rolling deploys) through a
+new connection; it exits non-zero if it gets disconnected. The second form goes
 through the gateway, as the browser does.
 
 The client itself can be scripted for tests (desktop only):

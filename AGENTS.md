@@ -25,7 +25,7 @@ SETUP-LOCAL.md):
 | Part | Port | Notes |
 |---|---|---|
 | Caddy | 80, 443 | https for everything: the website at `/`, browser play at `/play/`, and `/api` and `/ws` to the gateway |
-| Gateway (`bsk-gateway`) | 8095, VPS only | web client, account requests and the game over WebSocket |
+| Gateway (`bsk-gateway@a`/`b`/`c`) | 8095-8097, VPS only | web client, account requests and the game over WebSocket; one slot takes new players, another may be handing over |
 | Account server (`bsk-account`) | 8080 | open for older desktop clients |
 | World proxy and world servers (`bsk-world`) | 2051 (slots 12051 / 22051, VPS only) | rolling deploys, as on Windows |
 | Redis (`bsk-redis`) | 6379, VPS only | data in `/opt/bsk/redis/data` |
@@ -47,9 +47,15 @@ it asks first; never run test copies under the live process names (`redis-server
 - **Real people play on the live servers.** Anything that changes what they run (a deploy, a
   publish, a restart) is the owner's call: ask first, every time, unless they just asked for it.
   Test on an isolated stack instead. What disconnects whom:
-  - a world server deploy (`deploy/deploy.py` or a rolling deploy) kicks nobody;
+  - a deploy (`deploy/deploy.py`) kicks nobody: a new world server is a rolling deploy, a new
+    gateway starts in another slot while the old one hands over, the account server restart only
+    pauses sign-ins, and Caddy keeps WebSockets through a reload (SETUP-LOCAL.md, "Deploys that
+    kick nobody"). The first deploy onto the gateway slots (from the single `bsk-gateway` of
+    before 2026-10-17) is the exception: it disconnects https players once;
   - restarting `bsk-world` itself kicks everyone (they're saved first);
-  - restarting the gateway drops browser players; the account server pauses logins.
+  - restarting or stopping a gateway slot (`bsk-gateway@<slot>`) or Caddy drops the players on it,
+    nearly everyone (browser and https desktop clients). The Rust client then takes them back to
+    the Nexus by itself.
 - **Stopping a world server cleanly:** it saves everyone on Ctrl+C (Windows) or SIGTERM (Linux,
   `systemctl stop`). `taskkill /F`, which `rolling_restart.py stop` uses on Windows, skips the
   save. To stop one from a script on Windows, attach to its console and send Ctrl+C

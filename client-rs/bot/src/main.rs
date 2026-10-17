@@ -7,7 +7,9 @@
 //!
 //! The credentials file has `email: ...` and `password: ...` lines (test-account.local.txt).
 //! With `--gateway`, the game connection goes through the gateway's WebSocket bridge, as the
-//! browser client's does. The exit code is 0 if it stayed connected for the whole time.
+//! browser client's does. It follows the server's Reconnects (a world change, or a rolling
+//! deploy moving it to the new world server) as the client does, each through a new connection.
+//! The exit code is 0 if it stayed connected for the whole time.
 
 
 use bsk_net::{account, http, login, GameSocket, SocketEvent, Target};
@@ -81,19 +83,20 @@ fn run(args: Args) -> Result<(), String> {
     );
 
     // Through the gateway the same way the desktop client goes (wss with BSK_CA, as in its tests).
-    let mut socket =
-        GameSocket::connect(&Target { host: server.host.clone(), port: server.port, gateway: args.gateway.clone() });
+    let mut target = Target { host: server.host.clone(), port: server.port, gateway: args.gateway.clone() };
+    let mut socket = GameSocket::connect(&target);
     let started = Instant::now();
     let now = || started.elapsed().as_millis() as i32;
-    let hello = HelloParams {
+    let (guid, password) = (login::encrypt(&email), login::encrypt(&password));
+    let hello = |game_id: i32, key_time: i32, key: Vec<u8>| HelloParams {
         build_version: login::BUILD_VERSION.into(),
-        game_id: NEXUS_GAME_ID,
-        guid: login::encrypt(&email),
-        password: login::encrypt(&password),
-        key_time: -1,
-        key: vec![],
+        game_id,
+        guid: guid.clone(),
+        password: password.clone(),
+        key_time,
+        key,
     };
-    let (mut session, first) = Session::start(hello, Join::Load { char_id: ch.id });
+    let (mut session, first) = Session::start(hello(NEXUS_GAME_ID, -1, vec![]), Join::Load { char_id: ch.id });
     socket.send(&first);
 
     let mut received: BTreeMap<&'static str, u32> = BTreeMap::new();
@@ -104,6 +107,7 @@ fn run(args: Args) -> Result<(), String> {
     let mut next_report = started + Duration::from_secs(10);
     // The round trips the server measured (each Ping carries its recent average), this report.
     let mut rtts: Vec<i32> = Vec::new();
+    let mut reconnects = 0;
 
     let result = loop {
         if Instant::now() >= deadline {
@@ -158,7 +162,22 @@ fn run(args: Args) -> Result<(), String> {
                     Some(Event::Failure { error_id, description }) => {
                         break Err(format!("failure {error_id}: {description}"))
                     }
-                    Some(Event::Reconnect(r)) => break Err(format!("asked to reconnect to {}:{}", r.host, r.port)),
+                    Some(Event::Reconnect(r)) => {
+                        log::info!("reconnecting to {} (game {}{})", r.name, r.game_id,
+                            if r.host.is_empty() { String::new() } else { format!(" at {}:{}", r.host, r.port) });
+                        socket.close();
+                        if !r.host.is_empty() {
+                            target.host = r.host.clone();
+                            target.port = r.port as u16;
+                        }
+                        socket = GameSocket::connect(&target);
+                        let (s, first) = Session::start(hello(r.game_id, r.key_time, r.key.0.clone()), Join::Load { char_id: ch.id });
+                        session = s;
+                        out.clear();
+                        socket.send(&first);
+                        reconnects += 1;
+                        continue;
+                    }
                     None => {}
                 }
                 for m in out.drain(..) {
@@ -175,7 +194,7 @@ fn run(args: Args) -> Result<(), String> {
         return Err(result.err().unwrap_or_else(|| format!("never got into the game ({:?})", session.phase)));
     }
     result?;
-    log::info!("stayed connected for {} s at {:?}", args.seconds, session.position);
+    log::info!("stayed connected for {} s at {:?} ({reconnects} world changes)", args.seconds, session.position);
     socket.close();
     Ok(())
 }

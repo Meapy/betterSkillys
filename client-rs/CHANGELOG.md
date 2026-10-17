@@ -8,6 +8,12 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
+## Unreleased
+- Server updates no longer disconnect anyone, in the browser or the desktop game: you move to
+  the updated server the next time you change worlds.
+- If your connection drops while you play, the game now takes you back to the Nexus by itself
+  instead of sending you to the character list (it keeps trying for about two minutes).
+
 ## 1.2.3 (2026-10-17)
 - Monsters that never had any behaviour now move, attack and taunt: the Red Demon, the Phoenix
   Lord (which turns into an egg when it dies), the Lich, the Ent Ancient, the Ghost King and the

@@ -40,12 +40,16 @@ dotnet build source\WorldServer\WorldServer.csproj -c Debug -o build\wscheck   #
   logs "Tick stats" (`core/worlds/TickProfile.cs`): its ticks' work, the gaps between them (what
   players feel), the time per part of the tick, and the garbage collections. Measure with those.
 - **Deploying a server change:** `python deploy\deploy.py` from the main checkout (ask the owner
-  first: it changes what players run). A new world server goes in with a rolling deploy and kicks
-  nobody (see "Rolling deploys" below); a changed account server restarts, which pauses logins for
-  a few seconds. A message change ships with the client, as before.
+  first: it changes what players run). Nothing it does kicks anyone: a new world server goes in
+  with a rolling deploy (see "Rolling deploys" below); a changed account server restarts, which
+  pauses sign-ins for a few seconds (in-game players are on the world servers, and the gateway
+  holds https account requests until it's back); a new gateway starts in a free slot while the old
+  one hands over (SETUP-LOCAL.md, "Deploys that kick nobody"). A message change ships with the
+  client, as before.
 - **On the VPS:** logs are in `/opt/bsk/build/live/<slot>/logs/wServer/`,
-  `/opt/bsk/app/logs/` and the journal (`journalctl -u bsk-world`); Redis is `redis-cli -p 6379`
-  there. `python deploy\deploy.py --status` shows the services and the world server slots.
+  `/opt/bsk/app/logs/` and the journal (`journalctl -u bsk-world`, `-u 'bsk-gateway@*'`); Redis is
+  `redis-cli -p 6379` there. `python deploy\deploy.py --status` shows the services, the world
+  server slots and the gateway slots.
 - **Stopping a world server** saves everyone on Ctrl+C (Windows) or SIGTERM (Linux): `GameServer.Stop`
   ends the loop and `ConnectionListener.Shutdown` disconnects each player, which saves them.
   A forced kill (`taskkill /F`, which `rolling_restart.py stop` uses on Windows) skips that.

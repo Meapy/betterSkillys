@@ -20,6 +20,13 @@
 //! Caddy), so the world server doesn't see everyone as 127.0.0.1 (IP bans, mutes). Only for a
 //! world proxy (`tools/world_proxy.py`) that takes it in place of its own: an older one routes
 //! such a connection to the active world server whatever its Hello asks for.
+//!
+//! Deploys without disconnecting anyone (deploy/remote/install.sh): a new gateway starts beside
+//! the old one, and the old one gets SIGUSR1. From then on `/healthz` answers 503, so Caddy (which
+//! checks it every second) sends new requests to the new one; the old one keeps its open bridges
+//! and exits once the last one closes (players move over at their next world change, which opens
+//! a new connection), or when `--drain-limit` seconds (3 hours) are up. SIGTERM still stops it at
+//! once. `/healthz` gives the number of open bridges either way: `ok 12` or `draining 3`.
 
 use axum::body::Bytes;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
@@ -32,7 +39,9 @@ use futures::{SinkExt, StreamExt};
 use axum::extract::ConnectInfo;
 use std::collections::HashMap;
 use std::net::SocketAddr;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
@@ -42,10 +51,23 @@ struct Config {
     allowed: HashMap<String, String>,
     forward_address: bool,
     http: reqwest::Client,
+    /// How long a draining gateway keeps its bridges at most.
+    #[cfg_attr(not(unix), allow(dead_code))] // handing over is Linux-only (SIGUSR1)
+    drain_limit: Duration,
+    /// Open WebSocket bridges.
+    bridges: AtomicUsize,
+    /// Handing over to a newer gateway (SIGUSR1).
+    draining: AtomicBool,
 }
 
 /// Largest account request accepted from a browser.
 const MAX_API_BODY: usize = 64 * 1024;
+/// How long an account request waits for an account server that isn't listening (restarting).
+const ACCOUNT_RETRY: Duration = Duration::from_secs(20);
+/// A draining gateway stays at least this long, so Caddy has seen its `/healthz` turn 503 before
+/// it stops listening.
+#[cfg_attr(not(unix), allow(dead_code))]
+const DRAIN_MIN: Duration = Duration::from_secs(10);
 
 fn parse_args() -> Result<(String, String, Config), String> {
     let mut web = None;
@@ -53,6 +75,7 @@ fn parse_args() -> Result<(String, String, Config), String> {
     let mut account = None;
     let mut allowed = HashMap::new();
     let mut forward_address = false;
+    let mut drain_limit = Duration::from_secs(3 * 3600);
     let mut it = std::env::args().skip(1);
     while let Some(a) = it.next() {
         let mut value = || it.next().ok_or(format!("{a} needs a value"));
@@ -66,15 +89,28 @@ fn parse_args() -> Result<(String, String, Config), String> {
                 allowed.insert(target.to_owned(), to.to_owned());
             }
             "--forward-address" => forward_address = true,
+            "--drain-limit" => {
+                let v = value()?;
+                drain_limit = Duration::from_secs(v.parse().map_err(|_| format!("--drain-limit {v}: not a number of seconds"))?);
+            }
             _ => return Err(format!("unknown argument {a}")),
         }
     }
-    let usage = "usage: bsk-gateway --web <dir> --account <url> --allow <host:port>[=<host:port>]... [--bind <addr:port>] [--forward-address]";
+    let usage = "usage: bsk-gateway --web <dir> --account <url> --allow <host:port>[=<host:port>]... [--bind <addr:port>] [--forward-address] [--drain-limit <seconds>]";
     let (Some(web), Some(account)) = (web, account) else { return Err(usage.into()) };
     if allowed.is_empty() {
         return Err(format!("no --allow world server given\n{usage}"));
     }
-    Ok((web, bind, Config { account, allowed, forward_address, http: reqwest::Client::new() }))
+    let config = Config {
+        account,
+        allowed,
+        forward_address,
+        http: reqwest::Client::new(),
+        drain_limit,
+        bridges: AtomicUsize::new(0),
+        draining: AtomicBool::new(false),
+    };
+    Ok((web, bind, config))
 }
 
 #[tokio::main]
@@ -88,13 +124,17 @@ async fn main() {
         }
     };
     log::info!("serving {web} on http://{bind}, account server {}, world servers {:?}", config.account, config.allowed);
+    let config = Arc::new(config);
+    #[cfg(unix)]
+    tokio::spawn(drain_on_signal(config.clone()));
     let app = Router::new()
         .route("/ws/:target", get(bridge))
         .route("/api/*path", any(api))
+        .route("/healthz", get(health))
         // The build's .gz copies when the browser takes gzip (build_client_rs.py --web makes them).
         .fallback_service(tower_http::services::ServeDir::new(web).precompressed_gzip())
         .layer(axum::middleware::from_fn(cache_headers))
-        .with_state(Arc::new(config));
+        .with_state(config);
     let listener = tokio::net::TcpListener::bind(&bind).await.unwrap_or_else(|e| {
         eprintln!("{bind}: {e}");
         std::process::exit(1);
@@ -105,6 +145,52 @@ async fn main() {
         .tcp_nodelay(true)
         .await
         .expect("server");
+}
+
+/// For Caddy's health checks and the deploy: 200 while this gateway takes new players, 503 once
+/// it's handing over; either way with the number of open bridges.
+async fn health(State(config): State<Arc<Config>>) -> Response {
+    let bridges = config.bridges.load(Ordering::Relaxed);
+    if config.draining.load(Ordering::Relaxed) {
+        (StatusCode::SERVICE_UNAVAILABLE, format!("draining {bridges}\n")).into_response()
+    } else {
+        format!("ok {bridges}\n").into_response()
+    }
+}
+
+/// SIGUSR1: hand over to a newer gateway (see the top of this file), then exit with 0.
+#[cfg(unix)]
+async fn drain_on_signal(config: Arc<Config>) {
+    use tokio::signal::unix::{signal, SignalKind};
+    let Ok(mut usr1) = signal(SignalKind::user_defined1()) else {
+        log::warn!("can't listen for SIGUSR1: this gateway can't hand over");
+        return;
+    };
+    usr1.recv().await;
+    config.draining.store(true, Ordering::Relaxed);
+    let started = Instant::now();
+    log::info!(
+        "handing over: no new players; exiting when the {} open bridges have closed, or in {} min",
+        config.bridges.load(Ordering::Relaxed),
+        config.drain_limit.as_secs() / 60
+    );
+    let mut last_report = Instant::now();
+    loop {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        let open = config.bridges.load(Ordering::Relaxed);
+        if open == 0 && started.elapsed() >= DRAIN_MIN {
+            log::info!("handed over: no bridges left after {} s", started.elapsed().as_secs());
+            std::process::exit(0);
+        }
+        if started.elapsed() >= config.drain_limit {
+            log::info!("handed over: time's up, closing the last {open} bridges");
+            std::process::exit(0);
+        }
+        if last_report.elapsed() >= Duration::from_secs(60) {
+            last_report = Instant::now();
+            log::info!("handing over: {open} bridges still open");
+        }
+    }
 }
 
 /// Files asked for with the build in the query (`?v=`, every file the page and the game load)
@@ -136,14 +222,26 @@ async fn api(
     }
     let query = uri.query().map(|q| format!("?{q}")).unwrap_or_default();
     let url = format!("{}/{}{}", config.account, path, query);
-    let mut request = config.http.request(method, &url).body(body);
-    if let Some(ct) = headers.get("content-type") {
-        request = request.header("content-type", ct);
-    }
     // The player's address, for the account server's limits: the one the proxy in front (Caddy)
     // forwarded, else the peer's own, so a player reaching the gateway directly can't pick one.
-    request = request.header("x-forwarded-for", player_address(peer, &headers));
-    match request.send().await {
+    let address = player_address(peer, &headers);
+    let started = Instant::now();
+    let result = loop {
+        let mut request = config.http.request(method.clone(), &url).body(body.clone());
+        if let Some(ct) = headers.get("content-type") {
+            request = request.header("content-type", ct);
+        }
+        request = request.header("x-forwarded-for", &address);
+        match request.send().await {
+            // Not listening: the account server is restarting (a deploy). Nothing reached it, so
+            // asking again is safe; the player waits a few seconds rather than seeing an error.
+            Err(e) if e.is_connect() && started.elapsed() < ACCOUNT_RETRY => {
+                tokio::time::sleep(Duration::from_millis(250)).await;
+            }
+            result => break result,
+        }
+    };
+    match result {
         Ok(r) => {
             let status = StatusCode::from_u16(r.status().as_u16()).unwrap_or(StatusCode::BAD_GATEWAY);
             let content_type = r.headers().get("content-type").cloned();
@@ -175,7 +273,11 @@ async fn bridge(
         return StatusCode::FORBIDDEN.into_response();
     };
     let address = config.forward_address.then(|| player_address(peer, &headers));
-    ws.on_upgrade(move |socket| relay(socket, to, address))
+    ws.on_upgrade(move |socket| async move {
+        config.bridges.fetch_add(1, Ordering::Relaxed);
+        relay(socket, to, address).await;
+        config.bridges.fetch_sub(1, Ordering::Relaxed);
+    })
 }
 
 /// The player's address: the one Caddy (on this machine) forwarded, else the peer's.
