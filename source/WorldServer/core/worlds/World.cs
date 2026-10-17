@@ -581,6 +581,27 @@ namespace WorldServer.core.worlds
             return ret;
         }
 
+        // Every dungeon gives a way back to the realm: once its last boss (quest monster) is dead and
+        // nothing it dropped was a realm portal, one appears where it died. The check waits two
+        // seconds, for bosses that change form and for portals their death behaviours drop.
+        public void BossDied(Enemy boss)
+        {
+            if (IsRealm || InstanceType != WorldResourceInstanceType.Dungeon || IdName.Contains("Arena") || IdName.Contains("Zombies"))
+                return;
+            var (x, y) = (boss.X, boss.Y);
+            StartNewTimer(2000, (world, t) =>
+            {
+                if (world.Quests.Count > 0 || world.Portals.Values.Any(p => p.ObjectDesc.IdName is "Realm Portal" or "Random Realm Portal"))
+                    return;
+                var portal = Entity.Resolve(world.GameServer, "Realm Portal");
+                if (portal == null)
+                    return;
+                portal.Move(x, y);
+                world.EnterWorld(portal);
+                StaticLogger.Instance.Info($"[{world.IdName} {world.Id}] {boss.ObjectDesc.IdName} left no realm portal; one opened at ({(int)x}, {(int)y}).");
+            });
+        }
+
         /// <summary>Where this world's ticks spend their time (logged as "Tick stats").</summary>
         public readonly TickProfile Profile = new TickProfile();
 

@@ -204,6 +204,8 @@ namespace WorldServer.core.objects
                 OnDeath?.Invoke(this, new BehaviorEventArgs(this, time));
                 if (GameServer.BehaviorDb.Definitions.TryGetValue(ObjectType, out var loot))
                     loot.Item2?.Handle(this, time);
+                if (ObjectDesc.Quest)
+                    World?.BossDied(this);
             }
             Dead = true;
             World.LeaveWorld(this);

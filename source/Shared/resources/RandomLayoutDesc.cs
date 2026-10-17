@@ -17,9 +17,17 @@ namespace Shared.resources
         public readonly double MainPath;
         // a room holding one of these objects ends a branch (the boss room, a key room)
         public readonly string[] Goals;
+        // share of the map's other rooms (not the spawn or goal rooms) used by a small, medium and
+        // large layout; each instance picks a size, small 30%, medium 60% and large 10% of the time
+        public readonly double Small;
+        public readonly double Medium;
+        public readonly double Large;
 
         public RandomLayoutDesc(XElement e)
         {
+            Small = e.GetAttribute("small", 0.4);
+            Medium = e.GetAttribute("medium", 0.65);
+            Large = e.GetAttribute("large", 1.0);
             Passage = e.GetAttribute("passage", 2);
             Corridor = e.GetAttribute("corridor", 2);
             MinGap = e.GetAttribute("minGap", 3);

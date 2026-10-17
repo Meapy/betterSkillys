@@ -8,6 +8,13 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
+## Unreleased
+- Randomly built dungeons are shorter: each run now comes out small (3 in 10 runs), medium (6 in
+  10) or large (1 in 10, about the size they were before), with shorter corridors in the small
+  and medium ones.
+- Every dungeon boss now leaves a Realm Portal behind when it dies, and portals that bosses drop
+  in a dungeon (the Realm Portal, an Elder dungeon) stay open instead of closing after a while.
+
 ## 1.2.2 (2026-10-17)
 - Fixed being disconnected from the game with "Overlapped I/O operation is in progress (os
   error 997)" on some Windows PCs.

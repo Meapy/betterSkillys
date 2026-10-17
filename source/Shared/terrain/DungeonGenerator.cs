@@ -12,7 +12,8 @@ namespace Shared.terrain
     // Builds a new layout for a dungeon out of the rooms of its hand-made map. The map is cut into
     // rooms (wide areas, with the monsters and objects standing in them) and corridors (narrow
     // passages), then the rooms are joined again in a random tree with straight corridors: the
-    // spawn room is the root and every goal room (boss, key room) ends a branch.
+    // spawn room is the root and every goal room (boss, key room) ends a branch. Each instance
+    // picks a size, which sets how many of the other rooms are used and how long the corridors get.
     public static class DungeonGenerator
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -24,6 +25,16 @@ namespace Shared.terrain
         private const int Margin = 4;
         private const int Spacing = 2;      // empty tiles kept around a room's walls
         private const int DoorDepth = 3;    // how far a corridor may tunnel into a room's bounds
+        private const int ShortGap = 6;     // longest corridor gap in a small or medium layout
+
+        public enum Size { Small, Medium, Large }
+
+        // small 30%, medium 60%, large 10%
+        public static Size PickSize(Random rand)
+        {
+            var roll = rand.Next(100);
+            return roll < 30 ? Size.Small : roll < 90 ? Size.Medium : Size.Large;
+        }
 
         private static readonly int[] Dx = { 1, 0, -1, 0 };
         private static readonly int[] Dy = { 0, 1, 0, -1 };
@@ -37,11 +48,18 @@ namespace Shared.terrain
                 if (source == null)
                     return null;
 
+                var size = PickSize(rand);
+                var share = size switch { Size.Small => desc.Small, Size.Medium => desc.Medium, _ => desc.Large };
+                var rooms = Math.Clamp((int)Math.Round(source.Fillers.Count * share), Math.Min(source.Fillers.Count, 2), source.Fillers.Count);
+                var maxGap = size == Size.Large ? desc.MaxGap : Math.Max(desc.MinGap, Math.Min(desc.MaxGap, ShortGap));
                 for (var i = 0; i < Attempts; i++)
                 {
-                    var tiles = new Builder(source, desc, rand).Build();
+                    var tiles = new Builder(source, desc, rand, rooms, maxGap).Build();
                     if (tiles != null)
+                    {
+                        Log.Info("Random layout for '{0}': {1}, {2} of {3} rooms.", mapName, size.ToString().ToLowerInvariant(), rooms, source.Fillers.Count);
                         return WorldMapExporter.Export(tiles);
+                    }
                 }
                 Log.Warn("Random layout for '{0}' failed {1} times; using the fixed map.", mapName, Attempts);
             }
@@ -505,17 +523,21 @@ namespace Shared.terrain
             private readonly Source Source;
             private readonly RandomLayoutDesc Desc;
             private readonly Random Rand;
+            private readonly int Rooms;     // how many of the source's fillers to use
+            private readonly int MaxGap;
             private readonly int[,] Owner = new int[CanvasSize, CanvasSize];   // 0 empty, -1 corridor, else room id
             private readonly List<(Room room, int x, int y)> Placed = new List<(Room, int, int)>();
             private readonly Dictionary<Room, (int x, int y)> Pos = new Dictionary<Room, (int, int)>();
             private readonly List<(int x0, int y0, int x1, int y1)> Lanes = new List<(int, int, int, int)>();
             private readonly Dictionary<Room, List<(int d, int from, int to)>> UsedSides = new Dictionary<Room, List<(int, int, int)>>();
 
-            public Builder(Source source, RandomLayoutDesc desc, Random rand)
+            public Builder(Source source, RandomLayoutDesc desc, Random rand, int rooms, int maxGap)
             {
                 Source = source;
                 Desc = desc;
                 Rand = rand;
+                Rooms = rooms;
+                MaxGap = maxGap;
             }
 
             public TerrainTile[,] Build()
@@ -525,7 +547,7 @@ namespace Shared.terrain
                     return null;
                 Place(start, (CanvasSize - start.W) / 2, (CanvasSize - start.H) / 2);
 
-                var fillers = Source.Fillers.OrderBy(_ => Rand.Next()).ToList();
+                var fillers = Source.Fillers.OrderBy(_ => Rand.Next()).Take(Rooms).ToList();
                 var goals = Source.Goals.OrderBy(_ => Rand.Next()).ToList();
                 var chains = Math.Max(1, goals.Count);
                 var main = (int)Math.Round(fillers.Count * Desc.MainPath);
@@ -563,7 +585,7 @@ namespace Shared.terrain
                     }
                 }
 
-                // every room has to fit, or its monsters would be missing
+                // every room picked has to fit, or its monsters would be missing
                 spurs.AddRange(fillers.Skip(next));
                 foreach (var room in spurs)
                     if (!Placed.Select(p => p.room).Where(p => !p.Goal).OrderBy(_ => Rand.Next()).ToList().Any(a => Attach(a, room)))
@@ -609,7 +631,7 @@ namespace Shared.terrain
                     if (da == null || db == null || !SideFree(a, d, da.Perp, da.Perp + Desc.Corridor - 1))
                         continue;
 
-                    var gap = Rand.Next(Desc.MinGap, Desc.MaxGap + 1);
+                    var gap = Rand.Next(Desc.MinGap, MaxGap + 1);
                     var horizontal = d % 2 == 0;
                     int bx, by;
                     if (horizontal)

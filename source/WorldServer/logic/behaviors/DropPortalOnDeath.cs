@@ -62,7 +62,9 @@ namespace WorldServer.logic.behaviors
                     portal.LockedHint = _lockedHint;
                 owner.EnterWorld(entity);
 
-                if (timeoutTime != 0)
+                // in a dungeon the portals a monster drops (the realm portal, an Elder dungeon) stay
+                // open; only those in a realm close, or the realm would fill up with them
+                if (timeoutTime != 0 && owner.IsRealm)
                     owner.StartNewTimer(timeoutTime * 1000, (world, t) => //default portal close time * 1000
                     {
                         try { world.LeaveWorld(entity); }
