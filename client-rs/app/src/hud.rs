@@ -1821,6 +1821,8 @@ fn activate_detail(a: &bsk_data::xml::Element) -> String {
         "Fame" => format!("+{} fame", num("amount")),
         "Gold" => format!("+{} gold", num("amount")),
         "CreatePortal" | "Create" => format!("Opens {}", text("id")),
+        "Exchange" => format!("Gives you a {}", text("id")),
+        "MysteryDyes" => "Gives you one of the items listed".to_owned(),
         "Backpack" => "Gives you a backpack".to_owned(),
         "UnlockSkin" => "Unlocks a skin".to_owned(),
         "UnlockPetSkin" => "Unlocks a pet skin".to_owned(),

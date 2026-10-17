@@ -151,6 +151,13 @@ namespace WorldServer.core.objects
                     return;
                 }
 
+            // an item whose effect the server can't carry out isn't spent for nothing
+            if (!CanCarryOut(item))
+            {
+                Refuse("This item doesn't work yet.");
+                return;
+            }
+
             // use item
             var slotType = 10;
             if (slot < containerInventory.Length)
@@ -591,6 +598,11 @@ namespace WorldServer.core.objects
                         AEChangeObject(item, eff);
                         break;
                     case ActivateEffects.Exchange:
+                        AEExchange(eff);
+                        break;
+                    case ActivateEffects.MysteryDyes:
+                        AEMysteryBox(item);
+                        break;
                     case ActivateEffects.UnlockPetSkin:
                     case ActivateEffects.CreatePet:
                     case ActivateEffects.TeleportToObject:

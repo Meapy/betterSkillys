@@ -9,6 +9,10 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- Enchanted Keys now give the Mystery ST Crate they promise when you open their dungeon, and
+  the crate gives you one of the items it lists. Mystery Dyes from the Nexus shop now give a
+  dye, and the Mystery ST Chest an ST item. Items the game can't use yet now stay in your
+  inventory instead of disappearing.
 - Server updates no longer disconnect anyone, in the browser or the desktop game: you move to
   the updated server the next time you change worlds.
 - If your connection drops while you play, the game now takes you back to the Nexus by itself
