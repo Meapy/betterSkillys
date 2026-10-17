@@ -8,7 +8,7 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
-## Unreleased
+## 1.2.4 (2026-10-17)
 - Enchanted Keys now give the Mystery ST Crate they promise when you open their dungeon, and
   the crate gives you one of the items it lists. Mystery Dyes from the Nexus shop now give a
   dye, and the Mystery ST Chest an ST item. Items the game can't use yet now stay in your
