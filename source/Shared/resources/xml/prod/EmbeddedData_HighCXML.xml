@@ -1087,7 +1087,7 @@
 		</AltTexture>
 		<HitSound>monster/lizard_god_hit</HitSound>
 		<DeathSound>monster/lizard_god_death</DeathSound>
-		<Size>-1</Size>
+		<Size>100</Size>
 		<MaxHitPoints>40000</MaxHitPoints>
 		<Defense>10</Defense>
 		<Terrain>HighForest</Terrain>
