@@ -1523,6 +1523,9 @@ impl App {
             damage_numbers: self.settings.damage_numbers,
         };
         if matches!(self.phase, Phase::Menu) {
+            // The crosshair is only for the game: however it was left (a death, a disconnect,
+            // the Escape menu), the pointer shows again here.
+            hide_pointer(&self.window, &mut self.cursor_hidden, false, "menu");
             let mut actions = Vec::new();
             for (code, text, ctrl, shift) in std::mem::take(&mut self.front_keys) {
                 actions.extend(self.front.key(code, text.as_deref(), ctrl, shift));
@@ -2047,12 +2050,7 @@ impl App {
         if crosshair {
             draw_crosshair(renderer, mouse, lay.s);
         }
-        if crosshair != self.cursor_hidden {
-            self.cursor_hidden = crosshair;
-            if let Some(window) = &self.window {
-                window.set_cursor_visible(!crosshair);
-            }
-        }
+        hide_pointer(&self.window, &mut self.cursor_hidden, crosshair, "game");
         if self.game_menu {
             let (w, h) = renderer.size();
             let mut ui = hud::Ui { renderer: &mut *renderer, sprites, data, redrawer: &mut *redrawer, fonts, text: &mut *text };
@@ -2145,6 +2143,17 @@ impl App {
             }
             self.fps_frames = 0;
             self.fps_since = Instant::now();
+        }
+    }
+}
+
+/// Hide the pointer (for the crosshair) or show it again, logging the change and where.
+fn hide_pointer(window: &Option<Arc<Window>>, hidden: &mut bool, hide: bool, place: &str) {
+    if hide != *hidden {
+        *hidden = hide;
+        log::info!("pointer {} ({place})", if hide { "hidden" } else { "shown" });
+        if let Some(window) = window {
+            window.set_cursor_visible(!hide);
         }
     }
 }
