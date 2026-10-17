@@ -60,6 +60,12 @@ impl Element {
         self.child(name).map(|c| c.text.as_str())
     }
 
+    /// A child's text with its written `\n`s as line breaks (descriptions keep their line breaks
+    /// that way; the AIR client turned them into real ones), trimmed.
+    pub fn lines_of(&self, name: &str) -> Option<String> {
+        self.text_of(name).map(|t| t.trim().replace("\\n", "\n"))
+    }
+
     pub fn attr_int(&self, name: &str, default: i32) -> i32 {
         self.attr(name).map_or(default, as3_int)
     }

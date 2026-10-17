@@ -1114,20 +1114,24 @@ impl Front {
             ui.label(&format!("Next goal: earn {next} fame with a {}", desc.display_id), left[0] + 22.0 * s, dy, size, false, 0xFC8642);
             dy += 18.0 * s;
         }
-        if let Some(d) = desc.xml.text_of("Description") {
+        if let Some(d) = desc.xml.lines_of("Description") {
             let mut y = dy + 12.0 * s;
-            let mut line = String::new();
-            for word in d.split_whitespace() {
-                let next = if line.is_empty() { word.to_owned() } else { format!("{line} {word}") };
-                if ui.measure(&next, size, false) > left[2] - 44.0 * s && !line.is_empty() {
-                    ui.label(&line, left[0] + 22.0 * s, y, size, false, color::TEXT_DIM);
-                    y += size * 1.3;
-                    line = word.to_owned();
-                } else {
-                    line = next;
+            // Each of its lines wrapped on its own; an empty one is a gap between paragraphs.
+            for para in d.lines() {
+                let mut line = String::new();
+                for word in para.split_whitespace() {
+                    let next = if line.is_empty() { word.to_owned() } else { format!("{line} {word}") };
+                    if ui.measure(&next, size, false) > left[2] - 44.0 * s && !line.is_empty() {
+                        ui.label(&line, left[0] + 22.0 * s, y, size, false, color::TEXT_DIM);
+                        y += size * 1.3;
+                        line = word.to_owned();
+                    } else {
+                        line = next;
+                    }
                 }
+                ui.label(&line, left[0] + 22.0 * s, y, size, false, color::TEXT_DIM);
+                y += size * 1.3;
             }
-            ui.label(&line, left[0] + 22.0 * s, y, size, false, color::TEXT_DIM);
         }
         self.button(ui, Target::Create, [left[0] + 22.0 * s, left[1] + left[3] - 62.0 * s, left[2] - 44.0 * s, 44.0 * s], "Create character", Kind::Primary, s, mouse);
 

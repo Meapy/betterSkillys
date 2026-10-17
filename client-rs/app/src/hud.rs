@@ -1653,8 +1653,11 @@ pub fn item_tooltip(data: &GameData, item: i32, me: Option<&GameObj>, kind: Slot
     if let Some((tag, color)) = tier_tag(xml) {
         out.push(Line::new(&tag, 14.0, true, color));
     }
-    if let Some(d) = xml.text_of("Description") {
-        out.push(Line::new(d.trim(), 13.0, false, ATTR));
+    if let Some(d) = xml.lines_of("Description") {
+        // One line each, an empty one between paragraphs.
+        for l in d.lines() {
+            out.push(Line::new(l.trim(), if l.trim().is_empty() { 6.0 } else { 13.0 }, false, ATTR));
+        }
     }
     let mut attr = |label: &str, value: String, color: u32| out.push(Line::new(&format!("{label}: {value}"), 13.0, false, color));
     if let Some(p) = desc.projectiles.get(&0) {
