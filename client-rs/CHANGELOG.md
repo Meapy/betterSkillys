@@ -9,6 +9,11 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- Smoother walking: your character no longer flickers to standing or shakes by a pixel while
+  you walk (most noticeable with the frame rate unlocked), sliding along a wall no longer shakes
+  the view, monsters and other players keep walking instead of flickering to standing between
+  server updates, and legs move at a pace that matches how fast each character walks, as in
+  the original game.
 - Randomly built dungeons are shorter: each run now comes out small (3 in 10 runs), medium (6 in
   10) or large (1 in 10, about the size they were before), with shorter corridors in the small
   and medium ones.

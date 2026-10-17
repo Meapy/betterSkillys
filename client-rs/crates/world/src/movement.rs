@@ -9,7 +9,7 @@ const MOVE_THRESHOLD: f64 = 0.4;
 const MIN_MOVE_SPEED: f64 = 0.004;
 const MAX_MOVE_SPEED: f64 = 0.0096;
 const MAX_SINK_LEVEL: i32 = 18;
-const SPEED_STAT: u8 = 22;
+pub const SPEED_STAT: u8 = 22;
 
 /// The keys held: a direction relative to the screen (x right, y down; each -1, 0 or 1) and
 /// the camera angle the screen is turned by.
@@ -45,8 +45,8 @@ impl World {
             (rel_x, rel_y) = (-rel_y, -rel_x);
         }
         let (mut vx, mut vy) = (0.0, 0.0);
+        let speed = move_speed(player.stat_int(SPEED_STAT).unwrap_or(0), conditions, self.move_multiplier);
         if rel_x != 0.0 || rel_y != 0.0 {
-            let speed = move_speed(player.stat_int(SPEED_STAT).unwrap_or(0), conditions, self.move_multiplier);
             let angle = input.camera_angle + rel_y.atan2(rel_x);
             vx = speed * angle.cos();
             vy = speed * angle.sin();
@@ -72,7 +72,11 @@ impl World {
         };
         let moved = (nx, ny) != (x, y);
         if let Some(p) = self.objects.get_mut(&me) {
-            p.moving = moved;
+            // Walk frames whenever we're pushed somewhere (`moveVec_`), as the AIR client: also
+            // into a wall, and in a frame too short to move in (a 0 ms step at high frame rates,
+            // which used to flash the standing frame).
+            p.moving = true;
+            p.walk_speed = speed;
             if rel_x != 0.0 || rel_y != 0.0 {
                 p.facing = vy.atan2(vx);
             }
@@ -128,16 +132,21 @@ impl World {
         }
         let mut next_x = f64::NAN;
         let mut next_y = f64::NAN;
+        // Stopped short of a square's border going east or south, but never pushed back from
+        // it: the AIR client puts us 0.01 short every time we touch it, so short steps (high
+        // frame rates, or sliding along a wall at an angle) crept up and were pushed back each
+        // frame, shaking the view. At most 0.001 short, so the position sent stays in our square.
+        let short_of = |border: f64, from: f64| (border - 0.01).max(from.min(border - 0.001));
         if x_cross {
             next_x = if x > x0 { int(x * 2.0) as f64 / 2.0 } else { int(x0 * 2.0) as f64 / 2.0 };
             if int(next_x) > int(x0) {
-                next_x -= 0.01;
+                next_x = short_of(next_x, x0);
             }
         }
         if y_cross {
             next_y = if y > y0 { int(y * 2.0) as f64 / 2.0 } else { int(y0 * 2.0) as f64 / 2.0 };
             if int(next_y) > int(y0) {
-                next_y -= 0.01;
+                next_y = short_of(next_y, y0);
             }
         }
         if !x_cross {

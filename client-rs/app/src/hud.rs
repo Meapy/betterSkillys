@@ -54,10 +54,11 @@ impl Layout {
     }
 
     /// Where the player stands (`Camera`'s screen rects): centred across the view, a little
-    /// below the middle (`centered`) or three quarters of the way down.
+    /// below the middle (`centered`) or three quarters of the way down,
+    /// on a whole pixel so we're drawn on the same pixels every frame (`view::draw_object`).
     pub fn camera_point(&self, centered: bool) -> (f64, f64) {
         let down = if centered { 13.0 / 24.0 } else { 3.0 / 4.0 };
-        (self.view_w() as f64 / 2.0, self.h as f64 * down)
+        ((self.view_w() as f64 / 2.0).round(), (self.h as f64 * down).round())
     }
 
     /// A point on the panel, from HUD units.
