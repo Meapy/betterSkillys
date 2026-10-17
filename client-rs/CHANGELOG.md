@@ -10,7 +10,9 @@ version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
 - Item tooltips and class descriptions break their lines and paragraphs properly, instead of
-  showing "\n" in the text (a crate's list of rewards is one item per line again).
+  showing stray "\n" marks in the text (a crate's list of rewards is one item per line again).
+
+## 1.2.4 (2026-10-17)
 - Enchanted Keys now give the Mystery ST Crate they promise when you open their dungeon, and
   the crate gives you one of the items it lists. Mystery Dyes from the Nexus shop now give a
   dye, and the Mystery ST Chest an ST item. Items the game can't use yet now stay in your
