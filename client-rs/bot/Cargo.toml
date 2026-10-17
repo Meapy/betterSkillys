@@ -11,4 +11,3 @@ bsk-proto.workspace = true
 bsk-session.workspace = true
 env_logger.workspace = true
 log.workspace = true
-tungstenite = "0.24"

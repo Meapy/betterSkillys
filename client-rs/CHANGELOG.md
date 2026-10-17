@@ -9,6 +9,8 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- Fixed being disconnected from the game with "Overlapped I/O operation is in progress (os
+  error 997)" on some Windows PCs.
 - The Nexus is rebuilt as the courtyard of a castle, much smaller than before: you arrive by the
   fountains, the realm portals are in the keep's great hall just north, and the shops are in two
   market wards either side behind colonnades. The Vault and guild portals are beside the spawn;

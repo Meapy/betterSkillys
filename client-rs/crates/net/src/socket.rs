@@ -42,7 +42,8 @@ mod imp {
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
 
-    /// How long a WebSocket read waits before sending what's queued: the most a message waits.
+    /// How long the WebSocket thread waits for something to send before reading again: the most a
+    /// received message waits.
     const WS_POLL: Duration = Duration::from_millis(5);
 
     pub struct GameSocket {
@@ -137,23 +138,30 @@ mod imp {
         }
     }
 
-    /// Through the gateway's WebSocket bridge (wss: encrypted), as the browser client goes. One
-    /// thread reads with a short timeout and sends what's queued in between, since the
-    /// connection can't be split between a reader and a writer.
+    /// Through the gateway's WebSocket bridge (wss: encrypted), as the browser client goes. The
+    /// connection can't be split between a reader and a writer, so one thread does both, with the
+    /// socket non-blocking: it reads all there is, then waits up to `WS_POLL` for something to send.
+    ///
+    /// Not a read timeout instead: on Windows a blocking read that times out leaves an overlapped
+    /// receive behind ("the connection is in an indeterminate state"), and on some PCs the next
+    /// call fails with os error 997, "Overlapped I/O operation is in progress", which dropped
+    /// players from the game.
     fn run_ws(
         url: &str,
         slot: &Mutex<Option<TcpStream>>,
         event_tx: &Sender<SocketEvent>,
         out_rx: Receiver<Vec<u8>>,
     ) -> Result<(), String> {
-        use tungstenite::{http::Uri, Connector, Message};
+        use std::sync::mpsc::{RecvTimeoutError, TryRecvError};
+        use tungstenite::{http::Uri, Connector, Error, Message};
         let uri: Uri = url.parse().map_err(|e| format!("{url}: {e}"))?;
         let host = uri.host().ok_or(format!("{url}: no host"))?;
         let port = uri.port_u16().unwrap_or(if uri.scheme_str() == Some("wss") { 443 } else { 80 });
         let tcp = open(host, port).map_err(|e| format!("can't connect to {host}:{port}: {e}"))?;
+        // The handshake blocks, with a time limit.
         tcp.set_read_timeout(Some(Duration::from_secs(15))).map_err(|e| e.to_string())?;
-        // A second handle, to shut the connection down from `close`. (Read timeouts go on the
-        // stream itself: on Windows a clone is a handle of its own, with its own timeout.)
+        tcp.set_write_timeout(Some(Duration::from_secs(15))).map_err(|e| e.to_string())?;
+        // A second handle, to shut the connection down from `close`.
         *slot.lock().unwrap() = Some(tcp.try_clone().map_err(|e| e.to_string())?);
         let (mut ws, _) = tungstenite::client_tls_with_config(url, tcp, None, Some(Connector::Rustls(crate::tls::config())))
             .map_err(|e| format!("{url}: {e}"))?;
@@ -162,28 +170,46 @@ mod imp {
             tungstenite::stream::MaybeTlsStream::Rustls(s) => s.get_mut(),
             _ => return Err("unexpected stream".into()),
         };
-        stream.set_read_timeout(Some(WS_POLL)).map_err(|e| e.to_string())?;
+        stream.set_read_timeout(None).map_err(|e| e.to_string())?;
+        stream.set_write_timeout(None).map_err(|e| e.to_string())?;
+        stream.set_nonblocking(true).map_err(|e| e.to_string())?;
         let _ = event_tx.send(SocketEvent::Connected);
+
+        /// `WouldBlock` only means "not now": what didn't go out stays queued for the next flush.
+        fn fatal(r: tungstenite::Result<()>) -> Result<(), String> {
+            match r {
+                Err(Error::Io(e)) if e.kind() == std::io::ErrorKind::WouldBlock => Ok(()),
+                r => r.map_err(|e| e.to_string()),
+            }
+        }
         let mut decoder = FrameDecoder::default();
         loop {
             loop {
                 match out_rx.try_recv() {
-                    Ok(frame) => ws.send(Message::Binary(frame)).map_err(|e| e.to_string())?,
-                    Err(std::sync::mpsc::TryRecvError::Empty) => break,
-                    Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    Ok(frame) => fatal(ws.write(Message::Binary(frame)))?,
+                    Err(TryRecvError::Empty) => break,
+                    Err(TryRecvError::Disconnected) => {
                         let _ = ws.close(None);
                         return Ok(());
                     }
                 }
             }
+            fatal(ws.flush())?;
             match ws.read() {
                 Ok(Message::Binary(bytes)) => decode_into(&mut decoder, &bytes, |ev| {
                     let _ = event_tx.send(ev);
                 })?,
                 Ok(Message::Close(_)) => return Err("the server closed the connection".into()),
                 Ok(_) => {}
-                Err(tungstenite::Error::Io(e))
-                    if matches!(e.kind(), std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut) => {}
+                // Nothing to read now: wait a little for something to send.
+                Err(Error::Io(e)) if e.kind() == std::io::ErrorKind::WouldBlock => match out_rx.recv_timeout(WS_POLL) {
+                    Ok(frame) => fatal(ws.write(Message::Binary(frame)))?,
+                    Err(RecvTimeoutError::Timeout) => {}
+                    Err(RecvTimeoutError::Disconnected) => {
+                        let _ = ws.close(None);
+                        return Ok(());
+                    }
+                },
                 Err(e) => return Err(e.to_string()),
             }
         }

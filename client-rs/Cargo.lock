@@ -357,7 +357,6 @@ dependencies = [
  "bsk-session",
  "env_logger",
  "log",
- "tungstenite",
 ]
 
 [[package]]
