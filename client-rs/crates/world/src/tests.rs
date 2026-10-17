@@ -103,6 +103,36 @@ fn water_blocks_walking_south() {
 }
 
 #[test]
+fn short_steps_into_water_never_back_off() {
+    // 1 ms steps (a high frame rate), heading south and a little east: we slide along the
+    // water's edge without being pushed back from it and creeping up again every frame.
+    let d = data();
+    let mut w = world(&d);
+    w.apply_goto(2, 5.05, 6.7, 0, &d);
+    let input = MoveInput { x: 0.3, y: 1.0, camera_angle: 0.0 };
+    let mut last = w.player().unwrap().y;
+    for t in 0..200 {
+        w.update(t, 1, &input, &d);
+        let y = w.player().unwrap().y;
+        assert!(y >= last && y < 7.0, "y went from {last} to {y} at {t} ms");
+        last = y;
+    }
+    assert!(last > 6.98, "y = {last}");
+}
+
+#[test]
+fn our_walk_frames_keep_going_in_a_0_ms_frame() {
+    let d = data();
+    let mut w = world(&d);
+    let input = MoveInput { x: -1.0, y: 0.0, camera_angle: 0.0 };
+    w.update(0, 5, &input, &d);
+    w.update(5, 0, &input, &d);
+    assert!(w.player().unwrap().moving);
+    w.update(5, 5, &MoveInput { x: 0.0, y: 0.0, camera_angle: 0.0 }, &d);
+    assert!(!w.player().unwrap().moving);
+}
+
+#[test]
 fn others_glide_to_their_tick_position() {
     let d = data();
     let mut w = world(&d);
@@ -121,6 +151,26 @@ fn others_glide_to_their_tick_position() {
     w.update(1400, 140, &MoveInput::default(), &d);
     let o = &w.objects[&3];
     assert!((o.x - 3.0).abs() < 1e-9 && !o.moving, "{}", o.x);
+}
+
+#[test]
+fn walkers_keep_their_walk_frames_through_a_late_tick() {
+    let d = data();
+    let mut w = world(&d);
+    let mut other = obj(3, PLAYER, 2.0, 2.0, 0);
+    other.status.stats = Default::default();
+    w.apply_update(&Update { new_objs: vec![other].into(), ..Default::default() }, &d, 0);
+    let to = |x: f32| ObjectStatus { object_id: 3, pos: WorldPos { x, y: 2.0 }, stats: Default::default() };
+    w.apply_new_tick(&NewTick { tick_id: 1, tick_time: 100, statuses: vec![to(2.5)].into() }, 1000);
+    // Its glide ends at 1130 and the next tick is late: it waits at 2.5, still walking.
+    w.update(1180, 50, &MoveInput::default(), &d);
+    let o = &w.objects[&3];
+    assert!((o.x - 2.5).abs() < 1e-9 && o.moving, "{} {}", o.x, o.moving);
+    assert!((o.walk_speed - 0.005).abs() < 1e-9, "{}", o.walk_speed);
+    // A tick that leaves it where it is: it stands at once.
+    w.apply_new_tick(&NewTick { tick_id: 2, tick_time: 100, statuses: vec![to(2.5)].into() }, 1190);
+    w.update(1191, 1, &MoveInput::default(), &d);
+    assert!(!w.objects[&3].moving);
 }
 
 #[test]

@@ -273,8 +273,8 @@ impl Scene<'_> {
         }
         let walking = obj.moving;
         let frame = if walking {
-            // walkPer: 400 ms for any normal speed; two frames.
-            let p = (self.time.rem_euclid(400)) as f64 / 400.0;
+            let period = self.walk_period(obj, desc);
+            let p = (self.time.rem_euclid(period)) as f64 / period as f64;
             let walk2 = self.sprites.char_src(set, *index, row, 2)?;
             if p < 0.5 || !self.sprites.is_blank(walk2) {
                 if p < 0.5 { 1 } else { 2 }
@@ -292,6 +292,21 @@ impl Scene<'_> {
         let src = self.sprites.char_src(set, *index, row, frame)?;
         let mask = self.sprites.char_mask_src(set, *index, row, frame);
         Some(Look { src, mirror, mask, wide: false, tex: None })
+    }
+
+    /// How long a walk cycle (both frames) takes, ms. Players: `Player.getTexture`'s
+    /// 3.5 / move speed (365 ms at the fastest, 875 at the slowest); others:
+    /// `GameObject.getTexture`'s 0.5 / speed, rounded up to a multiple of 400.
+    fn walk_period(&self, obj: &GameObj, desc: &ObjectDesc) -> i32 {
+        let speed = if desc.class != ObjectClass::Player {
+            let w = (0.5 / obj.walk_speed.max(1e-6)).min(1e6) as i32;
+            return w + (400 - w % 400);
+        } else if Some(obj.id) == self.world.me {
+            obj.walk_speed
+        } else {
+            bsk_world::move_speed(obj.stat_int(bsk_world::SPEED_STAT).unwrap_or(0), obj.conditions(), 1.0)
+        };
+        ((3.5 / speed.max(1e-6)) as i32).clamp(100, 2000)
     }
 
     /// `AnimatedChar.loadDir`'s attack frames: frame 4, then frame 5 (two frames wide with frame 6,
@@ -682,8 +697,11 @@ fn draw_sprite(scene: &Scene, renderer: &mut Renderer, redrawer: &mut Redrawer, 
     } else {
         0.0
     };
-    // On a whole pixel, so the art keeps its shape as the object moves.
-    let quad = Quad::rect((px - sw / 2.0 + shift).round(), (py - sh + sink * k).round(), sw, sh * cut);
+    // On a whole pixel, so the art keeps its shape as the object moves. The point it stands on
+    // is rounded apart from the sprite's size: it then lands where the ground's pixels do, and we
+    // (at the camera point, a whole pixel) stay put instead of wobbling a pixel to and fro as
+    // the snapped camera's leftover fraction rounds the sum one way or the other.
+    let quad = Quad::rect(px.round() + (shift - sw / 2.0).round(), py.round() + (sink * k - sh).round(), sw, sh * cut);
     let mut tint = scene.particles.flash_tint(obj.id, scene.time).unwrap_or(Tint::NONE);
     // Conditions (Player.getTexture, GameObject.getTexture): grey in stasis (and, for players,
     // paused or petrified), red when cursed, faint when invisible; a player low on health

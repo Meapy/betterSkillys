@@ -14,12 +14,17 @@ use bsk_proto::{stat, NewTick, ObjectData, StatData, StatValue, Update};
 use std::collections::HashMap;
 
 pub use combat::{Hit, Impact, Projectile};
-pub use movement::{move_speed, MoveInput};
+pub use movement::{move_speed, MoveInput, SPEED_STAT};
 pub use random::Random;
 
 /// Other objects glide to a tick's positions over this much of the tick's time, so one that
 /// moves every tick is still moving when the next tick comes a little late.
 const GLIDE_SLACK: f64 = 1.3;
+
+/// How long other objects keep their walk frames after a glide ends, ms, so one walking steadily
+/// doesn't flash its standing frame whenever a tick comes late. A tick that leaves it where it
+/// was stops them at once.
+const WALK_HOLD_MS: i32 = 100;
 
 /// The tile type of a square nothing has been sent for (`Square.tileType_` default).
 pub const NO_TILE: u16 = 255;
@@ -40,8 +45,14 @@ pub struct GameObj {
     glide_ms: f64,
     /// Every stat the server has sent, latest value.
     pub stats: HashMap<u8, StatValue>,
-    /// Whether it moved during the last update (for walk animation).
+    /// Whether it shows its walk frames: we hold a direction, or it glides (or just did) to a
+    /// tick that moved it.
     pub moving: bool,
+    /// Until when it walks (other objects; `WALK_HOLD_MS` past the glide's end).
+    walk_until: i32,
+    /// How fast it walks, tiles/ms (for the walk frames' pace): our move speed, or how far the
+    /// server moved it over the last tick.
+    pub walk_speed: f64,
     /// The direction it last moved in, radians (for facing).
     pub facing: f64,
     /// When it last attacked and toward which world angle (for the attack frames).
@@ -232,6 +243,8 @@ impl World {
             glide_ms: 0.0,
             stats: HashMap::new(),
             moving: false,
+            walk_until: i32::MIN / 2,
+            walk_speed: 0.0,
             facing: 0.0,
             attack_start: i32::MIN / 2,
             attack_angle: 0.0,
@@ -285,6 +298,7 @@ impl World {
             let is_me = Some(s.object_id) == self.me;
             let Some(obj) = self.objects.get_mut(&s.object_id) else { continue };
             if tick.tick_time != 0 && !is_me {
+                let (dx, dy) = (s.pos.x as f64 - obj.tick_x, s.pos.y as f64 - obj.tick_y);
                 obj.last_tick_update_time = start;
                 obj.tick_x = s.pos.x as f64;
                 obj.tick_y = s.pos.y as f64;
@@ -293,6 +307,16 @@ impl World {
                 obj.glide_ms = tick.tick_time as f64 * GLIDE_SLACK;
                 obj.move_x = (obj.tick_x - obj.pos_at_tick_x) / obj.glide_ms;
                 obj.move_y = (obj.tick_y - obj.pos_at_tick_y) / obj.glide_ms;
+                // Walk frames while it glides; past the glide's end too if this tick moved it.
+                let glide_end = start + obj.glide_ms as i32;
+                if dx != 0.0 || dy != 0.0 {
+                    obj.walk_until = glide_end + WALK_HOLD_MS;
+                    obj.walk_speed = dx.hypot(dy) / tick.tick_time as f64;
+                } else {
+                    // It stopped: it walks the rest of the way, if any, then stands.
+                    let rest = if obj.move_x == 0.0 && obj.move_y == 0.0 { start } else { glide_end };
+                    obj.walk_until = obj.walk_until.min(rest);
+                }
             }
             obj.apply_stats(&s.stats);
         }
@@ -306,6 +330,7 @@ impl World {
                 o.last_tick_update_time = time;
                 (o.tick_x, o.tick_y, o.pos_at_tick_x, o.pos_at_tick_y) = (x, y, x, y);
                 (o.move_x, o.move_y) = (0.0, 0.0);
+                o.walk_until = time;
             }
         }
     }
@@ -318,7 +343,7 @@ impl World {
         let ids: Vec<i32> = self.objects.keys().copied().filter(|&id| Some(id) != self.me).collect();
         for id in ids {
             let Some(o) = self.objects.get_mut(&id) else { continue };
-            o.moving = false;
+            o.moving = time < o.walk_until;
             if o.move_x == 0.0 && o.move_y == 0.0 {
                 continue;
             }
@@ -328,7 +353,6 @@ impl World {
                 (o.move_x, o.move_y) = (0.0, 0.0);
                 (o.tick_x, o.tick_y)
             } else {
-                o.moving = true;
                 o.facing = o.move_y.atan2(o.move_x);
                 (o.pos_at_tick_x + tick_dt * o.move_x, o.pos_at_tick_y + tick_dt * o.move_y)
             };
