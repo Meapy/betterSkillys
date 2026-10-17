@@ -8,7 +8,7 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
-## Unreleased
+## 1.2.3 (2026-10-17)
 - Monsters that never had any behaviour now move, attack and taunt: the Red Demon, the Phoenix
   Lord (which turns into an egg when it dies), the Lich, the Ent Ancient, the Ghost King and the
   Oasis Giant with their minions, the golems, skeletons, mummies and ghosts, the Abyss lava bomb,
