@@ -99,7 +99,12 @@ async fn main() {
         eprintln!("{bind}: {e}");
         std::process::exit(1);
     });
-    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await.expect("server");
+    // No Nagle: small game messages to Caddy go out at once, not held for the last one's ACK
+    // (up to 40 ms on Linux). axum leaves it on.
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
+        .tcp_nodelay(true)
+        .await
+        .expect("server");
 }
 
 /// Files asked for with the build in the query (`?v=`, every file the page and the game load)

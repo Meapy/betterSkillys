@@ -102,6 +102,8 @@ fn run(args: Args) -> Result<(), String> {
     let mut out: Vec<ClientMessage> = Vec::new();
     let deadline = started + Duration::from_secs(args.seconds);
     let mut next_report = started + Duration::from_secs(10);
+    // The round trips the server measured (each Ping carries its recent average), this report.
+    let mut rtts: Vec<i32> = Vec::new();
 
     let result = loop {
         if Instant::now() >= deadline {
@@ -111,8 +113,15 @@ fn run(args: Args) -> Result<(), String> {
             std::thread::sleep(Duration::from_millis(2));
             if Instant::now() >= next_report {
                 next_report += Duration::from_secs(10);
+                let ping = match (rtts.iter().min(), rtts.iter().max()) {
+                    (Some(lo), Some(hi)) => {
+                        format!(", ping {lo}-{hi} ms (avg {})", rtts.iter().sum::<i32>() / rtts.len() as i32)
+                    }
+                    _ => String::new(),
+                };
+                rtts.clear();
                 log::info!(
-                    "{:>3} s: {} ticks, {} objects seen",
+                    "{:>3} s: {} ticks, {} objects seen{ping}",
                     started.elapsed().as_secs(),
                     received.get("NewTick").unwrap_or(&0),
                     objects.len()
@@ -126,6 +135,7 @@ fn run(args: Args) -> Result<(), String> {
             SocketEvent::Message(msg) => {
                 *received.entry(msg.name()).or_default() += 1;
                 match &*msg {
+                    ServerMessage::Ping(p) if p.round_trip_time >= 0 => rtts.push(p.round_trip_time),
                     ServerMessage::Update(u) => {
                         objects.extend(u.new_objs.iter().map(|o| o.status.object_id));
                         for o in u.new_objs.iter() {
