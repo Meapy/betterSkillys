@@ -37,6 +37,9 @@ How it fits together:
   Nexus. The old server then stops by itself.
 - A deploy while the other slot is still handing over waits for it, or with --now moves its
   players to the new Nexus first.
+- A new world server is in the state ("starting") from the moment it's started, so it's never
+  left running untracked: if it doesn't come up, or the tool is stopped while it waits, the tool
+  stops it again (it has no players yet), and a later deploy stops one a dead tool left behind.
 """
 import argparse
 import json
@@ -53,6 +56,7 @@ ROOT = os.path.dirname(HERE)
 SOURCE = os.path.join(ROOT, "source")
 SLOTS = {"a": 1, "b": 2}
 WINDOWS = os.name == "nt"
+START_MINUTES = 10  # how long a new world server gets to start listening
 
 LIVE = None   # set by configure()
 ISO = None
@@ -106,8 +110,9 @@ def write_state(st):
     os.replace(tmp, state_path())
 
 
-def alive(pid):
-    """Whether a world server or world proxy runs with this process id."""
+def alive(pid, names=(b"WorldServer", b"world_proxy")):
+    """Whether a world server or world proxy (on Linux: a process with one of these names in its
+    command line) runs with this process id."""
     if not pid:
         return False
     if WINDOWS:
@@ -133,7 +138,7 @@ def alive(pid):
     except (OSError, IndexError):
         return False
     # after a reboot an old id can belong to anything
-    return b"WorldServer" in cmdline or b"world_proxy" in cmdline
+    return any(n in cmdline for n in names)
 
 
 def listening(port):
@@ -229,21 +234,99 @@ def configure_slot(slot):
     return folder
 
 
+CTRL_C_HELPER = """
+import ctypes, sys
+k = ctypes.windll.kernel32
+k.FreeConsole()
+if k.AttachConsole(int(sys.argv[1])):
+    k.GenerateConsoleCtrlEvent(1, 0)  # Ctrl+Break: a new process group ignores Ctrl+C
+"""
+
+
+def stop_cleanly(pid, seconds=90):
+    """Stops a world server the way Ctrl+C or systemctl stop does, so it saves everyone; by force
+    only if it's still running after that long. True once it has stopped."""
+    if not alive(pid):
+        return True
+    try:
+        if WINDOWS:
+            # Ctrl+Break in its console, from a helper: attaching takes the caller's own console away
+            subprocess.run([sys.executable, "-c", CTRL_C_HELPER, str(pid)], capture_output=True, timeout=30,
+                           creationflags=subprocess.CREATE_NO_WINDOW)
+        else:
+            os.kill(pid, signal.SIGTERM)  # SignalListenerLinux
+    except (OSError, subprocess.SubprocessError):
+        pass
+    deadline = time.time() + seconds
+    while alive(pid) and time.time() < deadline:
+        time.sleep(0.5)
+    if alive(pid):
+        print("world server pid %d didn't stop in %d seconds: stopping it by force" % (pid, seconds))
+        if WINDOWS:
+            subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
+        else:
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except OSError:
+                pass
+        for _ in range(20):
+            if not alive(pid):
+                break
+            time.sleep(0.5)
+    return not alive(pid)
+
+
+class StartFailed(Exception):
+    pass
+
+
 def start_backend(st, slot, folder):
-    if listening(slot_port(slot)):
-        sys.exit("port %d (slot %s) is already taken" % (slot_port(slot), slot))
+    port = slot_port(slot)
+    if listening(port):
+        sys.exit("port %d (slot %s) is already taken (a world server the state doesn't know about?): "
+                 "stop it with SIGTERM or Ctrl+C, then try again" % (port, slot))
     args = [os.path.join(folder, "WorldServer.exe")] if ISO is None and WINDOWS else ["dotnet", "WorldServer.dll"]
     p = popen(args, folder, "ws.out")
-    print("started world server %s (pid %d, port %d); waiting until it listens..." % (slot, p.pid, slot_port(slot)))
-    deadline = time.time() + 300
-    while not listening(slot_port(slot)):
-        if not alive(p.pid):
-            sys.exit("world server %s stopped while starting: see %s" % (slot, os.path.join(folder, "logs")))
-        if time.time() > deadline:
-            sys.exit("world server %s didn't start listening in 5 minutes" % slot)
-        time.sleep(1)
-    st["backends"][slot] = {"port": slot_port(slot), "pid": p.pid, "started": time.strftime("%Y-%m-%d %H:%M:%S")}
+    # in the state at once: if this tool dies while it waits, the next deploy finds the server
+    st["backends"][slot] = {"port": port, "pid": p.pid, "started": time.strftime("%Y-%m-%d %H:%M:%S"),
+                            "starting": True}
+    write_state(st)
+    print("started world server %s (pid %d, port %d); waiting until it listens..." % (slot, p.pid, port), flush=True)
+    try:
+        deadline = time.time() + START_MINUTES * 60
+        while not listening(port):
+            if not alive(p.pid):
+                raise StartFailed("world server %s stopped while starting: see %s" % (slot, os.path.join(folder, "logs")))
+            if time.time() > deadline:
+                raise StartFailed("world server %s didn't start listening in %g minutes" % (slot, START_MINUTES))
+            time.sleep(1)
+    except BaseException as e:  # StartFailed, Ctrl+C, SIGTERM (SystemExit)
+        print("%s: stopping it again" % (e if isinstance(e, StartFailed) else "interrupted"), flush=True)
+        if stop_cleanly(p.pid):
+            del st["backends"][slot]
+            print("stopped world server %s (pid %d)" % (slot, p.pid))
+        else:
+            print("world server %s (pid %d) is still running: it stays in the state (starting), and the "
+                  "next deploy stops it" % (slot, p.pid))
+        write_state(st)
+        if isinstance(e, StartFailed):
+            sys.exit(str(e))
+        raise
+    del st["backends"][slot]["starting"]
     print("world server %s is up" % slot)
+
+
+def stop_leftover(st, slot):
+    """A world server still starting when its deploy died: it never took players, so it's stopped
+    rather than waited for."""
+    b = st["backends"].get(slot)
+    if not b or not b.get("starting") or st["active"] == slot:
+        return
+    print("world server %s (pid %s) was left starting by an earlier deploy: stopping it" % (slot, b.get("pid")))
+    if not stop_cleanly(b.get("pid")):
+        sys.exit("world server %s (pid %s) doesn't stop" % (slot, b.get("pid")))
+    del st["backends"][slot]
+    write_state(st)
 
 
 def prune(st):
@@ -270,9 +353,11 @@ def drain(slot, minutes):
 def lock():
     path = os.path.join(LIVE, "deploy.lock")
     try:
-        if time.time() - os.stat(path).st_mtime > 1800:
+        with open(path) as f:
+            holder = int(f.read().strip() or 0)
+        if time.time() - os.stat(path).st_mtime > 1800 or not alive(holder, (b"rolling_restart",)):
             os.remove(path)  # left by a deploy that died
-    except OSError:
+    except (OSError, ValueError):
         pass
     try:
         fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
@@ -308,6 +393,7 @@ def cmd_deploy(args):
     new = "b" if old == "a" else "a"
     path = lock()
     try:
+        stop_leftover(st, new)
         if new in st["backends"]:
             left = players_left(new)
             if not args.now:
@@ -478,6 +564,10 @@ def main():
     r.add_argument("command", nargs=argparse.REMAINDER, help="the command and its options (update, deploy --reuse...)")
     args = ap.parse_args()
     configure(args.iso, args.build_from)
+    if not WINDOWS:
+        # systemctl stop, or the proxy ending a scheduled restart that hangs: clean up (stop a
+        # starting world server, free the deploy lock) rather than die on the spot
+        signal.signal(signal.SIGTERM, lambda *_: sys.exit("stopped (SIGTERM)"))
     {"up": cmd_up, "update": cmd_update, "deploy": cmd_deploy, "status": cmd_status, "stop": cmd_stop,
      "serve": cmd_serve, "request": cmd_request}[args.cmd](args)
 

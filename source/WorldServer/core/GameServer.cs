@@ -130,6 +130,7 @@ namespace WorldServer.core
 
             var restart = false;
             var restartRequested = false;
+            var nextRestartRequest = RestartCloseTime;
 
             var watch = Stopwatch.StartNew();
             while (Running)
@@ -138,10 +139,15 @@ namespace WorldServer.core
                 // (the proxy does it, tools/rolling_restart.py), which takes over without kicking
                 if (ConnectionListener.BehindProxy)
                 {
-                    if (!restartRequested && Configuration.serverSettings.restartTime > 0 && DateTime.UtcNow >= RestartCloseTime)
+                    // asked again every 30 minutes until a new server replaces this one, in case
+                    // that restart failed
+                    if (!Draining && Configuration.serverSettings.restartTime > 0 && DateTime.UtcNow >= nextRestartRequest)
                     {
+                        Log.Info(restartRequested
+                            ? "Still not replaced: asking the world proxy again for a rolling restart."
+                            : "Asking the world proxy for a rolling restart.");
                         restartRequested = true;
-                        Log.Info("Asking the world proxy for a rolling restart.");
+                        nextRestartRequest = DateTime.UtcNow.AddMinutes(30);
                         TryWriteFile(RESTART_REQUEST, "");
                     }
                     if (DrainTick())

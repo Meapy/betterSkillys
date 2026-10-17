@@ -19,7 +19,12 @@ tools/rolling_restart.py starts it and keeps its state, <state folder>/state.jso
   address that way, and the proxy passes that one on instead of the gateway's.
 - It reads the state again whenever the file changes: a deploy only rewrites it.
 - When the active server asks for its scheduled restart (restart.request in its folder), it runs
-  `rolling_restart.py deploy --reuse`, so the 2-hourly restart kicks nobody either.
+  `rolling_restart.py deploy --reuse`, so the 2-hourly restart kicks nobody either. A request
+  that comes while another command runs waits for it (and says so); one from a server that is no
+  longer the active one is dropped (it's being replaced already); a scheduled restart still
+  running after RESTART_HOURS is stopped (SIGTERM: the tool stops the server it was starting).
+  A server whose restart didn't happen asks again later (GameServer).
+- A world server that is still starting ("starting" in the state) gets no connections.
 - It runs the command in deploy.request (a JSON list of rolling_restart.py arguments, written by
   `rolling_restart.py request`), its output in deploy.log and its exit code in deploy.result: on
   Linux the world servers it starts then belong to the proxy's service, as the first one does.
@@ -39,6 +44,7 @@ HELLO, PROXY_INFO = 16, 250
 POLICY = struct.pack(">i", 1014001516)  # "<pol": a Flash policy-file request
 SLOT_BY_RANGE = {1: "a", 2: "b"}       # world id // 1000000
 MAX_FIRST = 1 << 20
+RESTART_HOURS = 2  # a deploy --reuse waits for a hand-over (60 minutes) and a start (10)
 
 STATE_DIR = None
 state = {}
@@ -72,7 +78,7 @@ def load_state():
 
 def backend_port(st, slot):
     b = st.get("backends", {}).get(slot)
-    return b and b.get("port")
+    return b and not b.get("starting") and b.get("port")
 
 
 def route(game_id):
@@ -222,28 +228,51 @@ async def supervise():
     """Reloads the state, and runs a rolling restart when the active server asks for one, or the
     command a deploy asks for (deploy.request)."""
     restarting = None
+    restart_started = 0
     deploying = None
+    waiting_said = False
     while True:
         load_state()
         collect_stopped()
         active = state.get("active")
         request = active and os.path.join(STATE_DIR, active, "restart.request")
         deploy_request = os.path.join(STATE_DIR, "deploy.request")
+        for slot in ("a", "b"):
+            other = os.path.join(STATE_DIR, slot, "restart.request")
+            if slot != active and os.path.exists(other):
+                try:
+                    os.remove(other)
+                    log("world server %s asked for a restart, but it isn't the active one (it's being replaced): "
+                        "dropped" % slot)
+                except OSError:
+                    pass
+        if restarting is not None and restarting.poll() is None and time.time() - restart_started > RESTART_HOURS * 3600:
+            log("the scheduled restart is still running after %d hours: stopping it" % RESTART_HOURS)
+            restarting.terminate()
+            restart_started = time.time()  # once more after as long, if it doesn't stop
         if restarting is not None and restarting.poll() is not None:
-            log("scheduled restart finished (exit code %s)" % restarting.returncode)
+            log("scheduled restart finished (exit code %s)%s" % (
+                restarting.returncode, "" if restarting.returncode == 0 else ": see restart.log"))
             restarting = None
         if deploying is not None and deploying.poll() is not None:
             log("requested command finished (exit code %s)" % deploying.returncode)
             with open(os.path.join(STATE_DIR, "deploy.result"), "w", encoding="utf-8") as f:
                 json.dump({"code": deploying.returncode}, f)
             deploying = None
-        if request and os.path.exists(request) and restarting is None and deploying is None:
-            try:
-                os.remove(request)
-            except OSError:
-                pass
-            log("world server %s asks for its scheduled restart: starting a new one beside it" % active)
-            restarting = run_tool(["deploy", "--reuse"], "restart.log")
+        if request and os.path.exists(request):
+            if restarting is None and deploying is None:
+                try:
+                    os.remove(request)
+                except OSError:
+                    pass
+                log("world server %s asks for its scheduled restart: starting a new one beside it" % active)
+                restarting = run_tool(["deploy", "--reuse"], "restart.log")
+                restart_started = time.time()
+                waiting_said = False
+            elif not waiting_said:
+                log("world server %s asks for its scheduled restart: waiting for the %s that is running" % (
+                    active, "scheduled restart" if restarting is not None else "requested command"))
+                waiting_said = True
         if os.path.exists(deploy_request) and restarting is None and deploying is None:
             try:
                 with open(deploy_request, encoding="utf-8") as f:

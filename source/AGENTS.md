@@ -69,7 +69,12 @@ dotnet build source\WorldServer\WorldServer.csproj -c Debug -o build\wscheck   #
   leaves it, which can be just after the new server sees the Hello. `ConnectionManager` asks
   other world servers to sign the account out (Redis channel `Kick`) and waits up to 5 s.
 - **Scheduled restart:** behind the proxy, `restartTime` writes `restart.request` instead of
-  kicking; the proxy runs `rolling_restart.py deploy --reuse`.
+  kicking; the proxy runs `rolling_restart.py deploy --reuse`. The server asks again every 30
+  minutes until it's draining, so a failed restart is retried.
+- **Failed starts:** `start_backend` records a new server as `starting` in the state before it
+  waits, and stops it (SIGTERM, or Ctrl+Break on Windows) if it doesn't listen in time or the
+  tool is interrupted; a deploy stops a `starting` server a dead tool left. Never leave a world
+  server running that the state doesn't list.
 - **Client addresses:** the proxy sends message 250 (`PROXY_INFO`) with the player's address
   before the Hello. It's only taken by a server behind the proxy, before login.
 - **Testing:** `iso_stack.py --slot N start --rolling`, then `rolling_restart.py --iso N deploy`
