@@ -12,7 +12,9 @@ version number itself is in `client-rs/Cargo.toml`.
 - Monsters that never had any behaviour now move, attack and taunt: the Red Demon, the Phoenix
   Lord (which turns into an egg when it dies), the Lich, the Ent Ancient, the Ghost King and the
   Oasis Giant with their minions, the golems, skeletons, mummies and ghosts, the Abyss lava bomb,
-  Bonegrind the Butcher and the Beer God, among about 80 others.
+  Bonegrind the Butcher and the Beer God, among about 80 others. They drop loot to match: the
+  heroes tiered weapons, armor, rings, abilities and potions, their minions potions and the odd
+  low-tier item.
 - Smoother walking: your character no longer flickers to standing or shakes by a pixel while
   you walk (most noticeable with the frame rate unlocked), sliding along a wall no longer shakes
   the view, monsters and other players keep walking instead of flickering to standing between

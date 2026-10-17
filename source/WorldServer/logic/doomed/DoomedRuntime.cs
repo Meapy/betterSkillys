@@ -89,11 +89,12 @@ namespace WorldServer.logic.doomed
 
         public static BL.MobDrops[] Drops(string id, Definition def)
         {
+            var extra = DoomedExtraLoot.Extra.TryGetValue(id, out var make) ? make() : new BL.MobDrops[0];
             if (def.Loot == null)
-                return new BL.MobDrops[0];
+                return extra;
             var data = BehaviorDb.InitGameData;
             var maxHp = data.IdToObjectType.TryGetValue(id, out var type) && data.ObjectDescs.TryGetValue(type, out var desc) ? desc.MaxHP : 0;
-            return def.Loot.ToDrops(maxHp);
+            return def.Loot.ToDrops(maxHp).Concat(extra).ToArray();
         }
     }
 
