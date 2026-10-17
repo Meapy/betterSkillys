@@ -9,6 +9,8 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- The mouse pointer no longer stays hidden on the menus after you die or get disconnected while
+  the crosshair is showing.
 - Randomly built dungeons are shorter: each run now comes out small (3 in 10 runs), medium (6 in
   10) or large (1 in 10, about the size they were before), with shorter corridors in the small
   and medium ones.
