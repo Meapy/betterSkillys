@@ -9,6 +9,10 @@ refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>
 version number itself is in `client-rs/Cargo.toml`.
 
 ## Unreleased
+- Monsters that never had any behaviour now move, attack and taunt: the Red Demon, the Phoenix
+  Lord (which turns into an egg when it dies), the Lich, the Ent Ancient, the Ghost King and the
+  Oasis Giant with their minions, the golems, skeletons, mummies and ghosts, the Abyss lava bomb,
+  Bonegrind the Butcher and the Beer God, among about 80 others.
 - Randomly built dungeons are shorter: each run now comes out small (3 in 10 runs), medium (6 in
   10) or large (1 in 10, about the size they were before), with shorter corridors in the small
   and medium ones.

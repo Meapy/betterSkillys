@@ -31,6 +31,314 @@ namespace WorldServer.logic.doomed
                 Tuple.Create(0.01, (ILoot)new ItemLoot("Oceanic Curse")),
                 Tuple.Create(0.01, (ILoot)new ItemLoot("Djinn Generator")));
 
+        // AbyssTreasureLavaBomb
+        public static readonly Definition M_AbyssTreasureLavaBomb = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    SetConditionEffect.Instance(ConditionEffectIndex.Invincible),
+                    new QueuedBehavior(
+                        CooldownExact.Instance(2000),
+                        MonsterSetPiece.Instance("TempLava1", 1),
+                        CooldownExact.Instance(1000),
+                        MonsterSetPiece.Instance("TempLava2", 2),
+                        CooldownExact.Instance(1000),
+                        MonsterSetPiece.Instance("TempLava3", 3),
+                        CooldownExact.Instance(1000),
+                        MonsterSetPiece.Instance("TempLava4", 3),
+                        CooldownExact.Instance(10000),
+                        MonsterSetPiece.Instance("TempLava5", 3),
+                        CooldownExact.Instance(1000),
+                        MonsterSetPiece.Instance("TempLava6", 3),
+                        CooldownExact.Instance(1000),
+                        MonsterSetPiece.Instance("TempLava7", 2),
+                        CooldownExact.Instance(1000),
+                        MonsterSetPiece.Instance("TempLava8", 1),
+                        Despawn.Instance
+                        )
+                    )
+            },
+            null,
+            null);
+
+        // Actual Ent Ancient
+        public static readonly Definition M_Actual_Ent_Ancient = new Definition(
+            new Behavior[] {
+                SmoothWandering.Instance(0.5f, 2f),
+                new RunBehaviors(
+                    IfExist.Instance(-1, NullBehavior.Instance,
+                        new RunBehaviors(
+                            Once.Instance(SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)),
+                            new QueuedBehavior(
+                                CooldownExact.Instance(400),
+                                Once.Instance(new SimpleTaunt("With each attack, I only grow stronger."))
+                                ),
+                            SetSize.Instance(140),
+                            new QueuedBehavior(CooldownExact.Instance(2000), new SetKey(-1, 1)),
+                            Cooldown.Instance(750, Rand.Instance(
+                                SimpleAttack.Instance(10, projectileIndex: 0),
+                                RingAttack.Instance(3, projectileIndex: 0)
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-1, 1,
+                        new RunBehaviors(
+                            
+                            SetSize.Instance(160),
+                            new QueuedBehavior(CooldownExact.Instance(1600), new SetKey(-1, 2)),
+                            Cooldown.Instance(750, Rand.Instance(
+                                SimpleAttack.Instance(10, 1),
+                                RingAttack.Instance(3, projectileIndex: 1)
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-1, 2,
+                        new RunBehaviors(
+                            Once.Instance(new RandomTaunt(0.35, "Little mortals, your years are my minutes.")),
+                            SetSize.Instance(180),
+                            new QueuedBehavior(CooldownExact.Instance(1600), new SetKey(-1, 3)),
+                            Cooldown.Instance(750, Rand.Instance(
+                                SimpleAttack.Instance(10, 2),
+                                RingAttack.Instance(3, projectileIndex: 2)
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-1, 3,
+                        new RunBehaviors(
+                            
+                            SetSize.Instance(200),
+                            new QueuedBehavior(CooldownExact.Instance(1600), new SetKey(-1, 4)),
+                            Cooldown.Instance(750, Rand.Instance(
+                                SimpleAttack.Instance(10, 3),
+                                RingAttack.Instance(3, projectileIndex: 3)
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-1, 4,
+                        new RunBehaviors(
+                            Once.Instance(new RandomTaunt(0.35, "No axe can fell me!")),
+                            SetSize.Instance(220),
+                            new QueuedBehavior(CooldownExact.Instance(1600), new SetKey(-1, 5)),
+                            Cooldown.Instance(750, Rand.Instance(
+                                SimpleAttack.Instance(10, 4),
+                                RingAttack.Instance(3, projectileIndex: 4)
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-1, 5,
+                        new RunBehaviors(
+                            
+                            SetSize.Instance(240),
+                            new QueuedBehavior(CooldownExact.Instance(1600), new SetKey(-1, 6)),
+                            Cooldown.Instance(750, Rand.Instance(
+                                SimpleAttack.Instance(10, 5),
+                                RingAttack.Instance(3, projectileIndex: 5)
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-1, 6,
+                        new RunBehaviors(
+                            Once.Instance(new RandomTaunt(0.35, "Yes, YES...")),
+                            SetSize.Instance(260),
+                            new QueuedBehavior(CooldownExact.Instance(1600), new SetKey(-1, 7)),
+                            Cooldown.Instance(750, Rand.Instance(
+                                SimpleAttack.Instance(10, 6),
+                                RingAttack.Instance(3, projectileIndex: 6)
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-1, 7,
+                        new RunBehaviors(
+                            
+                            SetSize.Instance(280),
+                            new QueuedBehavior(CooldownExact.Instance(1600), new SetKey(-1, 8)),
+                            Cooldown.Instance(750, Rand.Instance(
+                                SimpleAttack.Instance(10, 7),
+                                RingAttack.Instance(3, projectileIndex: 7)
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-1, 8,
+                        new RunBehaviors(
+                            Once.Instance(new RandomTaunt(0.35, "I am the FOREST!!")),
+                            SetSize.Instance(300),
+                            new QueuedBehavior(CooldownExact.Instance(1600), new SetKey(-1, 9)),
+                            Cooldown.Instance(750, Rand.Instance(
+                                SimpleAttack.Instance(10, 8),
+                                RingAttack.Instance(3, projectileIndex: 8)
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-1, 9,
+                        new RunBehaviors(
+                            Once.Instance(new SimpleTaunt("YOU WILL DIE!!!")),
+                            Once.Instance(OrderGroup.Instance(20, "Greater Nature Sprites",
+                                new Transmute( T("Actual Greater Nature Sprite"))
+                                )),
+                            SetSize.Instance(320),
+                            new QueuedBehavior(
+                                CooldownExact.Instance(4000,
+                                    UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)),
+                                CooldownExact.Instance(4000,
+                                    SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable))
+                                ),
+                            Cooldown.Instance(750, Rand.Instance(
+                                SimpleAttack.Instance(10, 9),
+                                RingAttack.Instance(3, projectileIndex: 9)
+                                ))
+                            )
+                        )
+                    ),
+                If.Instance(
+                    EntityLesserThan.Instance(10, 5, T("Ent Sapling")),
+                    Reproduce.Instance( T("Ent Sapling"), 3, 3000, 1)
+                    )
+            },
+            null,
+            new LootBehavior(
+                        new LootDef(0, 6, 0, 8,
+                            Tuple.Create(0.1, (ILoot) new TierLoot(1, ItemType.Ability)),
+                            Tuple.Create(0.1, (ILoot) new TierLoot(2, ItemType.Ability)),
+                            Tuple.Create(0.5, (ILoot) PotionLoot.Instance)
+                            ),
+                        Tuple.Create(100, new LootDef(0, 3, 0, 8,
+                            Tuple.Create(0.20, (ILoot) new TierLoot(6, ItemType.Weapon)),
+                            Tuple.Create(0.12, (ILoot) new TierLoot(7, ItemType.Weapon)),
+                            Tuple.Create(0.20, (ILoot) new TierLoot(6, ItemType.Armor)),
+                            Tuple.Create(0.12, (ILoot) new TierLoot(7, ItemType.Armor)),
+                            Tuple.Create(0.80, (ILoot) new TierLoot(2, ItemType.Ring)),
+                            Tuple.Create(0.20, (ILoot) new TierLoot(3, ItemType.Ring)),
+                            Tuple.Create(0.008, (ILoot)new ItemLoot("Ent Ancient Sword")),
+                            Tuple.Create(0.05, (ILoot) new TierLoot(3, ItemType.Ability))
+                            ))
+                        ));
+
+        // Actual Ghost King
+        public static readonly Definition M_Actual_Ghost_King = new Definition(
+            new Behavior[] {
+                IfExist.Instance(-1,
+                    new RunBehaviors(
+                        Once.Instance(UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)),
+                        new QueuedBehavior(
+                            AngleMove.Instance(4, 180*(float) Math.PI/180, 6),
+                            AngleMove.Instance(4, 0*(float) Math.PI/180, 6)
+                            ),
+                        Flashing.Instance(1000, 0xff000000)
+                        ),
+                    new RunBehaviors(
+                        Once.Instance(SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)),
+                        SetSize.Instance(140),
+                        Flashing.Instance(1000, 0xff00ff00),
+                        new QueuedBehavior(
+                            Timed.Instance(1000, False.Instance(
+                                If.Instance(
+                                    WithinSpawn.Instance(15),
+                                    Chasing.Instance(4f, 10, 0, null),
+                                    ReturnSpawn.Instance(4f)
+                                    )
+                                )),
+                            SimpleAttack.Instance(10)
+                            ),
+                        If.Instance(EntityLesserThan.Instance(20, 1, T("Ghost Master")),
+                            new RunBehaviors(
+                                Rand.Instance(
+                                    new RunBehaviors(
+                                        new SimpleTaunt(
+                                            "I feel my flesh again! For the first time in a 1000 years I LIVE!"),
+                                        new SimpleTaunt("Will you release me?")
+                                        ),
+                                    new SimpleTaunt("You have sapped my energy. A curse on you!")
+                                    ),
+                                new SimpleTaunt("I am still very alone"),
+                                SetSize.Instance(100),
+                                new SetKey(-1, 0)
+                            )
+                        ),
+                        new RandomTaunt(0.0001, "I cannot be defeated while my loyal subjects sustain me!")
+                    )
+                )
+            },
+            null,
+            null);
+
+        // Actual Greater Nature Sprite
+        public static readonly Definition M_Actual_Greater_Nature_Sprite = new Definition(
+            new Behavior[] {
+                If.Instance(
+                    WithinSpawn.Instance(11),
+                    Circling.Instance(4, 10, 15, null),
+                    ReturnSpawn.Instance(15)
+                    ),
+                new RunBehaviors(
+                    Flashing.Instance(1000, 0xff000000),
+                    Cooldown.Instance(2000, HealGroup.Instance(20, 500, "Heros")),
+                    Cooldown.Instance(5000,
+                        OrderGroup.Instance(20, "Heros",
+                            new SetConditionEffectTimed(ConditionEffectIndex.Armored, 5000)
+                            )
+                        ),
+                    Cooldown.Instance(1000, MultiAttack.Instance(10, 10*(float) Math.PI/180, 4)),
+                    new QueuedBehavior(
+                        CooldownExact.Instance(60000),
+                        Despawn.Instance
+                        ),
+                    Reproduce.Instance( T("Ent"), 5, 3000)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.25, (ILoot) MpPotionLoot.Instance)
+                        ),
+                    Tuple.Create(100, new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.001, (ILoot) new ItemLoot("Quiver of Thunder")),
+                        Tuple.Create(0.06, (ILoot) new ItemLoot("Tincture of Dexterity")),
+                        Tuple.Create(0.06, (ILoot) new ItemLoot("Tincture of Life")),
+                        Tuple.Create(0.08, (ILoot) new ItemLoot("Green Drake Egg")),
+                        Tuple.Create(0.01, (ILoot) new StatPotionLoot(StatPotion.Att)),
+                        Tuple.Create(0.03, (ILoot) new TierLoot(7, ItemType.Armor))
+                        ))
+                    ));
+
+        // Actual Lich
+        public static readonly Definition M_Actual_Lich = new Definition(
+            new Behavior[] {
+                SmoothWandering.Instance(1.5f, 3f),
+                Cooldown.Instance(500, Rand.Instance(
+                    MultiAttack.Instance(10, 15*(float) Math.PI/180, 2, projectileIndex: 0),
+                    MultiAttack.Instance(10, 10*(float) Math.PI/180, 4, projectileIndex: 1)
+                    )),
+                new QueuedBehavior(
+                    True.Instance(Once.Instance(new SimpleTaunt("Kneel before me! I am the master of life and death!"))),
+                    SpawnMinionImmediate.Instance( T("Mummy King"), 1, 1, 1),
+                    SpawnMinionImmediate.Instance( T("Mummy Pharaoh"), 1, 1, 2),
+                    SpawnMinionImmediate.Instance( T("Mummy"), 1, 2, 3),
+                    CooldownExact.Instance(5000),
+                    Rand.Instance(
+                        new RandomTaunt(0.1, "All that I touch turns to dust!"),
+                        new RandomTaunt(0.1, "You will drown in a sea of undead!")
+                        )
+                    )
+            },
+            null,
+            new LootBehavior(
+                        new LootDef(0, 4, 0, 8,
+                            Tuple.Create(0.01, (ILoot) new TierLoot(1, ItemType.Ability)),
+                            Tuple.Create(0.01, (ILoot) new TierLoot(2, ItemType.Ability)),
+                            Tuple.Create(0.01, (ILoot) new TierLoot(5, ItemType.Weapon)),
+                            Tuple.Create(0.01, (ILoot) new TierLoot(5, ItemType.Armor)),
+                            Tuple.Create(0.5, (ILoot) PotionLoot.Instance)
+                            ),
+                        Tuple.Create(100, new LootDef(0, 2, 0, 8,
+                            Tuple.Create(0.10, (ILoot) new TierLoot(6, ItemType.Weapon)),
+                            Tuple.Create(0.06, (ILoot) new TierLoot(7, ItemType.Weapon)),
+                            Tuple.Create(0.10, (ILoot) new TierLoot(6, ItemType.Armor)),
+                            Tuple.Create(0.06, (ILoot) new TierLoot(7, ItemType.Armor)),
+                            Tuple.Create(0.20, (ILoot) new TierLoot(2, ItemType.Ring)),
+                            Tuple.Create(0.10, (ILoot) new TierLoot(3, ItemType.Ring)),
+                            Tuple.Create(0.01, (ILoot) new TierLoot(3, ItemType.Ability))
+                            ))
+                        ));
+
         // April Fools Chicken
         public static readonly Definition M_April_Fools_Chicken = new Definition(
             new Behavior[] {
@@ -83,6 +391,36 @@ namespace WorldServer.logic.doomed
                          HpLesser.Instance(569999,
                        Once.Instance(SpawnMinionImmediate.Instance( T("April Fools Chicken"), 1, 1, 1))
                        ))
+            },
+            null,
+            null);
+
+        // Birdman
+        public static readonly Definition M_Birdman = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(5f, 17, 12, T("Oasis Giant")),
+                    Rand.Instance(
+                        Chasing.Instance(5f, 10, 2, null),
+                        SimpleWandering.Instance(5f)
+                        )
+                    ),
+                Cooldown.Instance(500, PredictiveAttack.Instance(10, 0.5f))
+            },
+            null,
+            null);
+
+        // Birdman Chief
+        public static readonly Definition M_Birdman_Chief = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(5f, 17, 12, T("Oasis Giant")),
+                    Rand.Instance(
+                        Chasing.Instance(5f, 10, 2, null),
+                        SimpleWandering.Instance(5f)
+                        )
+                    ),
+                Cooldown.Instance(1000, PredictiveAttack.Instance(10, 0.5f))
             },
             null,
             null);
@@ -345,6 +683,81 @@ namespace WorldServer.logic.doomed
                         )
                     ));
 
+        // Blue Satellite
+        public static readonly Definition M_Blue_Satellite = new Definition(
+            new Behavior[] {
+                StrictCirclingGroup.Instance(3, 5, "Golems"),
+                GolemSatellites.Instance
+            },
+            null,
+            null);
+
+        // Blue Swarm Masters
+        public static readonly Definition M_Blue_Swarm_Masters = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    Once.Instance(SpawnMinionImmediate.Instance( T("Blue Swarm Minions"), 5, 2, 3)),
+                    SmoothWandering.Instance(2f, 2f),
+                    Chasing.Instance(8, 11, 1, null),
+                    Cooldown.Instance(1260, MultiAttack.Instance(600, 20*(float) Math.PI/360, 8, 0, projectileIndex: 0)),
+                    Cooldown.Instance(1600, MultiAttack.Instance(600, 60*(float) Math.PI/360, 2, 0, 1)),
+                    Cooldown.Instance(1880, MultiAttack.Instance(600, 20*(float) Math.PI/360, 2, 0, 2)),
+                    Cooldown.Instance(1990, MultiAttack.Instance(600, 20*(float) Math.PI/360, 2, 0, 3))
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Health Potion"))
+                        ))));
+
+        // Blue Swarm Minions
+        public static readonly Definition M_Blue_Swarm_Minions = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    SmoothWandering.Instance(2f, 2f),
+                    Chasing.Instance(8, 11, 1, null),
+                    Cooldown.Instance(1860, MultiAttack.Instance(600, 30*(float) Math.PI/360, 8, 0, projectileIndex: 0))
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Health Potion"))
+                        ))));
+
+        // Bonegrind the Butcher
+        public static readonly Definition M_Bonegrind_the_Butcher = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Escaping.Instance(4, 5, 100, null),
+                    IfNot.Instance(
+                        Chasing.Instance(8, 8, 1, null), SimpleWandering.Instance(4))),
+                Cooldown.Instance(1000,
+                    Rand.Instance(SimpleAttack.Instance(8), RingAttack.Instance(4, 8)))
+            },
+            new ConditionalBehavior[] {new ChefTaunt(100)},
+            new LootBehavior(
+                    new LootDef(2, 0, 0, 2,
+                        Tuple.Create(0.1, (ILoot) HpPotionLoot.Instance),
+                        Tuple.Create(0.1, (ILoot) MpPotionLoot.Instance)
+                        )
+                    ));
+
+        // Butcher
+        public static readonly Definition M_Butcher = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(8, 8, 1, null), SimpleWandering.Instance(4)),
+                Cooldown.Instance(1000, SimpleAttack.Instance(8))
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(2, 0, 0, 2,
+                        Tuple.Create(0.2, (ILoot) HpPotionLoot.Instance)
+                        )
+                    ));
+
         // Christmas Oryx
         public static readonly Definition M_Christmas_Oryx = new Definition(
             new Behavior[] {
@@ -503,12 +916,148 @@ namespace WorldServer.logic.doomed
             null,
             null);
 
+        // Clockwork Golem
+        public static readonly Definition M_Clockwork_Golem = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(8, 10, 1, null),
+                    SimpleWandering.Instance(4)
+                    ),
+                new RunBehaviors(
+                    Cooldown.Instance(2000, SimpleAttack.Instance(10)),
+                    Once.Instance(GolemSatelliteSpawn.Instance)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.03, (ILoot) new TierLoot(5, ItemType.Armor)),
+                        Tuple.Create(0.03, (ILoot) HpPotionLoot.Instance)
+                        )
+                    ));
+
         // Crawler
         public static readonly Definition M_Crawler = new Definition(
             new Behavior[] {
                 IfNot.Instance(
                     Chasing.Instance(5, 200, 0, null), SimpleWandering.Instance(4)),
                 Cooldown.Instance(2500, SimpleAttack.Instance(3))
+            },
+            null,
+            null);
+
+        // Darkness Golem
+        public static readonly Definition M_Darkness_Golem = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(10, 7, 1, null),
+                    SimpleWandering.Instance(4)
+                    ),
+                new QueuedBehavior(
+                    Once.Instance(GolemSatelliteSpawn.Instance),
+                    Timed.Instance(5000,
+                        new RunBehaviors(
+                            Flashing.Instance(250, 0xffffffff),
+                            Cooldown.Instance(250, SimpleAttack.Instance(10, 0))
+                            )
+                        ),
+                    Timed.Instance(5000,
+                        Cooldown.Instance(500, SimpleAttack.Instance(10, 1))
+                        )
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.03, (ILoot) MpPotionLoot.Instance)
+                        ),
+                    Tuple.Create(1, new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.05, (ILoot) new TierLoot(4, ItemType.Armor))
+                        ))
+                    ));
+
+        // Deathmage
+        public static readonly Definition M_Deathmage = new Definition(
+            new Behavior[] {
+                SmoothWandering.Instance(3f, 3f),
+                new RunBehaviors(
+                    new QueuedBehavior(
+                        Once.Instance(
+                            new RunBehaviors(
+                                SpawnMinionImmediate.Instance( T("Skeleton"), 1, 3, 5),
+                                SpawnMinionImmediate.Instance( T("Skeleton Swordsman"), 1, 2, 4),
+                                SpawnMinionImmediate.Instance( T("Skeleton Veteran"), 1, 1, 3),
+                                SpawnMinionImmediate.Instance( T("Skeleton Mage"), 1, 1, 2),
+                                SpawnMinionImmediate.Instance( T("Skeleton King"), 1, 1, 1)
+                                )),
+                        Rand.Instance(
+                            new RandomTaunt(0.1, "{PLAYER}, you will soon be my undead slave!"),
+                            new RandomTaunt(0.1, "My skeletons will make short work of you."),
+                            new RandomTaunt(0.1, "You will never leave this graveyard alive!")
+                            ),
+                        Cooldown.Instance(10000)
+                        ),
+                    Cooldown.Instance(1000, MultiAttack.Instance(10, 6*(float) Math.PI/180, 3))
+                    )
+            },
+            null,
+            null);
+
+        // Demon
+        public static readonly Definition M_Demon = new Definition(
+            new Behavior[] {
+                SimpleWandering.Instance(7f),
+                Cooldown.Instance(1000, PredictiveMultiAttack.Instance(10, 5*(float) Math.PI/180, 3, 0.5f))
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Fire Bow")),
+                        Tuple.Create(0.5, (ILoot) HpPotionLoot.Instance)
+                        ))
+                    ));
+
+        // Demon Warrior
+        public static readonly Definition M_Demon_Warrior = new Definition(
+            new Behavior[] {
+                SimpleWandering.Instance(7f),
+                Cooldown.Instance(1000, PredictiveMultiAttack.Instance(10, 5*(float) Math.PI/180, 3, 0.5f))
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Obsidian Dagger")),
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Steel Shield")),
+                        Tuple.Create(0.5, (ILoot) HpPotionLoot.Instance)
+                        ))
+                    ));
+
+        // Earth Golem
+        public static readonly Definition M_Earth_Golem = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(8, 10, 1, null),
+                    SimpleWandering.Instance(4)
+                    ),
+                new RunBehaviors(
+                    Cooldown.Instance(1000, MultiAttack.Instance(3, 7*(float) Math.PI/180, 2)),
+                    Once.Instance(GolemSatelliteSpawn.Instance)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.03, (ILoot) HpPotionLoot.Instance)
+                        ),
+                    Tuple.Create(1, new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new TierLoot(2, ItemType.Ring))
+                        ))
+                    ));
+
+        // East Tutorial Gun
+        public static readonly Definition M_East_Tutorial_Gun = new Definition(
+            new Behavior[] {
+                TutorialTower.Instance
             },
             null,
             null);
@@ -5178,6 +5727,147 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(0.1, (ILoot) new ItemLoot("Ring of Vitality"))
                         )));
 
+        // Ent
+        public static readonly Definition M_Ent = new Definition(
+            new Behavior[] {
+                Chasing.Instance(1f, 10, 0, null),
+                Cooldown.Instance(1000,
+                    IfNot.Instance(
+                        SimpleAttack.Instance(10),
+                        RingAttack.Instance(5)
+                        )
+                    ),
+                new RunBehaviors(
+                    new QueuedBehavior(
+                        CooldownExact.Instance(5000),
+                        Timed.Instance(2000, False.Instance(
+                            new RunBehaviors(
+                                SetSize.Instance(140),
+                                Flashing.Instance(500, 0xff00ff00)
+                                )
+                            )),
+                        CooldownExact.Instance(5000),
+                        Timed.Instance(2000, False.Instance(
+                            new RunBehaviors(
+                                SetSize.Instance(160),
+                                Flashing.Instance(500, 0xff00ff00)
+                                )
+                            )),
+                        CooldownExact.Instance(5000),
+                        Timed.Instance(2000, False.Instance(
+                            new RunBehaviors(
+                                SetSize.Instance(180),
+                                Flashing.Instance(500, 0xff00ff00)
+                                )
+                            )),
+                        CooldownExact.Instance(5000),
+                        Timed.Instance(2000, False.Instance(
+                            new RunBehaviors(
+                                SetSize.Instance(200),
+                                Flashing.Instance(500, 0xff00ff00)
+                                )
+                            ))
+                        ),
+                    new QueuedBehavior(
+                        CooldownExact.Instance(90000),
+                        Despawn.Instance
+                        )
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                        Tuple.Create(100, new LootDef(0, 1, 0, 8,
+                            Tuple.Create(0.01, (ILoot) new ItemLoot("Tincture of Dexterity"))
+                            ))
+                        ));
+
+        // Ent Ancient
+        public static readonly Definition M_Ent_Ancient = new Definition(
+            new Behavior[] {
+                IfExist.Instance(-1,
+                    IfGreater.Instance(-1, 1,
+                        IfEqual.Instance(-1, 3,
+                            NullBehavior.Instance,
+                            SmoothWandering.Instance(1.5f, 3f)
+                            ),
+                        SmoothWandering.Instance(1.5f, 2f)
+                        ),
+                    SmoothWandering.Instance(1.5f, 2f)
+                    ),
+                new RunBehaviors(
+                    IfEqual.Instance(-1, 1,
+                        new QueuedBehavior(
+                            CooldownExact.Instance(2000),
+                            new SetKey(-1, 2)
+                            )
+                        ),
+                    IfEqual.Instance(-1, 2,
+                        new RunBehaviors(
+                            Once.Instance(UnsetConditionEffect.Instance(ConditionEffectIndex.Invincible)),
+                            Flashing.Instance(500, 0xff0000ff),
+                            Cooldown.Instance(500, MultiAttack.Instance(10, (float) Math.PI, 2, 0*(float) Math.PI/180)),
+                            Cooldown.Instance(750, MultiAttack.Instance(10, (float) Math.PI, 2, 90*(float) Math.PI/180)),
+                            new QueuedBehavior(
+                                CooldownExact.Instance(6000),
+                                new SetKey(-1, 3)
+                                )
+                            )
+                        ),
+                    IfEqual.Instance(-1, 3,
+                        new RunBehaviors(
+                            SetConditionEffect.Instance(ConditionEffectIndex.Invincible),
+                            new QueuedBehavior(
+                                CooldownExact.Instance(3000),
+                                new Transmute( T("Actual Ent Ancient"))
+                                ),
+                            Once.Instance(new RunBehaviors(
+                                DamageLesserEqual.Instance(4500,
+                                    new RunBehaviors(
+                                        new SimpleTaunt("Mmm? Did you say something, mortal?"),
+                                        new SetKey(-2, 0)
+                                        ),
+                                    DamageLesserEqual.Instance(14400,
+                                        new RunBehaviors(
+                                            new SimpleTaunt("It will be trivial to dispose of you."),
+                                            SpawnMinionImmediate.Instance( T("Greater Nature Sprite"), 3, 1, 1),
+                                            SpawnMinionImmediate.Instance( T("Ent"), 3, 2, 2),
+                                            new SetKey(-2, 0)
+                                            ),
+                                        DamageLesserEqual.Instance(37500,
+                                            new RunBehaviors(
+                                                new SimpleTaunt("Little flies, little flies... we will swat you."),
+                                                SpawnMinionImmediate.Instance( T("Greater Nature Sprite"), 3, 3, 3),
+                                                SpawnMinionImmediate.Instance( T("Ent"), 3, 5, 5),
+                                                new SetKey(-2, 0)
+                                                ),
+                                            new RunBehaviors(
+                                                new SimpleTaunt("You are many, yet the sum of your years is nothing."),
+                                                SpawnMinionImmediate.Instance( T("Greater Nature Sprite"), 3, 6, 6),
+                                                SpawnMinionImmediate.Instance( T("Ent"), 3, 11, 11),
+                                                new SetKey(-2, 0)
+                                                )
+                                            )
+                                        )
+                                    )
+                                ))
+                            )
+                        )
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new OnHit(
+                        Once.Instance(
+                            new RunBehaviors(
+                                new SimpleTaunt("Uhh. So... sleepy..."),
+                                new SetKey(-1, 1),
+                                SetConditionEffect.Instance(ConditionEffectIndex.Invincible)
+                                )
+                            )
+                        )
+                },
+            null);
+
         // Ent Minion
         public static readonly Definition M_Ent_Minion = new Definition(
             new Behavior[] {
@@ -5191,6 +5881,371 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(0.05, (ILoot) HpPotionLoot.Instance)
                         )
                     ));
+
+        // Ent Sapling
+        public static readonly Definition M_Ent_Sapling = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(5.5f, 10, 8, T("Actual Ent Ancient")),
+                    SimpleWandering.Instance(5.5f)
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Evil Chicken
+        public static readonly Definition M_Evil_Chicken = new Definition(
+            new Behavior[] {
+                SimpleWandering.Instance(3)
+            },
+            null,
+            null);
+
+        // Evil Chicken God
+        public static readonly Definition M_Evil_Chicken_God = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(4, 5, 3, null), SimpleWandering.Instance(3)),
+                SpawnMinion.Instance( T("Evil Chicken Minion"), 5, 3, 2000, 5000)
+            },
+            null,
+            null);
+
+        // Evil Chicken Minion
+        public static readonly Definition M_Evil_Chicken_Minion = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(4, 5, 1, T("Evil Chicken God")), SimpleWandering.Instance(3)),
+                NullBehavior.Instance
+            },
+            null,
+            null);
+
+        // Fire Golem
+        public static readonly Definition M_Fire_Golem = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(10, 7, 1, null),
+                    SimpleWandering.Instance(4)
+                    ),
+                new RunBehaviors(
+                    Rand.Instance(
+                        Cooldown.Instance(1000, MultiAttack.Instance(10, 15*(float) Math.PI/180, 3, 0)),
+                        Cooldown.Instance(1000, SimpleAttack.Instance(10, 1))
+                        ),
+                    Once.Instance(GolemSatelliteSpawn.Instance)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.05, (ILoot) new TierLoot(4, ItemType.Armor)),
+                        Tuple.Create(0.03, (ILoot) MpPotionLoot.Instance)
+                        )
+                    ));
+
+        // Ghost King
+        public static readonly Definition M_Ghost_King = new Definition(
+            new Behavior[] {
+                IfExist.Instance(-1,
+                    IfGreater.Instance(-1, 2,
+                        NullBehavior.Instance,
+                        new QueuedBehavior(
+                            Not.Instance(ReturnSpawn.Instance(4)),
+                            False.Instance(SmoothWandering.Instance(1.5f, 3))
+                            )
+                        ),
+                    new QueuedBehavior(
+                        AngleMove.Instance(4, 180*(float) Math.PI/180, 6),
+                        AngleMove.Instance(4, 0*(float) Math.PI/180, 6)
+                        )
+                    ),
+                new RunBehaviors(
+                    IfEqual.Instance(-1, 1,
+                        new QueuedBehavior(
+                            CooldownExact.Instance(2000),
+                            new SetKey(-1, 2)
+                            )
+                        ),
+                    IfEqual.Instance(-1, 2,
+                        new RunBehaviors(
+                            Once.Instance(UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)),
+                            Flashing.Instance(200, 0xff00ff00),
+                            Cooldown.Instance(1000, MultiAttack.Instance(10, 30*(float) Math.PI/180, 4)),
+                            new QueuedBehavior(
+                                CooldownExact.Instance(200),
+                                SetSize.Instance(120),
+                                CooldownExact.Instance(200),
+                                SetSize.Instance(140),
+                                CooldownExact.Instance(3000),
+                                new SetKey(-1, 3)
+                                )
+                            )
+                        ),
+                    IfEqual.Instance(-1, 3,
+                        new RunBehaviors(
+                            new SetKey(-1, 4),
+                            Once.Instance(new RunBehaviors(
+                                Once.Instance(SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)),
+                                new SimpleTaunt("Aye, let's be miserable together"),
+                                DamageLesserEqual.Instance(4500,
+                                    new RunBehaviors(
+                                        new SimpleTaunt("Just you? I guess I don't have any friends to play with."),
+                                        new SetKey(-2, 0)
+                                        ),
+                                    DamageLesserEqual.Instance(14400,
+                                        new RunBehaviors(
+                                            new SimpleTaunt("Such a small party."),
+                                            new SetKey(-2, 1)
+                                            ),
+                                        DamageLesserEqual.Instance(37500,
+                                            new RunBehaviors(
+                                                new SimpleTaunt("There's a MOB of you."),
+                                                new SetKey(-2, 2)
+                                                ),
+                                            new RunBehaviors(
+                                                new SimpleTaunt("What a HUGE MOB!"),
+                                                new SetKey(-2, 3)
+                                                )
+                                            )
+                                        )
+                                    )
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-2, 0, 
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 5, T("Ghost Master")),
+                            TossEnemy.Instance(72*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(144*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(216*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(288*(float) Math.PI/180, 5, T("Small Ghost")),
+                            CooldownExact.Instance(3000),
+                            new Transmute( T("Actual Ghost King"))
+                            )
+                        ),
+                    IfEqual.Instance(-2, 1, 
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 5, T("Medium Ghost")),
+                            TossEnemy.Instance(72*(float) Math.PI/180, 5, T("Medium Ghost")),
+                            TossEnemy.Instance(144*(float) Math.PI/180, 5, T("Medium Ghost")),
+                            TossEnemy.Instance(216*(float) Math.PI/180, 5, T("Medium Ghost")),
+                            TossEnemy.Instance(288*(float) Math.PI/180, 5, T("Medium Ghost")),
+                            CooldownExact.Instance(5000),
+                            EntityGroupLesserThan.Instance(15, 2, "Ghosts"),
+                            CooldownExact.Instance(3000),
+                            new SimpleTaunt("Misery loves company!"),
+                            new SetKey(-2, 4)
+                            )
+                        ),
+                    IfEqual.Instance(-2, 2, 
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 5, T("Small Ghost")),
+                            TossEnemy.Instance(60*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(120*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(180*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(240*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(300*(float) Math.PI/180, 5, T("Large Ghost")),
+                            CooldownExact.Instance(5000),
+                            EntityGroupLesserThan.Instance(15, 2, "Ghosts"),
+                            CooldownExact.Instance(3000),
+                            new SimpleTaunt("Misery loves company!"),
+                            new SetKey(-2, 5)
+                            )
+                        ),
+                    IfEqual.Instance(-2, 3, 
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 5, T("Small Ghost")),
+                            TossEnemy.Instance(60*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(120*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(180*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(240*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(300*(float) Math.PI/180, 5, T("Large Ghost")),
+                            CooldownExact.Instance(5000),
+                            EntityGroupLesserThan.Instance(15, 2, "Ghosts"),
+                            CooldownExact.Instance(3000),
+                            new SimpleTaunt("I feel almost manic!"),
+                            new SetKey(-2, 6)
+                            )
+                        ),
+                    IfEqual.Instance(-2, 4, 
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 5, T("Ghost Master")),
+                            TossEnemy.Instance(60*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(120*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(180*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(240*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(300*(float) Math.PI/180, 5, T("Large Ghost")),
+                            CooldownExact.Instance(3000),
+                            new Transmute( T("Actual Ghost King"))
+                            )
+                        ),
+                    IfEqual.Instance(-2, 5, 
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 5, T("Ghost Master")),
+                            TossEnemy.Instance(60*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(120*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(180*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(240*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(300*(float) Math.PI/180, 5, T("Large Ghost")),
+                            CooldownExact.Instance(1000),
+                            TossEnemy.Instance(0, 5, T("Large Ghost")),
+                            TossEnemy.Instance(60*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(120*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(180*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(240*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(300*(float) Math.PI/180, 5, T("Large Ghost")),
+                            CooldownExact.Instance(3000),
+                            new Transmute( T("Actual Ghost King"))
+                            )
+                        ),
+                    IfEqual.Instance(-2, 6, 
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 5, T("Small Ghost")),
+                            TossEnemy.Instance(60*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(120*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(180*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(240*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(300*(float) Math.PI/180, 5, T("Small Ghost")),
+                            CooldownExact.Instance(1000),
+                            TossEnemy.Instance(0, 5, T("Ghost Master")),
+                            TossEnemy.Instance(60*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(120*(float) Math.PI/180, 5, T("Small Ghost")),
+                            TossEnemy.Instance(180*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(240*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(300*(float) Math.PI/180, 5, T("Large Ghost")),
+                            CooldownExact.Instance(1000),
+                            TossEnemy.Instance(0, 5, T("Large Ghost")),
+                            TossEnemy.Instance(60*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(120*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(180*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(240*(float) Math.PI/180, 5, T("Large Ghost")),
+                            TossEnemy.Instance(300*(float) Math.PI/180, 5, T("Large Ghost")),
+                            CooldownExact.Instance(3000),
+                            new Transmute( T("Actual Ghost King"))
+                            )
+                        )
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new OnHit(
+                        Once.Instance(
+                            new RunBehaviors(
+                                new SimpleTaunt("No corporeal creature can kill my sorrow"),
+                                new SetKey(-1, 1),
+                                SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)
+                                )
+                            )
+                        )
+                },
+            null);
+
+        // Ghost Master
+        public static readonly Definition M_Ghost_Master = new Definition(
+            new Behavior[] {
+                IfExist.Instance(-1,
+                    IfEqual.Instance(-1, 0,
+                        new RunBehaviors( 
+                            HpLesser.Instance(100000 - 1000 - 4000,
+                                new SetKey(-1, 1)
+                                ),
+                            new QueuedBehavior(
+                                SetSize.Instance(120),
+                                CooldownExact.Instance(200),
+                                SetSize.Instance(140),
+                                CooldownExact.Instance(200),
+                                Timed.Instance(3000, Flashing.Instance(500, 0xff00ff00)),
+                                False.Instance(NullBehavior.Instance)
+                                ),
+                            new QueuedBehavior(
+                                SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                                Timed.Instance(1500, False.Instance(
+                                    IfNot.Instance(
+                                        ChasingGroup.Instance(20, 50, 15, "Heros"),
+                                        SimpleWandering.Instance(20, 3f)
+                                        )
+                                    )),
+                                UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                                Timed.Instance(5000,
+                                    False.Instance(Cooldown.Instance(250,
+                                        RingAttack.Instance(4, offset: 45*(float) Math.PI/180))))
+                                )
+                            ),
+                        IfEqual.Instance(-1, 1,
+                            new RunBehaviors( 
+                                HpLesser.Instance(100000 - 1000 - 4000 - 8000,
+                                    new SetKey(-1, 2)
+                                    ),
+                                new QueuedBehavior(
+                                    SetSize.Instance(160),
+                                    CooldownExact.Instance(200),
+                                    SetSize.Instance(180),
+                                    CooldownExact.Instance(200),
+                                    Timed.Instance(3000, Flashing.Instance(500, 0xff00ff00)),
+                                    False.Instance(NullBehavior.Instance)
+                                    ),
+                                new QueuedBehavior(
+                                    SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                                    Timed.Instance(1500, False.Instance(
+                                        IfNot.Instance(
+                                            ChasingGroup.Instance(20, 50, 15, "Heros"),
+                                            SimpleWandering.Instance(20, 3f)
+                                            )
+                                        )),
+                                    UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                                    Timed.Instance(5000, False.Instance(Cooldown.Instance(250, RingAttack.Instance(8))))
+                                    )
+                                ),
+                            new QueuedBehavior( 
+                                new SimpleTaunt("Your secret soul master is dying, Your Majesty"),
+                                OrderEntity.Instance(100, T("Actual Ghost King"),
+                                    new RunBehaviors(
+                                        Rand.Instance(
+                                            new RunBehaviors(
+                                                new SimpleTaunt(
+                                                    "I feel my flesh again! For the first time in a 1000 years I LIVE!"),
+                                                new SimpleTaunt("Will you release me?")
+                                                ),
+                                            new SimpleTaunt("You have sapped my energy. A curse on you!")
+                                            ),
+                                        new SimpleTaunt("I am still very alone"),
+                                        SetSize.Instance(100),
+                                        new SetKey(-1, 0)
+                                        )
+                                    ),
+                                CooldownExact.Instance(2000),
+                                new SimpleTaunt("I cannot live with my betrayal..."),
+                                RingAttack.Instance(8),
+                                Die.Instance
+                                )
+                            )
+                        ),
+                    new RunBehaviors( 
+                        HpLesser.Instance(100000 - 1000,
+                            new SetKey(-1, 0)
+                            ),
+                        new QueuedBehavior(
+                            Timed.Instance(3000, Flashing.Instance(500, 0xff00ff00)),
+                            False.Instance(NullBehavior.Instance)
+                            ),
+                        new QueuedBehavior(
+                            SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                            Timed.Instance(1500, False.Instance(
+                                IfNot.Instance(
+                                    ChasingGroup.Instance(20, 50, 15, "Heros"),
+                                    SimpleWandering.Instance(20, 3f)
+                                    )
+                                )),
+                            UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                            Timed.Instance(5000, False.Instance(Cooldown.Instance(250, RingAttack.Instance(4))))
+                            )
+                        )
+                    )
+            },
+            null,
+            null);
 
         // Giant Herding Sheep
         public static readonly Definition M_Giant_Herding_Sheep = new Definition(
@@ -5215,6 +6270,63 @@ namespace WorldServer.logic.doomed
                                 )
                             )
                         )
+                    )
+            },
+            null,
+            null);
+
+        // Gray Satellite 1
+        public static readonly Definition M_Gray_Satellite_1 = new Definition(
+            new Behavior[] {
+                StrictCirclingGroup.Instance(1f, 10, "Golem Satellites"),
+                new RunBehaviors(
+                    Cooldown.Instance(500, SimpleAttack.Instance(5)),
+                    GolemSatellites.Instance
+                    )
+            },
+            null,
+            null);
+
+        // Gray Satellite 2
+        public static readonly Definition M_Gray_Satellite_2 = new Definition(
+            new Behavior[] {
+                StrictCirclingGroup.Instance(1f, 10, "Golem Satellites"),
+                new RunBehaviors(
+                    Cooldown.Instance(500, SimpleAttack.Instance(5)),
+                    GolemSatellites.Instance
+                    )
+            },
+            null,
+            null);
+
+        // Gray Satellite 3
+        public static readonly Definition M_Gray_Satellite_3 = new Definition(
+            new Behavior[] {
+                StrictCirclingGroup.Instance(1f, 10, "Golem Satellites"),
+                new RunBehaviors(
+                    Cooldown.Instance(500, SimpleAttack.Instance(5)),
+                    GolemSatellites.Instance
+                    )
+            },
+            null,
+            null);
+
+        // Greater Nature Sprite
+        public static readonly Definition M_Greater_Nature_Sprite = new Definition(
+            new Behavior[] {
+                If.Instance(
+                    WithinSpawn.Instance(11),
+                    Circling.Instance(4, 10, 15, null),
+                    ReturnSpawn.Instance(15)
+                    ),
+                new RunBehaviors(
+                    Once.Instance(SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)),
+                    Cooldown.Instance(1000, MultiAttack.Instance(10, 10*(float) Math.PI/180, 4)),
+                    new QueuedBehavior(
+                        CooldownExact.Instance(90000),
+                        Despawn.Instance
+                        ),
+                    Reproduce.Instance( T("Ent"), 5, 3000)
                     )
             },
             null,
@@ -5371,6 +6483,72 @@ namespace WorldServer.logic.doomed
                         )
                     ));
 
+        // Green Satellite
+        public static readonly Definition M_Green_Satellite = new Definition(
+            new Behavior[] {
+                StrictCirclingGroup.Instance(3, 5, "Golems"),
+                GolemSatellites.Instance
+            },
+            null,
+            null);
+
+        // Haunted Spirit
+        public static readonly Definition M_Haunted_Spirit = new Definition(
+            new Behavior[] {
+                IfExist.Instance(-1,
+                    SimpleWandering.Instance(10f),
+                    NullBehavior.Instance
+                    ),
+                new RunBehaviors(
+                    new QueuedBehavior(
+                        new SetKey(-1, 1),
+                        SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                        Cooldown.Instance(2500),
+                        new RemoveKey(-1),
+                        UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                        Cooldown.Instance(1500)
+                        ),
+                    Cooldown.Instance(1000,
+                        Rand.Instance(
+                            new RandomTaunt(0.01, "Hungry..."),
+                            new RandomTaunt(0.01, "XxxXxxxXxXxXxxx...")
+                            )
+                        ),
+                    new QueuedBehavior(
+                        SimpleAttack.Instance(10),
+                        CooldownExact.Instance(200),
+                        MultiAttack.Instance(10, 40*(float) Math.PI/180, 3),
+                        CooldownExact.Instance(200),
+                        SimpleAttack.Instance(10),
+                        CooldownExact.Instance(200),
+                        MultiAttack.Instance(10, 40*(float) Math.PI/180, 3),
+                        CooldownExact.Instance(200),
+                        SimpleAttack.Instance(10),
+                        CooldownExact.Instance(200),
+                        MultiAttack.Instance(10, 40*(float) Math.PI/180, 3),
+                        CooldownExact.Instance(200),
+                        SimpleAttack.Instance(10),
+                        CooldownExact.Instance(200),
+                        MultiAttack.Instance(10, 40*(float) Math.PI/180, 3),
+                        CooldownExact.Instance(2000)
+                        ),
+                    new QueuedBehavior(
+                        new SetKey(-1, 1),
+                        Cooldown.Instance(5000),
+                        new RemoveKey(-1),
+                        Cooldown.Instance(1000)
+                        )
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Tincture of Defense")),
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Tincture of Life")),
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Tincture of Mana"))
+                        ))
+                    ));
+
         // Hell Hound
         public static readonly Definition M_Hell_Hound = new Definition(
             new Behavior[] {
@@ -5409,6 +6587,51 @@ namespace WorldServer.logic.doomed
             null,
             null);
 
+        // Imp
+        public static readonly Definition M_Imp = new Definition(
+            new Behavior[] {
+                SimpleWandering.Instance(7f),
+                Cooldown.Instance(250, SimpleAttack.Instance(10))
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Missile Wand")),
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Serpentine Staff")),
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Fire Bow")),
+                            Tuple.Create(0.0001, (ILoot)new ItemLoot("Large Demonic Cloth")),
+                            Tuple.Create(0.0001, (ILoot)new ItemLoot("Small Demonic Cloth")),
+                        Tuple.Create(0.5, (ILoot) HpPotionLoot.Instance)
+                        ))
+                    ));
+
+        // Jackal Priest
+        public static readonly Definition M_Jackal_Priest = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(12, 9, 6, T("Jackal Priest")),
+                    Chasing.Instance(6.5f, 8, 1, null)
+                    ),
+                Cooldown.Instance(600, SimpleAttack.Instance(10, projectileIndex: 0)),
+                Cooldown.Instance(1000, RingAttack.Instance(5, 10, 0, 1)
+                    )
+            },
+            null,
+            new LootBehavior(
+                        new LootDef(0, 2, 0, 8,
+                            Tuple.Create(0.0001, (ILoot) HpPotionLoot.Instance)
+                            )));
+
+        // Kitchen Guard
+        public static readonly Definition M_Kitchen_Guard = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(6, 8, 6, null), SimpleWandering.Instance(4)),
+                Cooldown.Instance(1000, SimpleAttack.Instance(8))
+            },
+            null,
+            null);
+
         // Knight of Doom
         public static readonly Definition M_Knight_of_Doom = new Definition(
             new Behavior[] {
@@ -5425,6 +6648,339 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(100, new LootDef(0, 1, 0, 8,
                             Tuple.Create(0.01, (ILoot)new ItemLoot("Sword of Dark Enchantment"))
                 ))));
+
+        // Large Ghost
+        public static readonly Definition M_Large_Ghost = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    new QueuedBehavior(
+                        SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                        SetSize.Instance(160),
+                        CooldownExact.Instance(200),
+                        SetSize.Instance(180),
+                        CooldownExact.Instance(200),
+                        False.Instance(new QueuedBehavior(
+                            SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                            Timed.Instance(1500, False.Instance(
+                                IfNot.Instance(
+                                    ChasingGroup.Instance(20, 50, 15, "Heros"),
+                                    SimpleWandering.Instance(20, 3f)
+                                    )
+                                )),
+                            UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                            Timed.Instance(5000, False.Instance(
+                                new RunBehaviors(
+                                    Cooldown.Instance(1000,
+                                        new RandomTaunt(0.01, "Only the Secret Ghost Master can kill the King")),
+                                    Cooldown.Instance(250, RingAttack.Instance(8))
+                                    )
+                                ))
+                            ))
+                        ),
+                    new QueuedBehavior(
+                        Timed.Instance(3000, Flashing.Instance(500, 0xff00ff00)),
+                        False.Instance(NullBehavior.Instance)
+                        )
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new OnDeath(
+                        If.Instance(
+                            IsEntityNotPresent.Instance(15, T("Actual Ghost King")),
+                            new Transmute( T("Imp"), 2, 2)
+                            )
+                        )
+                },
+            null);
+
+        // Lich
+        public static readonly Definition M_Lich = new Definition(
+            new Behavior[] {
+                IfExist.Instance(-1,
+                    IfGreater.Instance(-1, 2,
+                        NullBehavior.Instance,
+                        SmoothWandering.Instance(1.5f, 3f)
+                        ),
+                    SmoothWandering.Instance(1.5f, 3f)
+                    ),
+                new RunBehaviors(
+                    IfEqual.Instance(-1, 1,
+                        new QueuedBehavior(
+                            CooldownExact.Instance(2000),
+                            new SetKey(-1, 2)
+                            )
+                        ),
+                    IfEqual.Instance(-1, 2,
+                        new RunBehaviors(
+                            Once.Instance(UnsetConditionEffect.Instance(ConditionEffectIndex.Invincible)),
+                            Flashing.Instance(200, 0xff00ff00),
+                            new QueuedBehavior(
+                                MultiAttack.Instance(10, 120*(float) Math.PI/180, 3, projectileIndex: 1),
+                                CooldownExact.Instance(200),
+                                MultiAttack.Instance(10, 120*(float) Math.PI/180, 3, projectileIndex: 1),
+                                CooldownExact.Instance(1800)
+                                ),
+                            new QueuedBehavior(
+                                CooldownExact.Instance(6000),
+                                new SetKey(-1, 3)
+                                )
+                            )
+                        ),
+                    IfEqual.Instance(-1, 3,
+                        new RunBehaviors(
+                            new SetKey(-1, 4),
+                            Once.Instance(new RunBehaviors(
+                                new SimpleTaunt("Time to meet your future brothers and sisters..."),
+                                DamageLesserEqual.Instance(4500,
+                                    new RunBehaviors(
+                                        new SimpleTaunt("...It's a small family, but you'll enjoy being part of it!"),
+                                        new SetKey(-2, 0)
+                                        ),
+                                    DamageLesserEqual.Instance(14400,
+                                        new RunBehaviors(
+                                            new SimpleTaunt("...and there's more where they came from!"),
+                                            new SetKey(-2, 1)
+                                            ),
+                                        DamageLesserEqual.Instance(37500,
+                                            new RunBehaviors(
+                                                new SimpleTaunt("...there's a lot of them! Hahaha!!"),
+                                                new SetKey(-2, 2)
+                                                ),
+                                            new RunBehaviors(
+                                                new SimpleTaunt("... there's an ARMY of them! HahaHahaaaa!!!"),
+                                                new SetKey(-2, 3)
+                                                )
+                                            )
+                                        )
+                                    )
+                                ))
+                            )
+                        ),
+                    IfEqual.Instance(-2, 0,
+                        new QueuedBehavior(
+                            CooldownExact.Instance(3000),
+                            new Transmute( T("Actual Lich"))
+                            )
+                        ),
+                    IfEqual.Instance(-2, 1,
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 5, T("Phylactery Bearer")),
+                            TossEnemy.Instance(120*(float) Math.PI/180, 5, T("Phylactery Bearer")),
+                            TossEnemy.Instance(240*(float) Math.PI/180, 5, T("Phylactery Bearer")),
+                            TossEnemy.Instance(0, 5, T("Haunted Spirit")),
+                            CooldownExact.Instance(6000),
+                            new Transmute( T("Actual Lich"))
+                            )
+                        ),
+                    IfEqual.Instance(-2, 2,
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 4, T("Phylactery Bearer")),
+                            TossEnemy.Instance(72*(float) Math.PI/180, 4, T("Phylactery Bearer")),
+                            TossEnemy.Instance(144*(float) Math.PI/180, 4, T("Phylactery Bearer")),
+                            TossEnemy.Instance(216*(float) Math.PI/180, 4, T("Phylactery Bearer")),
+                            TossEnemy.Instance(288*(float) Math.PI/180, 4, T("Phylactery Bearer")),
+                            TossEnemy.Instance(0, 4, T("Haunted Spirit")),
+                            TossEnemy.Instance(144*(float) Math.PI/180, 4, T("Haunted Spirit")),
+                            TossEnemy.Instance(288*(float) Math.PI/180, 4, T("Haunted Spirit")),
+                            CooldownExact.Instance(6000),
+                            new Transmute( T("Actual Lich"))
+                            )
+                        ),
+                    IfEqual.Instance(-2, 3,
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 4, T("Phylactery Bearer")),
+                            TossEnemy.Instance(72*(float) Math.PI/180, 4, T("Phylactery Bearer")),
+                            TossEnemy.Instance(144*(float) Math.PI/180, 4, T("Phylactery Bearer")),
+                            TossEnemy.Instance(216*(float) Math.PI/180, 4, T("Phylactery Bearer")),
+                            TossEnemy.Instance(288*(float) Math.PI/180, 4, T("Phylactery Bearer")),
+                            TossEnemy.Instance(0, 4, T("Haunted Spirit")),
+                            TossEnemy.Instance(144*(float) Math.PI/180, 4, T("Haunted Spirit")),
+                            TossEnemy.Instance(288*(float) Math.PI/180, 4, T("Haunted Spirit")),
+                            CooldownExact.Instance(5000),
+                            EntityLesserThan.Instance(10, 4, T("Phylactery Bearer")),
+                            CooldownExact.Instance(3000),
+                            new SimpleTaunt("My minions have stolen your life force and fed it to me!!"),
+                            new SetKey(-2, 4)
+                            )
+                        ),
+                    IfEqual.Instance(-2, 4,
+                        new QueuedBehavior(
+                            TossEnemy.Instance(0, 5, T("Phylactery Bearer")),
+                            TossEnemy.Instance(120*(float) Math.PI/180, 5, T("Phylactery Bearer")),
+                            TossEnemy.Instance(240*(float) Math.PI/180, 5, T("Phylactery Bearer")),
+                            CooldownExact.Instance(6000),
+                            new Transmute( T("Actual Lich"))
+                            )
+                        )
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new OnHit(
+                        Once.Instance(
+                            new RunBehaviors(
+                                new SimpleTaunt("New recruits for my undead army? How delightful!"),
+                                new SetKey(-1, 1),
+                                SetConditionEffect.Instance(ConditionEffectIndex.Invincible)
+                                )
+                            )
+                        )
+                },
+            null);
+
+        // Mad Gas Controller
+        public static readonly Definition M_Mad_Gas_Controller = new Definition(
+            new Behavior[] {
+                HpGreaterEqual.Instance(50000,
+                    new RunBehaviors(
+                        Cooldown.Instance(500, RingAttack.Instance(10, 0, 5, projectileIndex: 0)),
+                        Cooldown.Instance(500, RingAttack.Instance(8, 0, 5, 1)),
+                        Cooldown.Instance(1000,
+                            If.Instance(
+                                EntityGroupLesserThan.Instance(20, 4, "Bigsheep"),
+                                Rand.Instance(
+                                    TossEnemy.Instance(0, 5, T("Red Gas Spawner LR"))
+                                    )
+                                )
+                            )
+                        )),
+                If.Instance(
+                    And.Instance(HpLesser.Instance(50000, NullBehavior.Instance),
+                        HpGreaterEqual.Instance(25000, NullBehavior.Instance)),
+                    new RunBehaviors(
+                        Cooldown.Instance(15000, RingAttack.Instance(20, 0, 5, 2)),
+                        Cooldown.Instance(1000, ThrowAttack.Instance(4, 10, 125)),
+                        Cooldown.Instance(1000, MultiAttack.Instance(25, 10*(float) Math.PI/180, 3, 0, 3)),
+                        Cooldown.Instance(1000,
+                            If.Instance(
+                                EntityGroupLesserThan.Instance(20, 4, "Bigsheep"),
+                                Rand.Instance(
+                                    TossEnemy.Instance(0, 5, T("Red Gas Spawner LR"))
+                                    ))))),
+                HpLesser.Instance(25000, new RunBehaviors(
+                    Flashing.Instance(5000, 0xffff3333),
+                    Cooldown.Instance(15000, RingAttack.Instance(30, 0, 5, 2)),
+                    Cooldown.Instance(500, ThrowAttack.Instance(4, 10, 100)),
+                    Cooldown.Instance(500, RingAttack.Instance(10, 0, 5, projectileIndex: 0)),
+                    Cooldown.Instance(500, RingAttack.Instance(8, 0, 5, 1)),
+                    OrderAllEntity.Instance(20, T("Red Gas Spawner LR"), new Transmute( T("Red Gas Spawner UL"))
+                        ),
+                    OrderAllEntity.Instance(20, T("Red Gas Spawner LL"), new Transmute( T("Red Gas Spawner UR"))
+                        )))
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                            Tuple.Create(100, new LootDef(0, 3, 0, 8,
+                                Tuple.Create(0.001, (ILoot) new ItemLoot("Orb of Conflict")),
+                                Tuple.Create(0.01, (ILoot) new TierLoot(11, ItemType.Weapon)),
+                                Tuple.Create(0.01, (ILoot) new TierLoot(11, ItemType.Armor)),
+                                Tuple.Create(0.01, (ILoot) new TierLoot(5, ItemType.Ring)),
+                                Tuple.Create(0.02, (ILoot) new TierLoot(10, ItemType.Weapon)),
+                                Tuple.Create(0.02, (ILoot) new TierLoot(10, ItemType.Armor)),
+                                Tuple.Create(0.03, (ILoot) new TierLoot(9, ItemType.Weapon)),
+                                Tuple.Create(0.03, (ILoot) new TierLoot(5, ItemType.Ability)),
+                                Tuple.Create(0.03, (ILoot) new TierLoot(9, ItemType.Armor)),
+                                Tuple.Create(1.0, (ILoot) new StatPotionsLoot(1, 2)),
+                                Tuple.Create(0.05, (ILoot) new TierLoot(4, ItemType.Ring)),
+                                Tuple.Create(0.1, (ILoot) new TierLoot(4, ItemType.Ability)),
+                                Tuple.Create(0.1, (ILoot) new TierLoot(8, ItemType.Armor)),
+                                Tuple.Create(0.2, (ILoot) new TierLoot(8, ItemType.Weapon)),
+                                Tuple.Create(0.2, (ILoot) new TierLoot(7, ItemType.Armor)),
+                                Tuple.Create(0.2, (ILoot) new TierLoot(3, ItemType.Ring))
+                                ))
+                            ));
+
+        // Mask Hunter
+        public static readonly Definition M_Mask_Hunter = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                        Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 4, 0, projectileIndex: 0)),
+                        SimpleWandering.Instance(2, 2)
+                    ),
+                Cooldown.Instance(1000,
+                        Rand.Instance(
+                            new RandomTaunt(0.001, "Die"),
+                            new RandomTaunt(0.001, "Die")
+                        )
+                    )
+            },
+            null,
+            null);
+
+        // Mask Shaman
+        public static readonly Definition M_Mask_Shaman = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                        Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 4, 0, projectileIndex: 0)),
+                        SimpleWandering.Instance(2, 2)
+                    ),
+                Cooldown.Instance(1000,
+                        Rand.Instance(
+                            new RandomTaunt(0.001, "Die"),
+                            new RandomTaunt(0.001, "Die")
+                        )
+                    )
+            },
+            null,
+            null);
+
+        // Mask Warrior
+        public static readonly Definition M_Mask_Warrior = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                        Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 4, 0, projectileIndex: 0)),
+                        SimpleWandering.Instance(2, 2)
+                    ),
+                Cooldown.Instance(1000,
+                        Rand.Instance(
+                            new RandomTaunt(0.001, "Die"),
+                            new RandomTaunt(0.001, "Die")
+                        )
+                    )
+            },
+            null,
+            null);
+
+        // Medium Ghost
+        public static readonly Definition M_Medium_Ghost = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    new QueuedBehavior(
+                        SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                        SetSize.Instance(120),
+                        CooldownExact.Instance(200),
+                        SetSize.Instance(140),
+                        CooldownExact.Instance(200),
+                        False.Instance(new QueuedBehavior(
+                            SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                            Timed.Instance(1500, False.Instance(
+                                IfNot.Instance(
+                                    ChasingGroup.Instance(20, 50, 15, "Heros"),
+                                    SimpleWandering.Instance(20, 3f)
+                                    )
+                                )),
+                            UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                            Timed.Instance(5000, False.Instance(
+                                new RunBehaviors(
+                                    Cooldown.Instance(1000,
+                                        new RandomTaunt(0.01, "I come back more powerful than you could ever imagine")),
+                                    Cooldown.Instance(250, RingAttack.Instance(4, offset: 45*(float) Math.PI/180))
+                                    )
+                                ))
+                            ))
+                        ),
+                    new QueuedBehavior(
+                        Timed.Instance(3000, Flashing.Instance(500, 0xff00ff00)),
+                        False.Instance(NullBehavior.Instance)
+                        )
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new DeathTransmute( T("Large Ghost"))
+                },
+            null);
 
         // Mega Sheep
         public static readonly Definition M_Mega_Sheep = new Definition(
@@ -5537,6 +7093,54 @@ namespace WorldServer.logic.doomed
                 },
             null);
 
+        // Metal Golem
+        public static readonly Definition M_Metal_Golem = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(8, 10, 1, null),
+                    SimpleWandering.Instance(4)
+                    ),
+                new RunBehaviors(
+                    Cooldown.Instance(1000, SimpleAttack.Instance(10)),
+                    Once.Instance(GolemSatelliteSpawn.Instance)
+                    ),
+                Reproduce.Instance( T("Metal Golem"), 3)
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.03, (ILoot) new TierLoot(5, ItemType.Weapon)),
+                        Tuple.Create(0.03, (ILoot) HpPotionLoot.Instance)
+                        )
+                    ));
+
+        // Mummy
+        public static readonly Definition M_Mummy = new Definition(
+            new Behavior[] {
+                SimpleWandering.Instance(6f),
+                Cooldown.Instance(500, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Mummy King
+        public static readonly Definition M_Mummy_King = new Definition(
+            new Behavior[] {
+                SimpleWandering.Instance(6f),
+                Cooldown.Instance(500, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Mummy Pharaoh
+        public static readonly Definition M_Mummy_Pharaoh = new Definition(
+            new Behavior[] {
+                SimpleWandering.Instance(6f),
+                Cooldown.Instance(500, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
         // Native Ent God
         public static readonly Definition M_Native_Ent_God = new Definition(
             new Behavior[] {
@@ -5570,6 +7174,111 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(PotProbability, (ILoot) new StatPotionLoot(StatPotion.Att))
                         ))
                     ));
+
+        // North Tutorial Gun
+        public static readonly Definition M_North_Tutorial_Gun = new Definition(
+            new Behavior[] {
+                TutorialTower.Instance
+            },
+            null,
+            null);
+
+        // Oasis Creature
+        public static readonly Definition M_Oasis_Creature = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(5f, 17, 12, T("Oasis Giant")),
+                    Rand.Instance(
+                        Chasing.Instance(5f, 10, 2, null),
+                        SimpleWandering.Instance(5f)
+                        )
+                    ),
+                Cooldown.Instance(250, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Oasis Giant
+        public static readonly Definition M_Oasis_Giant = new Definition(
+            new Behavior[] {
+                SmoothWandering.Instance(1f, 3f),
+                new RunBehaviors(
+                    Once.Instance(
+                        new RunBehaviors(
+                            SpawnMinionImmediate.Instance( T("Oasis Monster"), 3, 1, 3),
+                            SpawnMinionImmediate.Instance( T("Oasis Creature"), 3, 1, 3),
+                            SpawnMinionImmediate.Instance( T("Oasis Soldier"), 3, 1, 3),
+                            SpawnMinionImmediate.Instance( T("Oasis Ruler"), 3, 1, 3)
+                            )
+                        ),
+                    new QueuedBehavior(
+                        If.Instance(EntityGroupLesserThan.Instance(20, 10, "Oasis"),
+                            Rand.Instance(
+                                SpawnMinionImmediate.Instance( T("Oasis Monster"), 2, 1, 3),
+                                SpawnMinionImmediate.Instance( T("Oasis Creature"), 2, 1, 3),
+                                SpawnMinionImmediate.Instance( T("Oasis Soldier"), 2, 1, 3),
+                                SpawnMinionImmediate.Instance( T("Oasis Ruler"), 2, 1, 3),
+                                NullBehavior.Instance
+                                )),
+                        True.Instance(Rand.Instance(
+                            new RandomTaunt(0.1, "Come closer, {PLAYER}! Yes, closer!"),
+                            new RandomTaunt(0.1, "I rule this place, {PLAYER}!"),
+                            new RandomTaunt(0.1, "Surrender to my aquatic army, {PLAYER}!"),
+                            new RandomTaunt(0.1, "You must be thirsty, {PLAYER}. Enter my waters!"),
+                            new RandomTaunt(0.1, "Minions! We shall have {PLAYER} for dinner!")
+                            )),
+                        Cooldown.Instance(2000)
+                        ),
+                    Cooldown.Instance(1000, MultiAttack.Instance(10, 10*(float) Math.PI/180, 4, 1))
+                    )
+            },
+            null,
+            null);
+
+        // Oasis Monster
+        public static readonly Definition M_Oasis_Monster = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(5f, 17, 12, T("Oasis Giant")),
+                    Rand.Instance(
+                        Chasing.Instance(5f, 10, 2, null),
+                        SimpleWandering.Instance(5f)
+                        )
+                    ),
+                Cooldown.Instance(250, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Oasis Ruler
+        public static readonly Definition M_Oasis_Ruler = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(5f, 17, 12, T("Oasis Giant")),
+                    Rand.Instance(
+                        Chasing.Instance(5f, 10, 2, null),
+                        SimpleWandering.Instance(5f)
+                        )
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Oasis Soldier
+        public static readonly Definition M_Oasis_Soldier = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(5f, 17, 12, T("Oasis Giant")),
+                    Rand.Instance(
+                        Chasing.Instance(5f, 10, 2, null),
+                        SimpleWandering.Instance(5f)
+                        )
+                    ),
+                Cooldown.Instance(500, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
 
         // Oryx the Birthday God
         public static readonly Definition M_Oryx_the_Birthday_God = new Definition(
@@ -5924,6 +7633,172 @@ namespace WorldServer.logic.doomed
                             Tuple.Create(0.1, (ILoot)new ItemLoot("Flying Doom Daggers"))
                 ))));
 
+        // Paper Golem
+        public static readonly Definition M_Paper_Golem = new Definition(
+            new Behavior[] {
+                IfNot.Instance(
+                    Chasing.Instance(8, 10, 1, null),
+                    SimpleWandering.Instance(4)
+                    ),
+                new RunBehaviors(
+                    Cooldown.Instance(1000, SimpleAttack.Instance(10)),
+                    Once.Instance(GolemSatelliteSpawn.Instance)
+                    )
+            },
+            null,
+            new LootBehavior(
+                    new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.03, (ILoot) HpPotionLoot.Instance),
+                        Tuple.Create(0.03, (ILoot) new TierLoot(5, ItemType.Weapon))
+                        )
+                    ));
+
+        // Phoenix Egg
+        public static readonly Definition M_Phoenix_Egg = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                    SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                    CooldownExact.Instance(1500),
+                    UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                    False.Instance(new RunBehaviors(
+                        Flashing.Instance(500, 0xffff0000),
+                        new QueuedBehavior(
+                            SetSize.Instance(140),
+                            CooldownExact.Instance(500),
+                            SetSize.Instance(130),
+                            CooldownExact.Instance(500)
+                            )
+                        ))
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new DeathTransmute( T("Phoenix Reborn"))
+                },
+            null);
+
+        // Phoenix Lord
+        public static readonly Definition M_Phoenix_Lord = new Definition(
+            new Behavior[] {
+                SmoothWandering.Instance(1f, 3f),
+                new RunBehaviors(
+                    Once.Instance(
+                        new RunBehaviors(
+                            SpawnMinionImmediate.Instance( T("Birdman"), 1, 3, 5),
+                            SpawnMinionImmediate.Instance( T("Birdman Chief"), 1, 1, 2)
+                            )
+                        ),
+                    new QueuedBehavior(
+                        If.Instance(
+                            EntityGroupLesserThan.Instance(10, 25, "Pyre"),
+                            Rand.Instance(
+                                SpawnMinionImmediate.Instance( T("Birdman"), 1, 2, 4),
+                                SpawnMinionImmediate.Instance( T("Birdman Chief"), 1, 1, 2),
+                                NullBehavior.Instance
+                                )
+                            ),
+                        True.Instance(Rand.Instance(
+                            new RandomTaunt(0.1, "Alas, {PLAYER}, you will taste death but once!"),
+                            new RandomTaunt(0.1, "I have met many like you, {PLAYER}, in my thrice thousand years!"),
+                            new RandomTaunt(0.1, "Purge yourself, {PLAYER}, in the heat of my flames!"),
+                            new RandomTaunt(0.1, "The ashes of past heroes cover my plains!"),
+                            new RandomTaunt(0.1, "Some die and are ashes, but I am ever reborn!")
+                            )),
+                        Cooldown.Instance(2000)
+                        ),
+                    Cooldown.Instance(500, PredictiveMultiAttack.Instance(10, 10*(float) Math.PI/180, 4, 1))
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new DeathTransmute( T("Phoenix Egg"))
+                },
+            null);
+
+        // Phoenix Reborn
+        public static readonly Definition M_Phoenix_Reborn = new Definition(
+            new Behavior[] {
+                SmoothWandering.Instance(1f, 3f),
+                new RunBehaviors(
+                    Once.Instance(
+                        new RunBehaviors(
+                            SpawnMinionImmediate.Instance( T("Birdman"), 1, 3, 5),
+                            SpawnMinionImmediate.Instance( T("Birdman Chief"), 1, 1, 2)
+                            )
+                        ),
+                    new QueuedBehavior(
+                        If.Instance(
+                            EntityGroupLesserThan.Instance(10, 25, "Pyre"),
+                            Rand.Instance(
+                                SpawnMinionImmediate.Instance( T("Birdman"), 1, 2, 4),
+                                SpawnMinionImmediate.Instance( T("Birdman Chief"), 1, 1, 2),
+                                NullBehavior.Instance
+                                )
+                            ),
+                        Cooldown.Instance(2000)
+                        ),
+                    new QueuedBehavior(
+                        Cooldown.Instance(500, RingAttack.Instance(12, projectileIndex: 0)),
+                        Cooldown.Instance(500, RingAttack.Instance(12, projectileIndex: 0)),
+                        Cooldown.Instance(200, SimpleAttack.Instance(10, 1)),
+                        Cooldown.Instance(200, SimpleAttack.Instance(10, 1)),
+                        Cooldown.Instance(200, SimpleAttack.Instance(10, 1)),
+                        Cooldown.Instance(200, SimpleAttack.Instance(10, 1)),
+                        Cooldown.Instance(200, SimpleAttack.Instance(10, 1)),
+                        Cooldown.Instance(500, PredictiveMultiAttack.Instance(10, 10*(float) Math.PI/180, 4, 1, 1)),
+                        Cooldown.Instance(500, PredictiveMultiAttack.Instance(10, 10*(float) Math.PI/180, 4, 1, 1)),
+                        Cooldown.Instance(500, PredictiveMultiAttack.Instance(10, 10*(float) Math.PI/180, 4, 1, 1)),
+                        Cooldown.Instance(500, PredictiveMultiAttack.Instance(10, 10*(float) Math.PI/180, 4, 1, 1))
+                        )
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(400, new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.0001, (ILoot) IncLoot.Instance),
+                                                Tuple.Create(0.001, (ILoot)new ItemLoot("Wine Cellar Incantation")),
+                            Tuple.Create(0.01, (ILoot)new ItemLoot("Phoenix Generator"))
+                        ))
+                    ));
+
+        // Phylactery Bearer
+        public static readonly Definition M_Phylactery_Bearer = new Definition(
+            new Behavior[] {
+                HpLesser.Instance(500,
+                    SimpleWandering.Instance(10f),
+                    IfNot.Instance(
+                        ChasingGroup.Instance(2, 20, 8, "Heros"),
+                        SimpleWandering.Instance(6f)
+                        )
+                    ),
+                new RunBehaviors(
+                    HpLesser.Instance(500,
+                        new RunBehaviors(
+                            Once.Instance(SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)),
+                            new QueuedBehavior(
+                                CooldownExact.Instance(3000),
+                                Die.Instance
+                                )
+                            )
+                        ),
+                    Cooldown.Instance(250, HealGroup.Instance(15, 500, "Heros")),
+                    Cooldown.Instance(1000, new RandomTaunt(0.01, "We feed the master!")),
+                    Cooldown.Instance(500,
+                        Rand.Instance(
+                            MultiAttack.Instance(10, 120*(float) Math.PI/180, 3, projectileIndex: 0),
+                            MultiAttack.Instance(10, 10*(float) Math.PI/180, 3, projectileIndex: 0),
+                            PredictiveAttack.Instance(10, 1, 1)
+                            )
+                        )
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 1, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Orange Drake Egg"))
+                        ))
+                    ));
+
         // Red Balloon
         public static readonly Definition M_Red_Balloon = new Definition(
             new Behavior[] {
@@ -5937,6 +7812,64 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(0.10, (ILoot) new ItemLoot("Disco Lights")),
                         Tuple.Create(0.10, (ILoot) new ItemLoot("Party Hat"))
                         ))));
+
+        // Red Demon
+        public static readonly Definition M_Red_Demon = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                    Timed.Instance(5000, False.Instance(SmoothWandering.Instance(1f, 3f))),
+                    Timed.Instance(5000, Not.Instance(Chasing.Instance(3f, 10, 2, null))),
+                    Not.Instance(ReturnSpawn.Instance(3f))
+                    ),
+                new RunBehaviors(
+                    Once.Instance(
+                        new RunBehaviors(
+                            SpawnMinionImmediate.Instance( T("Imp"), 1, 1, 2),
+                            SpawnMinionImmediate.Instance( T("Demon"), 1, 1, 2),
+                            SpawnMinionImmediate.Instance( T("Demon Warrior"), 1, 1, 2)
+                            )
+                        ),
+                    new QueuedBehavior(
+                        If.Instance(EntityGroupLesserThan.Instance(30, 5, "Demons"),
+                            new QueuedBehavior(
+                                Rand.Instance(
+                                    SpawnMinionImmediate.Instance( T("Imp"), 1, 1, 3),
+                                    SpawnMinionImmediate.Instance( T("Demon"), 1, 1, 3),
+                                    SpawnMinionImmediate.Instance( T("Demon Warrior"), 1, 1, 3),
+                                    NullBehavior.Instance
+                                    ), Cooldown.Instance(2000))),
+                        True.Instance(Rand.Instance(
+                            new RandomTaunt(0.1, "I will deliver your soul to Oryx, {PLAYER}!"),
+                            new RandomTaunt(0.1, "Oryx will not end our pain. We can only share it... with you!"),
+                            new RandomTaunt(0.1, "Our anguish is endless, unlike your lives!"),
+                            new RandomTaunt(0.1, "There can be no forgiveness!"),
+                            new RandomTaunt(0.1, "What do you know of suffering? I can teach you much, {PLAYER}"),
+                            new RandomTaunt(0.1, "Would you attempt to destroy us? I know your name, {PLAYER}!"),
+                            new RandomTaunt(0.1, "You cannot hurt us. You cannot help us. You will feed us."),
+                            new RandomTaunt(0.1, "Your life is an offering to Oryx. You will die.")
+                            )),
+                        Cooldown.Instance(2000)
+                        ),
+                    Cooldown.Instance(1500, SimpleAttack.Instance(10, 1)),
+                    Cooldown.Instance(1000,
+                        PredictiveMultiAttack.Instance(10, 5*(float) Math.PI/180, 5, 1, projectileIndex: 0))
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 2, 0, 8,
+                        Tuple.Create(0.02, (ILoot) new ItemLoot("Golden Sword")),
+                        Tuple.Create(0.02, (ILoot) new ItemLoot("Ring of Greater Defense")),
+                        Tuple.Create(0.02, (ILoot) new ItemLoot("Steel Helm")),
+                            Tuple.Create(0.01, (ILoot)new ItemLoot("Red Demon Generator")),
+                            Tuple.Create(0.01, (ILoot)new ItemLoot("Large Red Diamond Cloth")),
+                            Tuple.Create(0.01, (ILoot)new ItemLoot("Small Red Diamond Cloth")),
+                        Tuple.Create(0.5, (ILoot) HpPotionLoot.Instance),
+                        Tuple.Create(0.5, (ILoot) MpPotionLoot.Instance),
+                        Tuple.Create(0.01, (ILoot) new StatPotionLoot(StatPotion.Spd)),
+                        Tuple.Create(0.01, (ILoot) new StatPotionLoot(StatPotion.Att))
+                        ))
+                    ));
 
         // Red Forest Wisp
         public static readonly Definition M_Red_Forest_Wisp = new Definition(
@@ -6024,6 +7957,49 @@ namespace WorldServer.logic.doomed
                         )
                     ));
 
+        // Red Satellite
+        public static readonly Definition M_Red_Satellite = new Definition(
+            new Behavior[] {
+                StrictCirclingGroup.Instance(3, 5, "Golems"),
+                GolemSatellites.Instance
+            },
+            null,
+            null);
+
+        // Red Swarm Masters
+        public static readonly Definition M_Red_Swarm_Masters = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    Once.Instance(SpawnMinionImmediate.Instance( T("Blue Swarm Minions"), 5, 2, 3)),
+                    SmoothWandering.Instance(2f, 2f),
+                    Chasing.Instance(8, 11, 1, null),
+                    Cooldown.Instance(1260, MultiAttack.Instance(600, 20*(float) Math.PI/360, 8, 0, projectileIndex: 0)),
+                    Cooldown.Instance(1600, MultiAttack.Instance(600, 60*(float) Math.PI/360, 2, 0, 1)),
+                    Cooldown.Instance(1880, MultiAttack.Instance(600, 20*(float) Math.PI/360, 2, 0, 2)),
+                    Cooldown.Instance(1990, MultiAttack.Instance(600, 20*(float) Math.PI/360, 2, 0, 3))
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Health Potion"))
+                        ))));
+
+        // Red Swarm Minions
+        public static readonly Definition M_Red_Swarm_Minions = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    SmoothWandering.Instance(2f, 2f),
+                    Chasing.Instance(8, 11, 1, null),
+                    Cooldown.Instance(1860, MultiAttack.Instance(600, 30*(float) Math.PI/360, 8, 0, projectileIndex: 0))
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Health Potion"))
+                        ))));
+
         // Regular Zombie
         public static readonly Definition M_Regular_Zombie = new Definition(
             new Behavior[] {
@@ -6052,6 +8028,132 @@ namespace WorldServer.logic.doomed
                 },
             null);
 
+        // Skeleton
+        public static readonly Definition M_Skeleton = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                    Timed.Instance(2500, False.Instance(
+                        Rand.Instance(
+                            Circling.Instance(2, 10, 8f, null),
+                            Chasing.Instance(8f, 10, 2, null)
+                            )
+                        )),
+                    Timed.Instance(500, False.Instance(Retracting.Instance(8f, 10, null)))
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Skeleton King
+        public static readonly Definition M_Skeleton_King = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                    Timed.Instance(2500, False.Instance(
+                        Rand.Instance(
+                            Circling.Instance(2, 10, 8f, null),
+                            Chasing.Instance(8f, 10, 2, null)
+                            )
+                        )),
+                    Timed.Instance(500, False.Instance(Retracting.Instance(8f, 10, null)))
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Skeleton Mage
+        public static readonly Definition M_Skeleton_Mage = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                    Timed.Instance(2500, False.Instance(
+                        Rand.Instance(
+                            Circling.Instance(2, 10, 8f, null),
+                            Chasing.Instance(8f, 10, 2, null)
+                            )
+                        )),
+                    Timed.Instance(500, False.Instance(Retracting.Instance(8f, 10, null)))
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Skeleton Swordsman
+        public static readonly Definition M_Skeleton_Swordsman = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                    Timed.Instance(2500, False.Instance(
+                        Rand.Instance(
+                            Circling.Instance(2, 10, 8f, null),
+                            Chasing.Instance(8f, 10, 2, null)
+                            )
+                        )),
+                    Timed.Instance(500, False.Instance(Retracting.Instance(8f, 10, null)))
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Skeleton Veteran
+        public static readonly Definition M_Skeleton_Veteran = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                    Timed.Instance(2500, False.Instance(
+                        Rand.Instance(
+                            Circling.Instance(2, 10, 8f, null),
+                            Chasing.Instance(8f, 10, 2, null)
+                            )
+                        )),
+                    Timed.Instance(500, False.Instance(Retracting.Instance(8f, 10, null)))
+                    ),
+                Cooldown.Instance(1000, SimpleAttack.Instance(10))
+            },
+            null,
+            null);
+
+        // Small Ghost
+        public static readonly Definition M_Small_Ghost = new Definition(
+            new Behavior[] {
+                new QueuedBehavior(
+                    SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                    Timed.Instance(1500, False.Instance(
+                        IfNot.Instance(
+                            ChasingGroup.Instance(20, 50, 15, "Heros"),
+                            SimpleWandering.Instance(20, 3f)
+                            )
+                        )),
+                    UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable),
+                    Timed.Instance(5000, False.Instance(
+                        new RunBehaviors(
+                            Cooldown.Instance(1000, Rand.Instance(
+                                new RandomTaunt(0.01, "Switch!"),
+                                new RandomTaunt(0.01, "Save the King's Soul!")
+                                )),
+                            Cooldown.Instance(250, RingAttack.Instance(4))
+                            )
+                        ))
+                    ),
+                new QueuedBehavior(
+                    Timed.Instance(3000, Flashing.Instance(500, 0xff00ff00)),
+                    False.Instance(NullBehavior.Instance)
+                    )
+            },
+            new ConditionalBehavior[]
+                {
+                    new DeathTransmute( T("Medium Ghost"))
+                },
+            null);
+
+        // South Tutorial Gun
+        public static readonly Definition M_South_Tutorial_Gun = new Definition(
+            new Behavior[] {
+                TutorialTower.Instance
+            },
+            null,
+            null);
+
         // Speedy Zombie
         public static readonly Definition M_Speedy_Zombie = new Definition(
             new Behavior[] {
@@ -6062,6 +8164,30 @@ namespace WorldServer.logic.doomed
             },
             null,
             null);
+
+        // Suit of Armor
+        public static readonly Definition M_Suit_of_Armor = new Definition(
+            new Behavior[] {
+                
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 5, 0, 8,
+                        Tuple.Create(0.03, (ILoot) MpPotionLoot.Instance),
+                        Tuple.Create(0.03, (ILoot) HpPotionLoot.Instance)
+                        ))));
+
+        // Suit of Armor Sm
+        public static readonly Definition M_Suit_of_Armor_Sm = new Definition(
+            new Behavior[] {
+                
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 5, 0, 8,
+                        Tuple.Create(0.03, (ILoot) MpPotionLoot.Instance),
+                        Tuple.Create(0.03, (ILoot) HpPotionLoot.Instance)
+                        ))));
 
         // Tank Zombie
         public static readonly Definition M_Tank_Zombie = new Definition(
@@ -6092,6 +8218,23 @@ namespace WorldServer.logic.doomed
                 },
             null);
 
+        // Totem Spirit
+        public static readonly Definition M_Totem_Spirit = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                        Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 4, 0, projectileIndex: 0)),
+                        SimpleWandering.Instance(1, 1)
+                    ),
+                Cooldown.Instance(1000,
+                        Rand.Instance(
+                            new RandomTaunt(0.001, "Die"),
+                            new RandomTaunt(0.001, "Die")
+                        )
+                    )
+            },
+            null,
+            null);
+
         // Tree of Doom
         public static readonly Definition M_Tree_of_Doom = new Definition(
             new Behavior[] {
@@ -6109,6 +8252,106 @@ namespace WorldServer.logic.doomed
                         )
                     )
                 },
+            null);
+
+        // Turkey God
+        public static readonly Definition M_Turkey_God = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                        new RunBehaviors(
+                            Once.Instance(SetConditionEffect.Instance(ConditionEffectIndex.Invulnerable)), 
+                            If.Instance(IsEntityPresent.Instance(15, null), Once.Instance(new SetKey(-1, 1))) 
+                        ),
+
+                        IfEqual.Instance(-1, 1,
+                            new RunBehaviors(
+                                Flashing.Instance(250, 0xffff0000), 
+                                new QueuedBehavior( 
+                                    new SimpleTaunt("A long time ago. Pilgrims ate their feast."),
+                                    CooldownExact.Instance(5000), 
+                                    new SimpleTaunt("It's called Thanksgiving, for a reason."),
+                                    CooldownExact.Instance(5000),
+                                    new SimpleTaunt("You give me food."),
+                                    CooldownExact.Instance(5000), 
+                                    new SimpleTaunt("You give me pain."),
+                                    CooldownExact.Instance(5000), 
+                                    new SimpleTaunt("Now I give you both."),
+                                    CooldownExact.Instance(2000),
+                                    UnsetConditionEffect.Instance(ConditionEffectIndex.Invulnerable), 
+                                    new SimpleTaunt("Prepare to enjoy your dinner!"),
+                                    new SetKey(-1, 2) 
+                                    )
+                                )
+                            ),
+
+
+                        IfEqual.Instance(-1, 2,
+                            new RunBehaviors(
+                                Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 3, 0, projectileIndex: 1)),
+                                Cooldown.Instance(500, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 5, 0, projectileIndex: 2)),
+                                Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 3, 0, projectileIndex: 3)),
+                                Cooldown.Instance(500, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 4, 0, projectileIndex: 5)),
+                                Cooldown.Instance(1000, MultiAttack.Instance(25, 10 * (float)Math.PI / 180, 3, 0, projectileIndex: 6)),
+                                Cooldown.Instance(6000, new SimpleTaunt("Happy Thanksgiving, Friends! Only {HP} more hitpoints to go!"))
+                            )
+                        )
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                        Tuple.Create(100, new LootDef(0, 5, 0, 8,
+                            Tuple.Create(0.05, (ILoot)new ItemLoot("America Sword")),
+                            Tuple.Create(0.05, (ILoot)new ItemLoot("America Armor")),
+                            Tuple.Create(0.05, (ILoot)new ItemLoot("America Shield")),
+                            Tuple.Create(0.05, (ILoot)new ItemLoot("America Ring")),
+
+                            Tuple.Create(0.5, (ILoot)new StatPotionLoot(StatPotion.Att)),
+                            Tuple.Create(0.5, (ILoot)new StatPotionLoot(StatPotion.Wis)),
+                            Tuple.Create(0.5, (ILoot)new StatPotionLoot(StatPotion.Vit)),
+                            Tuple.Create(0.5, (ILoot)new StatPotionLoot(StatPotion.Spd))
+                    ))));
+
+        // Vampire Bat
+        public static readonly Definition M_Vampire_Bat = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                                    If.Instance(IsEntityPresent.Instance(20, null),
+                                                Chasing.Instance(8, 20, 2, null)
+                                               ),
+                                    IfNot.Instance(Chasing.Instance(8, 20, 2, null),
+                                    SimpleWandering.Instance(2, 1)
+                                  ),
+                                    Cooldown.Instance(900, SimpleAttack.Instance(1, projectileIndex: 0))
+                                  )
+            },
+            null,
+            null);
+
+        // Vampire Bat Swarmer 1
+        public static readonly Definition M_Vampire_Bat_Swarmer_1 = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                                    Chasing.Instance(8, 20, 4, T("Lord Ruthven")),
+                                    If.Instance(IsEntityPresent.Instance(5, T("Lord Ruthven")),
+                                               SimpleWandering.Instance(2, 1)
+                                              ),
+                                    Cooldown.Instance(900, SimpleAttack.Instance(1, projectileIndex: 0))
+                                  ),
+                If.Instance(IsEntityNotPresent.Instance(200, T("Lord Ruthven")),
+                                             new QueuedBehavior(
+                                                CooldownExact.Instance(2000),
+                                              Die.Instance
+                                             ))
+            },
+            null,
+            null);
+
+        // West Tutorial Gun
+        public static readonly Definition M_West_Tutorial_Gun = new Definition(
+            new Behavior[] {
+                TutorialTower.Instance
+            },
+            null,
             null);
 
         // Wisp Queen
@@ -6357,6 +8600,40 @@ namespace WorldServer.logic.doomed
                         Tuple.Create(0.005, (ILoot) new ItemLoot("Will-o-Wisp Spell"))
                         )
                         )));
+
+        // Yellow Swarm Masters
+        public static readonly Definition M_Yellow_Swarm_Masters = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    Once.Instance(SpawnMinionImmediate.Instance( T("Blue Swarm Minions"), 5, 2, 3)),
+                    SmoothWandering.Instance(2f, 2f),
+                    Chasing.Instance(8, 11, 1, null),
+                    Cooldown.Instance(1260, MultiAttack.Instance(600, 20*(float) Math.PI/360, 8, 0, projectileIndex: 0)),
+                    Cooldown.Instance(1600, MultiAttack.Instance(600, 60*(float) Math.PI/360, 2, 0, 1)),
+                    Cooldown.Instance(1880, MultiAttack.Instance(600, 20*(float) Math.PI/360, 2, 0, 2)),
+                    Cooldown.Instance(1990, MultiAttack.Instance(600, 20*(float) Math.PI/360, 2, 0, 3))
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Health Potion"))
+                        ))));
+
+        // Yellow Swarm Minions
+        public static readonly Definition M_Yellow_Swarm_Minions = new Definition(
+            new Behavior[] {
+                new RunBehaviors(
+                    SmoothWandering.Instance(2f, 2f),
+                    Chasing.Instance(8, 11, 1, null),
+                    Cooldown.Instance(1860, MultiAttack.Instance(600, 30*(float) Math.PI/360, 8, 0, projectileIndex: 0))
+                    )
+            },
+            null,
+            new LootBehavior(LootDef.Empty,
+                    Tuple.Create(100, new LootDef(0, 3, 0, 8,
+                        Tuple.Create(0.01, (ILoot) new ItemLoot("Health Potion"))
+                        ))));
 
         // Zombie
         public static readonly Definition M_Zombie = new Definition(

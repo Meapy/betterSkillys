@@ -97,6 +97,21 @@ def load_blocks(dr_root):
     return blocks
 
 
+def handwritten_behaviours():
+    """Monster ids the betterSkillys behaviours register (`.Init("id"` or `.Init(E("id")`, which is
+    the regular or the Elder version), leaving out the generated BehaviorDb.DoomedMonsters.cs."""
+    ids = set()
+    for f in glob.glob(os.path.join(ROOT, "source", "WorldServer", "logic", "db", "*.cs")):
+        if os.path.abspath(f) == os.path.abspath(DB_CS):
+            continue
+        text = strip_comments(open(f, encoding="utf-8-sig", errors="replace").read())
+        for m in re.finditer(r'\.Init\(\s*(E\(\s*)?"([^"]+)"', text):
+            ids.add(m.group(2))
+            if m.group(1):
+                ids.add("Elder " + m.group(2))
+    return ids
+
+
 def translate(expr, type_to_id, refs):
     """Replaces object-type numbers in the known argument positions with T("id")."""
     calls = list(re.finditer(r"\b(?:new\s+)?(%s)(?:\.Instance)?\s*\(" % "|".join(OBJTYPE_ARGS), expr))
@@ -144,7 +159,7 @@ def definition(block, type_to_id, refs):
 
 def write_monsters(dr_root, monsters, aliases=None):
     """monsters: ported monster id -> (Doomed Realms type whose behaviour it uses, type -> object id
-    lookup for its arguments); aliases: monster id -> betterSkillys monster whose behaviour it shares.
+    lookup for its arguments); aliases: Elder monster id -> regular monster whose behaviour it shares.
     Returns the object ids their behaviours use."""
     blocks = load_blocks(dr_root)
     refs, members, inits = set(), [], []
@@ -177,7 +192,7 @@ def write_monsters(dr_root, monsters, aliases=None):
         f.write("namespace WorldServer.logic\n{\n    partial class BehaviorDb\n    {\n")
         f.write("        private _ DoomedMonsters = () => Behav()\n")
         f.write("\n".join(inits) + ";\n\n")
-        f.write("        // Elder monsters that share the behaviour of their regular betterSkillys version\n")
+        f.write("        // Elder monsters that share the behaviour of their regular version\n")
         f.write("        // (applied by Initialize once every behaviour is registered)\n")
         f.write("        private static readonly (string Elder, string Regular)[] DoomedAliases =\n        {\n")
         f.write("".join("            (%s, %s),\n" % (cs_string(k), cs_string(v)) for k, v in sorted((aliases or {}).items())))

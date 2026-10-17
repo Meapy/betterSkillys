@@ -67,6 +67,10 @@ namespace WorldServer.logic.doomed
             h.Definition = _def;
             foreach (var b in _def.Behaviors)
                 b.Tick(h, time);
+            // "Other" conditions are checked every tick (ChefTaunt)
+            foreach (var c in _def.CondBehaviors)
+                if (c.Condition == BehaviorCondition.Other)
+                    c.Behave(BehaviorCondition.Other, h, time, null, null);
         }
 
         public override void OnDeath(Entity host, ref TickTime time)
@@ -265,6 +269,18 @@ namespace WorldServer.logic.doomed
             foreach (var i in self.World.EnemiesCollision.HitTest(self.X, self.Y, dist).ToArray())
                 if (i.ObjectDesc != null && i.ObjectDesc.Group == group && Dist(i, self) < dist)
                     yield return i;
+        }
+
+        protected Entity NearestOfGroup(float radius, string group, out float dist)
+        {
+            Entity ret = null;
+            dist = radius;
+            foreach (var i in GetNearestEntitiesByGroup(radius, group))
+            {
+                var d = Dist(i, Host.Self);
+                if (i != Host.Self && d < dist) { dist = d; ret = i; }
+            }
+            return ret;
         }
 
         protected int CountEntity(float dist, ushort? objType) => GetNearestEntities(dist, objType).Count();
@@ -1027,6 +1043,30 @@ namespace WorldServer.logic.doomed
         }
     }
 
+    // Bonegrind the Butcher's two lines: when a player comes near, and when its health runs low
+    internal class ChefTaunt : ConditionalBehavior
+    {
+        private readonly int threshold;
+        public ChefTaunt(int threshold) => this.threshold = threshold;
+        public override BehaviorCondition Condition => BehaviorCondition.Other;
+
+        protected override void BehaveCore(BehaviorCondition cond, TickTime time, string msg, Player player)
+        {
+            var n = Host.StateStorage.TryGetValue(Key, out var o) ? (int)o : 0;
+            var dist = 8f;
+            if (n == 0 && GetNearestEntity(ref dist, null) != null)
+            {
+                Taunt("Ah, fresh meat for the minions!");
+                Host.StateStorage[Key] = 1;
+            }
+            else if (n < 2 && Host.Self is Character c && c.Health < threshold)
+            {
+                Taunt("The meat ain't supposed to bite back! Waaaaa!!");
+                Host.StateStorage[Key] = 2;
+            }
+        }
+    }
+
     internal class DeathTransmute : ConditionalBehavior
     {
         private readonly ushort? objType;
@@ -1342,9 +1382,232 @@ namespace WorldServer.logic.doomed
         }
     }
 
+    internal class HealGroup : Behavior
+    {
+        private readonly float radius;
+        private readonly int amount;
+        private readonly string group;
+        private HealGroup(float radius, int amount, string group) { this.radius = radius; this.amount = amount; this.group = group; }
+        public static HealGroup Instance(float radius, int amount, string group) => Cached(Tuple.Create(radius, amount, group), () => new HealGroup(radius, amount, group));
+
+        protected override bool TickCore(TickTime time)
+        {
+            var ret = false;
+            foreach (var c in GetNearestEntitiesByGroup(radius, group).OfType<Enemy>())
+            {
+                var hp = Math.Min(c.Health + amount, c.MaxHealth);
+                if (hp == c.Health)
+                    continue;
+                var n = hp - c.Health;
+                c.Health = hp;
+                Effect(EffectType.Potion, c, 0xffffffff);
+                Effect(EffectType.Trail, Host.Self, 0xffffffff, new Position(c.X, c.Y));
+                c.World.BroadcastIfVisible(new Notification() { ObjectId = c.Id, Message = "+" + n, Color = new ARGB(0xff00ff00) }, c);
+                ret = true;
+            }
+            return ret;
+        }
+    }
+
+    // the tutorial guns: one shot every 2 to 3.5 s in the direction their name gives
+    internal class TutorialTower : Behavior
+    {
+        public static readonly TutorialTower Instance = new TutorialTower();
+
+        protected override bool TickCore(TickTime time)
+        {
+            var remaining = Host.StateStorage.TryGetValue(Key, out var o) ? (int)o : 0;
+            remaining -= time.ElapsedMsDelta;
+            var ret = false;
+            if (remaining <= 0)
+            {
+                var id = Host.Self.ObjectDesc.IdName;
+                var angle = id.StartsWith("South") ? Math.PI / 2 : id.StartsWith("North") ? Math.PI * 3 / 2 : id.StartsWith("West") ? Math.PI : 0;
+                DoomedRuntime.Fire(Host.Self, 0, angle, 0, 1);
+                remaining = Rng.Next(2000, 3500);
+                ret = true;
+            }
+            Host.StateStorage[Key] = remaining;
+            return ret;
+        }
+    }
+
     #endregion
 
     #region Movement
+
+    internal class AngleMove : Behavior
+    {
+        private readonly float speed, angle, dist;
+        private AngleMove(float speed, float angle, float dist) { this.speed = speed; this.angle = angle; this.dist = dist; }
+        public static AngleMove Instance(float speed, float angle, float dist) => Cached(Tuple.Create(speed, angle, dist), () => new AngleMove(speed, angle, dist));
+
+        protected override bool TickCore(TickTime time)
+        {
+            if (Host.Self.HasConditionEffect(ConditionEffectIndex.Paralyzed)) return true;
+            float d;
+            if (!Host.StateStorage.TryGetValue(Key, out var o))
+                d = dist;
+            else
+            {
+                d = (float)o;
+                var dd = Step(speed * GetSpeedMultiplier(Host.Self), time);
+                d -= dd;
+                ValidateAndMove(Host.Self.X + (float)Math.Cos(angle) * dd, Host.Self.Y + (float)Math.Sin(angle) * dd);
+            }
+            var ret = d <= 0;
+            if (ret)
+                d = dist;
+            Host.StateStorage[Key] = d;
+            return ret;
+        }
+    }
+
+    internal class ChasingGroup : Behavior
+    {
+        private readonly float speed, radius, targetRadius;
+        private readonly string group;
+        private ChasingGroup(float speed, float radius, float targetRadius, string group) { this.speed = speed; this.radius = radius; this.targetRadius = targetRadius; this.group = group; }
+        public static ChasingGroup Instance(float speed, float radius, float targetRadius, string group) =>
+            Cached(Tuple.Create(speed, radius, targetRadius, group), () => new ChasingGroup(speed, radius, targetRadius, group));
+
+        protected override bool TickCore(TickTime time)
+        {
+            if (Host.Self.HasConditionEffect(ConditionEffectIndex.Paralyzed)) return true;
+            var entity = NearestOfGroup(radius, group, out var dist);
+            if (entity == null || dist <= targetRadius)
+                return false;
+            MoveToward(entity.X + Rng.Next(-2, 2) / 2f, entity.Y + Rng.Next(-2, 2) / 2f, speed * GetSpeedMultiplier(Host.Self), time);
+            return true;
+        }
+    }
+
+    // runs from the nearest target once its health is under the threshold
+    internal class Escaping : Behavior
+    {
+        private readonly float speed, radius;
+        private readonly int threshold;
+        private readonly ushort? objType;
+        private Escaping(float speed, float radius, int threshold, ushort? objType) { this.speed = speed; this.radius = radius; this.threshold = threshold; this.objType = objType; }
+        public static Escaping Instance(float speed, float radius, int threshold, ushort? objType) =>
+            Cached(Tuple.Create(speed, radius, threshold, objType), () => new Escaping(speed, radius, threshold, objType));
+
+        protected override bool TickCore(TickTime time)
+        {
+            if (Host.Self.HasConditionEffect(ConditionEffectIndex.Paralyzed)) return true;
+            var dist = radius;
+            var entity = GetNearestEntity(ref dist, objType);
+            if (entity == null || !(Host.Self is Character c) || c.Health >= threshold)
+                return false;
+            MoveToward(2 * Host.Self.X - entity.X, 2 * Host.Self.Y - entity.Y, speed * GetSpeedMultiplier(Host.Self), time);
+            if (!Host.StateStorage.ContainsKey(Key))
+            {
+                Effect(EffectType.Flashing, Host.Self, 0xff303030, new Position(1, 1000000));
+                Host.StateStorage[Key] = true;
+            }
+            return true;
+        }
+    }
+
+    // moves away from the nearest target
+    internal class Retracting : Behavior
+    {
+        private readonly float speed, radius;
+        private readonly ushort? objType;
+        private Retracting(float speed, float radius, ushort? objType) { this.speed = speed; this.radius = radius; this.objType = objType; }
+        public static Retracting Instance(float speed, float radius, ushort? objType) => Cached(Tuple.Create(speed, radius, objType), () => new Retracting(speed, radius, objType));
+
+        protected override bool TickCore(TickTime time)
+        {
+            if (Host.Self.HasConditionEffect(ConditionEffectIndex.Paralyzed)) return true;
+            var dist = radius;
+            var entity = GetNearestEntity(ref dist, objType);
+            if (entity == null || entity.X == Host.Self.X && entity.Y == Host.Self.Y)
+                return false;
+            MoveToward(2 * Host.Self.X - entity.X, 2 * Host.Self.Y - entity.Y, speed * GetSpeedMultiplier(Host.Self), time);
+            return true;
+        }
+    }
+
+    internal class StrictCirclingGroup : Behavior
+    {
+        private class CirclingState { public float angle; public WeakReference<Entity> target; }
+        private readonly float radius, angularSpeed;
+        private readonly string group;
+        private StrictCirclingGroup(float radius, float speed, string group) { this.radius = radius; angularSpeed = speed / radius; this.group = group; }
+        public static StrictCirclingGroup Instance(float radius, float speed, string group) => Cached(Tuple.Create(radius, speed, group), () => new StrictCirclingGroup(radius, speed, group));
+
+        protected override bool TickCore(TickTime time)
+        {
+            if (Host.Self.HasConditionEffect(ConditionEffectIndex.Paralyzed)) return true;
+            if (!Host.StateStorage.TryGetValue(Key, out var o))
+            {
+                var t = NearestOfGroup(radius, group, out _);
+                if (t == null) return false;
+                Host.StateStorage[Key] = new CirclingState { target = new WeakReference<Entity>(t), angle = (float)(2 * Math.PI * Rng.NextDouble()) };
+                return true;
+            }
+            var state = (CirclingState)o;
+            state.angle += angularSpeed * GetSpeedMultiplier(Host.Self) * (time.ElapsedMsDelta / 1000f);
+            if (!state.target.TryGetTarget(out var target) || target.World == null || target.Dead)
+            {
+                Host.StateStorage.Remove(Key);
+                return false;
+            }
+            ValidateAndMove(target.X + (float)Math.Cos(state.angle) * radius, target.Y + (float)Math.Sin(state.angle) * radius);
+            if (state.angle >= Math.PI * 2)
+                state.angle -= (float)(Math.PI * 2);
+            return true;
+        }
+    }
+
+    // a golem's satellites: one coloured and three gray, once, when none are near
+    internal class GolemSatelliteSpawn : Behavior
+    {
+        public static readonly GolemSatelliteSpawn Instance = new GolemSatelliteSpawn();
+        private static readonly string[] Colored = { "Red Satellite", "Green Satellite", "Blue Satellite" };
+
+        protected override bool TickCore(TickTime time)
+        {
+            if (NearestOfGroup(4, "Golem Satellites", out _) != null)
+                return false;
+            var ids = Host.Self.GameServer.Resources.GameData.IdToObjectType;
+            void Spawn(string id)
+            {
+                if (ids.TryGetValue(id, out var t))
+                    DoomedRuntime.Spawn(Host.Self, t, Host.Self.X, Host.Self.Y);
+            }
+            Spawn(Colored[Rng.Next(0, Colored.Length)]);
+            for (var i = 1; i <= 3; i++)
+                Spawn("Gray Satellite " + i);
+            return true;
+        }
+    }
+
+    // keeps a satellite with its golem, and removes it 30 s after the golem is gone. Doomed Realms
+    // looked for the group "Golem", which no monster has, so its satellites always left after 30 s.
+    internal class GolemSatellites : Behavior
+    {
+        public static readonly GolemSatellites Instance = new GolemSatellites();
+
+        protected override bool TickCore(TickTime time)
+        {
+            var golem = NearestOfGroup(8, "Golems", out var dist);
+            if (golem == null)
+            {
+                var remaining = Host.StateStorage.TryGetValue(Key, out var o) ? (int)o : 30 * 1000;
+                remaining -= time.ElapsedMsDelta;
+                if (remaining <= 0)
+                    Host.Self.World.LeaveWorld(Host.Self);
+                Host.StateStorage[Key] = remaining;
+                return false;
+            }
+            if (dist > 4)
+                ValidateAndMove(golem.X, golem.Y);
+            Host.StateStorage[Key] = 30 * 1000;
+            return true;
+        }
+    }
 
     internal class Chasing : Behavior
     {
@@ -1691,6 +1954,55 @@ namespace WorldServer.logic.doomed
         }
     }
 
+    // Paints one of Doomed Realms' small ground set pieces at the monster ((int)X - offset,
+    // (int)Y - offset at the top left), on tiles without an object. Only the Abyss lava bomb uses
+    // them: lava spreading from its tile and drawing back (TempLava1 to 8, as rows of the pattern,
+    // 1 the first ground and 2 the second).
+    internal class MonsterSetPiece : Behavior
+    {
+        private static readonly Dictionary<string, (string Tile1, string Tile2, string[] Rows)> Pieces = new Dictionary<string, (string, string, string[])>
+        {
+            ["TempLava1"] = ("Lava Blend", null, new[] { "1" }),
+            ["TempLava2"] = ("Lava Blend", null, new[] { ".1.", "111", ".1." }),
+            ["TempLava3"] = ("Lava Blend", null, new[] { "..1..", ".111.", "11111", ".111.", "..1.." }),
+            ["TempLava4"] = ("Lava Blend", null, new[] { ".111.", "11111", "11111", "11111", ".111." }),
+            ["TempLava5"] = ("Lava Blend", "Red Quad", new[] { ".212.", "21112", "11111", "21112", ".212." }),
+            ["TempLava6"] = ("Lava Blend", "Red Quad", new[] { "..2..", ".212.", "21112", ".212.", "..2.." }),
+            ["TempLava7"] = ("Lava Blend", "Red Quad", new[] { ".2.", "212", ".2." }),
+            ["TempLava8"] = ("Red Quad", null, new[] { "1" }),
+        };
+
+        private readonly string piece;
+        private readonly int offset;
+        private MonsterSetPiece(string piece, int offset) { this.piece = piece; this.offset = offset; }
+        public static MonsterSetPiece Instance(string piece, int offset) => Cached(Tuple.Create(piece, offset), () => new MonsterSetPiece(piece, offset));
+
+        protected override bool TickCore(TickTime time)
+        {
+            var world = Host.Self.World;
+            if (world.IdName == "Battle Arena" || world.IdName == "Free Battle Arena" || !Pieces.TryGetValue(piece, out var p))
+                return false;
+            var dat = Host.Self.GameServer.Resources.GameData;
+            ushort? Ground(string id) => id != null && dat.IdToTileType.TryGetValue(id, out var t) ? t : (ushort?)null;
+            var grounds = new[] { Ground(p.Tile1), Ground(p.Tile2) };
+            int x0 = (int)Host.Self.X - offset, y0 = (int)Host.Self.Y - offset;
+            for (var y = 0; y < p.Rows.Length; y++)
+                for (var x = 0; x < p.Rows[y].Length; x++)
+                {
+                    var c = p.Rows[y][x];
+                    if (c != '1' && c != '2' || !world.Map.Contains(x0 + x, y0 + y))
+                        continue;
+                    var ground = grounds[c - '1'];
+                    var tile = world.Map[x0 + x, y0 + y];
+                    if (ground == null || tile.ObjType != 0 || tile.TileId == ground.Value)
+                        continue;
+                    tile.TileId = ground.Value;
+                    tile.UpdateCount++;
+                }
+            return true;
+        }
+    }
+
     internal class Flashing : Behavior
     {
         private readonly int time;
@@ -1904,6 +2216,12 @@ namespace WorldServer.logic.doomed
     {
         public static readonly MpPotionLoot Instance = new MpPotionLoot();
         private MpPotionLoot() : base("Magic Potion") { }
+    }
+
+    internal class IncLoot : ItemLoot
+    {
+        public static readonly IncLoot Instance = new IncLoot();
+        private IncLoot() : base("Wine Cellar Incantation") { }
     }
 
     // a health or a magic potion

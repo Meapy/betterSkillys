@@ -199,6 +199,63 @@ namespace WorldServer.logic
                 new TierLoot(3, ItemType.Ability, 0.15)
                 )
             )
+        // a realm event in the high forest: it had object data but no behaviour, so it stood still
+        .Init("Beer God",
+            new State(
+                new State("idle",
+                    new Wander(0.3),
+                    new PlayerWithinTransition(12, "barrels")
+                    ),
+                new State("fight",
+                    new Taunt(0.4, new Cooldown(9000, 3000), "Prost!", "Another round for {PLAYER}!", "You look thirsty, {PLAYER}!", "To your health... what's left of it!"),
+                    new State("barrels",
+                        new Prioritize(
+                            new Follow(0.5, acquireRange: 12, range: 5),
+                            new Wander(0.3)
+                            ),
+                        new Shoot(12, count: 3, shootAngle: 16, projectileIndex: 0, predictive: 0.5, coolDown: 1200),
+                        new Shoot(8, count: 1, projectileIndex: 2, coolDown: 900),
+                        new TimedTransition(6000, "shockwave")
+                        ),
+                    new State("shockwave",
+                        new SetAltTexture(1),
+                        new Shoot(10, count: 12, shootAngle: 30, projectileIndex: 1, fixedAngle: 0, coolDown: 1600),
+                        new Shoot(10, count: 12, shootAngle: 30, projectileIndex: 1, fixedAngle: 15, coolDown: 1600, coolDownOffset: 800),
+                        new Shoot(10, count: 2, shootAngle: 20, projectileIndex: 2, coolDown: 1000),
+                        new TimedTransition(4800, "settle")
+                        ),
+                    new State("settle",
+                        new SetAltTexture(0),
+                        new TimedTransition(0, "barrels")
+                        ),
+                    new HpLessTransition(0.3, "last call"),
+                    new NoPlayerWithinTransition(20, "idle")
+                    ),
+                new State("last call",
+                    new SetAltTexture(1),
+                    new Taunt("LAST CALL!"),
+                    new Prioritize(
+                        new Follow(0.7, acquireRange: 12, range: 3),
+                        new Wander(0.4)
+                        ),
+                    new Shoot(12, count: 5, shootAngle: 14, projectileIndex: 0, predictive: 0.6, coolDown: 1000),
+                    new Shoot(10, count: 12, shootAngle: 30, projectileIndex: 1, rotateAngle: 12, coolDown: 1200),
+                    new Shoot(8, count: 2, shootAngle: 20, projectileIndex: 2, coolDown: 700)
+                    )
+                ),
+            new Threshold(.01,
+                new TierLoot(6, ItemType.Weapon, 0.25),
+                new TierLoot(7, ItemType.Weapon, 0.15),
+                new TierLoot(8, ItemType.Weapon, 0.08),
+                new TierLoot(6, ItemType.Armor, 0.25),
+                new TierLoot(7, ItemType.Armor, 0.15),
+                new TierLoot(8, ItemType.Armor, 0.08),
+                new TierLoot(3, ItemType.Ring, 0.15),
+                new TierLoot(3, ItemType.Ability, 0.15),
+                new ItemLoot("Mighty Stein", 0.05),
+                new ItemLoot("Mini Beer God Pet Stone", 0.02)
+                )
+            )
         .Init("Night Elf Archer",
             new State(
                 new Shoot(10, predictive: 1),

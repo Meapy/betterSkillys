@@ -767,6 +767,15 @@ def main():
                 refs = {elderize(r) for r in refs}
             if refs:
                 behaviour_refs[oid] = refs
+    # betterSkillys monsters it never gave a behaviour (the realm heroes such as Red Demon and
+    # Phoenix Lord, and their minions) use the Doomed Realms one of the same name, and bring over
+    # what that spawns
+    handwritten = pm.handwritten_behaviours()
+    bs_unbehaved = {oid: int(dr[oid].get("type"), 16) for oid, o in bs.items()
+                    if o.find("Enemy") is not None and oid not in handwritten
+                    and oid in dr and dr[oid].get("type") and int(dr[oid].get("type"), 16) in blocks}
+    map_objs |= {dr_by_type[r] for r in pm.referenced_types(args.dr, bs_unbehaved.values(), blocks)
+                 if r in dr_by_type and dr_by_type[r] not in bs}
     chosen, skipped = select(dr, bs, extra=map_objs | set(portal_world), allowed_portals=set(portal_world),
                              behaviour_refs=behaviour_refs)
     classes = {}
@@ -875,9 +884,18 @@ def main():
             monsters[oid] = (elder_base[oid], elder_type_to_id)
         elif oid in elder_base and oid[len("Elder "):] in bs:
             aliases[oid] = oid[len("Elder "):]  # only betterSkillys has a behaviour for the regular one
+    for oid, t_ in bs_unbehaved.items():
+        monsters.setdefault(oid, (t_, type_to_id))
+    # Elder monsters make_elder.py made, with no behaviour of their own, share their regular one's
+    for oid, o in bs.items():
+        regular = oid[len("Elder "):]
+        if (oid.startswith("Elder ") and o.find("Enemy") is not None and oid not in handwritten
+                and oid not in monsters and oid not in aliases and (regular in monsters or regular in handwritten)):
+            aliases[oid] = regular
 
     _, n = pm.write_monsters(args.dr, monsters, aliases)
-    print("Wrote %s: %d monsters, %d Elder monsters sharing a betterSkillys behaviour." % (pm.DEFS_CS, n, len(aliases)))
+    print("Wrote %s: %d monsters (%d betterSkillys ones that had none), %d Elder monsters sharing their regular version's behaviour."
+          % (pm.DEFS_CS, n, len(bs_unbehaved), len(aliases)))
     import port_doomed_economy
     port_doomed_economy.write_economy(args.dr, dr, bs, final_id, known)
 
