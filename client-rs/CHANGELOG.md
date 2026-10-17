@@ -8,7 +8,7 @@ version (`python tools/build_client_rs.py --publish`) needs a section for that v
 refuses while an `Unreleased` one is left, so rename it to `## <version> (<date>)` then. The
 version number itself is in `client-rs/Cargo.toml`.
 
-## Unreleased
+## 1.2.2 (2026-10-17)
 - Fixed being disconnected from the game with "Overlapped I/O operation is in progress (os
   error 997)" on some Windows PCs.
 - The Nexus is rebuilt as the courtyard of a castle, much smaller than before: you arrive by the
